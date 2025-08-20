@@ -1,182 +1,87 @@
-// src/pages/blog.js
-import Head from 'next/head'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Tab } from '@headlessui/react'
-import Layout from '@/components/layout/layout'
-import HeaderTwo from '@/components/header/header-2'
+// src/pages/blog/index.js
+import Head from 'next/head';
+import Link from 'next/link';
+import Layout from '@/components/layout/layout';
+import HeaderTwo from '@/components/header/header-2';
 
-/**
- * Splits on " // " and inserts a <br/>
- */
-function LabelWithBreak({ text }) {
-  const [first, second] = text.split(/\s*\/\/\s*/)
-  return (
-    <span className="whitespace-nowrap text-sm font-medium">
-      {first}
-      {second && (
-        <>
-          <br />
-          {second}
-        </>
-      )}
-    </span>
-  )
-}
-
-export default function BlogIndex({ posts, categories }) {
-  // prepend an "All" tab
-  const tabs = [{ id: 'all', slug: 'all', name: 'ALL' }, ...categories]
+export default function BlogIndex({ posts = [], categories = [] }) {
+  const list = Array.isArray(posts) ? posts : [];
+  const cats = Array.isArray(categories) ? categories : [];
 
   return (
     <Layout>
       <Head>
         <title>Blog | RELUXE Med Spa</title>
+        <meta name="description" content="Latest news and guides from RELUXE Med Spa." />
       </Head>
 
-      <HeaderTwo
-        title="Our Blog"
-        subtitle="Latest tips, news & offers"
-        image="/images/blog/blog-hero.jpg"
-      />
+      <HeaderTwo title="RELUXE Blog" subtitle={`${list.length} posts`} />
 
-      {/* RE[CONNECT] with Background */}
-      <section className="relative w-full overflow-hidden">
-        {/* background image */}
-        <div className="absolute inset-0 -z-10">
-          <Image
-            src="/images/blog/connect-bg.jpg"
-            alt="Connect background"
-            layout="fill"
-            objectFit="cover"
-            objectPosition="center"
-          />
-          {/* optional dark overlay */}
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+      <main className="max-w-5xl mx-auto px-4 py-12">
+        {list.length === 0 && <p>No posts yet.</p>}
 
-        {/* text content */}
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white">
-            RE[CONNECT]
-          </h2>
-          <p className="mt-4 text-lg text-gray-200">
-            Insights. Inspiration. Innovation.
-          </p>
-        </div>
-      </section>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Tab.Group>
-          {/* ----- Tab List ----- */}
-          <Tab.List className="flex space-x-4 overflow-x-auto border-b border-gray-200 pb-4 no-scrollbar">
-            {tabs.map((cat) => (
-              <Tab
-                key={cat.slug}
-                className={({ selected }) =>
-                  `px-3 py-2 transition ${
-                    selected
-                      ? 'text-reluxe-primary border-b-2 border-reluxe-primary'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`
-                }
+        <ul className="grid md:grid-cols-2 gap-8">
+          {list.map((p) => (
+            <li key={p.id}>
+              <Link
+                href={`/blog/${p.slug}`}
+                className="block p-4 rounded-xl ring-1 ring-black/10 hover:bg-neutral-50"
               >
-                <LabelWithBreak text={cat.name} />
-              </Tab>
-            ))}
-          </Tab.List>
+                <h3
+                  className="font-semibold text-xl"
+                  dangerouslySetInnerHTML={{ __html: p?.title?.rendered || 'Untitled' }}
+                />
+                <p
+                  className="text-sm text-neutral-600"
+                  dangerouslySetInnerHTML={{
+                    __html: (p?.excerpt?.rendered || '').replace(/<[^>]+>/g, ''),
+                  }}
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
 
-          {/* ----- Tab Panels ----- */}
-          <Tab.Panels className="mt-8">
-            {tabs.map((cat) => (
-              <Tab.Panel key={cat.slug}>
-                <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-8">
-                  {posts
-                    .filter((post) =>
-                      cat.slug === 'all'
-                        ? true
-                        : post.categories.includes(cat.id)
-                    )
-                    .map((post) => {
-                      const media = post._embedded?.['wp:featuredmedia']?.[0]
-                      const img =
-                        media?.media_details?.sizes?.medium?.source_url ||
-                        media?.source_url ||
-                        '/images/blog/default-card.jpg'
-                      const date = new Date(post.date).toLocaleDateString(
-                        'en-US',
-                        { month: 'short', day: 'numeric', year: 'numeric' }
-                      )
-
-                      return (
-                        <article
-                          key={post.id}
-                          className="group bg-white rounded-xl shadow hover:shadow-lg transition-shadow overflow-hidden"
-                        >
-                          <div className="relative h-48 w-full">
-                            <Link href={`/blog/${post.slug}`} legacyBehavior>
-                              <a className="block h-full w-full">
-                                <Image
-                                  src={img}
-                                  alt={post.title.rendered}
-                                  layout="fill"
-                                  objectFit="cover"
-                                />
-                              </a>
-                            </Link>
-                          </div>
-                          <div className="p-6">
-                            <time className="text-xs text-gray-500">{date}</time>
-                            <h2 className="mt-2 text-lg font-semibold text-gray-800 group-hover:text-reluxe-primary transition-colors">
-                              <Link href={`/blog/${post.slug}`} legacyBehavior>
-                                <a>{post.title.rendered}</a>
-                              </Link>
-                            </h2>
-                            <p
-                              className="mt-2 text-gray-600 text-sm"
-                              dangerouslySetInnerHTML={{
-                                __html: post.excerpt.rendered
-                                  .slice(0, 100)
-                                  .replace(/<\/?[^>]+(>|$)/g, '') + '…',
-                              }}
-                            />
-                            <Link href={`/blog/${post.slug}`} legacyBehavior>
-                              <a className="inline-block mt-4 text-reluxe-primary font-medium hover:underline">
-                                Read more →
-                              </a>
-                            </Link>
-                          </div>
-                        </article>
-                      )
-                    })}
-                </div>
-              </Tab.Panel>
-            ))}
-          </Tab.Panels>
-        </Tab.Group>
+        {cats.length > 0 && (
+          <section className="mt-12">
+            <h4 className="font-semibold mb-2">Categories</h4>
+            <div className="flex flex-wrap gap-2">
+              {cats.map((c) => (
+                <span key={c.id} className="px-3 py-1 rounded-full ring-1 ring-black/10">
+                  {c.name}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </Layout>
-  )
+  );
 }
 
 export async function getStaticProps() {
-  const WP_API = process.env.WP_API
-  if (!WP_API) throw new Error('Missing WP_API env var')
+  const WP_API =
+    process.env.WP_API ||
+    'https://wordpress-74434-5742908.cloudwaysapps.com/wp-json/wp/v2';
 
-  const [postsRes, catsRes] = await Promise.all([
-    fetch(`${WP_API}/posts?_embed&per_page=100`),
-    fetch(`${WP_API}/categories`)
-  ])
+  const safeJson = async (url, fallback = []) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return fallback;
+      const data = await res.json();
+      return Array.isArray(data) ? data : fallback;
+    } catch {
+      return fallback;
+    }
+  };
 
-  if (!postsRes.ok || !catsRes.ok) {
-    throw new Error('Failed to fetch blog data')
-  }
+  // keep it simple for export; no ISR, just arrays or []
+  const posts = await safeJson(
+    `${WP_API}/posts?per_page=12&_fields=id,slug,title,excerpt,date`
+  );
+  const categories = await safeJson(
+    `${WP_API}/categories?per_page=100&_fields=id,name,slug,count`
+  );
 
-  const posts = await postsRes.json()
-  const categories = await catsRes.json()
-
-  return {
-    props: { posts, categories },
-    revalidate: 60,
-  }
+  return { props: { posts, categories } };
 }

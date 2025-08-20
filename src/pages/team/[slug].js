@@ -66,7 +66,7 @@ export async function getStaticProps({ params }) {
 
   return {
     props: { person: data.staff },
-    revalidate: 60
+    
   }
 }
 

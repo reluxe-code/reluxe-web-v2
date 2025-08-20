@@ -1,7 +1,7 @@
 // src/lib/deals.js
 // Isomorphic fetch of RELUXE deals from WP; caches (SSR + browser)
 
-const WP_BASE = 'https://wordpress-74434-5742908.cloudwaysapps.com';
+const WP_BASE = 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/';
 const ENDPOINT =
   `${WP_BASE}/wp-json/wp/v2/monthly_special` +
   '?per_page=20&orderby=date&order=desc' +

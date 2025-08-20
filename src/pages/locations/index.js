@@ -40,7 +40,7 @@ export async function getStaticProps() {
     props: {
       locations: data.locations.nodes
     },
-    revalidate: 60
+    
   }
 }
 

@@ -103,7 +103,7 @@ export async function getStaticProps() {
     props: {
       staffList: data?.staffs?.nodes || [],
     },
-    revalidate: 60,
+    
   }
 }
 

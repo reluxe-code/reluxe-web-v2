@@ -260,7 +260,7 @@ export async function getStaticProps() {
       projects: featuredProjects,
       deals,
     },
-    revalidate: 600,
+    
   };
 }
 

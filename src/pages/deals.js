@@ -108,5 +108,5 @@ if (process.env.NODE_ENV !== 'production' && (data?.length ?? 0) > 0) {
 // Revalidate every ~10 minutes
 export async function getStaticProps() {
   const initial = await getDealsSSR().catch(() => []);
-  return { props: { initial }, revalidate: 600 };
+  return { props: { initial }, };
 }

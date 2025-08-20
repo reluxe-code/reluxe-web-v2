@@ -38,7 +38,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const slug = typeof params?.slug === 'string' ? params.slug : '';
-  if (!slug) return { notFound: true, revalidate: 60 };
+  if (!slug) return { notFound: true, };
 
   let service = null;
 
@@ -72,8 +72,8 @@ export async function getStaticProps({ params }) {
     }
   }
 
-  if (!service) return { notFound: true, revalidate: 60 };
-  return { props: { service }, revalidate: 60 };
+  if (!service) return { notFound: true, };
+  return { props: { service }, };
 }
 
 

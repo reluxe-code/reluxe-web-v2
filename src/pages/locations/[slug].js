@@ -118,7 +118,7 @@ export async function getStaticProps({ params }) {
     return slugs.length === 0 || slugs.includes(pageSlug);
   });
 
-  return { props: { location, staff, deals: locationDeals }, revalidate: 60 }
+  return { props: { location, staff, deals: locationDeals }, }
 
 }
 
