@@ -7,7 +7,7 @@ const {
 } = require('@apollo/client/core');
 const fetch = require('cross-fetch');
 
-const GRAPHQL_URL = 'https://wordpress-74434-5742908.cloudwaysapps.com/graphql';
+const GRAPHQL_URL = 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/graphql';
 
 const client = new ApolloClient({
   link: new HttpLink({ uri: GRAPHQL_URL, fetch }),

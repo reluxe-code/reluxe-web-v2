@@ -211,7 +211,7 @@ s.providers = [
   {
     name: 'Krista Spalding, NP',
     title: 'Nurse Practitioner Injector',
-    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/wp-content/uploads/2025/08/krista.png',
+    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/krista.png',
     bio: 'Detail-obsessed injector focused on natural movement and balanced facial aesthetics.',
     href: '/book/tox', // provider-specific link if available
     instagram: 'https://instagram.com/injector.krista',
@@ -220,7 +220,7 @@ s.providers = [
   {
     name: 'Hannah, RN',
     title: 'Nurse Injector',
-    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/wp-content/uploads/2025/08/hannah.png',
+    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/hannah.png',
     bio: 'Gentle technique + great communication—Hannah makes first-time tox feel easy.',
     href: '/book/tox',
     instagram: 'https://instagram.com/injector.hannah',
@@ -229,7 +229,7 @@ s.providers = [
   {
      name: 'Alexis, RN',
      title: 'Nurse Injector',
-     headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/wp-content/uploads/2025/08/alexis.png',
+     headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/alexis.png',
      bio: 'Add Alexis’s short bio here (1–2 lines).',
      href: '/book/tox',
      instagram: 'https://instagram.com/____',

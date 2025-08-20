@@ -164,7 +164,7 @@ s.providers = [
   {
     name: 'Krista Spalding, NP',
     title: 'Nurse Practitioner Injector',
-    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/wp-content/uploads/2025/08/krista.png',
+    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/krista.png',
     bio: 'Amazing results. Lots of successfult Morpheus8 success stories.',
     href: '/book/m8', // provider-specific link if available
     instagram: 'https://instagram.com/injector.krista',
@@ -173,7 +173,7 @@ s.providers = [
   {
     name: 'Hannah, RN',
     title: 'Nurse Injector',
-    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/wp-content/uploads/2025/08/hannah.png',
+    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/hannah.png',
     bio: 'Amazing results. Lots of successfult Morpheus8 success stories.',
     href: '/book/m8',
     instagram: 'https://instagram.com/injector.hannah',
