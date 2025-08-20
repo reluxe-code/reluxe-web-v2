@@ -1,0 +1,206 @@
+[
+    {
+        "key": "group_testimonial_fields",
+        "title": "Testimonial Fields",
+        "fields": [
+            {
+                "key": "field_testimonial_quote",
+                "label": "Quote",
+                "name": "quote",
+                "aria-label": "",
+                "type": "textarea",
+                "instructions": "The testimonial text.",
+                "required": 1,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "rows": 4,
+                "new_lines": "wpautop",
+                "default_value": "",
+                "maxlength": "",
+                "placeholder": ""
+            },
+            {
+                "key": "field_testimonial_author",
+                "label": "Author Name",
+                "name": "author_name",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "Name of the person giving the testimonial.",
+                "required": 1,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_testimonial_rating",
+                "label": "Rating",
+                "name": "rating",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "Star rating from 1 to 5.",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "min": 1,
+                "max": 5,
+                "step": 1,
+                "default_value": "",
+                "placeholder": "",
+                "prepend": "",
+                "append": ""
+            },
+            {
+                "key": "field_testimonial_service",
+                "label": "Service Received",
+                "name": "service_received",
+                "aria-label": "",
+                "type": "relationship",
+                "instructions": "Select the service this testimonial refers to.",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "25",
+                    "class": "",
+                    "id": ""
+                },
+                "post_type": [
+                    "service"
+                ],
+                "return_format": "object",
+                "taxonomy": [],
+                "min": 0,
+                "max": 0,
+                "filters": [
+                    "search",
+                    "post_type",
+                    "taxonomy"
+                ],
+                "elements": [],
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_testimonial_photo",
+                "label": "Before\/After Photo",
+                "name": "testimonial_photo",
+                "aria-label": "",
+                "type": "image",
+                "instructions": "Optional photo showcasing results.",
+                "required": false,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "50",
+                    "class": "",
+                    "id": ""
+                },
+                "return_format": "array",
+                "preview_size": "medium",
+                "library": "all",
+                "min_width": 0,
+                "min_height": 0,
+                "min_size": 0,
+                "max_width": 0,
+                "max_height": 0,
+                "max_size": 0,
+                "mime_types": ""
+            },
+            {
+                "key": "field_applicable_locations",
+                "label": "Applicable Locations",
+                "name": "applicable_locations",
+                "aria-label": "",
+                "type": "relationship",
+                "instructions": "Select which locations this testimonial applies to.",
+                "required": 0,
+                "conditional_logic": false,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "post_type": [
+                    "locations"
+                ],
+                "filters": [
+                    "search"
+                ],
+                "return_format": "object",
+                "taxonomy": [],
+                "min": 0,
+                "max": 0,
+                "elements": [],
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_6894215758663",
+                "label": "Staff",
+                "name": "staff",
+                "aria-label": "",
+                "type": "relationship",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "show_in_graphql": 1,
+                "post_type": [
+                    "staff"
+                ],
+                "post_status": "",
+                "taxonomy": "",
+                "filters": [
+                    "search",
+                    "post_type",
+                    "taxonomy"
+                ],
+                "return_format": "object",
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "elements": "",
+                "bidirectional": 0,
+                "bidirectional_target": []
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "testimonial"
+                }
+            ]
+        ],
+        "menu_order": 0,
+        "position": "normal",
+        "style": "seamless",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "hide_on_screen": "",
+        "active": true,
+        "description": "",
+        "show_in_rest": 1,
+        "show_in_graphql": 1,
+        "graphql_field_name": "testimonialFields",
+        "map_graphql_types_from_location_rules": 0,
+        "graphql_types": ""
+    }
+]

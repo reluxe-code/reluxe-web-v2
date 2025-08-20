@@ -1,0 +1,24 @@
+---
+# Version 2: Featuring Cherry Payment Plans
+title: 'Beauty Bash is September 11th'
+date: '2025-09-11'
+image: 'cherry.png'
+descriptionImg: 'cherry.png'
+isFeatured: true
+category:
+  - events
+postTitle: 'Beauty Bash: Now with Cherry Payment Options!'
+postDesc: 'Celebrate September 11th at Birdies with RELUXE Med Spa—and take advantage of Cherry’s flexible payment plans on the spot.'
+postAdditionalDesc: 'Enjoy live demos, mini-treatments, and unlock easy financing through Cherry for your favorite services: injectables, lasers, facials, and more.'
+singlePostTitle: 'Beauty Within Reach'
+singlePostDesc: 'Discover Cherry at Beauty Bash: split your spa investment into manageable payments and indulge in top-tier treatments without breaking the bank.'
+icon: 'FaMoneyCheckAlt'
+blockquoteText: '“Pamper yourself today—pay your way with Cherry.”'
+postExcerpt: 'Join us September 11th and say yes to beauty with Cherry financing available on all event purchases.'
+postTags:
+  - beautybash
+  - cherry
+  - financing
+  - spa
+  - reluxe
+---

@@ -1,0 +1,21 @@
+---
+title: 'Contact'
+subTitle: 'Westfield & Carmel, <span class="text-[#6F6969]"> Indiana</span>'
+address: '514 E State Road 32, Westfield, IN 46074' # default (Westfield)
+contactNumberPath: ''            # fill in if you want click-to-call, e.g. 'tel:+1317XXXXXXX'
+contactNumber: ''                # e.g. '(317) 555-0123'
+contactEmailPath: 'mailto:contact@reluxemedspa.com'
+contactEmail: 'contact@reluxemedspa.com'
+infoButtonText: 'Map Directions'
+formTitle: 'Send a message to our team'
+formButton: 'Send Message'
+
+# New: both locations (use this in your map / contact cards)
+locations:
+  - name: 'RELUXE Med Spa — Westfield'
+    address: '514 E State Road 32, Westfield, IN 46074'
+    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=514%20E%20State%20Road%2032%2C%20Westfield%2C%20IN%2046074'
+  - name: 'RELUXE Med Spa — Carmel'
+    address: '10485 N Pennsylvania Street, Carmel, IN 46280'
+    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=10485%20N%20Pennsylvania%20Street%2C%20Carmel%2C%20IN%2046280'
+---
