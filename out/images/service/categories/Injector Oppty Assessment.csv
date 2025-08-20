@@ -1,0 +1,732 @@
+Sale id,Sale Date,Location Name,Client Name,Staff Name,Service Name,Retail Product Name,Membership Name,Package Name,Sale Type,Line Item Type,Gross Sales,Discount Amount,Refunds,Net Sales,Sales Tax
+All,,RELUXE Med Spa,,,,,,,service,Service,107392.0,-18244.9,-570.0,88383.78,0.0
+f080ebdb-c890-5771-ab1b-0ab2fcc5531c,9/30/2024,RELUXE Med Spa,Chrissy Evans,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+a6221301-8bf4-53a7-8e85-fe090b11827f,9/30/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+a535c138-294a-57fd-8796-fce21bdc0f14,9/30/2024,RELUXE Med Spa,Leah Qualls,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+884d4f53-af70-5b9b-961c-0ad7d858a37a,9/30/2024,RELUXE Med Spa,Grace Wallen,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+739cfc98-5909-5dd2-a3c1-4dbb218166a7,9/30/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+672282ea-5141-5d7d-b9d6-591404c0d3f2,9/30/2024,RELUXE Med Spa,Leah Qualls,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,600.0,0.0,,600.0,0.0
+5bf496a2-cd66-56f0-bab5-8556059d98ab,9/30/2024,RELUXE Med Spa,Leah Qualls,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+40c880b7-c725-5669-9422-8817cc793870,9/30/2024,RELUXE Med Spa,Chrissy Evans,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+33ba6d52-c46e-5a46-ae90-43c9e56ad390,9/30/2024,RELUXE Med Spa,Grace Wallen,Krista Spalding,RHA 3,,,,service,Service,650.0,-650.0,,0.0,0.0
+0b8361b4-96c3-546a-baab-75a605188698,9/30/2024,RELUXE Med Spa,Brenda Newberry,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+fada6b20-1e32-56f1-98d4-0ec07b7b0a87,9/27/2024,RELUXE Med Spa,Marla Fairley,Hannah Kerns,Botox ($14/unit),,,,service,Service,768.0,0.0,,768.0,0.0
+eeef9641-a2e4-5726-b647-3bc56f16dfb2,9/27/2024,RELUXE Med Spa,Taylor Standridge,Hannah Kerns,Botox ($14/unit),,,,service,Service,288.0,0.0,,288.0,0.0
+c511af8f-847d-5fab-8995-4cc0642ec649,9/27/2024,RELUXE Med Spa,Nicole Echols,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+aedfdde9-7f87-58f7-9407-815517a021fc,9/27/2024,RELUXE Med Spa,Taylor Standridge,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ab22de5e-de2c-5da0-bc90-d7b05c861f64,9/27/2024,RELUXE Med Spa,Taylor Standridge,Hannah Kerns,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+a1e3e4c2-9089-5581-8c68-65c59fe1a98b,9/27/2024,RELUXE Med Spa,Nicole Echols,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,576.0,0.0,,576.0,0.0
+a1a27f7d-d010-5c31-bf00-04f661d40723,9/27/2024,RELUXE Med Spa,Micki Clevenger,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+94794931-0cec-5575-857d-c474561b8d50,9/27/2024,RELUXE Med Spa,Michelle Goudy,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+90cc8680-c649-57c2-ad77-a25735c84e77,9/27/2024,RELUXE Med Spa,Haylee Wynn,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,432.0,0.0,,432.0,0.0
+8d28c7c3-97e8-5272-ae90-2cf44311dd88,9/27/2024,RELUXE Med Spa,Haylee Wynn,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+81a4f3b8-18fe-5a60-8d87-d7b4859bb568,9/27/2024,RELUXE Med Spa,Amy Crispen,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+797774e2-722f-5708-b4f8-f0a24b0bc8fd,9/27/2024,RELUXE Med Spa,Paige Hackman,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+55b4c451-af34-52e4-ac0c-3d9a704f6c58,9/27/2024,RELUXE Med Spa,Amy Crispen,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+4ddaf5ad-904b-586b-a048-5542bf612e2b,9/27/2024,RELUXE Med Spa,Amy Crispen,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,312.0,0.0,,312.0,0.0
+483ca917-c82a-5387-a61e-e0046b2aacac,9/27/2024,RELUXE Med Spa,Micki Clevenger,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+26d620a8-6e43-5edf-954d-ed857df8f0d0,9/27/2024,RELUXE Med Spa,Paige Hackman,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,288.0,0.0,,288.0,0.0
+208cfa09-f0c9-52c7-a6e5-c2741d53a5a0,9/27/2024,RELUXE Med Spa,Micki Clevenger,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+169ad41a-1ee4-5a0c-a30e-2ae3ef162313,9/27/2024,RELUXE Med Spa,Marla Fairley,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0c8a03eb-60b5-5c49-b3be-0d5d3ad9724d,9/27/2024,RELUXE Med Spa,Paige Hackman,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+03d3e235-fd6e-5259-9d32-93c63e5d3074,9/27/2024,RELUXE Med Spa,Micki Clevenger,Krista Spalding,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+a8c9350c-72c1-5c70-91d7-7586b32eb91d,9/25/2024,RELUXE Med Spa,Lily Jones,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,300.0,0.0
+864a7ce1-37ee-5575-a158-b906b16fb643,9/25/2024,RELUXE Med Spa,Chelsea Price,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+50470835-ff80-5ea3-83b8-e50abc3e4130,9/25/2024,RELUXE Med Spa,Qiong Jiang,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0638000d-be7a-57d8-9a41-2055e072edb8,9/25/2024,RELUXE Med Spa,Qiong Jiang,Hannah Kerns,Botox ($14/unit),,,,service,Service,528.0,0.0,,528.0,0.0
+f3de8a6a-7deb-5410-abee-9fea500fbeae,9/24/2024,RELUXE Med Spa,Heather Wilensky,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,144.0,-25.0,,119.0,0.0
+f32cea3f-ca1f-5941-99e3-a96dd5860a52,9/24/2024,RELUXE Med Spa,Leslie Reichert,Krista Spalding,Versa & Lips,,,,service,Service,650.0,0.0,,650.0,0.0
+ebaca1ff-bee4-5981-8ef0-2676773ab4e6,9/24/2024,RELUXE Med Spa,Jane Ferreri,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+e7ea8496-52bc-57fe-bbdd-21faa4bc1618,9/24/2024,RELUXE Med Spa,Jane Ferreri,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+8e363b9c-1757-5c93-b97e-d2c00d280e96,9/24/2024,RELUXE Med Spa,Heather Wilensky,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+89f1bf86-bbc0-5c41-9418-307aaf26aec5,9/24/2024,RELUXE Med Spa,Athena Noal,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,384.0,0.0,,384.0,0.0
+664ac616-ae42-5aa9-b1b0-3619f447b4d2,9/24/2024,RELUXE Med Spa,Heather Wilensky,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+5045ebc8-e83b-5fcb-ae39-e43d288b88a7,9/24/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+447a560f-134b-5e11-b339-b80a0209e04c,9/24/2024,RELUXE Med Spa,lynn smith,Hannah Kerns,Filler Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+312101e0-9edd-56e1-baa7-f384188839ec,9/24/2024,RELUXE Med Spa,Jane Ferreri,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+23994f1f-74b7-53f0-bbe3-d11ca714bb99,9/24/2024,RELUXE Med Spa,Leslie Reichert,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+15a2e17c-6f17-57c9-a30c-e8511124076a,9/24/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+07ea0066-1f99-5a46-8c8f-145a771da159,9/24/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,312.0,0.0,,312.0,0.0
+0300fbc8-4cbd-5332-951b-1059abea4f49,9/24/2024,RELUXE Med Spa,Athena Noal,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ec9b8007-f59f-53f7-84fc-2b211878ee8f,9/23/2024,RELUXE Med Spa,Laurel Fennerty,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,408.0,0.0,,408.0,0.0
+e5ab52b4-c297-5bdf-ad8b-bdbd03af0672,9/23/2024,RELUXE Med Spa,Sarah Vas,Hannah Kerns,Botox ($14/unit),,,,service,Service,336.0,-25.0,,311.0,0.0
+b80ee764-5ee5-5680-af5e-b07b80b29f67,9/23/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,Botox ($14/unit),,,,service,Service,372.0,0.0,,372.0,0.0
+9e54f6ae-2d57-5668-b61c-974818a8e299,9/23/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+941c3f95-f056-5952-acc0-cf9b9d610504,9/23/2024,RELUXE Med Spa,Lisa Holman,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,500.0,-50.0,,450.0,0.0
+80a700ac-1f2e-5346-a42a-c72981fafda5,9/23/2024,RELUXE Med Spa,Sarah Vas,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+579eb8de-f66a-51d9-b73a-c04b0cda7910,9/23/2024,RELUXE Med Spa,Gabrielle Cox,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+205acf6f-3f2d-52a7-9e8a-7ca7e14d0683,9/23/2024,RELUXE Med Spa,Laurel Fennerty,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1fb12e4b-2a04-5214-b96b-a8e142118223,9/23/2024,RELUXE Med Spa,Gabrielle Cox,Krista Spalding,Botox ($14/unit),,,,service,Service,300.0,-25.0,,275.0,0.0
+084e5de7-d423-551b-9eba-d7894f115d7c,9/23/2024,RELUXE Med Spa,Lisa Holman,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+fe2e2c26-c562-5598-9602-ef87b9c09ead,9/21/2024,RELUXE Med Spa,Dolores Paul,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+7a1258e4-514d-5bf8-955e-dde3f06c93cb,9/21/2024,RELUXE Med Spa,Jake Elliott,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+720c574a-a191-5c1a-b137-63fb24572e89,9/21/2024,RELUXE Med Spa,Dolores Paul,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+14514ce2-b387-5c55-bfee-9f183a96f64a,9/21/2024,RELUXE Med Spa,Jake Elliott,Hannah Kerns,Botox ($14/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+04f12bc7-b7a5-5068-a22b-4a0eb3b566b5,9/21/2024,RELUXE Med Spa,Dolores Paul,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,288.0,0.0,,288.0,0.0
+f6514211-eb28-56e1-aded-408a7f705607,9/20/2024,RELUXE Med Spa,Kalee Hobbs,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+e6328681-a81c-5b9c-b302-1bdd9b0d3cab,9/20/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+e0f4b139-de1e-5c48-b551-1dde860848c4,9/20/2024,RELUXE Med Spa,Patrick Dooling,Krista Spalding,Botox ($14/unit),,,,service,Service,60.0,0.0,,60.0,0.0
+e0d0640e-4580-50e3-a961-21f1f0cc6858,9/20/2024,RELUXE Med Spa,Stacie Morris,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+e00743da-b7d1-5964-af2b-7fd777c8070c,9/20/2024,RELUXE Med Spa,Jennifer Campbell,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+dba0ccb9-28a2-58aa-ae38-123e5a946a93,9/20/2024,RELUXE Med Spa,Ally Detzler,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d74bc08c-ab80-5012-a0b8-763428bb2d9f,9/20/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+c7b56887-a9e7-5fd1-8ca4-1c4fb2ff13a5,9/20/2024,RELUXE Med Spa,Kalee Hobbs,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+bdc05b26-b91d-5d7d-a5f4-78235fbb92ff,9/20/2024,RELUXE Med Spa,Patti Abernathy,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,350.0,0.0,,350.0,0.0
+98dc1ca5-ded1-515d-a7e5-ff5ae41bd782,9/20/2024,RELUXE Med Spa,Stacie Morris,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+94363d5a-35b4-5798-a4df-40a79cd6bdb5,9/20/2024,RELUXE Med Spa,Stacy Kinnett,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+83d85d2f-5dc5-54a4-88d9-1e7a26972730,9/20/2024,RELUXE Med Spa,Patti Abernathy,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+790e9f48-36ac-5092-ac75-c9af0761eadf,9/20/2024,RELUXE Med Spa,Stacy Kinnett,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,400.0,0.0,,400.0,0.0
+640d388a-62e0-5125-87fe-8cdbe3b54cfc,9/20/2024,RELUXE Med Spa,Jennifer Campbell,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+50563afb-d5ce-51c6-aef7-c8996499373a,9/20/2024,RELUXE Med Spa,Patrick Dooling,Krista Spalding,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+4386b0fb-c937-5545-ae3e-fc18224dc2f8,9/20/2024,RELUXE Med Spa,Jennifer Campbell,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+41626fd9-f235-5d34-be15-d329a8d7bd32,9/20/2024,RELUXE Med Spa,Ally Detzler,Hannah Kerns,Botox ($14/unit),,,,service,Service,384.0,0.0,,384.0,0.0
+201410d1-d796-581d-91b3-bd7e93f23b62,9/20/2024,RELUXE Med Spa,Patrick Dooling,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d8792321-55dc-5f62-828b-a187338ceb10,9/18/2024,RELUXE Med Spa,Amber Dunn,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+bc0a8aa4-363f-5d3d-8d5c-c5af2e05fba3,9/18/2024,RELUXE Med Spa,Amber Dunn,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,312.0,0.0,,312.0,0.0
+a6e2bb66-07b5-5ed2-8c8f-8b29c1db9c6d,9/18/2024,RELUXE Med Spa,Tina Williamson,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+67ee5c51-f952-5c7b-a6f4-0cab3cc7b2e6,9/18/2024,RELUXE Med Spa,Tina Williamson,Hannah Kerns,Post Injection Dysport,,,,service,Service,0.0,0.0,,0.0,0.0
+2c87a075-06fb-5ad2-ba8e-a9bfb5f72d80,9/18/2024,RELUXE Med Spa,Amber Dunn,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+d0122613-236a-548f-bedd-91b4119216d4,9/17/2024,RELUXE Med Spa,Zlata Tkach,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a5fb6682-5929-5750-bae4-4b028fb692e9,9/17/2024,RELUXE Med Spa,Christina Lux,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,600.0,0.0,,600.0,0.0
+9f8e6042-afd4-5982-983a-cfe65e2afc08,9/17/2024,RELUXE Med Spa,Christina Lux,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+766bf8a2-7e0d-5c3f-9544-96f030938e34,9/17/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,720.0,-500.0,,220.0,0.0
+730d8e2b-0a88-55bb-9ec7-f7dcb5654609,9/17/2024,RELUXE Med Spa,Zlata Tkach,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,396.0,0.0,,396.0,0.0
+57f254ac-2f25-57cf-8920-8b9a41cd1fab,9/17/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,Microneedling w/SkinPen,,,,service,Service,300.0,-300.0,,0.0,0.0
+416fa362-0e2d-5931-96e9-4c785cac2a22,9/17/2024,RELUXE Med Spa,Joy Cobb,Hannah Kerns,Skincare Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+1673ddde-dab7-5ce9-949c-6adb581b41c2,9/17/2024,RELUXE Med Spa,Zlata Tkach,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+02b3f394-8c67-5f5a-91ac-74872130652c,9/17/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f465aa58-4cb4-51ee-991b-e80e3a641edc,9/16/2024,RELUXE Med Spa,Marcella Hoard,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,144.0,0.0,,144.0,0.0
+dd820c08-5afe-50d9-8900-c9126a68da26,9/16/2024,RELUXE Med Spa,Cammy Korth,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d5fcc628-722b-5694-8e8b-9abc3006a435,9/16/2024,RELUXE Med Spa,Chrissy Evans,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d3cdeacf-44b6-5fef-ab4f-9da0ac6935b8,9/16/2024,RELUXE Med Spa,Jessica Bowen,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+cf7e7938-b970-514a-a159-cc455a1477df,9/16/2024,RELUXE Med Spa,Marcella Hoard,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+cd12f0ba-7abc-5bd4-a1b3-e50ded112f9b,9/16/2024,RELUXE Med Spa,Marcella Hoard,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+b806a28d-9b0b-5ad5-99d2-5fddd63ddd73,9/16/2024,RELUXE Med Spa,Cammy Korth,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,200.0,0.0,,200.0,0.0
+b4893ab3-e02b-5895-8542-97d7ce42bc0e,9/16/2024,RELUXE Med Spa,Chrissy Evans,Krista Spalding,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+b2e52d66-8d4e-5eea-af2d-49e193b17578,9/16/2024,RELUXE Med Spa,Cammy Korth,Hannah Kerns,Botox ($14/unit),,,,service,Service,144.0,0.0,,144.0,0.0
+a564bc84-6d9e-5209-aa11-eb2324fe4e5b,9/16/2024,RELUXE Med Spa,Chrissy Evans,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,312.0,0.0,,312.0,0.0
+66722c60-e123-548d-b40e-63088f5469a4,9/16/2024,RELUXE Med Spa,John Denton,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+64c348b0-48a9-5130-bd56-d6d80d5c6948,9/16/2024,RELUXE Med Spa,John Denton,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,432.0,0.0,,432.0,0.0
+5fd0c771-8ba7-58fc-93fc-682a499c5f7f,9/16/2024,RELUXE Med Spa,Cammy Korth,Hannah Kerns,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+54658876-c6a2-5406-ac11-9b57f24dfd80,9/16/2024,RELUXE Med Spa,Jessica Bowen,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+4ae2e873-b1fd-59d3-aa68-8c2a37a0f83a,9/16/2024,RELUXE Med Spa,John Denton,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+46d8d3e1-a0bf-5ce3-8a3c-dd4540360f77,9/16/2024,RELUXE Med Spa,Dawn Ruh,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+3e6a5dd8-3255-540b-aa74-7a76cb1a3d01,9/16/2024,RELUXE Med Spa,Dawn Ruh,Krista Spalding,Juvéderm Volbella XC .55 ML (1/2 syringe) ~ lips & under eye,,,,service,Service,410.0,0.0,,410.0,0.0
+2216d5cc-0a36-5da9-bdb2-93a49ac983ba,9/16/2024,RELUXE Med Spa,Chrissy Evans,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+1a588629-5b80-5717-98b6-f33dcabf99d4,9/16/2024,RELUXE Med Spa,Tara Hines,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+1a1d629c-6009-59f1-ab5e-a050f59d7dab,9/16/2024,RELUXE Med Spa,Cammy Korth,Hannah Kerns,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+12e39de8-79aa-525f-b317-78390a42ed33,9/16/2024,RELUXE Med Spa,Jessica Bowen,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+0c457159-17b5-5365-b69a-ed61c0abfb0b,9/16/2024,RELUXE Med Spa,Tara Hines,Krista Spalding,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+f87a8de1-7cca-5f84-97a9-6fee137b400b,9/13/2024,RELUXE Med Spa,Shelby Heitz,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+e94af6da-6933-5821-a5f3-5ed2f0b6060b,9/13/2024,RELUXE Med Spa,Brittany Songer,Hannah Kerns,Botox ($14/unit),,,,service,Service,432.0,0.0,,432.0,0.0
+e77a67f3-d3f6-53bd-8953-ae0f6ad8fd69,9/13/2024,RELUXE Med Spa,Lauren Morris,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,384.0,-25.0,,359.0,0.0
+e0d69240-df7f-5dac-ab09-476642233a8a,9/13/2024,RELUXE Med Spa,Lauren Fortin,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d5d5315e-d7cc-5e41-8e18-b5ec13a868e5,9/13/2024,RELUXE Med Spa,Lauren Morris,Krista Spalding,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+c732e044-e6d6-54c5-92b5-a3088ce7a6b5,9/13/2024,RELUXE Med Spa,Gabby Shane,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,400.0,0.0,,400.0,0.0
+b02cd8b1-1cd6-5c9d-8596-25330817cd37,9/13/2024,RELUXE Med Spa,Dawn Ruh,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,420.0,0.0,,420.0,0.0
+99f7608c-db17-5fd2-aabf-d8e35f3c40ed,9/13/2024,RELUXE Med Spa,Ally Hausaman,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+83573b04-2168-5872-8def-0653942c6a78,9/13/2024,RELUXE Med Spa,Lauren Morris,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+7fca1dd4-9bfd-50de-a8ab-bce3e9139d5e,9/13/2024,RELUXE Med Spa,Lauren Morris,Krista Spalding,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+6a431222-51f4-5d64-97af-f772eb587a96,9/13/2024,RELUXE Med Spa,Lauren Fortin,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,480.0,0.0,,480.0,0.0
+443e1da1-807f-5a1e-81c8-c32a1c1849ef,9/13/2024,RELUXE Med Spa,Megan Howard,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+424d1560-f03e-5aec-affd-9e6c1047bfd8,9/13/2024,RELUXE Med Spa,Shelby Heitz,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,342.0,-35.0,,307.0,0.0
+3369c26b-0678-5815-a483-d80c7707ad90,9/13/2024,RELUXE Med Spa,Gabby Shane,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+255aa3da-f1ca-5474-a78f-4eb875a57cb7,9/13/2024,RELUXE Med Spa,Ally Hausaman,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,240.0,0.0,,240.0,0.0
+19db5c05-d222-5b86-8a3e-efe8453b5c41,9/13/2024,RELUXE Med Spa,Dawn Ruh,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+17f3f28a-8628-54d4-80a0-1ecbcf8577a4,9/13/2024,RELUXE Med Spa,Brittany Songer,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0b13f8b8-b8ab-5e01-b7b0-32e71b6d464f,9/13/2024,RELUXE Med Spa,Megan Howard,Krista Spalding,Botox ($14/unit),,,,service,Service,624.0,-120.0,,504.0,0.0
+e8dbc92d-825f-5db1-b19f-aebb6f0683d3,9/12/2024,RELUXE Med Spa,Anna Brown,Krista Spalding,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,266.67,0.0
+dc5dae68-eac0-5b9e-a5a7-a815a241ff8b,9/12/2024,RELUXE Med Spa,Jennifer Delph,Krista Spalding,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+d84cc703-ef69-5120-8279-0cf018aa85e7,9/12/2024,RELUXE Med Spa,Jennifer Delph,Krista Spalding,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+d316a59b-c624-5970-8f85-9c50594fa8ee,9/12/2024,RELUXE Med Spa,Dalia Izzy,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+789ac54a-4b4b-589e-ab97-b576f42f1eca,9/12/2024,RELUXE Med Spa,Sheri Nichols,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6fbf09c1-345b-5e0e-941f-5a7884c23482,9/12/2024,RELUXE Med Spa,Brittany Schott,Krista Spalding,Dysport ($3.95/unit Member Pricing),,,,service,Service,360.0,0.0,,360.0,0.0
+590fa5bb-e67a-59b3-9e4a-07c70e030fbc,9/12/2024,RELUXE Med Spa,Brittany Schott,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+46a56cee-400f-5e9f-956e-078de1b214d2,9/12/2024,RELUXE Med Spa,Dalia Izzy,Krista Spalding,Botox ($14/unit),,,,service,Service,420.0,-73.0,,347.0,0.0
+27184378-9f90-5aac-9c46-1a6d9f7382bb,9/12/2024,RELUXE Med Spa,Sheri Nichols,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,648.0,0.0,,648.0,0.0
+0ba25953-f12b-5df0-a864-f8c0d03a8eef,9/12/2024,RELUXE Med Spa,Brenda Justak,Hannah Kerns,Morpheus8 Treatment,,,,service,Service,0.0,0.0,,0.0,0.0
+e143c23a-1758-5b8b-8373-e18a23ba7a5b,9/11/2024,RELUXE Med Spa,Miriam O'Malley-Long,Hannah Kerns,Botox ($14/unit),,,,service,Service,48.0,0.0,,48.0,0.0
+a38c642e-f12a-51d4-9828-233837db7ec3,9/11/2024,RELUXE Med Spa,Alexis Luckey,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+8c090965-33b4-540f-90c4-90159eaf3342,9/11/2024,RELUXE Med Spa,Carrie Reiff,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+82af41ea-33f5-5471-ab05-f6021ed08aa3,9/11/2024,RELUXE Med Spa,Alexis Luckey,Hannah Kerns,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+7a8c6d0a-23b1-5ef7-8cc5-b16f2032bff1,9/11/2024,RELUXE Med Spa,Alison Pelletiere,Hannah Kerns,Botox ($14/unit),,,,service,Service,384.0,0.0,,384.0,0.0
+6641e0fa-ebdc-5faf-87d3-6d329eae9efa,9/11/2024,RELUXE Med Spa,Carrie Reiff,Hannah Kerns,Morpheus8 Treatment,,,,service,Service,1100.0,0.0,,1000.0,0.0
+643ee49a-1dcd-5eaa-b7bc-63ebe345e5e2,9/11/2024,RELUXE Med Spa,Miriam O'Malley-Long,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+63d0240a-3d88-587d-b6bb-1b108342175b,9/11/2024,RELUXE Med Spa,Alexis Luckey,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+526a69d8-d4ca-5597-b216-44c9cbd67423,9/11/2024,RELUXE Med Spa,Alison Pelletiere,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+3416ebcf-b7d3-5c45-b677-3440889adcbe,9/11/2024,RELUXE Med Spa,Alexis Luckey,Hannah Kerns,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+29b7dcf7-6021-5826-a49a-ebea25dfe618,9/11/2024,RELUXE Med Spa,Alexis Luckey,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,264.0,0.0,,264.0,0.0
+1317c4c0-99b8-59a3-bfe9-9420360e1b38,9/11/2024,RELUXE Med Spa,Miriam O'Malley-Long,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,460.0,0.0,,460.0,0.0
+d89c2c8c-1e46-568f-9c82-199cbcaceacb,9/10/2024,RELUXE Med Spa,Stephanie Mathes,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+c21f4344-9a9a-5ac8-aee4-7535532c6c3b,9/10/2024,RELUXE Med Spa,Stephanie Mathes,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+0e207c02-754d-552b-92c9-32605ab81bb6,9/10/2024,RELUXE Med Spa,Stephanie Mathes,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+66623ec5-232c-5165-9df5-64b4a5f72373,9/9/2024,RELUXE Med Spa,Ashu Jayaprakasan,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,300.0,0.0
+3e485374-8e62-5b9a-9fd6-949e0bb53eeb,9/9/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+219403b3-ec8a-5cb3-9d80-ba3185dfb732,9/9/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+ef0c1ae1-5fa6-5783-9b7f-77b269703363,9/7/2024,RELUXE Med Spa,Wendy Creech,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+d41e1ca1-b8ca-5880-a08c-2fc02b9fdba4,9/7/2024,RELUXE Med Spa,Wendy Creech,Hannah Kerns,Juvéderm Volbella XC .55 ML (1/2 syringe) ~ lips & under eye,,,,service,Service,410.0,0.0,,410.0,0.0
+b46c2236-8538-5861-919e-be4ecbd89a39,9/7/2024,RELUXE Med Spa,Anna Nelson,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+b1e902bc-3110-5b90-8f4a-0675980dae31,9/7/2024,RELUXE Med Spa,Alicia Elam,Hannah Kerns,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+8383313e-64d1-5402-bf30-ff68a781ed9b,9/7/2024,RELUXE Med Spa,Anna Nelson,Hannah Kerns,Botox ($14/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+608cdaab-61e3-5cfc-8884-0c9823b1ec69,9/7/2024,RELUXE Med Spa,Laura Rummel,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,323.0,0.0,,323.0,0.0
+46667a91-3753-5ba7-ac77-17c8ac9e59e7,9/7/2024,RELUXE Med Spa,Laura Rummel,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f507abd6-2fe0-51a3-a27c-0cce5a3ae2f9,9/6/2024,RELUXE Med Spa,Anne Morris,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c8b4da3d-84f0-5439-bab4-dfffff6e2598,9/6/2024,RELUXE Med Spa,Ally Green,Hannah Kerns,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+a656165c-3d56-53ae-a503-e99621043805,9/6/2024,RELUXE Med Spa,Terri Gilbert,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a4ac1dfe-b766-5796-abf7-5eb29f829482,9/6/2024,RELUXE Med Spa,Hannah Doubet,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+93f9bb0c-0f98-5d1b-80a3-54c31963c106,9/6/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,168.0,-168.0,,0.0,0.0
+8c6f4273-59d2-5398-beda-11858893be2b,9/6/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+564ce8f6-5b57-58a5-a998-1895b6653e54,9/6/2024,RELUXE Med Spa,Maddison Karcz,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+50c2826c-a676-5225-a8ca-1bd5e0ce0bfe,9/6/2024,RELUXE Med Spa,Anne Morris,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,360.0,0.0,,360.0,0.0
+4484cfc4-6770-5582-8e41-2d4d6c6ae75f,9/6/2024,RELUXE Med Spa,Ally Green,Hannah Kerns,Botox ($14/unit),,,,service,Service,216.0,0.0,,216.0,0.0
+382088ab-77bf-5e1a-9409-ee6f5c4d2cdf,9/6/2024,RELUXE Med Spa,Ally Green,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+214523a6-ee70-566c-b091-85e83bd891f6,9/6/2024,RELUXE Med Spa,Maddison Karcz,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,24.0,0.0,,24.0,0.0
+1197d6b7-7752-542c-a04c-a671d922c5cd,9/6/2024,RELUXE Med Spa,Hannah Doubet,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+07d5d360-0696-5b20-9661-9f01be2f9170,9/6/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,Botox ($14/unit),,,,service,Service,456.0,-79.0,,377.0,0.0
+dea83859-52f7-52fc-8f5d-61168b95541a,9/5/2024,RELUXE Med Spa,Sydney Kremer,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+d454afaa-69f7-5d35-9da2-3ab9e3b9618f,9/5/2024,RELUXE Med Spa,Megan Montague,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+ca8f9012-e995-561f-94e3-69693c10677b,9/5/2024,RELUXE Med Spa,Jamie Maynard,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+b6f8eec0-8fa4-5475-8ed2-1658ae74b4f1,9/5/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+b080ff68-20c6-5dd1-b328-04ddf728debd,9/5/2024,RELUXE Med Spa,Jamie Maynard,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+8da62602-54bb-5dc3-8eeb-b76b06a7b734,9/5/2024,RELUXE Med Spa,Sydney Kremer,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+622b7059-3935-55d8-bca0-6f401adf1f0b,9/5/2024,RELUXE Med Spa,Andrea McIntosh,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+54109796-62c5-5238-880f-ade5ce4e3841,9/5/2024,RELUXE Med Spa,Mary Kuhl,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+3b532265-2f0c-58cd-a69d-ba56fd521287,9/5/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+3976771f-7f8d-5f69-8ada-2c32803e003f,9/5/2024,RELUXE Med Spa,Tara Hines,Krista Spalding,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+300588d8-0f3f-55c1-87e4-060aa7286b5e,9/5/2024,RELUXE Med Spa,Sydney Kremer,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,120.0,0.0,,120.0,0.0
+2c0f20f0-fc7b-5e84-92c3-e1633c565f18,9/5/2024,RELUXE Med Spa,Megan Montague,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,480.0,0.0,,480.0,0.0
+26a31857-4250-53f2-8f1d-76b3a0f89a0a,9/5/2024,RELUXE Med Spa,Tara Hines,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+21cb94f7-38c6-531b-a400-d2e1b40c757c,9/5/2024,RELUXE Med Spa,Tara Hines,Krista Spalding,Botox ($14/unit),,,,service,Service,300.0,0.0,,300.0,0.0
+20b26cfa-92f8-5713-ab2c-849c7ad3bf31,9/5/2024,RELUXE Med Spa,Mary Kuhl,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+1ed96163-d0ae-5f1d-94dd-bc500e4838e7,9/5/2024,RELUXE Med Spa,Jamie Maynard,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+1a75aa65-f6c0-5edb-96f3-5f6eee5617b9,9/5/2024,RELUXE Med Spa,Andrea McIntosh,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,320.0,0.0,,320.0,0.0
+0e459e91-1106-57a0-a53e-f202ccbc6877,9/5/2024,RELUXE Med Spa,Andrea McIntosh,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ff4f4f9a-2b35-5605-bc27-9e0320ff2645,9/4/2024,RELUXE Med Spa,Karin Romano,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+f9ac2508-caff-5c76-8248-a58f3d6b158c,9/4/2024,RELUXE Med Spa,Lisa Wilken,Hannah Kerns,Botox ($14/unit),,,,service,Service,72.0,-7.2,,64.8,0.0
+f5128af2-1944-5190-a32a-8e44a73812b0,9/4/2024,RELUXE Med Spa,Tina Williamson,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f0b60a89-44be-5f0a-ae96-0509346e7e7e,9/4/2024,RELUXE Med Spa,Tina Williamson,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,280.0,-280.0,,0.0,0.0
+c19a6358-cd9d-5296-a68b-a7d088184d84,9/4/2024,RELUXE Med Spa,Karin Romano,Hannah Kerns,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+bb66faf8-d178-54ae-97ee-09dca5ba87af,9/4/2024,RELUXE Med Spa,Lisa Wilken,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+7f1f84df-0692-56fe-ad66-90b7abd700df,9/4/2024,RELUXE Med Spa,Laurine Gedemer,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+70788ebd-e6ab-5a2e-9fa1-367c8086e424,9/4/2024,RELUXE Med Spa,Laurine Gedemer,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+2e35e385-9aae-5517-b084-f50c32885c89,9/4/2024,RELUXE Med Spa,Lisa Wilken,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0359199c-4e32-52fd-ba5f-207015a268c3,9/4/2024,RELUXE Med Spa,Tina Williamson,Hannah Kerns,Botox ($14/unit),,,,service,Service,72.0,-72.0,,0.0,0.0
+fa02ff5f-4474-576b-bc83-743e39191200,9/3/2024,RELUXE Med Spa,Stacie Morris,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+f74faf4f-9d3a-56fb-af11-ebba355fb503,9/3/2024,RELUXE Med Spa,Shelley Roettger,Krista Spalding,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+f4ec2d8f-8567-53d3-9af5-ce1d98e3fa9d,9/3/2024,RELUXE Med Spa,Kim Galaviz,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+f30af4cf-bc2d-5e3a-876f-046334fa6fcb,9/3/2024,RELUXE Med Spa,Shelley Roettger,Krista Spalding,Botox ($14/unit),,,,service,Service,60.0,0.0,,60.0,0.0
+ed65a9f3-98de-546f-975b-c711bc332098,9/3/2024,RELUXE Med Spa,Elizabeth Hardisty,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+d8f1e1ae-05de-5643-8a87-d5edfb4ee0c0,9/3/2024,RELUXE Med Spa,Morgan Swallows,Hannah Kerns,Botox ($14/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+d59daeb4-a1ce-5214-9f55-8c102592f35e,9/3/2024,RELUXE Med Spa,Stacie Morris,Krista Spalding,Botox ($14/unit),,,,service,Service,0.0,0.0,,0.0,0.0
+d3d8d6c1-2a62-5d0a-9714-b27f2f735334,9/3/2024,RELUXE Med Spa,Kim Galaviz,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,300.0,0.0,,300.0,0.0
+cf4fe9cd-685a-5c76-bd0a-a54c139d18f0,9/3/2024,RELUXE Med Spa,Heather Norton,Hannah Kerns,Botox ($14/unit),,,,service,Service,168.0,-144.0,,24.0,0.0
+9a7b148c-3f14-5fa2-95a2-12e1da774e95,9/3/2024,RELUXE Med Spa,Morgan Swallows,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+96c12b99-6d5d-5797-b4e7-671f5d7e2662,9/3/2024,RELUXE Med Spa,Michelle Vize,Krista Spalding,$475 for 50 Units Jeuveau,,,,service,Service,427.5,0.0,,427.5,0.0
+82b1a604-63b8-53a7-a952-5317dc73bbee,9/3/2024,RELUXE Med Spa,Elizabeth Hardisty,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+69109df0-09cd-5896-86f1-dad0c23acf15,9/3/2024,RELUXE Med Spa,Kim Galaviz,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5f99b38d-b49d-597b-af01-6967cd1c9375,9/3/2024,RELUXE Med Spa,Shelley Roettger,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+1fa72b7a-df95-59a6-94fc-6de8a3bd9f81,9/3/2024,RELUXE Med Spa,Michelle Vize,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+14aa96a9-9ab9-53d7-8090-eab11f3b01ad,9/3/2024,RELUXE Med Spa,Heather Norton,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+099ad2f3-ef94-5d9d-9a09-0cd9bcbfbd20,9/3/2024,RELUXE Med Spa,Stacie Morris,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+04dc53c5-398a-5bc3-8d72-01e3d80f07d0,9/3/2024,RELUXE Med Spa,Elizabeth Hardisty,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+020aeefc-6d26-516a-818a-c46943921d00,9/3/2024,RELUXE Med Spa,Stacie Morris,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+fd1f638b-487c-5bf4-af18-16e3a8f5f071,8/30/2024,RELUXE Med Spa,Jordan Graham,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,273.34,0.0
+f6f4dedc-36e8-5061-8039-f5c766eacea0,8/30/2024,RELUXE Med Spa,Rachel Colbert,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,465.5,-14.5,,451.0,0.0
+e8e22f88-5474-5fcc-ad23-a32a1dee7a5f,8/30/2024,RELUXE Med Spa,Rachel Colbert,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a41ef9b6-f343-5a1b-97f1-2bcc9590893c,8/30/2024,RELUXE Med Spa,Mary Brown,Hannah Kerns,Filler Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+a2fdd305-9ab7-5aef-a131-863c30b22c57,8/30/2024,RELUXE Med Spa,Jordan Graham,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+938118e7-2dbd-5e19-9e7d-27e1967556ef,8/30/2024,RELUXE Med Spa,Gretchen Kotterman,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+89e4a574-ac98-5388-862e-89c1189eb9ec,8/30/2024,RELUXE Med Spa,Susan Decker,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+81a4c10c-4c6f-5b6e-9c87-8f39f195daea,8/30/2024,RELUXE Med Spa,Mary Brown,Hannah Kerns,Botox ($14/unit),,,,service,Service,192.0,0.0,,192.0,0.0
+68e661d1-5069-5416-9b8b-51867b969b19,8/30/2024,RELUXE Med Spa,Brandi Severns,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,1152.0,0.0,,1152.0,0.0
+55d5e5fd-a984-5e3d-b550-5bf4085581e1,8/30/2024,RELUXE Med Spa,Mary Brown,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+38aa7b1b-5ff1-5cd8-9e71-471d48d672bb,8/30/2024,RELUXE Med Spa,Brandi Severns,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+2b2c80e0-466e-56e0-b26d-4f27bcc86588,8/30/2024,RELUXE Med Spa,Jordan Graham,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,456.0,0.0,,456.0,0.0
+28df2a0a-e530-5d7a-bf21-ae12081ac87a,8/30/2024,RELUXE Med Spa,Mary Brown,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+24a85c7f-085f-5e08-affa-867d2b97162d,8/30/2024,RELUXE Med Spa,Susan Decker,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,285.0,-50.0,,235.0,0.0
+1210d7d1-6fe7-5232-9636-87d9687f201e,8/30/2024,RELUXE Med Spa,Gretchen Kotterman,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+e5afe2f8-032e-5f57-8e73-235388dc8493,8/29/2024,RELUXE Med Spa,Abby Prather,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+dfc85016-292a-5c32-8346-c82fbf7ea256,8/29/2024,RELUXE Med Spa,Bridget Owens,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+d0b28fe4-25ef-560a-9a1a-e2124c13b1c6,8/29/2024,RELUXE Med Spa,Lauren Beck,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+b26ba3e6-3576-5c7c-b557-861f10eeba0a,8/29/2024,RELUXE Med Spa,Lauren Beck,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+8ad0f0d2-d041-5ec5-8f98-7a44abdadb58,8/29/2024,RELUXE Med Spa,Lauren Beck,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+36c38bcb-d72c-587c-9a42-de31c30d4f18,8/29/2024,RELUXE Med Spa,Emily Imel,Krista Spalding,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+2e34aa34-e906-56ce-b004-dc9db53f11d9,8/29/2024,RELUXE Med Spa,Emily Imel,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+16ba714e-bbab-5feb-a5c0-eec6a8c38cd3,8/29/2024,RELUXE Med Spa,Bridget Owens,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+14bd54a6-3c91-558b-b650-5f379b583846,8/29/2024,RELUXE Med Spa,Abby Prather,Krista Spalding,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+cdc98349-4b27-5822-86f8-73d0dcc37dcb,8/28/2024,RELUXE Med Spa,Tessa Kopnisky,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+bb554dac-7fbc-555c-984b-bf349d546263,8/28/2024,RELUXE Med Spa,Shelly Tragesser,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+83130c16-b3c5-5779-b7cb-4c3ab4f12ac2,8/28/2024,RELUXE Med Spa,Tessa Kopnisky,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,192.0,-25.0,,167.0,0.0
+47159750-3c38-578f-ad5c-8405b95498ab,8/28/2024,RELUXE Med Spa,Tessa Kopnisky,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+373524dd-ebf7-50b7-9b16-b5c7bc430459,8/28/2024,RELUXE Med Spa,Shelly Tragesser,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+2f1bf187-0519-5142-8561-a9f692d1d9c7,8/28/2024,RELUXE Med Spa,Sarah Hall,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+0821e512-947f-55ab-bdf7-a697e3def753,8/28/2024,RELUXE Med Spa,Sarah Hall,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+f5a0f86e-b855-5668-8461-40f34cbbc9ec,8/27/2024,RELUXE Med Spa,Rebecca Hicks,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,432.0,0.0,,432.0,0.0
+e69e76c8-878d-5f33-b78d-dc611e093eec,8/27/2024,RELUXE Med Spa,Bobbi Shellabarger,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d5ea5c56-34e5-587a-b12c-ce0112a098ec,8/27/2024,RELUXE Med Spa,Bobbi Shellabarger,Hannah Kerns,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,800.0,-75.0,,725.0,0.0
+d220e9c6-00e4-5700-8141-bbb69de5f094,8/27/2024,RELUXE Med Spa,Rebecca Hicks,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a4fe2342-931d-5826-82ca-6fa8a725d4ff,8/27/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+a0dd3f8c-1fb7-5438-a6fd-506a8b92bf73,8/27/2024,RELUXE Med Spa,Rebecca Hicks,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+96be53ee-c5ec-53af-9fa7-e29b6ad37a6f,8/27/2024,RELUXE Med Spa,Irma Kincaide,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+62f02153-a4c0-5477-bdd9-4a5b89d41a99,8/27/2024,RELUXE Med Spa,Bobbi Shellabarger,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+4d6d228f-4ba0-560c-92b9-92da65af8a1a,8/27/2024,RELUXE Med Spa,Bobbi Shellabarger,Hannah Kerns,Botox ($14/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+3fd5a556-b5eb-5cfa-bfee-89dc9c949b44,8/27/2024,RELUXE Med Spa,Irma Kincaide,Hannah Kerns,Botox ($14/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+133def55-034a-59f3-b519-b333340cdb67,8/27/2024,RELUXE Med Spa,Bobbi Shellabarger,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+0b714204-0e40-55fc-a418-4c59ff8c30be,8/27/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,RHA 4,,,,service,Service,650.0,-50.0,,600.0,0.0
+e39a8d6a-297c-58ef-9dab-ad86cd6a543a,8/26/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+d82e6309-7d36-5784-9a29-50e46268e089,8/26/2024,RELUXE Med Spa,Tina Robinson,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,528.0,0.0,,528.0,0.0
+642d7882-ef96-5ffd-9222-49f88bfc1c00,8/26/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,100.0,0.0,,100.0,0.0
+5b11bda5-3397-5e66-862c-f18cd2afcb51,8/26/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+2bed98cf-be72-547e-973c-41c9b527c308,8/26/2024,RELUXE Med Spa,Tina Robinson,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+279d5113-36ef-5459-964f-2ca4766467ee,8/26/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+23c5bfc6-0cb2-5ca9-a2a1-a48cc631644e,8/26/2024,RELUXE Med Spa,Tina Robinson,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d0504737-e4ff-562b-a41d-36a892203cfa,8/24/2024,RELUXE Med Spa,Lindsey Bruce,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+4769360f-c8ef-559e-8921-b418cfa4fab1,8/24/2024,RELUXE Med Spa,Lindsey Bruce,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,450.0,0.0,,450.0,0.0
+f65c76bd-4a9c-5876-a3bb-a86353db7b94,8/23/2024,RELUXE Med Spa,Israa Bukhari,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+f650c6d3-3159-5ca6-b624-1f0d9ca8c420,8/23/2024,RELUXE Med Spa,Hannah Doubet,Hannah Kerns,Botox ($14/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+dda3308f-a12b-58dd-a2f9-807ca99d3812,8/23/2024,RELUXE Med Spa,Jill Henderson,Krista Spalding,Lip Flip (Neuromodulator) Botox,,,,service,Service,100.0,0.0,,100.0,0.0
+dc74077f-2ce8-5015-9646-ba07c932ecea,8/23/2024,RELUXE Med Spa,Matt King,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+dbce173d-2112-5739-a8c6-ceefe8597bb5,8/23/2024,RELUXE Med Spa,Israa Bukhari,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+dba211b4-fe78-50c7-8a48-37a19b8c3e2d,8/23/2024,RELUXE Med Spa,Angelica Estrada,Hannah Kerns,REBALANCE by RELUXE: Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+d852a93b-b96f-5b8f-8e6d-8d2e60b22466,8/23/2024,RELUXE Med Spa,Jodona Young,Hannah Kerns,Botox ($14/unit),,,,service,Service,288.0,0.0,,288.0,0.0
+d5e843af-cdaf-5c91-9ae3-7eae26767e1c,8/23/2024,RELUXE Med Spa,Sarah Vas,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d5b1f795-f137-5fb8-aa25-341b412ad9f3,8/23/2024,RELUXE Med Spa,Maddison Karcz,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d39ae74e-7f4b-586e-b09a-b1783d94bcc6,8/23/2024,RELUXE Med Spa,Maddison Karcz,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+c974e8c6-5b81-5cdd-9378-558984f89919,8/23/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c7164b32-9ba5-5d6d-8d8d-a22331e1f09e,8/23/2024,RELUXE Med Spa,Matt King,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+bea7dd47-e2bd-5f3c-8d55-7858e950327c,8/23/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,3200.0,-1600.0,,1600.0,0.0
+bba2ff22-a103-5283-843e-003354c9f8cd,8/23/2024,RELUXE Med Spa,Melissa Zofchak,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ae9adf3b-81de-5557-a5f3-4dc3fffac399,8/23/2024,RELUXE Med Spa,Michelle Baxter,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+a8621e9f-3c21-59bd-8769-efc48f85622d,8/23/2024,RELUXE Med Spa,Jodona Young,Hannah Kerns,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+a776236a-98fc-50ab-9f7d-d1ea5fc9fbe3,8/23/2024,RELUXE Med Spa,Jana DeSapio,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+a772d75f-2eaf-5428-8a4a-47b33a5a6f92,8/23/2024,RELUXE Med Spa,Minerva Barger,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+942f5a40-647b-5d2e-8421-633c44ec5961,8/23/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+93956be6-cf48-5d42-899d-7706bd39ee33,8/23/2024,RELUXE Med Spa,Matt King,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+917cd594-8751-5a03-af7e-be09e6f4272c,8/23/2024,RELUXE Med Spa,Jill Henderson,Krista Spalding,Botox ($14/unit),,,,service,Service,180.0,0.0,,180.0,0.0
+91163124-1860-5956-bd04-0b0e23897936,8/23/2024,RELUXE Med Spa,Jill Henderson,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+8f6db85a-dfce-5258-bd94-f6215be0bc91,8/23/2024,RELUXE Med Spa,Jodona Young,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+8d3359b4-165c-5fe4-af31-345f2d767305,8/23/2024,RELUXE Med Spa,Maddison Karcz,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+8cf6849e-204c-537f-9cbd-d3be8565df52,8/23/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,Dysport ($3.95/unit Member Pricing),,,,service,Service,420.0,0.0,,420.0,0.0
+8cca804a-10ab-5ca8-94ec-4a9c2a1c158f,8/23/2024,RELUXE Med Spa,Emily Fisher,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+7e60437b-6824-519d-b309-6722c1cdb1b7,8/23/2024,RELUXE Med Spa,Minerva Barger,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,540.0,0.0,,540.0,0.0
+5eab83b4-50e5-50d0-bcf1-847290657472,8/23/2024,RELUXE Med Spa,Sharon Lewis,Krista Spalding,Juvéderm Volbella XC .55 ML (1/2 syringe) ~ lips & under eye,,,,service,Service,820.0,-450.0,,370.0,0.0
+27fd8e57-dc8e-52c5-9a50-7fea6f916ffa,8/23/2024,RELUXE Med Spa,Melissa Zofchak,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+188abcff-584c-5347-9219-bcfded46fd69,8/23/2024,RELUXE Med Spa,Emily Fisher,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+15b78d17-bed0-55e6-a01d-d69e5ca89fbe,8/23/2024,RELUXE Med Spa,Melissa Zofchak,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,192.0,0.0,,192.0,0.0
+0712b2fc-7db6-5fe9-94ac-ffabb90e139f,8/23/2024,RELUXE Med Spa,Hannah Doubet,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+03232ced-b84d-5bdf-b0ca-d96684203658,8/23/2024,RELUXE Med Spa,Jana DeSapio,Hannah Kerns,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+fc3607c7-a640-5b42-9178-09f7ae441164,8/22/2024,RELUXE Med Spa,Jennifer Cassady,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+fbfad488-acc2-53a2-911e-e9519543c44e,8/22/2024,RELUXE Med Spa,Barry Lacey,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,312.0,0.0,,312.0,0.0
+e1e7d884-2d3e-55ad-b158-005b44aa6f00,8/22/2024,RELUXE Med Spa,Mary Kuhl,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+cd133232-cff3-5cba-a2e1-790fca01a3ad,8/22/2024,RELUXE Med Spa,Barry Lacey,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c5596cf8-3837-5df3-acc2-2a17e64971dd,8/22/2024,RELUXE Med Spa,Kara Horniacek,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+b9371dce-ed54-57c4-968e-781fb62c32ee,8/22/2024,RELUXE Med Spa,Jamie Rowles,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,264.0,0.0,,264.0,0.0
+a1db31d7-c202-5d62-ab9c-2881ed31f68b,8/22/2024,RELUXE Med Spa,Jamie Rowles,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+a1972b6f-44b9-5b95-8fed-16283253e8c7,8/22/2024,RELUXE Med Spa,Barry Lacey,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+9df2b698-bc83-5193-bda7-7839d9580d3f,8/22/2024,RELUXE Med Spa,Hannah Lucas,Krista Spalding,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+8588f3d2-0a92-574a-95aa-aabc62107899,8/22/2024,RELUXE Med Spa,Anna Dawson,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,-36.0,,324.0,0.0
+852ae7a3-1970-5a05-aaed-b5654ef00261,8/22/2024,RELUXE Med Spa,Jennifer Cassady,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,72.0,-7.2,,64.8,0.0
+80d6b4bf-aa37-55c3-a520-1732ab955e88,8/22/2024,RELUXE Med Spa,Mary Kuhl,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6f489645-efa1-5d98-98af-0f57148bf1b6,8/22/2024,RELUXE Med Spa,Hannah Lucas,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+6d11f4f8-a3b2-5a24-8a95-bdf4b5fa989e,8/22/2024,RELUXE Med Spa,Mary Kuhl,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+3a0b8855-a5f2-5e01-8772-8a310755564e,8/22/2024,RELUXE Med Spa,Anna Dawson,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1a3531fa-751c-5fbb-9e2e-0dcc90430a74,8/22/2024,RELUXE Med Spa,Jamie Rowles,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+1769d7c9-530d-53b4-a18a-a7e8e3cfa84f,8/22/2024,RELUXE Med Spa,Erica Watson,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1175faef-dbec-558e-89af-c9d419f79b9d,8/22/2024,RELUXE Med Spa,Hannah Lucas,Krista Spalding,Botox ($14/unit),,,,service,Service,264.0,0.0,,264.0,0.0
+02756ef1-60b9-58af-9d84-8e0e545b16a3,8/22/2024,RELUXE Med Spa,Anna Dawson,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+ed8fdd96-c863-5675-a18d-b09bdc8df06d,8/21/2024,RELUXE Med Spa,Joy Cobb,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d9cecfa4-e12d-5a8b-a344-9c709582d852,8/21/2024,RELUXE Med Spa,Sommer Redmon,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+b9411ae0-ac81-5143-917a-743b9afeee87,8/21/2024,RELUXE Med Spa,Sommer Redmon,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+aa0f7965-df90-5b0e-94e8-3c0e4f86ca8e,8/21/2024,RELUXE Med Spa,Sommer Redmon,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6f19c654-f1cb-578c-96b6-131b64ffff83,8/21/2024,RELUXE Med Spa,Joy Cobb,Hannah Kerns,Morpheus8 Treatment,,,,service,Service,1500.0,-1100.0,,400.0,0.0
+49509cb6-34fd-53e5-97da-ffd7817ce4d8,8/21/2024,RELUXE Med Spa,Joy Cobb,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+82860f52-3ab9-546d-8546-ba68eba7b967,8/20/2024,RELUXE Med Spa,Karin Romano,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+1e565d70-f86e-5174-a964-16c5eec76a49,8/20/2024,RELUXE Med Spa,Karin Romano,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0882ae81-2a24-5b0f-a278-fc5129879cdd,8/20/2024,RELUXE Med Spa,Karin Romano,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,456.0,0.0,,456.0,0.0
+fa728331-9ca5-5844-b2db-127b18f57492,8/19/2024,RELUXE Med Spa,Mia Wallace,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+cb861349-69bc-5991-a44f-ee77447e321f,8/19/2024,RELUXE Med Spa,Mia Wallace,Hannah Kerns,Botox ($14/unit),,,,service,Service,264.0,0.0,,264.0,0.0
+c893a6e9-2948-51a5-a080-fdfc5ca66492,8/19/2024,RELUXE Med Spa,Laurine Gedemer,Hannah Kerns,Botox ($14/unit),,,,service,Service,888.0,0.0,,888.0,0.0
+4b3a5894-1cda-5fe8-bcc0-7a68ea4cc534,8/19/2024,RELUXE Med Spa,Laurine Gedemer,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ffe4a7a2-95f8-5f10-9a72-6fb7ffb88d47,8/16/2024,RELUXE Med Spa,Megan Pino,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,480.0,0.0,,480.0,0.0
+f43abae5-dcf5-5877-ae7b-40366850a2cb,8/16/2024,RELUXE Med Spa,Andie Bleyle,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+dd7f21a0-c42a-5a2a-a750-86449074940e,8/16/2024,RELUXE Med Spa,Nicole Echols,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,72.0,0.0,,72.0,0.0
+d2551da4-7c60-5983-9785-39d7403b60a6,8/16/2024,RELUXE Med Spa,Kasey Denton,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+d1f39d9c-4051-5f4c-ab9f-46314a99f99b,8/16/2024,RELUXE Med Spa,Kasey Denton,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+c372427c-b39f-5327-a2a8-0c388a7c8c8b,8/16/2024,RELUXE Med Spa,Kim Clevenger,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+a57864c4-61d8-5043-9015-de2cb504d0a5,8/16/2024,RELUXE Med Spa,Kim Clevenger,Krista Spalding,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+a092c985-2ce6-5232-bd32-7a6e063894e5,8/16/2024,RELUXE Med Spa,Andie Bleyle,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+96f0793c-b1c9-5b0a-9190-3740249e347e,8/16/2024,RELUXE Med Spa,Nicole Echols,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6d86fc52-d242-5ff4-a4f6-74a1597380a9,8/16/2024,RELUXE Med Spa,Nicole Echols,Krista Spalding,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+57185754-dfda-52ea-b76b-486acc682161,8/16/2024,RELUXE Med Spa,Megan Pino,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5608299b-e187-5033-a4f0-2562f565ec27,8/16/2024,RELUXE Med Spa,Andie Bleyle,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,300.0,-25.0,,275.0,0.0
+3d8fab46-b7ac-59bf-b9bb-41bdba2cf818,8/16/2024,RELUXE Med Spa,Nicole Echols,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+3424b4d0-9971-5c48-9450-b66083989f33,8/16/2024,RELUXE Med Spa,Shay Eddins,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+27a14b8a-c7fb-5f6b-94c8-6e3f67a8a1d9,8/16/2024,RELUXE Med Spa,Shay Eddins,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+2199d6e6-be74-593d-8fd7-edd48fe9ebfc,8/16/2024,RELUXE Med Spa,Megan Pino,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+08d7496a-4fb2-5d3e-b18b-591e54b64b23,8/16/2024,RELUXE Med Spa,Shay Eddins,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+facfdd60-91a6-5414-aecf-ec580f2c700d,8/15/2024,RELUXE Med Spa,Brenda Justak,Hannah Kerns,Botox ($14/unit),,,,service,Service,72.0,0.0,,72.0,0.0
+f86aaa81-96f6-57a5-8b2e-fa38ae6b07d9,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f4905304-b888-5fdf-8a19-7ac7c92c7822,8/15/2024,RELUXE Med Spa,Abby Prather,Krista Spalding,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+f310e2b2-ea4a-5c59-a76b-dcef4e6e28a9,8/15/2024,RELUXE Med Spa,Deea Breeden,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+f28c888a-e414-50fa-8690-0f0940a07d39,8/15/2024,RELUXE Med Spa,Brittany Stubblefield,Krista Spalding,Botox ($14/unit),,,,service,Service,396.0,0.0,,396.0,0.0
+ed801150-25c7-5866-81ff-b289d3c9bc3a,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,-825.0,,0.0,0.0
+ebe68125-9430-50e8-a6d5-621585439980,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,Versa & Lips,,,,service,Service,650.0,-50.0,,600.0,0.0
+e6001db3-de8d-5e4e-845d-9e8bd811fe4c,8/15/2024,RELUXE Med Spa,Laura Brantner-Cordova,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c9c4cef1-8fdf-55a8-96b4-0ac349ce5dbd,8/15/2024,RELUXE Med Spa,Lily Jones,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,300.0,0.0
+c55d6ec0-3cda-564b-b37f-91907a7d0386,8/15/2024,RELUXE Med Spa,Gretchen Kotterman,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c3e49d51-df7e-5669-adc7-1447b918d31a,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+c3667b93-81cc-561c-9692-7199a242335b,8/15/2024,RELUXE Med Spa,Brittany Stubblefield,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+bc9450b0-64bd-5164-8971-d7c425a73c9e,8/15/2024,RELUXE Med Spa,Paula Bird,Krista Spalding,Botox ($14/unit),,,,service,Service,720.0,0.0,,720.0,0.0
+bb69907c-f0c2-56eb-9c12-6a70b42d1730,8/15/2024,RELUXE Med Spa,Emily Rizek,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+ade01963-cf6a-5162-a244-e2487833a8ce,8/15/2024,RELUXE Med Spa,Gretchen Kotterman,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,420.0,0.0,,420.0,0.0
+a8c14e29-cbf9-551a-9b48-ed7965e98728,8/15/2024,RELUXE Med Spa,Bridget Owens,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a30e35fe-5184-5466-99a6-be0311a9a0cd,8/15/2024,RELUXE Med Spa,Laura Brantner-Cordova,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,480.0,0.0,,480.0,0.0
+a28f4229-297e-545b-9868-54030244359f,8/15/2024,RELUXE Med Spa,Laura Brantner-Cordova,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+9564f459-b6fe-52b3-bc6a-97dc0162afcf,8/15/2024,RELUXE Med Spa,Brenda Justak,Hannah Kerns,Morpheus8 Treatment,,,,service,Service,0.0,0.0,,0.0,0.0
+8cb2c537-dc71-5147-819f-233cc49c2b0c,8/15/2024,RELUXE Med Spa,Bridget Owens,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+8a616967-8356-5495-914b-82d6f18db19c,8/15/2024,RELUXE Med Spa,Gretchen Kotterman,Krista Spalding,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+89d500b9-b22e-5be6-bb43-ca090b947332,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+8794697b-51e9-5675-a15c-c90903a957c4,8/15/2024,RELUXE Med Spa,Jacqueline Waite,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+8739326d-e3cb-5b6c-b1b1-7e7f0e3f77fe,8/15/2024,RELUXE Med Spa,Deea Breeden,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+84096105-ee6e-55ed-979a-9414865c3deb,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+7cbeca4e-a1ef-5fe7-be5b-931640293279,8/15/2024,RELUXE Med Spa,Abby Prather,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+7aeac63c-a74e-5e28-a534-aec8727e295a,8/15/2024,RELUXE Med Spa,Brenda Justak,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+74f58f87-7237-5087-b697-493ef4be6ba5,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,0.0,,825.0,0.0
+6dd01841-9894-59c8-a188-5c034fd7fb6f,8/15/2024,RELUXE Med Spa,Berklyn Root,Krista Spalding,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+6b555750-327c-51f0-a732-77e472fabf6e,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,0.0,,825.0,0.0
+616e9ff6-b30c-5352-917e-2bc085b63b59,8/15/2024,RELUXE Med Spa,Deea Breeden,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+60cd4c3b-1b35-558f-8b7f-37da585bf685,8/15/2024,RELUXE Med Spa,Paula Bird,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+56fa6d1b-d985-5bc3-af5d-ee5a9d7c1a27,8/15/2024,RELUXE Med Spa,Abby Prather,Krista Spalding,Botox ($14/unit),,,,service,Service,240.0,-24.0,,216.0,0.0
+41ce2c34-9065-55ff-bdfa-3e7b578b6f2a,8/15/2024,RELUXE Med Spa,Kalee Hobbs,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+3bf440f7-2ae9-5bfa-bf91-c44c116f3c3c,8/15/2024,RELUXE Med Spa,Lonnie Madison,Krista Spalding,Botox ($14/unit),,,,service,Service,480.0,-120.0,,360.0,0.0
+38a20ece-ae2b-53e0-9fff-caee71301663,8/15/2024,RELUXE Med Spa,Brittany Stubblefield,Krista Spalding,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+3670edf0-53db-5420-be26-61b82ef79d8f,8/15/2024,RELUXE Med Spa,Abby Prather,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+34c5e678-4c3b-5e30-9bbf-68533036dcc9,8/15/2024,RELUXE Med Spa,Emily Rizek,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+285e40e8-7986-543e-ba89-dd42b0d45869,8/15/2024,RELUXE Med Spa,Brenda Justak,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+258653e7-93ba-538a-97a6-ca28e4167404,8/15/2024,RELUXE Med Spa,Gretchen Kotterman,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+2068022a-f184-5a1a-a514-a339129955a8,8/15/2024,RELUXE Med Spa,Brenda Justak,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1968f66d-da2d-5424-a36a-00bad0a76992,8/15/2024,RELUXE Med Spa,Jacqueline Waite,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,360.0,0.0,,360.0,0.0
+17c30457-4312-55da-b22c-568755937819,8/15/2024,RELUXE Med Spa,Kalee Hobbs,Krista Spalding,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+15f69c81-1eaa-5f45-ae94-bb056fd0164d,8/15/2024,RELUXE Med Spa,Kalee Hobbs,Krista Spalding,Botox ($14/unit),,,,service,Service,84.0,-84.0,,0.0,0.0
+11208742-4e96-5aea-a2d2-dfb92ca128f4,8/15/2024,RELUXE Med Spa,Bridget Owens,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+fc7987b8-61ed-56c5-b25f-f5f9c14eafe1,8/14/2024,RELUXE Med Spa,Jeff Beatty,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f723afc1-8896-59df-a3e3-c5506d3b5d3c,8/14/2024,RELUXE Med Spa,Jeff Beatty,Hannah Kerns,Botox ($14/unit),,,,service,Service,60.0,0.0,,60.0,0.0
+d2745f7e-804f-54db-808a-1756b75da2ae,8/14/2024,RELUXE Med Spa,Melinda Rowan,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+32ab3bde-fa7a-5e90-9ecd-6108a3a4dd89,8/14/2024,RELUXE Med Spa,Jeff Beatty,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+1a3a61d9-5d2c-505c-8ca9-eff86998340b,8/13/2024,RELUXE Med Spa,Amy Gallagher,Krista Spalding,REBALANCE by RELUXE: Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+d646b888-9607-5397-a1c2-58736d662549,8/12/2024,RELUXE Med Spa,Christine Reeder,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+a9a4a6f4-a42c-515d-bec3-614be6b7528e,8/12/2024,RELUXE Med Spa,Amanda Adkins,Hannah Kerns,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+9b78f9f0-c4f9-5245-a477-aeff484229b5,8/12/2024,RELUXE Med Spa,Amanda Adkins,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+6b86021e-c684-5fc6-85e1-4e0b64b37e6d,8/12/2024,RELUXE Med Spa,Stephanie Miller,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+5aba576f-c478-5d38-b812-b9d9af922a4a,8/12/2024,RELUXE Med Spa,Ryan Prendergast,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+3df65bbe-0ea7-5efa-9ba9-873e7cbbd371,8/12/2024,RELUXE Med Spa,Christine Reeder,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+19eae6aa-e072-57e6-8bd6-f6f710162019,8/12/2024,RELUXE Med Spa,Ryan Prendergast,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,250.0,0.0,,250.0,0.0
+ad65ed34-1865-59e8-8f64-6cc732f26c8f,8/10/2024,RELUXE Med Spa,Deborah Reeves,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+7e66318b-990e-5e0f-9633-9b3e366605c1,8/10/2024,RELUXE Med Spa,Deborah Reeves,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,456.0,-25.0,,431.0,0.0
+76818717-afde-510f-b0d4-b6f7185a9673,8/10/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+73e9ad35-0a57-5611-b413-93ae4f87b5c2,8/10/2024,RELUXE Med Spa,Deborah Reeves,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+70676453-e1c1-5b7c-8ecb-68ed5e72f063,8/10/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,RHA 1,,,,service,Service,2000.0,0.0,,2000.0,0.0
+2edcb1c7-5e21-5ebb-8d80-2aae5b63fe3d,8/10/2024,RELUXE Med Spa,Deborah Reeves,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+1b1b4373-8839-517a-a3ab-a1d5acbd859d,8/10/2024,RELUXE Med Spa,Deborah Reeves,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+ff279c46-f11f-59af-abda-6779aac5a637,8/9/2024,RELUXE Med Spa,Kim Read,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,68.0,-68.0,,0.0,0.0
+f7df72d5-94d0-5f81-9a92-40f2ac2fb280,8/9/2024,RELUXE Med Spa,Mariah Zingarelli,Hannah Kerns,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+f6f1d60a-c154-5eb0-b5e2-3b6029bdf844,8/9/2024,RELUXE Med Spa,Emily Fisher,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ee96d8f4-0922-5da3-b1e4-4b31e03c30ea,8/9/2024,RELUXE Med Spa,Jana DeSapio,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+c5be9879-94fe-5fd9-8e8f-86d837217ccd,8/9/2024,RELUXE Med Spa,Emily Fisher,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+c4fe4608-decd-5670-9d8f-a6db1032feac,8/9/2024,RELUXE Med Spa,Kim Read,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+b6eea9fa-738d-5111-9e8b-e6dd4b81da98,8/9/2024,RELUXE Med Spa,Emily Dodd,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a0448ca3-56fa-5749-b6fb-239d656cd0e4,8/9/2024,RELUXE Med Spa,Tonya Fox,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+78822045-5185-5c88-a39f-315f56202d8d,8/9/2024,RELUXE Med Spa,Brooke Sampsel,Krista Spalding,Botox ($14/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+7499f81c-16f1-5f0e-bb3d-156a0bce228f,8/9/2024,RELUXE Med Spa,Emily Dodd,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,288.0,0.0,,288.0,0.0
+69d70318-d4b6-5f1a-8079-d2f2088457a5,8/9/2024,RELUXE Med Spa,Emily Fisher,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+66db8bd9-894c-5d81-b20b-96ff4d239c47,8/9/2024,RELUXE Med Spa,Mariah Zingarelli,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,560.0,-196.0,,364.0,0.0
+5abee48c-11dd-57a9-a4a3-049403c2a0c6,8/9/2024,RELUXE Med Spa,Jana DeSapio,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+4a7b798a-d1b9-5d58-81d3-0442c159a035,8/9/2024,RELUXE Med Spa,Jana DeSapio,Hannah Kerns,Lip Flip (Neuromodulator) Botox,,,,service,Service,100.0,0.0,,100.0,0.0
+4912ac08-c519-5ddc-8185-ad6468ee7e8b,8/9/2024,RELUXE Med Spa,Michelle Baxter,Krista Spalding,Dysport ($3.95/unit Member Pricing),,,,service,Service,340.0,-340.0,,0.0,0.0
+39b10f36-1b65-5cc3-8de0-15c060ac3111,8/9/2024,RELUXE Med Spa,Jana DeSapio,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+35765609-5a59-5669-a578-1086857df5a7,8/9/2024,RELUXE Med Spa,Tonya Fox,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+1de20c53-0308-502a-8456-4645ae44b242,8/9/2024,RELUXE Med Spa,Kristy Swart,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+128b9fae-9dcc-5ac0-9870-607b8e441dde,8/9/2024,RELUXE Med Spa,Michelle Baxter,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0ce099e8-e34b-502d-b288-d52e09fe9c90,8/9/2024,RELUXE Med Spa,Brooke Sampsel,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+e5b8e5f0-8421-5643-81b9-1ddbbe7e1c5a,8/8/2024,RELUXE Med Spa,Bri LaReau,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+d2aa874c-46bd-52ee-a648-13554bc3600d,8/8/2024,RELUXE Med Spa,Bri LaReau,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+71d13456-3120-58b7-8e63-aa2ddee53aa1,8/8/2024,RELUXE Med Spa,Sarah Hall,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5b283a27-a7ba-5b8f-b934-b12dc56ccfe5,8/8/2024,RELUXE Med Spa,Sarah Hall,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+5981d77d-0a2d-5c5b-bd55-2a599cbb8994,8/8/2024,RELUXE Med Spa,Sarah Hall,Hannah Kerns,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+56c02d39-333c-57e2-aa2f-a89fa42d044d,8/8/2024,RELUXE Med Spa,Sarah Hall,Hannah Kerns,Botox ($14/unit),,,,service,Service,24.0,0.0,,24.0,0.0
+280c75ec-bd89-5a25-9e81-3a700c6aa552,8/8/2024,RELUXE Med Spa,Bri LaReau,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,384.0,0.0,,384.0,0.0
+e7fef500-da38-5f4b-aa68-f04848a2993f,8/7/2024,RELUXE Med Spa,Chelsea Price,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ab06c7db-7859-5d13-aa9f-dd41e44291b7,8/7/2024,RELUXE Med Spa,Chelsea Price,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+44f04c86-9157-5db7-9b25-6606276c07b9,8/7/2024,RELUXE Med Spa,Lisa VanZee,Hannah Kerns,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+0ca82d84-7014-5cef-b19e-2d6cdd6f1e0f,8/7/2024,RELUXE Med Spa,Chelsea Price,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,72.0,0.0,,72.0,0.0
+0175bb1e-a96c-5f5f-b458-42b63af0c47e,8/7/2024,RELUXE Med Spa,Laurine Gedemer,Hannah Kerns,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+f0bb29e4-68c9-54ba-83f3-055e7eba38e0,8/6/2024,RELUXE Med Spa,Carly Munroe,Krista Spalding,$179 for 20 Units Jeuveau,,,,service,Service,179.0,0.0,,179.0,0.0
+efe110f9-7b41-5ef4-b60e-99f4b3af336d,8/6/2024,RELUXE Med Spa,Stephanie Stern,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,270.0,0.0,,270.0,0.0
+bba7ff9a-7143-5309-9b6d-1ade414586ac,8/6/2024,RELUXE Med Spa,Lacy Clark,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a86abe53-0937-55f5-9e18-aa5333783275,8/6/2024,RELUXE Med Spa,Carrie Mattingly,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+a5fe01f2-5878-5f5f-bf75-43464aaf2935,8/6/2024,RELUXE Med Spa,Lacy Clark,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,500.0,0.0,,500.0,0.0
+95a38d6a-b251-53a1-a9f2-db766b9ba43b,8/6/2024,RELUXE Med Spa,Alex Cowlin,Hannah Kerns,Filler Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+7e758f53-0729-57e5-9395-b8a8bf8bca8e,8/6/2024,RELUXE Med Spa,Stephanie Miller,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6af693da-77b5-5b8e-8c29-4a798c292cf7,8/6/2024,RELUXE Med Spa,Carrie Mattingly,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+672cdb30-81d4-5af0-b79a-9c45736d518a,8/6/2024,RELUXE Med Spa,Lily Jones,Hannah Kerns,SkinPen Microneedling Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+62bc9d1d-efbd-54ec-8612-feaca188fcf0,8/6/2024,RELUXE Med Spa,Carly Munroe,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5f8f9764-3066-528f-9c6c-61baa9725042,8/6/2024,RELUXE Med Spa,Stephanie Stern,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1242e258-1676-5e5c-ae9f-fea25129d151,8/6/2024,RELUXE Med Spa,Stephanie Miller,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+0d344213-7a1a-5836-9961-9bbd126d64bb,8/6/2024,RELUXE Med Spa,Carrie Mattingly,Hannah Kerns,Botox ($14/unit),,,,service,Service,240.0,-40.0,,200.0,0.0
+fd8c3054-c9d0-5757-a928-861f5b103493,8/2/2024,RELUXE Med Spa,Kim McGuire,Hannah Kerns,Botox ($14/unit),,,,service,Service,1164.0,-1164.0,,0.0,0.0
+f6810fa6-8eb6-5113-ba6d-b0f39eed65f8,8/2/2024,RELUXE Med Spa,Evan Robbins,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+eddca6b0-15de-578f-89c3-c5534d0707bc,8/2/2024,RELUXE Med Spa,Kasey Denton,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+d967adca-7835-5cd3-8c5f-f900bb22fe6d,8/2/2024,RELUXE Med Spa,Gene Miller,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d7a898af-9c13-5e6d-abf1-6e75f115f746,8/2/2024,RELUXE Med Spa,Kasey Denton,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ca6612ae-8b40-55cb-a26d-a31bcddc600a,8/2/2024,RELUXE Med Spa,Gene Miller,Hannah Kerns,Botox ($14/unit),,,,service,Service,768.0,-192.0,,576.0,0.0
+ac72ff41-2ce0-5289-b910-f42b2c54a308,8/2/2024,RELUXE Med Spa,Claire Clapp,Hannah Kerns,Botox ($14/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+aab5a171-2dbb-5c15-95bb-0c0eb79524d6,8/2/2024,RELUXE Med Spa,Anna Leonov,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+aa53daca-b234-5637-baa4-3771d0aa5c3f,8/2/2024,RELUXE Med Spa,Emily Rizek,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a966a8d9-2691-53f4-b843-a02f34a531de,8/2/2024,RELUXE Med Spa,Claire Clapp,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a77dd902-a799-5360-a6e0-db339e5c1fa1,8/2/2024,RELUXE Med Spa,Carrie Hart,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+673fdf61-b6bc-557c-b21c-f8160912e327,8/2/2024,RELUXE Med Spa,Evan Robbins,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,936.0,-936.0,,0.0,0.0
+5ddadfe9-1b19-52a9-b79d-aa42c9ab253d,8/2/2024,RELUXE Med Spa,Kim Clevenger,Krista Spalding,Botox ($14/unit),,,,service,Service,720.0,0.0,,720.0,0.0
+521ab6cf-2642-54fb-96cd-0ad2d670e195,8/2/2024,RELUXE Med Spa,Kyle Robbins,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,792.0,-792.0,,0.0,0.0
+4ef5788b-8251-5041-85a1-61961049f9b0,8/2/2024,RELUXE Med Spa,Kyle Robbins,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+4eb1b464-5635-5552-ba5b-6cdc01e319a0,8/2/2024,RELUXE Med Spa,Kim Clevenger,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+4e688ab4-ebec-5a64-a07d-c669f4c30003,8/2/2024,RELUXE Med Spa,Kasey Denton,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,264.0,0.0,,264.0,0.0
+4a2708ce-83be-509c-873f-b3db24d93afd,8/2/2024,RELUXE Med Spa,Emily Rizek,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+44213102-45e1-596f-bd10-bfe3c516c920,8/2/2024,RELUXE Med Spa,Kim McGuire,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+29587590-bfe4-59ae-b7ef-ff0f76e9b8f5,8/2/2024,RELUXE Med Spa,Claire Clapp,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+248d2c24-4ef1-57dc-9050-1885fd278a27,8/2/2024,RELUXE Med Spa,Anna Leonov,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,1128.0,-1128.0,,0.0,0.0
+226523d6-c446-55cb-bb35-67ad50421610,8/2/2024,RELUXE Med Spa,Carrie Hart,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+d9bc11e2-4d06-5d0b-8bef-da57d73ed738,8/1/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+bbdf3166-25c5-532a-8243-6b23950bdef6,8/1/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+bab9557c-ab6b-554e-ad23-6a6a9b7e1a7e,8/1/2024,RELUXE Med Spa,Youxia Zhu,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,266.67,0.0
+71e04a77-7aec-5069-857d-f30faafc1fe8,8/1/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,-825.0,,0.0,0.0
+5207ffd1-86dc-5f70-a368-4e6e797a9aec,8/1/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,-825.0,,0.0,0.0
+373737c8-7851-5fd0-b81c-9d366f6d73e9,8/1/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+27482178-6e93-5145-acce-57cd8de506f8,8/1/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,-825.0,,0.0,0.0
+fae141bc-f104-527a-bff5-e88caf75410f,7/31/2024,RELUXE Med Spa,Shelly Tragesser,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+c96f555b-7144-528a-82b8-76b019157bc1,7/31/2024,RELUXE Med Spa,Shelly Tragesser,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,264.0,0.0,,264.0,0.0
+c1311ec1-b2ff-5b3d-86e6-d0246a9faaa0,7/31/2024,RELUXE Med Spa,Shelly Tragesser,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+fb11e426-82ad-5e00-8147-cf56fe175683,7/30/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+deb8a549-6c9b-56d8-8140-24727f83f354,7/30/2024,RELUXE Med Spa,Amanda Adkins,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d50fc22a-2326-502b-bbe6-456899058c15,7/30/2024,RELUXE Med Spa,Christie Brancheau,Hannah Kerns,Botox ($14/unit),,,,service,Service,24.0,0.0,,24.0,0.0
+d34ea646-85d9-5cce-994b-8a34a84c72fb,7/30/2024,RELUXE Med Spa,Michael Capstick,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+ccb5d4db-7c5d-5789-9cd1-f6127b124c54,7/30/2024,RELUXE Med Spa,Debra Richardson,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+ba9b6180-7bd5-5039-aa42-cdc0ccd3ccf1,7/30/2024,RELUXE Med Spa,Michael Capstick,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ba219848-e893-58f1-b2f4-f37175f9177c,7/30/2024,RELUXE Med Spa,Heather Wells,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+af53c636-dcb5-5a99-ad30-bd4136ddfa0d,7/30/2024,RELUXE Med Spa,Amanda Adkins,Hannah Kerns,Botox ($14/unit),,,,service,Service,408.0,-408.0,,0.0,0.0
+a87162dd-be65-57a0-bc33-92000c18162d,7/30/2024,RELUXE Med Spa,Winnie Zeliger,Hannah Kerns,Botox ($14/unit),,,,service,Service,348.0,0.0,,348.0,0.0
+8a1fdc99-1ecb-5e96-bf2e-969167804e93,7/30/2024,RELUXE Med Spa,Michael Capstick,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,-25.0,,335.0,0.0
+8254b202-6ed5-5ed1-9987-ea57ca8ddf5f,7/30/2024,RELUXE Med Spa,Heather Wells,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+7496b5fe-b7bd-5330-8128-6daff7172c96,7/30/2024,RELUXE Med Spa,Amanda Adkins,Hannah Kerns,Morpheus8 Treatment,,,,service,Service,0.0,0.0,,0.0,0.0
+66aead6f-00d7-54ff-88f0-be0a0851a451,7/30/2024,RELUXE Med Spa,Christie Brancheau,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5e559951-18ef-5753-954c-6abca7b767a0,7/30/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+2d38b771-a4a0-5d44-8842-efc43f9826d5,7/30/2024,RELUXE Med Spa,Heather Wells,Hannah Kerns,Botox ($14/unit),,,,service,Service,48.0,0.0,,48.0,0.0
+22485fce-8480-5709-b9c1-0c27f833722d,7/30/2024,RELUXE Med Spa,Winnie Zeliger,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1bd3ea90-1f6a-5366-bf18-6665603d5411,7/30/2024,RELUXE Med Spa,Christie Brancheau,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+f5d357f6-c689-5b3e-88e3-ac907f431175,7/29/2024,RELUXE Med Spa,Christine Reeder,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+ed858f60-101f-5c5a-a3c6-e56166a46aaf,7/29/2024,RELUXE Med Spa,Christine Reeder,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,480.0,0.0,,480.0,0.0
+e6eec9fa-19eb-5622-8a70-9a627b558dea,7/29/2024,RELUXE Med Spa,Lisa Woerner,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+de6426fe-0565-52cd-85df-d237c65e40b6,7/29/2024,RELUXE Med Spa,Amber Martin,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d37c06ac-b999-5e39-944e-4e5cab9624a0,7/29/2024,RELUXE Med Spa,Israa Bukhari,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,0.0,,300.0,0.0
+b903e610-28ab-52b3-af9b-f2f637874e8d,7/29/2024,RELUXE Med Spa,Athena Noal,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+b634c9bc-9e82-5bd8-aec1-713e8f2919a9,7/29/2024,RELUXE Med Spa,Cindy Garland,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+9ae98f3a-2627-5722-af0d-e2e3be88d973,7/29/2024,RELUXE Med Spa,Christine Reeder,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+95cf4f01-9a17-55f0-96e1-c51637daa62d,7/29/2024,RELUXE Med Spa,Hilary Normand,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+8fc3b772-3b05-53f6-bb8e-5528aec63582,7/29/2024,RELUXE Med Spa,Hilary Normand,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,440.0,-20.0,,420.0,0.0
+8dd203dc-f988-5bad-86e2-5b916c345342,7/29/2024,RELUXE Med Spa,Stephanie Miller,Hannah Kerns,Skincare Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+87d9733e-0d28-588b-a9cf-40e8c27d4c1e,7/29/2024,RELUXE Med Spa,Amber Martin,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,660.0,-240.0,,420.0,0.0
+6fd9fd58-c7c8-5d6d-9a8a-30e4f3b1580c,7/29/2024,RELUXE Med Spa,Cindy Garland,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+6bd6eb71-3ddc-5316-986d-2a8edbebc505,7/29/2024,RELUXE Med Spa,Athena Noal,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,288.0,0.0,,288.0,0.0
+589d8075-46f3-5f40-9cd6-bd5d1f79a59e,7/29/2024,RELUXE Med Spa,Athena Noal,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+3baf042c-6608-5bd0-a2c7-62be3c28499a,7/29/2024,RELUXE Med Spa,Lisa Woerner,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1eb6e197-dae5-5473-89da-e8ab8a6cf988,7/29/2024,RELUXE Med Spa,Laurie Jones,Hannah Kerns,Botox ($14/unit),,,,service,Service,624.0,0.0,,624.0,0.0
+133bd493-851c-58af-9a16-ed508137d2a4,7/29/2024,RELUXE Med Spa,Laurie Jones,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+0b415279-81c9-56e9-aa99-dc1a693423d3,7/29/2024,RELUXE Med Spa,Israa Bukhari,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+041b12a1-3b06-576d-b9d6-7ddad95a9c56,7/29/2024,RELUXE Med Spa,Israa Bukhari,Hannah Kerns,Botox ($14/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+f7a974b0-731f-5be7-b6d8-d99c9bd9e9a4,7/26/2024,RELUXE Med Spa,Kristy Swart,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c9fb28ef-3ec5-5be8-8a4a-4c558f8b3726,7/26/2024,RELUXE Med Spa,Danielle Capstick,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+b7c854ec-9832-5e6a-ba32-8969baf60e7f,7/26/2024,RELUXE Med Spa,Nicole Eliason,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+b4eefc14-b48d-50db-bc48-07bc9a6fd712,7/26/2024,RELUXE Med Spa,Alexis Adkins,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,420.0,-25.0,,395.0,0.0
+839549cf-e2d8-5b4f-a6ad-60bd56d171f1,7/26/2024,RELUXE Med Spa,Jessica Greene,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+7af8f983-bc3d-58bb-8a1b-755246bcaf9f,7/26/2024,RELUXE Med Spa,Pavan Vooka,Hannah Kerns,Skincare Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+729fdade-3508-5daf-ab52-c96665564cc9,7/26/2024,RELUXE Med Spa,Danielle Capstick,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+6d2fdd9c-9251-5776-aef3-88adceab94c3,7/26/2024,RELUXE Med Spa,Alexis Adkins,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6acced67-eb28-517d-a7fc-ebc51b88d828,7/26/2024,RELUXE Med Spa,Lily Wright,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+5acfee38-f602-5f2a-8022-93531c04e65b,7/26/2024,RELUXE Med Spa,Nicole Eliason,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,720.0,-680.0,,40.0,0.0
+5a0ebbbf-c6e9-5fa7-89a3-a23b8b1c9406,7/26/2024,RELUXE Med Spa,Danielle Capstick,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5785f5d3-cb3a-5d1e-a1e1-e314020ce05d,7/26/2024,RELUXE Med Spa,Kristy Swart,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+53bd91cd-61cf-57bb-a8d3-08201f35f85c,7/26/2024,RELUXE Med Spa,Regina Franks,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+4d680894-87fe-5d84-a65a-4f28974e7b90,7/26/2024,RELUXE Med Spa,Kim Read,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+2f1d729b-b1f6-530a-9b7f-45e562171d8c,7/26/2024,RELUXE Med Spa,Lily Wright,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,72.0,0.0,,72.0,0.0
+1f07fabc-81d3-5abc-b839-42fd2b58ea2b,7/26/2024,RELUXE Med Spa,Kristy Swart,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+1d4bc094-398f-5b2f-8fe5-ca0646561119,7/26/2024,RELUXE Med Spa,Kim Read,Hannah Kerns,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+13180d0b-c0f8-5409-bf01-817bbc50065f,7/26/2024,RELUXE Med Spa,Kim Read,Hannah Kerns,Dysport ($3.95/unit Member Pricing),,,,service,Service,320.0,0.0,,320.0,0.0
+063c0758-1845-5321-8c49-a560ff810ebb,7/26/2024,RELUXE Med Spa,Regina Franks,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+d42a833e-46cb-5dbb-8dfe-200f48116833,7/25/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+d2f2e76b-637e-5ee2-a304-9d7b50954860,7/25/2024,RELUXE Med Spa,Katelyn Le,Hannah Kerns,Botox ($14/unit),,,,service,Service,96.0,0.0,,96.0,0.0
+cb9318f1-65e9-5bbf-8b37-fbd3bddfe05b,7/25/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+ca7800b0-1531-5f7c-9e72-2ed5f967488d,7/25/2024,RELUXE Med Spa,Flora Guidos,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+bf41f54b-a041-509c-a2f2-b0a4e1724a93,7/25/2024,RELUXE Med Spa,Megan Robbins,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+bf1c9ad9-702a-5f0b-9743-bd4bbbefb1c1,7/25/2024,RELUXE Med Spa,Laura Fuehrmeyer,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+bd95ae2e-f3d2-5a10-a448-7f89b6ec7aa1,7/25/2024,RELUXE Med Spa,Flora Guidos,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+a145fec1-06a4-5602-a2bf-19ab1750a51d,7/25/2024,RELUXE Med Spa,Sarah Solis,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+886fcad9-4800-5483-85b6-a3afcdead767,7/25/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,Filler Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+86d869d9-a17c-5e83-b3c7-bb9a0a77160e,7/25/2024,RELUXE Med Spa,Flora Guidos,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+80de098d-29c2-58af-96d9-c63f3d867068,7/25/2024,RELUXE Med Spa,Sarah Solis,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+72473771-f5ff-548b-be7e-4ab3fc89232c,7/25/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,0.0,,825.0,0.0
+667b28e6-f1e6-59c4-b7cc-e959cb64e2c3,7/25/2024,RELUXE Med Spa,Laura Fuehrmeyer,Hannah Kerns,Botox ($14/unit),,,,service,Service,72.0,0.0,,72.0,0.0
+50bc92f7-3c57-58ee-9245-d9bea027c958,7/25/2024,RELUXE Med Spa,Sarah Solis,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,312.0,0.0,,312.0,0.0
+48e68151-b407-536b-b55b-acbaa6496d25,7/25/2024,RELUXE Med Spa,Katelyn Le,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+413023b2-1ce0-55b2-bd8f-4ed0d6beeb1d,7/25/2024,RELUXE Med Spa,Megan Robbins,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+226490f5-03f9-5947-b0af-bd0b0a5e46ef,7/25/2024,RELUXE Med Spa,Marta Kaczanowska,Hannah Kerns,Juvederm Voluma XC ~ cheeks & chin,,,,service,Service,825.0,0.0,,825.0,0.0
+06350d3d-f5a7-51e7-9862-4f7d5f343ef3,7/25/2024,RELUXE Med Spa,Laura Fuehrmeyer,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+01e5dbfa-d9e5-55f6-b29b-433069fd216c,7/25/2024,RELUXE Med Spa,Katelyn Le,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+f098af55-5df1-5cf5-91b3-5a2ec5148999,7/24/2024,RELUXE Med Spa,Lisa VanZee,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+b4a47cd2-8c86-577d-9b1d-575ba2b7d3ae,7/24/2024,RELUXE Med Spa,Stephanie Hipskind,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+ae1f32fa-42ee-5fdd-bb09-a256e147fb7e,7/24/2024,RELUXE Med Spa,Stephanie Hipskind,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+261d1ffb-98a3-5228-8d24-ba8d84e27657,7/24/2024,RELUXE Med Spa,Lisa VanZee,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+169961cc-665b-5644-8e1f-f0650b53e03e,7/24/2024,RELUXE Med Spa,Laurine Gedemer,Hannah Kerns,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+148bcaf9-1241-5f03-89e7-bd06496ea40e,7/24/2024,RELUXE Med Spa,Stephanie Hipskind,Hannah Kerns,Botox ($14/unit),,,,service,Service,48.0,0.0,,48.0,0.0
+12567ecf-2927-5493-ad01-b78a92ba0355,7/24/2024,RELUXE Med Spa,Lilly Pelletiere,Hannah Kerns,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+03d0554b-208c-5eff-8d4e-d6dd87b336aa,7/24/2024,RELUXE Med Spa,Lisa VanZee,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f1486df7-0dd8-5129-b5cc-5d18fa36e4eb,7/23/2024,RELUXE Med Spa,Kimberly Combs,Hannah Kerns,$475 for 50 Units Jeuveau,,,,service,Service,475.0,0.0,,475.0,0.0
+ed36df06-992e-52fd-9843-c0ec84bef21c,7/23/2024,RELUXE Med Spa,Pam Spayd,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ce319c7f-b711-5ba7-97b1-1b79ee5ebe74,7/23/2024,RELUXE Med Spa,Kimberly Combs,Hannah Kerns,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+9ad025e9-7d26-514b-86ae-99f857e3a4fa,7/23/2024,RELUXE Med Spa,Kimberly Combs,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+92bfe40c-ad31-5691-a52c-44839d3ebc19,7/23/2024,RELUXE Med Spa,Stephenie Knoll,Krista Spalding,Botox ($14/unit),,,,service,Service,48.0,0.0,,48.0,0.0
+8ea23c0f-a680-5364-9d32-46d767b4bc03,7/23/2024,RELUXE Med Spa,Sheila Williams,Krista Spalding,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+8321f8db-26b2-5292-8650-e1b61fddb713,7/23/2024,RELUXE Med Spa,Pam Spayd,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,456.0,-456.0,,0.0,0.0
+6ada302c-98cc-5228-a7ff-e4e29504453c,7/23/2024,RELUXE Med Spa,Jennifer Cassady,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+69608ac9-70ab-5c97-aa83-71b10de7988c,7/23/2024,RELUXE Med Spa,Stephenie Knoll,Krista Spalding,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+659ea0c9-d0c8-5529-99b4-b881dae89b48,7/23/2024,RELUXE Med Spa,Jennifer Cassady,Krista Spalding,$179 for 20 Units Jeuveau,,,,service,Service,179.0,-179.0,,0.0,0.0
+43c1cf9d-8140-5dc4-9b9d-8f3ae01a9c81,7/23/2024,RELUXE Med Spa,Taylor London,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+2e850a5a-cc33-5fa1-bbff-096d55d42e47,7/23/2024,RELUXE Med Spa,Taylor London,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+20c66fc4-f9b3-516a-a882-a6e201f2274a,7/23/2024,RELUXE Med Spa,Jennifer Cassady,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,180.0,0.0,,180.0,0.0
+1f762a7c-1c4f-5b92-8795-bea6dffd28cb,7/23/2024,RELUXE Med Spa,Pam Spayd,Krista Spalding,Jeuveau ($10/unit Member Pricing),,,,service,Service,230.0,0.0,,230.0,0.0
+1b86ecd9-5136-570c-af92-a237caf77bf3,7/23/2024,RELUXE Med Spa,Taylor London,Hannah Kerns,Botox ($14/unit),,,,service,Service,192.0,0.0,,192.0,0.0
+012969b6-a644-52c0-bd58-396b3116fec7,7/23/2024,RELUXE Med Spa,Stephenie Knoll,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+f621c553-1c64-5bb3-859d-7899c4448a45,7/19/2024,RELUXE Med Spa,Chad Zingarelli,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+f039fd8a-51d2-5412-9423-cf3ff26bc19f,7/19/2024,RELUXE Med Spa,Allison Smith,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+e4f7e575-5c12-5921-adf4-1f4d8172c818,7/19/2024,RELUXE Med Spa,Allison Smith,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,288.0,0.0,,288.0,0.0
+e3bccd11-c064-5339-9a44-7e282523f1ee,7/19/2024,RELUXE Med Spa,Lexi Proffitt,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d5de0c55-346e-58f3-bcd9-3c3c4da33caa,7/19/2024,RELUXE Med Spa,Chad Zingarelli,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+cee8e4ac-b43b-580f-b182-e75fefe02b93,7/19/2024,RELUXE Med Spa,Allison Smith,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+bbbe0a08-1a3a-5df8-82e6-d5121e18d399,7/19/2024,RELUXE Med Spa,Chad Zingarelli,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,408.0,-136.0,,272.0,0.0
+b5c8fdaa-5888-558c-a0d6-e37767564330,7/19/2024,RELUXE Med Spa,Lexi Proffitt,Krista Spalding,$475 for 50 Units Jeuveau,,,,service,Service,475.0,0.0,,475.0,0.0
+79993128-51f0-59ce-afac-ce0a75083b01,7/19/2024,RELUXE Med Spa,Hadley Norton,Krista Spalding,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+ebf455cd-9146-51aa-839a-01f8d2880676,7/18/2024,RELUXE Med Spa,Jennifer Chappell,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c05a8b8b-bc66-585b-a143-43f50a067dba,7/18/2024,RELUXE Med Spa,Alex Alford,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+b46e6dc8-4d05-5110-878f-a2be624a17b4,7/18/2024,RELUXE Med Spa,Ashley Gould,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,96.0,0.0,,96.0,0.0
+a6b9cab9-dc5d-56f3-b103-ad358781be3d,7/18/2024,RELUXE Med Spa,Eutemia Stockman,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+9b21b4bd-9d8b-580c-beb0-db452a1a3c4a,7/18/2024,RELUXE Med Spa,Ashley Gould,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+8a31ed92-ce6e-580d-9018-bb884ed053f8,7/18/2024,RELUXE Med Spa,Alex Alford,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,480.0,-80.0,,400.0,0.0
+64b69134-0b8a-5ddb-a9c9-045cda37565a,7/18/2024,RELUXE Med Spa,Jennifer Chappell,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,384.0,0.0,,384.0,0.0
+5fe21a3c-fdbc-55a2-88c3-632d3559f0e4,7/18/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+39bc6855-160a-50d1-bd3d-6ab9e307585d,7/18/2024,RELUXE Med Spa,Eutemia Stockman,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+38998257-ab76-5381-8472-3c8d68f7d575,7/18/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,816.0,-360.0,,456.0,0.0
+2c163709-1bb5-56ff-a8c0-2e6c4616bca2,7/18/2024,RELUXE Med Spa,Eutemia Stockman,Krista Spalding,Microneedling w/SkinPen with PRP + PRP Injections,,,,service,Service,800.0,0.0,,800.0,0.0
+22c5b9f6-2403-5608-a343-659c595525a6,7/18/2024,RELUXE Med Spa,Jennifer Chappell,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+2156fe2e-a48a-5e14-bc86-13f9fd15c398,7/18/2024,RELUXE Med Spa,Ashley Gould,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+1a14c3a1-c14a-5bb9-baf7-e90412fc3cdb,7/18/2024,RELUXE Med Spa,Eutemia Stockman,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,360.0,0.0,,360.0,0.0
+133c7f6e-07d8-52bf-b86b-dbd28de8a866,7/18/2024,RELUXE Med Spa,Melanie Woodard,Krista Spalding,Morpheus8 Treatment,,,,service,Service,0.0,0.0,,0.0,0.0
+77cde80e-2a60-539a-a481-119b65737b8e,7/17/2024,RELUXE Med Spa,Nicole Welsh,Hannah Kerns,Lip Flip (Neuromodulator),,,,service,Service,100.0,0.0,,100.0,0.0
+e19c5632-e105-526d-8331-a659ce77563e,7/16/2024,RELUXE Med Spa,Mary Cockerham,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+df7b838f-d38a-5332-bdb5-039d03f6b8df,7/16/2024,RELUXE Med Spa,Emily Janak,Hannah Kerns,Botox ($14/unit),,,,service,Service,24.0,0.0,,24.0,0.0
+dacc9a9f-3e1e-5d81-97fa-286b319f5d7f,7/16/2024,RELUXE Med Spa,Emily Janak,Hannah Kerns,FREE Demo: Ourself Non-Injectable Filler,,,,service,Service,0.0,0.0,,0.0,0.0
+c805bd2e-991b-53c5-929b-3869119e62c3,7/16/2024,RELUXE Med Spa,Debra Richardson,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,380.0,0.0,,380.0,0.0
+b796166f-0d9c-51de-94c3-1fbaf0fbb374,7/16/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,168.0,-25.0,,143.0,0.0
+8fad0cd1-e7fd-59f3-b10b-5146e5ac5191,7/16/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+88ac2110-f1d6-5fe5-8fbb-30149a8512db,7/16/2024,RELUXE Med Spa,Debra Richardson,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+65be7339-5942-5268-bb3d-a856c023bcae,7/16/2024,RELUXE Med Spa,Emily Janak,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+5c3da0a9-3b42-551e-99c0-875474f1f722,7/16/2024,RELUXE Med Spa,Emily Janak,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,-25.0,,450.0,0.0
+57216360-d912-50e2-8c94-ca938e2ee2b1,7/16/2024,RELUXE Med Spa,Shay Eddins,Krista Spalding,"Dermal Filler Appointment: RHA, Versa, Juvéderm",,,,service,Service,0.0,0.0,,0.0,0.0
+37056508-169a-5763-a15f-1f4be0498bd4,7/16/2024,RELUXE Med Spa,Riley Clinkenbeard,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1ac7fb05-3469-5b1c-b14c-35a732c24c8b,7/16/2024,RELUXE Med Spa,Mary Cockerham,Krista Spalding,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+0fc071ed-1cd1-50ce-8766-4c4dc451078c,7/16/2024,RELUXE Med Spa,Mary Cockerham,Krista Spalding,Botox ($14/unit),,,,service,Service,204.0,0.0,,204.0,0.0
+fc34d56f-33a7-5b3d-922a-3db5f8f56f86,7/15/2024,RELUXE Med Spa,Brandi Schroeder,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+fa5a8ce1-3a7e-5ba7-8144-78b07019ba25,7/15/2024,RELUXE Med Spa,Kim McGuire,Krista Spalding,Botox ($14/unit),,,,service,Service,,0.0,-199.0,-199.0,0.0
+d42ae95c-75c8-5cfa-be02-834709f272c5,7/15/2024,RELUXE Med Spa,Amy Leo,Hannah Kerns,Botox ($14/unit),,,,service,Service,456.0,0.0,,456.0,0.0
+c9c418fa-5afa-5ad8-832b-8ef8a80eabd0,7/15/2024,RELUXE Med Spa,Cindy Garland,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+b8393b0d-c527-513b-9d59-89cd3b19e819,7/15/2024,RELUXE Med Spa,Anna Leonov,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,,0.0,-120.0,-120.0,0.0
+afc16cf0-6bb3-542c-90e8-dfdb8a254add,7/15/2024,RELUXE Med Spa,Kyle Robbins,Hannah Kerns,Botox ($14/unit),,,,service,Service,,0.0,-1.0,-1.0,0.0
+a1e08635-0712-5127-b217-9a57449b7757,7/15/2024,RELUXE Med Spa,Casey Shinaver,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+9676c479-9f1d-502d-804e-1b6991e9fd3b,7/15/2024,RELUXE Med Spa,Ashley Coffey,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+847c83e3-916d-5037-b882-368e94ccd4d1,7/15/2024,RELUXE Med Spa,Joy Cobb,Hannah Kerns,ClearLift Treatment,,,,service,Service,250.0,-125.0,,125.0,0.0
+7709e99b-340c-5731-9c9c-53c8931ce2d6,7/15/2024,RELUXE Med Spa,Amy Leo,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+6642f388-4130-5135-8fed-0c1d68020f5f,7/15/2024,RELUXE Med Spa,Ashley Coffey,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+47f9b208-764a-5616-923b-e4ce67b7b623,7/15/2024,RELUXE Med Spa,Cindy Garland,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,456.0,0.0,,456.0,0.0
+3acbfb09-36b8-5329-8a03-82dca334a984,7/15/2024,RELUXE Med Spa,Casey Shinaver,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,480.0,-80.0,,400.0,0.0
+2bf97a09-2c1b-5020-9b48-6512f5406a6d,7/15/2024,RELUXE Med Spa,Kyle Robbins,Hannah Kerns,Botox ($14/unit),,,,service,Service,,0.0,-249.0,-249.0,0.0
+23eb9c98-b779-596b-994e-500485dca49e,7/15/2024,RELUXE Med Spa,Kim McGuire,Krista Spalding,Botox ($14/unit),,,,service,Service,,0.0,-1.0,-1.0,0.0
+14926fb9-ad71-5f9f-b85b-cb2629d966a4,7/15/2024,RELUXE Med Spa,Stephanie Duehring,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+ddea1b76-efd3-5139-926b-f518e7244d5b,7/13/2024,RELUXE Med Spa,Heather Norton,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c1ecff32-7815-57a5-a1a0-e3c829194a7d,7/13/2024,RELUXE Med Spa,Jake Elliott,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+a3cb260b-0379-5f53-ae17-b5a7ca01abfb,7/13/2024,RELUXE Med Spa,Heather Norton,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+6af58dcd-3080-5ea8-b103-2dcb5d513e90,7/13/2024,RELUXE Med Spa,Jake Elliott,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+1908c473-23d1-5ef7-bbcd-dd91fcdf4f1e,7/13/2024,RELUXE Med Spa,Meredith Cobb,Hannah Kerns,Facial Balancing Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+fd596149-4988-5a1d-b72d-8d30b982ac83,7/12/2024,RELUXE Med Spa,Lily Wright,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ed5c20ff-5469-5265-9fb6-a8382bb640fb,7/12/2024,RELUXE Med Spa,Anna Brown,Krista Spalding,PRP Injections,,,,service,Service,300.0,-150.0,,150.0,0.0
+e1b6e29d-1a43-5156-9900-5dd3e1d1b6be,7/12/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+bc62bcfd-e6b7-5cc7-b2c9-31e2f8a2b72f,7/12/2024,RELUXE Med Spa,Andrea Cason,Hannah Kerns,Post Injection Botox,,,,service,Service,0.0,0.0,,0.0,0.0
+b9c2946f-514c-50e5-b71e-7a3b1633f2e6,7/12/2024,RELUXE Med Spa,Mayela Rodríguez,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+b295af59-2677-5d58-a398-cca2bdf1ea9b,7/12/2024,RELUXE Med Spa,Mayela Rodríguez,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+b0069880-76c1-5449-8e43-2d672faa4fae,7/12/2024,RELUXE Med Spa,Lily Wright,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+a6b28005-1a96-5e6e-a95a-536f42854524,7/12/2024,RELUXE Med Spa,Gina Morgan,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+766bb183-1787-5e05-9dfa-ef2c617a0625,7/12/2024,RELUXE Med Spa,Laura Lancaster,Krista Spalding,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+721680ae-7db0-5c67-b442-69e7a1db0e6d,7/12/2024,RELUXE Med Spa,Lily Wright,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+5afd5fcb-17d4-5b10-938c-1dc2a166a52d,7/12/2024,RELUXE Med Spa,Anna Brown,Krista Spalding,Microneedling w/SkinPen,,,,service,Service,300.0,-300.0,,0.0,0.0
+54222e2b-339e-55b7-aabf-cd3bc5edb1b3,7/12/2024,RELUXE Med Spa,Eva Suarez,Hannah Kerns,"Consultation for Botox, Dysport, Jeuveau, Xeomin",,,,service,Service,0.0,0.0,,0.0,0.0
+4c2a88f3-346f-5c27-8d69-648ccb9c5cf1,7/12/2024,RELUXE Med Spa,Laura Lancaster,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,516.0,-111.0,,405.0,0.0
+1b80ea50-50ab-5469-81d3-72c4c0d349c1,7/12/2024,RELUXE Med Spa,Eva Suarez,Hannah Kerns,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+eb9129a0-93c1-5ae7-9c75-f2b1c359977c,7/11/2024,RELUXE Med Spa,Regina Franks,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d990d828-af55-5527-8cab-bb9fbe87c56f,7/11/2024,RELUXE Med Spa,Emily Kelly,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+c2636624-f525-57b7-b08d-64f2baa9e2c2,7/11/2024,RELUXE Med Spa,Emily Kelly,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,336.0,0.0,,336.0,0.0
+bef21135-7c68-5825-a784-62dd5c4e0a45,7/11/2024,RELUXE Med Spa,Emily Kelly,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+973b659f-0098-584c-8399-a7ef951a1720,7/11/2024,RELUXE Med Spa,Heather Wilensky,Krista Spalding,Post Injection Jeuveau,,,,service,Service,0.0,0.0,,0.0,0.0
+6f7c72e5-055b-5d38-998e-725bc1222841,7/11/2024,RELUXE Med Spa,Regina Franks,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,348.0,-25.0,,323.0,0.0
+428a1127-6cc0-5cca-9e59-143a4589d0de,7/11/2024,RELUXE Med Spa,Regina Franks,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+04326a20-b61a-5770-acf4-ea31d54afe38,7/11/2024,RELUXE Med Spa,Heather Wilensky,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+fe05e68d-0cec-5163-9179-59da41c8f7cb,7/9/2024,RELUXE Med Spa,Dawne Connell,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,444.0,0.0,,444.0,0.0
+f1d34d26-2ac0-58ea-98a5-31625d8326d6,7/9/2024,RELUXE Med Spa,Janie Brandt,Krista Spalding,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+e9494304-b7c4-5ebc-995c-f17cebc77f93,7/9/2024,RELUXE Med Spa,Lisa Sears,Krista Spalding,$475 for 50 Units Botox,,,,service,Service,304.0,0.0,,304.0,0.0
+b51ef569-1df8-5dda-8e14-a50d285fd4c4,7/9/2024,RELUXE Med Spa,Tammy Derrick,Hannah Kerns,Botox ($14/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+aa791443-ca09-5672-92f7-874fe851dfb8,7/9/2024,RELUXE Med Spa,Tammy Derrick,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a77fe11e-ebb7-51bb-8142-243f53e07818,7/9/2024,RELUXE Med Spa,Matt Spivey-Bevington,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,437.0,0.0,,437.0,0.0
+a6444438-3a78-5cce-b04a-178369667456,7/9/2024,RELUXE Med Spa,Janie Brandt,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,540.0,-25.0,,515.0,0.0
+a044f7dc-80f4-5fc8-9520-a673259c4b40,7/9/2024,RELUXE Med Spa,Lisa Sears,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+9cc05560-e288-57d1-9145-16ff3ba9afdd,7/9/2024,RELUXE Med Spa,Tammy Derrick,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+5f7b3f70-5dd0-5f55-bd9b-7219138edfc8,7/9/2024,RELUXE Med Spa,Matt Spivey-Bevington,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+28014297-bf9b-5a91-88b8-df2ed40dd4a7,7/9/2024,RELUXE Med Spa,Janie Brandt,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+1b7bfecd-95a9-5ee1-9602-2eec55fbdb27,7/9/2024,RELUXE Med Spa,Dawne Connell,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+ce996f43-2014-5be6-87ff-3ba1a4d9d586,7/8/2024,RELUXE Med Spa,Andrea Dunkle,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+be53daa1-d1a6-5012-9e81-c2bef5925e67,7/8/2024,RELUXE Med Spa,Sarah Pyle,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+acbc2d94-a8d1-5ee3-b787-526abcf3f219,7/8/2024,RELUXE Med Spa,Abby Moore,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+a864ca66-9610-56d4-8105-87a344756d31,7/8/2024,RELUXE Med Spa,Sarah Pyle,Hannah Kerns,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+96a95c88-863c-5b64-9290-07697418fb4c,7/8/2024,RELUXE Med Spa,Andrea Dunkle,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,300.0,0.0,,300.0,0.0
+8d69064c-b7d6-5551-831c-1d82c9f733e6,7/8/2024,RELUXE Med Spa,Jordan Graham,Hannah Kerns,Morpheus8 Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+810fb1f6-1142-5626-8ad9-a52c93d24841,7/8/2024,RELUXE Med Spa,Abby Moore,Krista Spalding,$179 for 20 Units Jeuveau,,,,service,Service,179.0,0.0,,179.0,0.0
+603ec48c-061b-5932-b5b3-e11639ac595f,7/8/2024,RELUXE Med Spa,Sarah Pyle,Hannah Kerns,Jeuveau ($12/unit),,,,service,Service,216.0,0.0,,216.0,0.0
+51943afd-d4f0-52c6-a437-137dcc9dde5c,7/8/2024,RELUXE Med Spa,Laurel Fennerty,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+1cf7b659-ef7d-5990-8131-a7d431bf863f,7/8/2024,RELUXE Med Spa,Andrea Dunkle,Krista Spalding,20 Unit JEUVEAU Naive (Free after Evolus Rewards),,,,service,Service,0.0,0.0,,0.0,0.0
+ffcab384-7f7f-5aa9-9b18-9f4dc7b07e25,7/3/2024,RELUXE Med Spa,Kim McGuire,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+c4de5c95-4b1f-56ed-aa8a-70acdbb40417,7/3/2024,RELUXE Med Spa,Erin Grover,Hannah Kerns,Botox ($14/unit),,,,service,Service,24.0,0.0,,24.0,0.0
+74418fbe-1b58-5144-8dce-28d0de219b47,7/3/2024,RELUXE Med Spa,Erin Grover,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+33c690ee-6155-5bc5-9654-b5b90e74bcc4,7/3/2024,RELUXE Med Spa,Erin Grover,Hannah Kerns,$179 for 20 Units Botox,,,,service,Service,179.0,0.0,,179.0,0.0
+e61d89de-d4f4-5ce9-a95a-1ed22b5761b9,7/2/2024,RELUXE Med Spa,Kali Heckert,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+cc975cb4-9a6f-5766-be44-b992a43895f6,7/2/2024,RELUXE Med Spa,Stephanie Duehring,Hannah Kerns,Botox ($14/unit),,,,service,Service,168.0,0.0,,168.0,0.0
+a87e428b-e949-52eb-b7d3-478ffff1ca05,7/2/2024,RELUXE Med Spa,Youxia Zhu,Hannah Kerns,Microneedling w/SkinPen,,,,service,Service,300.0,-300.0,,0.0,0.0
+9647dae4-ae23-5f28-a1e9-68582f626a4f,7/2/2024,RELUXE Med Spa,Stephanie Duehring,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+8a4618b4-9f61-5e3a-85c9-8329b46cf557,7/2/2024,RELUXE Med Spa,Tina Williamson,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+4eb42525-836d-5434-a61e-e400228ef08e,7/2/2024,RELUXE Med Spa,Stephanie Duehring,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
+4729e424-e5ac-5344-a83a-afeefa8e99a3,7/2/2024,RELUXE Med Spa,Amanda Adkins,Hannah Kerns,Morpheus8 Treatment,,,,service,Service,0.0,0.0,,0.0,0.0
+ff40536d-e181-5e0c-970b-2348f37a83b7,7/1/2024,RELUXE Med Spa,Brookyln Stocker,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+d5a4ef1c-20cb-5ccc-b20a-d7fffa20fd38,7/1/2024,RELUXE Med Spa,Sarah Stewart,Krista Spalding,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+a28446d4-052f-5116-9718-39abaaad203b,7/1/2024,RELUXE Med Spa,Lauren Sexton,Krista Spalding,Filler Consultation,,,,service,Service,0.0,0.0,,0.0,0.0
+9b7c4f32-f83a-5d3f-aeda-757475c64d3e,7/1/2024,RELUXE Med Spa,Jennifer Craig,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+7285abf3-7e02-5507-803f-a81df0a75f0c,7/1/2024,RELUXE Med Spa,Brandi Schroeder,Hannah Kerns,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+53d93a20-a902-5842-a11b-2e8cf4914984,7/1/2024,RELUXE Med Spa,Brookyln Stocker,Krista Spalding,20 Unit BOTOX Naive,,,,service,Service,0.0,0.0,,0.0,0.0
+51b2fa47-b204-5b6f-80d7-9641e32c99ce,7/1/2024,RELUXE Med Spa,Betina Hill,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+49b6a138-86fb-5986-839c-4b8f3594c59a,7/1/2024,RELUXE Med Spa,Stephanie Swann,Krista Spalding,Jeuveau ($12/unit),,,,service,Service,504.0,0.0,,504.0,0.0
+2bcdcb05-98ee-518e-b022-048495c4b014,7/1/2024,RELUXE Med Spa,Stephanie Swann,Krista Spalding,"Botox, Dysport, Jeuveau, Xeomin Treatment",,,,service,Service,0.0,0.0,,0.0,0.0
+22b1ed40-70b0-5996-b618-d565e8a7fb89,7/1/2024,RELUXE Med Spa,Brookyln Stocker,Krista Spalding,Botox ($14/unit),,,,service,Service,240.0,0.0,,240.0,0.0
+196bca77-b44f-5b43-b8a8-4ab3217abbcb,7/1/2024,RELUXE Med Spa,John Denton,Hannah Kerns,Post injection follow up,,,,service,Service,0.0,0.0,,0.0,0.0
+1019abd9-87ad-5f98-8f58-0bb76bbf094e,7/1/2024,RELUXE Med Spa,Brandi Schroeder,Hannah Kerns,$475 for 50 Units Botox,,,,service,Service,475.0,0.0,,475.0,0.0
