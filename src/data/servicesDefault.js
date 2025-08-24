@@ -1821,6 +1821,137 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+   // Core identity
+  slug: 'men',
+  name: "Men's Services",
+  label: 'For Men',
+  route: '/services/men',
+  featured: true,
+
+  // Quick copy
+  short:
+    'Confident, low-maintenance results. Botox, laser hair removal, facials, and recovery tailored for men.',
+  excerpt:
+    'Natural-looking Botox (“Brotox”), laser hair removal for back/neck/chest, deep-tissue massage, and laser/RF for sun damage, acne scars, and skin quality—built for everyday guys and high-performers.',
+
+  // Hero section (swap image path if you have one)
+  hero: {
+    title: "Men's Aesthetics & Recovery",
+    subtitle:
+      'Look sharp. Feel better. Treatments that fit your routine—fast visits, natural results.',
+    image: '/images/service/men/hero.png',
+    badge: 'Westfield • Carmel',
+  },
+
+  // What we recommend (drives internal linking)
+  recommended: [
+    { slug: 'botox', label: 'Botox for Men (Forehead, Frown, Crow’s Feet)' },
+    { slug: 'laserhair', label: 'Laser Hair Removal (Back, Neck, Chest, Ears)' },
+    { slug: 'massage', label: 'Sports & Deep-Tissue Massage' },
+    { slug: 'morpheus8', label: 'Morpheus8 (Jawline, Acne Scars, Pores)' },
+    { slug: 'clearlift', label: 'ClearLift (Texture & Fine Lines, No Downtime)' },
+    { slug: 'ipl', label: 'IPL (Sun Damage, Redness)' },
+    { slug: 'skinpen', label: 'Microneedling (Acne Scars, Texture)' },
+    { slug: 'hydrafacial', label: 'HydraFacial (Deep Clean + Hydration)' },
+    { slug: 'glo2facial', label: 'Glo2Facial (Glow & Maintenance)' },
+    { slug: 'evolvex', label: 'EvolveX (Core/Torso Tightening & Tone)' },
+    { slug: 'saltsauna', label: 'Infrared Sauna + Salt Booth (Recovery, Stress)' },
+  ],
+
+  // Content blocks (used by your renderer if present)
+  highlights: [
+    {
+      title: 'Natural Results',
+      text: 'Subtle Botox dosing and male brow/forehead patterns—keep expression, reduce lines.',
+      icon: 'fa-regular fa-face-smile',
+    },
+    {
+      title: 'Low-Maintenance',
+      text: 'Book-and-go visits, same-day availability, and plans that fit work & gym schedules.',
+      icon: 'fa-solid fa-bolt',
+    },
+    {
+      title: 'Target Real Concerns',
+      text: 'Back/neck hair, razor bumps, sun damage, jawline definition, shoulder tension.',
+      icon: 'fa-solid fa-bullseye',
+    },
+  ],
+
+  // “At a glance” (renders as bullets or chips)
+  atAGlance: [
+    'Botox® for men (Brotox): 3–4 months typical',
+    'Laser Hair Removal: back/neck/chest/ears',
+    'Sports & Deep-Tissue Massage (60–90 min)',
+    'Acne scar & pore work: Morpheus8 / SkinPen',
+    'Sun damage/redness: IPL • Texture: ClearLift',
+    'HydraFacial / Glo2Facial maintenance',
+  ],
+
+  // Link other service detail pages for the grid/carousel
+  relatedSlugs: [
+    'botox',
+    'laserhair',
+    'massage',
+    'morpheus8',
+    'clearlift',
+    'ipl',
+    'skinpen',
+    'hydrafacial',
+    'glo2facial',
+    'evolvex',
+    'saltsauna',
+  ],
+
+  // Optional booking helpers if your renderer uses them
+  booking: {
+    primary: { label: 'Book a Consult', href: '/book/consult' },
+    quick: [
+      { label: 'Book Botox', href: '/book/botox' },
+      { label: 'Laser Hair (Back/Neck)', href: '/book/laser-hair-removal' },
+      { label: 'Massage', href: '/book/massage' },
+    ],
+  },
+
+  // FAQs (lean, men-specific)
+  faqs: [
+    {
+      q: 'Is “Brotox” different from Botox for women?',
+      a: 'We dose and map differently for male anatomy—typically stronger frontalis and different brow goals—to keep a natural, masculine look.',
+    },
+    {
+      q: 'Best areas for laser hair removal for men?',
+      a: 'Back, back-of-neck, chest, shoulders, abdomen, ears. It reduces ingrown hairs and shaving irritation.',
+    },
+    {
+      q: 'I have sun damage and redness—what helps?',
+      a: 'IPL targets brown/red while ClearLift improves texture with no downtime. We’ll guide which (or both) fits your skin and schedule.',
+    },
+    {
+      q: 'What if I’m new to this?',
+      a: 'Start with a consult. We’ll set a simple plan: quick Botox, facial maintenance, and targeted laser where it matters.',
+    },
+  ],
+
+  // SEO
+  seo: {
+    title: "Men's Services | RELUXE Med Spa (Botox, Laser Hair, Massage)",
+    description:
+      'Men’s aesthetics made simple: subtle Botox, laser hair removal for back/neck/chest, deep-tissue massage, and lasers for sun damage & texture. Westfield & Carmel.',
+    keywords: [
+      'mens botox',
+      'brotox',
+      'laser hair removal men',
+      'mens facial',
+      'morpheus8 for men',
+      'mens massage westfield carmel',
+    ],
+  },
+
+  // Optional imagery (swap if you have assets)
+  images: {
+    hero: '/images/service/men/hero.png',
+    secondary: '/images/service/men/secondary.png',
+  },
 };
 
 export function getDefaultService(slug) {

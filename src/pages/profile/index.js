@@ -31,7 +31,7 @@ export default function ProfileDashboard() {
         <div className="w-full md:w-1/4 bg-gray-50 border-r p-6 space-y-4">
           <div className="mb-8 text-center">
             <Image
-              src="/images/myRELUXE.png"
+              src="/images/myreluxe.png"
               alt="myRELUXE"
               width={300}
               height={1000}

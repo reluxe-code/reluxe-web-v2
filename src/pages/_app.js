@@ -8,12 +8,69 @@ import '@/lib/fontawesome' // ✅ import once
 import { config } from '@fortawesome/fontawesome-svg-core'
 import Script from 'next/script'
 import 'leaflet/dist/leaflet.css'
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || '';
+
 
 config.autoAddCss = false
 
 function MyApp({ Component, pageProps }) {
   return (
     <>
+    {/* =========================
+          Google Analytics 4 (gtag)
+         ========================= */}
+      {GA_ID && (
+        <>
+          <Script
+            id="ga-loader"
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+            strategy="afterInteractive"
+          />
+          <Script id="ga-init" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              // We disable the automatic page_view to avoid double-counting on SPA navigations.
+              gtag('config', '${GA_ID}', { send_page_view: false });
+            `}
+          </Script>
+        </>
+      )}
+
+      {/* =========================
+          Meta (Facebook) Pixel
+         ========================= */}
+      {FB_PIXEL_ID && (
+        <>
+          <Script id="fb-pixel" strategy="afterInteractive">
+            {`
+              !function(f,b,e,v,n,t,s){
+                if(f.fbq)return; n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n; n.push=n; n.loaded=!0; n.version='2.0';
+                n.queue=[]; t=b.createElement(e); t.async=!0;
+                t.src=v; s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)
+              }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '${FB_PIXEL_ID}');
+              fbq('track', 'PageView');
+            `}
+          </Script>
+          {/* NoScript fallback for Pixel */}
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: 'none' }}
+              src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+              alt=""
+            />
+          </noscript>
+        </>
+      )}
+
       {/* 1️⃣ Boulevard injector */}
       <Script id="boulevard-injector" strategy="beforeInteractive">
         {`
@@ -246,107 +303,123 @@ function MyApp({ Component, pageProps }) {
         };
 
         // ---- Helpers ----
-  function whenBlvdReady(cb){
-    if (typeof blvd !== 'undefined' && blvd) return cb();
-    var tries = 0, max = 100;
-    var iv = setInterval(function(){
-      if (typeof blvd !== 'undefined' && blvd) { clearInterval(iv); cb(); }
-      else if (++tries >= max) { clearInterval(iv); }
-    }, 50);
-  }
-
-  function openBookingForSlug(slug){
-    slug = String(slug || '').toLowerCase();
-    var cfg = bookingMap[slug] || bookingMap[''];
-    if (!cfg) return false;
-    if (!blvd || !blvd.openBookingWidget) return false;
-    blvd.openBookingWidget({ urlParams: cfg });
-    return true;
-  }
-
-  // Expose globally in case you want to trigger from React
-  window.bookingMap = bookingMap;
-  window.__openBlvdForSlug = function(slug){
-    whenBlvdReady(function(){ openBookingForSlug(slug); });
-  };
-
-  function isBookHref(href){
-    if (!href) return false;
-    try {
-      var u = new URL(href, location.origin);
-      return u.origin === location.origin && u.pathname.startsWith('/book');
-    } catch(e){ return false; }
-  }
-
-  function handleBook(urlLike, preventers){
-    var url = new URL(urlLike, location.origin);
-    var parts = url.pathname.split('/').filter(Boolean); // ['book','skinpen']
-    var slug = parts[1] || '';
-    if (preventers) preventers.forEach(function(p){ try{ p(); }catch(e){} });
-    whenBlvdReady(function(){ openBookingForSlug(slug); });
-  }
-
-  // ---- Intercept clicks to /book/* (prevents navigation) ----
-  function captureHandler(e){
-    var t = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-    if (!t) return;
-    var href = t.getAttribute('href');
-    if (!isBookHref(href)) return;
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var preventers = [
-      function(){ e.preventDefault(); },
-      function(){ e.stopPropagation(); },
-      function(){ if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
-    ];
-    handleBook(href, preventers);
-  }
-  document.addEventListener('click', captureHandler, true);
-  document.addEventListener('pointerdown', captureHandler, true);
-  document.addEventListener('keydown', function(e){
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    var el = document.activeElement;
-    if (el && el.matches && el.matches('a[href]') && isBookHref(el.getAttribute('href'))){
-      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-      handleBook(el.getAttribute('href'));
-    }
-  }, true);
-
-  // ---- Direct landings on /book or /book/<slug> ----
-  if (location.pathname === '/book' || location.pathname.startsWith('/book/')) {
-    var p1 = location.pathname.split('/').filter(Boolean);
-    var slug1 = p1[1] || '';
-    whenBlvdReady(function(){
-      if (openBookingForSlug(slug1)) {
-        // visually restore URL (no reload)
-        var ref, fallback = '/';
-        try {
-          ref = document.referrer ? new URL(document.referrer) : null;
-          if (ref && ref.origin === location.origin) fallback = ref.pathname + ref.search + ref.hash;
-        } catch(e){}
-        try { history.replaceState({}, '', fallback); } catch(e){}
-      }
-    });
-  }
-
-  // ✅ Auto-open on /services/<slug>?book=1 (or any ?book)
-  (function(){
-    var params = new URLSearchParams(location.search);
-    if (!params.has('book')) return;
-    var parts = location.pathname.replace(/\\/+$/,'').split('/').filter(Boolean);
-    if (parts[0] === 'services' && parts[1]) {
-      var slug2 = parts[1].toLowerCase();
-      whenBlvdReady(function(){
-        if (openBookingForSlug(slug2)) {
-          // remove ?book from the URL to avoid re-opening on refresh
-          params.delete('book');
-          var newUrl = location.pathname + (params.toString() ? ('?' + params.toString()) : '') + location.hash;
-          try { history.replaceState({}, '', newUrl); } catch(e){}
+        function whenBlvdReady(cb){
+          if (typeof blvd !== 'undefined' && blvd) return cb();
+          var tries = 0, max = 100;
+          var iv = setInterval(function(){
+            if (typeof blvd !== 'undefined' && blvd) { clearInterval(iv); cb(); }
+            else if (++tries >= max) { clearInterval(iv); }
+          }, 50);
         }
-      });
-    }
-  })();
 
-})();
+        function openBookingForSlug(slug){
+        slug = String(slug || '').toLowerCase();
+        var cfg = bookingMap[slug] || bookingMap[''];
+        if (!cfg) return false;
+        if (!blvd || !blvd.openBookingWidget) return false;
+        blvd.openBookingWidget({ urlParams: cfg });
+
+        // 🔑 Push analytics event
+        try {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: 'begin_checkout',
+            method: 'blvd_drawer',
+            service_slug: slug,
+            service_path: cfg.path,
+            location_id: cfg.locationId
+          });
+        } catch(e) {
+          console.warn('Booking event not tracked', e);
+        }
+
+        return true;
+      }
+
+
+        // Expose globally in case you want to trigger from React
+        window.bookingMap = bookingMap;
+        window.__openBlvdForSlug = function(slug){
+          whenBlvdReady(function(){ openBookingForSlug(slug); });
+        };
+
+        function isBookHref(href){
+          if (!href) return false;
+          try {
+            var u = new URL(href, location.origin);
+            return u.origin === location.origin && u.pathname.startsWith('/book');
+          } catch(e){ return false; }
+        }
+
+        function handleBook(urlLike, preventers){
+          var url = new URL(urlLike, location.origin);
+          var parts = url.pathname.split('/').filter(Boolean); // ['book','skinpen']
+          var slug = parts[1] || '';
+          if (preventers) preventers.forEach(function(p){ try{ p(); }catch(e){} });
+          whenBlvdReady(function(){ openBookingForSlug(slug); });
+        }
+
+        // ---- Intercept clicks to /book/* (prevents navigation) ----
+        function captureHandler(e){
+          var t = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+          if (!t) return;
+          var href = t.getAttribute('href');
+          if (!isBookHref(href)) return;
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          var preventers = [
+            function(){ e.preventDefault(); },
+            function(){ e.stopPropagation(); },
+            function(){ if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+          ];
+          handleBook(href, preventers);
+        }
+        document.addEventListener('click', captureHandler, true);
+        document.addEventListener('pointerdown', captureHandler, true);
+        document.addEventListener('keydown', function(e){
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          var el = document.activeElement;
+          if (el && el.matches && el.matches('a[href]') && isBookHref(el.getAttribute('href'))){
+            e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            handleBook(el.getAttribute('href'));
+          }
+        }, true);
+
+        // ---- Direct landings on /book or /book/<slug> ----
+        if (location.pathname === '/book' || location.pathname.startsWith('/book/')) {
+          var p1 = location.pathname.split('/').filter(Boolean);
+          var slug1 = p1[1] || '';
+          whenBlvdReady(function(){
+            if (openBookingForSlug(slug1)) {
+              // visually restore URL (no reload)
+              var ref, fallback = '/';
+              try {
+                ref = document.referrer ? new URL(document.referrer) : null;
+                if (ref && ref.origin === location.origin) fallback = ref.pathname + ref.search + ref.hash;
+              } catch(e){}
+              try { history.replaceState({}, '', fallback); } catch(e){}
+            }
+          });
+        }
+
+        // ✅ Auto-open on /services/<slug>?book=1 (or any ?book)
+        (function(){
+          var params = new URLSearchParams(location.search);
+          if (!params.has('book')) return;
+          var parts = location.pathname.replace(/\\/+$/,'').split('/').filter(Boolean);
+          if (parts[0] === 'services' && parts[1]) {
+            var slug2 = parts[1].toLowerCase();
+            whenBlvdReady(function(){
+              if (openBookingForSlug(slug2)) {
+                // remove ?book from the URL to avoid re-opening on refresh
+                params.delete('book');
+                var newUrl = location.pathname + (params.toString() ? ('?' + params.toString()) : '') + location.hash;
+                try { history.replaceState({}, '', newUrl); } catch(e){}
+              }
+            });
+          }
+        })();
+
+      })();
         `}
       </Script>
 
