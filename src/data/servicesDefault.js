@@ -1848,7 +1848,7 @@ const SERVICES_DEFAULTS = {
     },
     overview: {
       p1: "RELUXE Med Spa offers tailored treatments for men who want to look sharp, feel better, and stay on top of their game.",
-      p2: "From wrinkle relaxers and laser hair removal to massage and advanced skin treatments, our team makes aesthetics simple, natural, and confidence-building for everyday guys and high performers alike.",
+      p2: "From wrinkle relaxers like Botox, Dysport, Jeuveau, or Daxxify and laser hair removal to massage and advanced skin treatments, our team makes aesthetics simple, natural, and confidence-building for everyday guys and high performers alike.",
     },
     whyReluxe: [
       { title: 'Natural Results', body: 'Subtle Botox and injectables that keep expression while softening deep lines.' },
@@ -1858,7 +1858,7 @@ const SERVICES_DEFAULTS = {
     tagline: "Look sharp. Feel better. Treatments built for men.",
     bookingLink: bookingLink('men'),
     quickFacts: [
-      { iconKey: 'clock', label: 'Treatment Time', value: '20–60 min avg.' },
+      { iconKey: 'clock', label: 'Treatment Time', value: 'Get in & out fast.' },
       { iconKey: 'calendar', label: 'Frequency', value: 'Every 3–4 months (Botox) or as planned' },
       { iconKey: 'dumbbell', label: 'Best For', value: 'Busy men, professionals, athletes' },
       { iconKey: 'location', label: 'Available At', value: 'Westfield & Carmel' },

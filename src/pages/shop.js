@@ -68,13 +68,6 @@ export default function ShopPage() {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Cherry */}
           <div className="bg-white p-6 rounded-xl shadow-md text-center">
-            <Image
-              src="/images/payment/cherry.png"
-              alt="Cherry Payment Plans"
-              width={200}
-              height={80}
-              className="mx-auto"
-            />
             <h3 className="text-xl font-semibold mt-4">Cherry Payment Plans</h3>
             <p className="text-gray-600 mt-2 mb-4">Split your treatments into monthly payments with 0% interest options.</p>
             <Link
@@ -86,26 +79,12 @@ export default function ShopPage() {
 
           {/* Spafinder */}
           <div className="bg-white p-6 rounded-xl shadow-md text-center">
-            <Image
-              src="/images/payment/spafinder.png"
-              alt="Spafinder"
-              width={200}
-              height={80}
-              className="mx-auto"
-            />
             <h3 className="text-xl font-semibold mt-4">Spafinder Gift Cards</h3>
             <p className="text-gray-600 mt-2">Yes! We gladly accept Spafinder gift certificates.</p>
           </div>
 
           {/* RELUXE Gift Cards */}
           <div className="bg-white p-6 rounded-xl shadow-md text-center">
-            <Image
-              src="/images/payment/giftcard.png"
-              alt="RELUXE Gift Card"
-              width={200}
-              height={80}
-              className="mx-auto"
-            />
             <h3 className="text-xl font-semibold mt-4">RELUXE Gift Cards</h3>
             <p className="text-gray-600 mt-2 mb-4">Give the gift of beauty. Purchase a digital RELUXE gift card instantly.</p>
             <Link

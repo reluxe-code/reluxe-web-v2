@@ -67,11 +67,12 @@ function Footer() {
                 <div className="footer-widget-item">
                   <h2 className="title">Quick Links</h2>
                   <ul className="footer-list mt-[25px]">
-                    <li><Link href="/contact">Book Now</Link></li>
+                    <li><Link href="/book/">Book Now</Link></li>
                     <li><Link href="/locations">Our Locations</Link></li>
                     <li><Link href="/shop">Shop Our Skincare</Link></li>
-                    <li><Link href="/about">Meet Our Team</Link></li>
-                    <li><Link href="/reviews">Reviews</Link></li>
+                     <li><Link href="/conditions">Conditions We Treat</Link></li>
+                    <li><Link href="/team">Meet Our Team</Link></li>
+                    <li><Link href="/events">Wedding & Event Prep</Link></li>
                   </ul>
                 </div>
               </div>
@@ -82,7 +83,8 @@ function Footer() {
                   <h2 className="title">About Us</h2>
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/about">About</Link></li>
-                    <li><Link href="/cherry">Cherry</Link></li>
+                    <li><Link href="/affiliations">Affiliations</Link></li>
+                    <li><Link href="/cherry-financing">Cherry</Link></li>
                     <li><Link href="/spafinder">Spafinder</Link></li>
                     <li><Link href="/blog">Beauty Notes</Link></li>
                   </ul>
@@ -96,9 +98,10 @@ function Footer() {
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/faqs">FAQs</Link></li>
                     <li><Link href="/terms">Terms & Conditions</Link></li>
-                    <li><Link href="/privacy">Privacy Policy</Link></li>
-                    <li><Link href="/help">Help</Link></li>
-                    <li><Link href="/services">Services</Link></li>
+                    <li><Link href="/privacy-policy">Privacy Policy</Link></li>
+                    <li><Link href="/legal">Legal Center</Link></li>
+                    <li><Link href="/profile">Patient Portal</Link></li>
+                    <li><Link href="/services">Our Services</Link></li>
                   </ul>
                 </div>
               </div>
@@ -115,7 +118,7 @@ function Footer() {
                   <div className="copyright flex-wrap md:justify-start justify-center md:mb-0 mb-[10px]">
                     © {currentYear} RELUXE Med Spa • Made with
                     <span className="text-[#f53400] mx-1"><AiIcons.AiFillHeart /></span>
-                    <Link href="https://themeforest.net/user/codecarnival/portfolio" target="_blank">
+                    <Link href="https://goodlookingco.com" target="_blank">
                       by Ridiculously Good Looking Co
                     </Link>
                   </div>
