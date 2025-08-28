@@ -3,16 +3,92 @@ import Link from 'next/link';
 import * as AiIcons from 'react-icons/ai';
 import Image from 'next/image';
 import TextListSignupCTA from '@/components/cta/TextListSignupCTA';
+import { FiCalendar, FiGrid, FiHeart, FiTag, FiMapPin } from 'react-icons/fi';
+import { useRouter } from 'next/router';
+
+// --- Mobile Tab Bar (sticky, black, white icons/text) ---
+function MobileTabBar({ isActivePath }) {
+  const tabs = [
+    { href: '/book',        label: 'Book',      Icon: FiCalendar },
+    { href: '/services',    label: 'Services',  Icon: FiGrid },
+    { href: '/conditions',  label: 'Treat',     Icon: FiHeart },
+    { href: '/deals',      label: 'Offers',    Icon: FiTag },   // update/rename if needed
+    { href: '/locations',   label: 'Locations', Icon: FiMapPin },
+  ];
+
+  return (
+    <>
+      {/* spacer so content isn’t hidden behind the fixed bar */}
+      <div className="h-16 md:hidden" aria-hidden="true" />
+
+      {/* fixed at absolute bottom; safe-area aware for iOS */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-[100] md:hidden"
+        role="navigation"
+        aria-label="Primary"
+      >
+        <div
+          className="mx-auto max-w-3xl bg-black text-white ring-1 ring-white/10 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.65)]"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <ul className="grid grid-cols-5">
+            {tabs.map(({ href, label, Icon }) => {
+              const active = isActivePath(href);
+              return (
+                <li key={href} className="flex">
+                  <Link
+                    href={href}
+                    className={[
+                      'flex flex-1 flex-col items-center justify-center gap-1 py-2 min-w-0',
+                      active ? 'text-white' : 'text-white/70 hover:text-white',
+                    ].join(' ')}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <span
+                      className={[
+                        'relative inline-flex h-6 w-6 items-center justify-center',
+                        active ? 'scale-110' : '',
+                      ].join(' ')}
+                    >
+                      <Icon className="h-6 w-6" />
+                      {active && (
+                        <span
+                          className="absolute -top-2 h-1 w-6 rounded-full bg-white/80"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </span>
+                    <span className="text-[11px] font-medium">{label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </nav>
+    </>
+  );
+}
 
 function Footer() {
   const currentYear = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
   });
 
+  // Active-path helper for MobileTabBar
+  const router = useRouter();
+  const normalize = (p) => (p || '').replace(/\/+$/, '') || '/';
+  const isActivePath = (testPath) => {
+    const curr = normalize(router.asPath || router.pathname);
+    const test = normalize(testPath);
+    if (test === '/') return curr === '/';
+    return curr === test || curr.startsWith(`${test}/`);
+  };
+
   return (
     <>
       {/* ——— Newsletter / Text-List Signup CTA ——— */}
-      <TextListSignupCTA className="md:pt-[120px]"/>
+      <TextListSignupCTA className="md:pt-[120px]" />
 
       {/* ——— Actual Footer ——— */}
       <footer className="footer-area pt-[60px]">
@@ -40,18 +116,18 @@ function Footer() {
                       RELUXE Med Spa<br />
                       514 E State Road 32<br />
                       Westfield, IN 46074<br />
-                      <Link href="tel:+1-317-763-1142" className="hover:text-black transition-all">
+                      <a href="tel:+13177631142" className="hover:text-black transition-all">
                         317-763-1142
-                      </Link>
+                      </a>
                     </li>
                     <li>
                       <b>Carmel</b><br />
                       RELUXE x House of Health<br />
                       10485 N Pennsylvania St.<br />
                       Carmel, IN 46280<br />
-                      <Link href="tel:+1-317-763-1216" className="hover:text-black transition-all">
-                        317-763-1216
-                      </Link>
+                      <a href="tel:+13177631142" className="hover:text-black transition-all">
+                        317-763-1142
+                      </a>
                     </li>
                     <li>
                       <a href="mailto:hello@reluxemedspa.com" className="hover:text-black transition-all">
@@ -70,7 +146,7 @@ function Footer() {
                     <li><Link href="/book/">Book Now</Link></li>
                     <li><Link href="/locations">Our Locations</Link></li>
                     <li><Link href="/shop">Shop Our Skincare</Link></li>
-                     <li><Link href="/conditions">Conditions We Treat</Link></li>
+                    <li><Link href="/conditions">Conditions We Treat</Link></li>
                     <li><Link href="/team">Meet Our Team</Link></li>
                     <li><Link href="/events">Wedding & Event Prep</Link></li>
                   </ul>
@@ -84,8 +160,8 @@ function Footer() {
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/about">About</Link></li>
                     <li><Link href="/affiliations">Affiliations</Link></li>
-                    <li><Link href="/cherry-financing">Cherry</Link></li>
-                    <li><Link href="/spafinder">Spafinder</Link></li>
+                    <li><Link href="/financing/cherry">Cherry</Link></li>
+                    <li><Link href="/gifts/spafinder">SpaFinder</Link></li>
                     <li><Link href="/blog">Beauty Notes</Link></li>
                   </ul>
                 </div>
@@ -97,8 +173,8 @@ function Footer() {
                   <h2 className="title">Help Center</h2>
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/faqs">FAQs</Link></li>
-                    <li><Link href="/terms">Terms & Conditions</Link></li>
-                    <li><Link href="/privacy-policy">Privacy Policy</Link></li>
+                    <li><Link href="/legal/terms">Terms &amp; Conditions</Link></li>
+                    <li><Link href="/legal/privacy">Privacy Policy</Link></li>
                     <li><Link href="/legal">Legal Center</Link></li>
                     <li><Link href="/profile">Patient Portal</Link></li>
                     <li><Link href="/services">Our Services</Link></li>
@@ -118,17 +194,17 @@ function Footer() {
                   <div className="copyright flex-wrap md:justify-start justify-center md:mb-0 mb-[10px]">
                     © {currentYear} RELUXE Med Spa • Made with
                     <span className="text-[#f53400] mx-1"><AiIcons.AiFillHeart /></span>
-                    <Link href="https://goodlookingco.com" target="_blank">
+                    <a href="https://goodlookingco.com" target="_blank" rel="noreferrer">
                       by Ridiculously Good Looking Co
-                    </Link>
+                    </a>
                   </div>
                 </div>
                 <div className="md:col-span-4">
                   <ul className="footer-social-link md:mb-0 mb-[10px] flex space-x-4 justify-center md:justify-start">
-                    <li><Link href="https://twitter.com/">Twitter</Link></li>
-                    <li><Link href="https://facebook.com/reluxemedspa">Facebook</Link></li>
-                    <li><Link href="https://instagram.com/reluxemedspa">Instagram</Link></li>
-                    <li><Link href="https://tiktok.com/reluxemedspa">TikTok</Link></li>
+                    <li><a href="https://twitter.com/" target="_blank" rel="noreferrer">Twitter</a></li>
+                    <li><a href="https://facebook.com/reluxemedspa" target="_blank" rel="noreferrer">Facebook</a></li>
+                    <li><a href="https://instagram.com/reluxemedspa" target="_blank" rel="noreferrer">Instagram</a></li>
+                    <li><a href="https://tiktok.com/reluxemedspa" target="_blank" rel="noreferrer">TikTok</a></li>
                   </ul>
                 </div>
                 <div className="md:col-span-2">
@@ -139,7 +215,7 @@ function Footer() {
                       </Link>
                     </li>
                     <li>
-                      <Link href="/contact" className="text-[#30373E] text-[14px] uppercase hover:text-[#263a4f]">
+                      <Link href="/book" className="text-[#30373E] text-[14px] uppercase hover:text-[#263a4f]">
                         Book Now
                       </Link>
                     </li>
@@ -150,6 +226,9 @@ function Footer() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile sticky footer nav */}
+      <MobileTabBar isActivePath={isActivePath} />
     </>
   );
 }
