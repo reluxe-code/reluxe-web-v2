@@ -89,41 +89,24 @@ function PillDropdown({ className = '' }) {
   );
 }
 
-/* ---------- Segmented toggle: Westfield | Carmel (compact, theme-aware) ---------- */
-function Segmented({ className = '', tone = 'light', showLabel = true }) {
+/* Segmented toggle: Westfield | Carmel (compact, sticky-friendly) */
+function Segmented({ className = '', tone = 'light', showLabel = false }) {
   const { locationKey, setLocationKey } = useLocationPref();
   const isDark = tone === 'dark';
 
-  const wrap = `inline-flex items-center gap-2 ${className}`;
-  const labelCls = [
-    'text-[11px] tracking-wide',
-    isDark ? 'text-white/70' : 'text-gray-600'
-  ].join(' ');
+  const wrap     = `inline-flex items-center gap-2 ${className}`;
+  const labelCls = `text-[11px] tracking-wide ${isDark ? 'text-white/70' : 'text-gray-600'}`;
   const groupCls = [
-    'inline-flex rounded-full border p-0.5',
+    'loc-group inline-flex rounded-full border p-0.5 transition-colors',
     isDark ? 'bg-white/10 border-white/20' : 'bg-gray-100 border-gray-200'
   ].join(' ');
-  const btnBase = 'px-3 py-1 rounded-full text-xs font-semibold transition focus:outline-none focus:ring-2';
-  const activeCls   = isDark ? 'bg-white text-black shadow-sm focus:ring-white/60'
-                             : 'bg-black text-white shadow-sm focus:ring-black/60';
-  const inactiveCls = isDark ? 'text-white/90 hover:bg-white/10 focus:ring-white/30'
-                             : 'text-gray-800 hover:bg-gray-200 focus:ring-gray-300';
+  const btnBase  = 'loc-btn px-3 py-1 rounded-full text-xs font-semibold transition focus:outline-none focus:ring-2';
+  const active   = isDark ? 'bg-white text-black shadow-sm focus:ring-white/60'
+                          : 'bg-black text-white shadow-sm focus:ring-black/60';
+  const inactive = isDark ? 'text-white/90 hover:bg-white/10 focus:ring-white/30'
+                          : 'text-gray-800 hover:bg-gray-200 focus:ring-gray-300';
 
-  const select = (k) => {
-    setLocationKey(k);
-    try {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ event: 'location_changed', location_key: k });
-    } catch {}
-  };
-
-  // arrow-left/right to toggle
-  const onKeyDown = (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      select(locationKey === 'westfield' ? 'carmel' : 'westfield');
-    }
-  };
+  const select = (k) => { setLocationKey(k); try{ window.dataLayer?.push({event:'location_changed',location_key:k}); }catch{} };
 
   const Btn = ({ k, children }) => (
     <button
@@ -131,14 +114,14 @@ function Segmented({ className = '', tone = 'light', showLabel = true }) {
       role="radio"
       aria-checked={k === locationKey}
       onClick={() => select(k)}
-      className={[btnBase, k === locationKey ? activeCls : inactiveCls].join(' ')}
+      className={[btnBase, k === locationKey ? active : inactive].join(' ')}
     >
       {children}
     </button>
   );
 
   return (
-    <div className={wrap} role="radiogroup" aria-label="Choose location" onKeyDown={onKeyDown}>
+    <div className={wrap} role="radiogroup" aria-label="Choose location">
       {showLabel && <span className={labelCls}>Location</span>}
       <div className={groupCls}>
         <Btn k="westfield">Westfield</Btn>
@@ -147,6 +130,7 @@ function Segmented({ className = '', tone = 'light', showLabel = true }) {
     </div>
   );
 }
+
 
 
 /* ---------- Icon-only button with badge + dropdown ---------- */

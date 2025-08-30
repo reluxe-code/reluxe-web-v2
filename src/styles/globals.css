@@ -381,3 +381,26 @@ textarea:focus-visible {
 }
 
 .popup-text { color:white; }
+
+/* Compact by default */
+.loc-group { backdrop-filter: blur(4px); }
+.loc-btn   { height: 28px; line-height: 1; }
+
+/* When header sticks, make it a touch slimmer & lower-contrast */
+.header-section.is-sticky .loc-group {
+  background-color: rgba(255,255,255,0.08); /* subtle on dark */
+  border-color: rgba(255,255,255,0.12);
+}
+
+.header-section.is-sticky .loc-btn {
+  height: 24px;
+  padding-left: 0.5rem;  /* px-2 */
+  padding-right: 0.5rem; /* px-2 */
+  font-size: 0.7rem;     /* ~text-[11px] */
+}
+
+/* Prevent layout jank in the header row */
+.header-section .loc-group,
+.header-section .loc-btn {
+  white-space: nowrap;
+}
