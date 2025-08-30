@@ -8,17 +8,21 @@ import '@/lib/fontawesome' // ✅ import once
 import { config } from '@fortawesome/fontawesome-svg-core'
 import Script from 'next/script'
 import 'leaflet/dist/leaflet.css'
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID || '';
-const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || '';
 
+// 🔁 Location preference provider & chooser
+import { LocationProvider } from '@/context/LocationContext'
+import LocationChooserModal from '@/components/location/LocationChooserModal'
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || ''
+const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || ''
 
 config.autoAddCss = false
 
 function MyApp({ Component, pageProps }) {
   return (
     <>
-    {/* =========================
-          Google Analytics 4 (gtag)
+      {/* =========================
+            Google Analytics 4 (gtag)
          ========================= */}
       {GA_ID && (
         <>
@@ -40,7 +44,7 @@ function MyApp({ Component, pageProps }) {
       )}
 
       {/* =========================
-          Meta (Facebook) Pixel
+            Meta (Facebook) Pixel
          ========================= */}
       {FB_PIXEL_ID && (
         <>
@@ -93,216 +97,79 @@ function MyApp({ Component, pageProps }) {
         `}
       </Script>
 
-      {/* 2️⃣ Intercept /book/* links and open BLVD drawer without navigation */}
+      {/* 2️⃣ Intercept /book/* links and open BLVD drawer using preferred location */}
       <Script id="blvd-booking-link-interceptor" strategy="afterInteractive">
         {`
       (function () {
-        // ---- Map slugs -> BLVD urlParams ----
+        // ---- Booking paths by slug (location resolved at runtime) ----
         var bookingMap = {
-          tox: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1',
-            visitType: 'SELF_VISIT'
-          },
-          botox: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1',
-            visitType: 'SELF_VISIT'
-          },
-          dysport: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1',
-            visitType: 'SELF_VISIT'
-          },
-          jeuveau: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1',
-            visitType: 'SELF_VISIT'
-          },
-          daxxify: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1',
-            visitType: 'SELF_VISIT'
-          },
-          prp: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_55c393d3-4bc7-46ae-a2f8-e696c45eb2f2',
-            visitType: 'SELF_VISIT'
-          },
-          filler: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_3fd6eb78-f596-486f-a2b0-179e33b424f7',
-            visitType: 'SELF_VISIT'
-          },
-          rha: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_3fd6eb78-f596-486f-a2b0-179e33b424f7',
-            visitType: 'SELF_VISIT'
-          },
-          filler: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_3fd6eb78-f596-486f-a2b0-179e33b424f7',
-            visitType: 'SELF_VISIT'
-          },
-          facialbalancing: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Consultations%20&%20Follow-Ups/s_0b53c178-1c07-4620-bf6e-505c5f76a24a',
-            visitType: 'SELF_VISIT'
-          },
-          'filler-dissolving': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_c35e5b52-c42d-405e-9676-b56537dc3658',
-            visitType: 'SELF_VISIT'
-          },
-           'sculptra': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_40baf4e1-3e0a-4737-8608-518e169e7b8e',
-            visitType: 'SELF_VISIT'
-          },
-          consult: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Consultations%20&%20Follow-Ups',
-            visitType: 'SELF_VISIT'
-          },
-          'tox-consult': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Consultations%20&%20Follow-Ups/s_2f718b9d-27b3-48a6-8877-f29e45ed37d4',
-            visitType: 'SELF_VISIT'
-          },
-          massage: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Massage',
-            visitType: 'SELF_VISIT'
-          },
-          '60-minute-choice-massage': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Massage/s_22296534-3a47-475b-8056-fe911317c22b',
-            visitType: 'SELF_VISIT'
-          },
-          'intromassage': {
-             locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Massage/s_c20c2018-45b2-410d-b160-27a68ca7b2c6',
-            visitType: 'SELF_VISIT'
-          },
-          'massageintro': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Massage/s_c20c2018-45b2-410d-b160-27a68ca7b2c6',
-            visitType: 'SELF_VISIT'
-          },
-          skinpen: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Microneedling%20%28Morpheus8%20&%20SkinPen%29/s_9be00f2c-f0c5-4333-abbc-3fb955562838',
-            visitType: 'SELF_VISIT'
-          },
-          'lip-flip': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_93f3a755-5ad7-4d18-8416-c9bf5c0200e6',
-            visitType: 'SELF_VISIT'
-          },
-          facials: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels',
-            visitType: 'SELF_VISIT'
-          },
-          'signature-facial': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_3101d014-5a79-418a-80d8-e2c78fcdf541',
-            visitType: 'SELF_VISIT'
-          },
-          biorepeel: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_712c0f4c-18ba-456f-b313-108115bae7f2',
-            visitType: 'SELF_VISIT'
-          },
-          'the-perfect-dermapeel': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_aa963e4b-d087-4534-9451-1ee0b535e799',
-            visitType: 'SELF_VISIT'
-          },
-          'chemical-peel': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_c2626b50-9007-49b4-a701-97aa230f1b2c',
-            visitType: 'SELF_VISIT'
-          },
-          dermaplane: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_bab15280-f62e-4b30-8f69-fd38310638fa',
-            visitType: 'SELF_VISIT'
-          },
-          'lash-lift-tint': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_6ce1edab-b912-4bb8-939b-cafbedb4579d',
-            visitType: 'SELF_VISIT'
-          },
-          'teen-facial': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_5ee35d44-a9a0-4f4b-9a00-7c4406ae855c',
-            visitType: 'SELF_VISIT'
-          },
-          hydrafacial: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Hydrafacial™%20Premium%20Facials',
-            visitType: 'SELF_VISIT'
-          },
-          glo2facial: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Glo2Facial™%20Premium%20Facials',
-            visitType: 'SELF_VISIT'
-          },
-          morpheus8: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Microneedling%20%28Morpheus8%20&%20SkinPen%29/s_f7e2d350-427f-4292-97aa-eb74fc86d228',
-            visitType: 'SELF_VISIT'
-          },
-          opus: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_35e8d13c-516c-4a84-a4b6-2fd81e065d23',
-            visitType: 'SELF_VISIT'
-          },
-          'laser-hair-removal': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_20eba50f-1d8b-434b-bb64-b8fd8bca016e',
-            visitType: 'SELF_VISIT'
-          },
-          clearlift: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_ef2b57db-69d7-49ee-89e9-27475ea1001e',
-            visitType: 'SELF_VISIT'
-          },
-          ipl: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_8f5b3d81-58f0-400e-93dd-c83b0ca60e41',
-            visitType: 'SELF_VISIT'
-          },
-          clearskin: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_0df5eeda-be41-4f67-94d8-1e21a7dacba0',
-            visitType: 'SELF_VISIT'
-          },
-          vascupen: {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '#/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_3b9e9259-c659-400d-ac22-d8cd7db3676b',
-            visitType: 'SELF_VISIT'
-          },
-          'body-contouring': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/Body%20Contouring%20w%2FEvolveX/s_f132103a-ff13-465c-8e26-6ee2370cb909',
-            visitType: 'SELF_VISIT'
-          },
-          'salt-sauna': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu/IR%20Sauna%20&%20Salt%20Booth',
-            visitType: 'SELF_VISIT'
-          },
-          // default /book goes to main menu
-          '': {
-            locationId: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-            path: '/cart/menu',
-            visitType: 'SELF_VISIT'
-          }
+          tox:   { path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1', visitType: 'SELF_VISIT' },
+          botox: { path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1', visitType: 'SELF_VISIT' },
+          dysport:{ path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1', visitType: 'SELF_VISIT' },
+          jeuveau:{ path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1', visitType: 'SELF_VISIT' },
+          daxxify:{ path: '/cart/menu/Injectables: Wrinkle Relaxers (Tox) + Fillers/s_f57a8a20-d32d-4e1a-bb78-5f366dc73cf1', visitType: 'SELF_VISIT' },
+          prp:   { path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_55c393d3-4bc7-46ae-a2f8-e696c45eb2f2', visitType: 'SELF_VISIT' },
+          filler:{ path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_3fd6eb78-f596-486f-a2b0-179e33b424f7', visitType: 'SELF_VISIT' },
+          rha:   { path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_3fd6eb78-f596-486f-a2b0-179e33b424f7', visitType: 'SELF_VISIT' },
+          facialbalancing: { path: '/cart/menu/Consultations%20&%20Follow-Ups/s_0b53c178-1c07-4620-bf6e-505c5f76a24a', visitType: 'SELF_VISIT' },
+          'filler-dissolving': { path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_c35e5b52-c42d-405e-9676-b56537dc3658', visitType: 'SELF_VISIT' },
+          sculptra: { path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_40baf4e1-3e0a-4737-8608-518e169e7b8e', visitType: 'SELF_VISIT' },
+          consult: { path: '/cart/menu/Consultations%20&%20Follow-Ups', visitType: 'SELF_VISIT' },
+          'tox-consult': { path: '/cart/menu/Consultations%20&%20Follow-Ups/s_2f718b9d-27b3-48a6-8877-f29e45ed37d4', visitType: 'SELF_VISIT' },
+          massage: { path: '/cart/menu/Massage', visitType: 'SELF_VISIT' },
+          '60-minute-choice-massage': { path: '/cart/menu/Massage/s_22296534-3a47-475b-8056-fe911317c22b', visitType: 'SELF_VISIT' },
+          intromassage: { path: '/cart/menu/Massage/s_c20c2018-45b2-410d-b160-27a68ca7b2c6', visitType: 'SELF_VISIT' },
+          massageintro: { path: '/cart/menu/Massage/s_c20c2018-45b2-410d-b160-27a68ca7b2c6', visitType: 'SELF_VISIT' },
+          skinpen: { path: '/cart/menu/Microneedling%20%28Morpheus8%20&%20SkinPen%29/s_9be00f2c-f0c5-4333-abbc-3fb955562838', visitType: 'SELF_VISIT' },
+          'lip-flip': { path: '/cart/menu/Injectables:%20Wrinkle%20Relaxers%20%28Tox%29%20%2B%20Fillers/s_93f3a755-5ad7-4d18-8416-c9bf5c0200e6', visitType: 'SELF_VISIT' },
+          facials: { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels', visitType: 'SELF_VISIT' },
+          'signature-facial': { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_3101d014-5a79-418a-80d8-e2c78fcdf541', visitType: 'SELF_VISIT' },
+          biorepeel: { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_712c0f4c-18ba-456f-b313-108115bae7f2', visitType: 'SELF_VISIT' },
+          'the-perfect-dermapeel': { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_aa963e4b-d087-4534-9451-1ee0b535e799', visitType: 'SELF_VISIT' },
+          'chemical-peel': { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_c2626b50-9007-49b4-a701-97aa230f1b2c', visitType: 'SELF_VISIT' },
+          dermaplane: { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_bab15280-f62e-4b30-8f69-fd38310638fa', visitType: 'SELF_VISIT' },
+          'lash-lift-tint': { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_6ce1edab-b912-4bb8-939b-cafbedb4579d', visitType: 'SELF_VISIT' },
+          'teen-facial': { path: '/cart/menu/Signature%20Facials,%20Masks,%20Dermaplane,%20&%20Peels/s_5ee35d44-a9a0-4f4b-9a00-7c4406ae855c', visitType: 'SELF_VISIT' },
+          hydrafacial: { path: '/cart/menu/Hydrafacial™%20Premium%20Facials', visitType: 'SELF_VISIT' },
+          glo2facial: { path: '/cart/menu/Glo2Facial™%20Premium%20Facials', visitType: 'SELF_VISIT' },
+          morpheus8: { path: '/cart/menu/Microneedling%20%28Morpheus8%20&%20SkinPen%29/s_f7e2d350-427f-4292-97aa-eb74fc86d228', visitType: 'SELF_VISIT' },
+          opus: { path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_35e8d13c-516c-4a84-a4b6-2fd81e065d23', visitType: 'SELF_VISIT' },
+          'laser-hair-removal': { path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_20eba50f-1d8b-434b-bb64-b8fd8bca016e', visitType: 'SELF_VISIT' },
+          clearlift: { path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_ef2b57db-69d7-49ee-89e9-27475ea1001e', visitType: 'SELF_VISIT' },
+          ipl: { path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_8f5b3d81-58f0-400e-93dd-c83b0ca60e41', visitType: 'SELF_VISIT' },
+          clearskin: { path: '/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_0df5eeda-be41-4f67-94d8-1e21a7dacba0', visitType: 'SELF_VISIT' },
+          vascupen: { path: '#/cart/menu/Laser%20Treatments:%20Opus,%20IPL,%20Hair%20Removal,%20ClearLift/s_3b9e9259-c659-400d-ac22-d8cd7db3676b', visitType: 'SELF_VISIT' },
+          'body-contouring': { path: '/cart/menu/Body%20Contouring%20w%2FEvolveX/s_f132103a-ff13-465c-8e26-6ee2370cb909', visitType: 'SELF_VISIT' },
+          'salt-sauna': { path: '/cart/menu/IR%20Sauna%20&%20Salt%20Booth', visitType: 'SELF_VISIT' },
+          '': { path: '/cart/menu', visitType: 'SELF_VISIT' }
         };
 
-        // ---- Helpers ----
+        // Preferred location (cookie/localStorage)
+        var LOCATION_IDS = {
+          westfield: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
+          carmel: '3ce18260-2e1f-4beb-8fcf-341bc85a682c'
+        };
+
+        function readCookie(name){
+          var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+          return m ? decodeURIComponent(m[1]) : null;
+        }
+
+        function getPreferredLocationKey(){
+          try {
+            var params = new URLSearchParams(location.search);
+            var loc = params.get('loc');
+            if (loc && LOCATION_IDS[loc]) return loc;
+          } catch(e){}
+          var ck = readCookie('reluxeLocation');
+          if (ck && LOCATION_IDS[ck]) return ck;
+          try {
+            var ls = localStorage.getItem('reluxeLocation');
+            if (ls && LOCATION_IDS[ls]) return ls;
+          } catch(e){}
+          return null;
+        }
+
         function whenBlvdReady(cb){
           if (typeof blvd !== 'undefined' && blvd) return cb();
           var tries = 0, max = 100;
@@ -313,35 +180,34 @@ function MyApp({ Component, pageProps }) {
         }
 
         function openBookingForSlug(slug){
-        slug = String(slug || '').toLowerCase();
-        var cfg = bookingMap[slug] || bookingMap[''];
-        if (!cfg) return false;
-        if (!blvd || !blvd.openBookingWidget) return false;
-        blvd.openBookingWidget({ urlParams: cfg });
+          slug = String(slug || '').toLowerCase();
+          var cfg = bookingMap[slug] || bookingMap[''];
+          if (!cfg) return false;
 
-        // 🔑 Push analytics event
-        try {
-          window.dataLayer = window.dataLayer || [];
-          window.dataLayer.push({
-            event: 'begin_checkout',
-            method: 'blvd_drawer',
-            service_slug: slug,
-            service_path: cfg.path,
-            location_id: cfg.locationId
-          });
-        } catch(e) {
-          console.warn('Booking event not tracked', e);
+          var locKey = getPreferredLocationKey();
+          if (!locKey) {
+            // ask React to open chooser, and continue booking after selection
+            try { window.dispatchEvent(new CustomEvent('open-location-chooser', { detail: { slug: slug } })); } catch(e){}
+            return true;
+          }
+
+          var locationId = LOCATION_IDS[locKey];
+          if (!locationId || !blvd || !blvd.openBookingWidget) return false;
+
+          blvd.openBookingWidget({ urlParams: { locationId: locationId, path: cfg.path, visitType: cfg.visitType } });
+
+          // 🔑 Analytics event
+          try {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event: 'begin_checkout', method: 'blvd_drawer', service_slug: slug, service_path: cfg.path, location_id: locationId });
+          } catch(e){}
+
+          return true;
         }
-
-        return true;
-      }
-
 
         // Expose globally in case you want to trigger from React
         window.bookingMap = bookingMap;
-        window.__openBlvdForSlug = function(slug){
-          whenBlvdReady(function(){ openBookingForSlug(slug); });
-        };
+        window.__openBlvdForSlug = function(slug){ whenBlvdReady(function(){ openBookingForSlug(slug); }); };
 
         function isBookHref(href){
           if (!href) return false;
@@ -423,15 +289,21 @@ function MyApp({ Component, pageProps }) {
         `}
       </Script>
 
-      <Layout>
-        <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <link rel="shortcut icon" href="../favicon.png" />
-        </Head>
+      {/* Wrap the site so React can read/set preference */}
+      <LocationProvider>
+        <Layout>
+          <Head>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <link rel="shortcut icon" href="../favicon.png" />
+          </Head>
 
-        <Component {...pageProps} />
-        <ScrollToTop />
-      </Layout>
+          <Component {...pageProps} />
+          <ScrollToTop />
+
+          {/* First-time chooser modal lives at app root */}
+          <LocationChooserModal />
+        </Layout>
+      </LocationProvider>
     </>
   )
 }

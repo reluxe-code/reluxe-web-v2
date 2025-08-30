@@ -15,6 +15,7 @@ import LocationOverview from '@/components/locations/LocationOverview'
 import CollaborationSection from '@/components/locations/CollaborationSection' 
 import DealsCarousel from '@/components/deals/DealsCarousel'
 import { getDealsSSR } from '@/lib/deals';
+import ForceLocation from '@/components/location/ForceLocation';
 
 
 export async function getStaticPaths() {
@@ -144,6 +145,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
 
   return (
     <>
+    <ForceLocation loc={slug} />
       <Head>
         <title>{title} | RELUXE Med Spa</title>
       </Head>

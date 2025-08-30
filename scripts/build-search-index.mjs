@@ -2,7 +2,7 @@
 import fs from "fs/promises";
 import path from "path";
 import fg from "fast-glob";
-import cheerio from "cheerio";
+import { load } from "cheerio";
 
 /**
  * Usage:
@@ -72,7 +72,7 @@ async function main() {
   for (const file of files) {
     try {
       const html = await fs.readFile(file, "utf8");
-      const $ = cheerio.load(html);
+      const $ = load(html);
 
       // URL
       const url = toUrlFromFile(outDir.replace(/\\/g, "/"), file);

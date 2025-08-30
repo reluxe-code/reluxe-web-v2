@@ -8,6 +8,7 @@ import { AiOutlineClose } from 'react-icons/ai';
 import { OffcanvasData } from './offcanvas-data';
 import WhiteLogo from './white-logo';
 import { FiPhone, FiMessageSquare } from 'react-icons/fi';
+import LocationSwitcherMini from '@/components/location/LocationSwitcherMini';
 
 
 function HeaderTwo() {
@@ -132,7 +133,7 @@ function HeaderTwo() {
             </div>
 
             {/* Desktop Nav */}
-            <div className="lg:col-span-7 lg:block hidden">
+            <div className="lg:col-span-6 lg:block hidden">
               <nav className="pl-4">
                 <ul className="main-menu text-white flex">
                   <li>
@@ -216,8 +217,9 @@ function HeaderTwo() {
             </div>
 
             {/* CTA + Mobile Controls */}
-            <div className="lg:col-span-3 col-span-6">
+            <div className="lg:col-span-4 col-span-7">
               <div className="flex justify-end items-center gap-2 pr-2">
+                
                 <Link
                   href="/book"
                   className="hidden sm:inline-block bg-black border border-white text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition"
@@ -236,6 +238,7 @@ function HeaderTwo() {
                 >
                  <FiPhone className="h-5 w-5" />
                 </Link>
+                <LocationSwitcherMini variant="icon" />
                 <button
                   type="button"
                   className="menu-bars flex text-[24px] ml-2 sm:ml-3"
@@ -300,6 +303,7 @@ function HeaderTwo() {
 
           {/* Top CTAs (fixed) */}
           <div className="p-4 border-b grid grid-cols-1 gap-2 flex-none">
+            <LocationSwitcherMini variant="segmented" />
             <Link
               href="/book"
               className="w-full text-center bg-black text-white px-4 py-3 rounded font-semibold"
