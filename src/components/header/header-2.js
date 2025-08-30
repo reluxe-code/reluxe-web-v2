@@ -239,8 +239,8 @@ function HeaderTwo() {
                  <FiPhone className="h-5 w-5" />
                 </Link>
                 
-                  <Segmented tone="dark" showLabel={false} className="hidden sm:inline-flex flex-none" />
-
+                <LocationSwitcherMini variant="icon" className="flex-none z-20" />
+                
                 <button
                   type="button"
                   className="menu-bars flex text-[24px] ml-2 sm:ml-3"

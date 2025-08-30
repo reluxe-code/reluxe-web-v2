@@ -404,3 +404,14 @@ textarea:focus-visible {
 .header-section .loc-btn {
   white-space: nowrap;
 }
+
+/* never stretch; keep a square */
+.loc-icon-btn { height: 32px; width: 32px; padding: 0; line-height: 0; }
+
+/* when header sticks, gently shrink */
+.header-section.is-sticky .loc-icon-btn {
+  height: 28px;
+  width: 28px;
+  border-color: rgba(255,255,255,0.25);
+  background-color: rgba(0,0,0,0.2);
+}

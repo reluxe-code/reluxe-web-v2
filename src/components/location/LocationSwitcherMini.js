@@ -133,15 +133,16 @@ function Segmented({ className = '', tone = 'light', showLabel = false }) {
 
 
 
-/* ---------- Icon-only button with badge + dropdown ---------- */
+/* ---------- Icon-only button with badge + dropdown (sticky-safe) ---------- */
 function IconDropdown({ className = '' }) {
   const { locationKey, setLocationKey } = useLocationPref();
   const [open, setOpen] = useState(false);
   const btnRef = useRef(null);
   const popRef = useRef(null);
+  const badge = locationKey ? ABBR[locationKey] : '—';
 
   useEffect(() => {
-    function onDoc(e) {
+    function onDoc(e){
       if (!open) return;
       if (popRef.current?.contains(e.target) || btnRef.current?.contains(e.target)) return;
       setOpen(false);
@@ -155,15 +156,16 @@ function IconDropdown({ className = '' }) {
     };
   }, [open]);
 
-  const badge = locationKey ? ABBR[locationKey] : '—';
-
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative flex-none ${className}`}>
       <button
         ref={btnRef}
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="relative inline-flex items-center justify-center h-8 w-8 rounded-md border border-white/30 bg-black/20 text-white hover:bg-white hover:text-black transition"
+        /* lock dimensions; avoid parent flex stretching */
+        className="loc-icon-btn relative inline-grid place-items-center h-8 w-8 rounded-full
+                   border border-white/30 bg-black/20 text-white transition
+                   hover:bg-white hover:text-black p-0 leading-none select-none"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Change location"
@@ -172,8 +174,10 @@ function IconDropdown({ className = '' }) {
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
           <path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/>
         </svg>
+
         {/* badge */}
-        <span className="absolute -top-1 -right-1 rounded-full bg-white text-black text-[10px] font-bold px-1.5 py-[1px]">
+        <span className="absolute -top-1 -right-1 rounded-full bg-white text-black
+                         text-[10px] font-bold px-1.5 py-[1px] leading-none">
           {badge}
         </span>
       </button>
@@ -201,3 +205,4 @@ function IconDropdown({ className = '' }) {
     </div>
   );
 }
+
