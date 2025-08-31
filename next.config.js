@@ -4,10 +4,14 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+<<<<<<< HEAD
 
   // Native Next.js on Vercel (no static export)
   images: {
     unoptimized: false,
+=======
+  images: {
+>>>>>>> rescue/broken-includes
     domains: ['wordpress-74434-5742908.cloudwaysapps.com'],
     remotePatterns: [
       { protocol: 'https', hostname: 'wordpress-74434-5742908.cloudwaysapps.com', pathname: '/**' },
