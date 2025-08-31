@@ -8,7 +8,6 @@ import '@/lib/fontawesome' // ✅ import once
 import { config } from '@fortawesome/fontawesome-svg-core'
 import Script from 'next/script'
 import 'leaflet/dist/leaflet.css'
-import { DefaultSeo } from 'next-seo';
 
 // 🔁 Location preference provider & chooser
 import { LocationProvider } from '@/context/LocationContext'
@@ -20,37 +19,8 @@ const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || ''
 config.autoAddCss = false
 
 function MyApp({ Component, pageProps }) {
-  const { basePath } = useRouter()
-  const prefix = basePath || '' // '' in local/prod root, '/v2' if you set basePath
   return (
     <>
-    <DefaultSeo
-        titleTemplate="%s | RELUXE Med Spa"
-        defaultTitle="RELUXE Med Spa"
-        description="Subtle, natural outcomes with expert injectors and premium skin treatments in Westfield & Carmel."
-        canonical={SITE}
-        openGraph={{
-          type: 'website',
-          url: SITE,
-          site_name: 'RELUXE Med Spa',
-          images: [
-            {
-              url: `${SITE}/og/default-1200x630.jpg`,
-              width: 1200,
-              height: 630,
-              alt: 'RELUXE Med Spa Carmel & Westfield',
-              type: 'image/png',
-            },
-          ],
-        }}
-        twitter={{
-          cardType: 'summary_large_image',
-          site: '@reluxemedspa',   // optional
-          handle: '@reluxemedspa', // optional
-        }}
-      />
-      
-
       {/* =========================
             Google Analytics 4 (gtag)
          ========================= */}
@@ -325,10 +295,6 @@ function MyApp({ Component, pageProps }) {
           <Head>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="shortcut icon" href="/favicon.png" />
-            <link rel="icon" href={`${prefix}/favicon.png`} />
-            <link rel="icon" type="image/png" sizes="32x32" href={`${prefix}/favicon.png`} />
-            <link rel="icon" type="image/png" sizes="16x16" href={`${prefix}/favicon.png`} />
-            <link rel="apple-touch-icon" href={`${prefix}/favicon.ico`} />
           </Head>
 
           <Component {...pageProps} />

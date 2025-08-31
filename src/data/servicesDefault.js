@@ -1822,132 +1822,132 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
   skiniq: {
-  indexable: true,
-  slug: 'skin-iq',
-  name: 'Skin IQ • 3D Skin Consultation',
-  heroImage: '/images/service/default/1.png',
-  images: {
-    primaryCallout: '/images/service/default/2.png',
-    secondaryCallout: '/images/service/default/3.png',
-    testimonialBg: '/images/service/default/4.png',
-    ctaBanner: '/images/service/default/5.png',
-    stepByStep: '/images/service/default/6.png',
-    deviceShot: '/images/service/default/7.png',      // Alma IQ device shot if available
-    techniqueShot: '/images/service/default/8.png',
-    benefitHighlight: '/images/service/default/9.png',
-    financingVisual: '/images/service/default/10.png',
-    packageVisual: '/images/service/default/11.png',
-    beforeAfterBg: '/images/service/default/12.png',
-    overviewVisual: '/images/service/default/13.jpg',
-  },
-  seo: {
-    title: 'Skin IQ 3D Skin Consultation in Westfield & Carmel, IN | RELUXE Med Spa',
-    description:
-      'Our 3D skin consultation pairs Alma IQ AI analysis with expert esthetician guidance to create a program that actually fits your skin, lifestyle, and goals.',
-    image: '/images/seo/skin-iq.png',
-  },
-  overview: {
-    p1: 'Skin IQ maps texture, pores, pigment, and tone in 3D, then uses AI insights to spotlight what matters most for *your* skin.',
-    p2: 'Your esthetician translates the data into a practical plan—clinic treatments, at-home products, and check-ins—so you can track progress over time.',
-  },
-  whyReluxe: [
-    { title: 'AI + human expertise', body: 'Alma IQ analysis interpreted by experienced RELUXE estheticians.' },
-    { title: 'Clear plan, not guesswork', body: 'Treatment roadmap and product routine tailored to your skin and schedule.' },
-    { title: 'Trackable results', body: 'Re-scan to see measurable changes and fine-tune your plan.' },
-  ],
-  tagline: 'See beneath the surface. Plan smarter.',
-  bookingLink: bookingLink('consult'), // or bookingLink('skiniq') if you wire a dedicated slug
-  quickFacts: [
-    qf.fast,
-    qf.noneDT,
-    qf.resultsFast,
-    { iconKey: 'camera', label: 'Imaging', value: '3D + AI' }
-  ],
-  benefits: [
-    'Personalized treatment roadmap',
-    'Objective skin analysis',
-    'Product recommendations that make sense',
-    'Progress photos & metrics over time',
-  ],
-  howItWorks: d(baseHow),        // optionally replace with custom steps when you have assets
-  candidates: d(baseCandidates),  // works for all skin types & tones
-  appointmentSteps: d(baseSteps), // capture • analyze • plan • follow-up
-  pricing: { single: 'Varies' },  // set real price when finalized (e.g., Complimentary / $XX)
-  flexEverything: {
-    intro: 'What Skin IQ measures',
-    items: [
-      { heading: 'Texture & pores', body: 'Surface evenness and pore visibility.' },
-      { heading: 'Pigment & redness', body: 'Brown spots, UV signatures, and vascular redness.' },
-      { heading: 'Lines & firmness', body: 'Fine lines, laxity markers, and tone.' },
-      { heading: 'Progress tracking', body: 'Re-scan to visualize change and refine your plan.' },
+    indexable: true,
+    slug: 'skin-iq',
+    name: 'Skin IQ • 3D Skin Consultation',
+    heroImage: '/images/service/default/1.png',
+    images: {
+      primaryCallout: '/images/service/default/2.png',
+      secondaryCallout: '/images/service/default/3.png',
+      testimonialBg: '/images/service/default/4.png',
+      ctaBanner: '/images/service/default/5.png',
+      stepByStep: '/images/service/default/6.png',
+      deviceShot: '/images/service/default/7.png',      // Alma IQ device shot if available
+      techniqueShot: '/images/service/default/8.png',
+      benefitHighlight: '/images/service/default/9.png',
+      financingVisual: '/images/service/default/10.png',
+      packageVisual: '/images/service/default/11.png',
+      beforeAfterBg: '/images/service/default/12.png',
+      overviewVisual: '/images/service/default/13.jpg',
+    },
+    seo: {
+      title: 'Skin IQ 3D Skin Consultation in Westfield & Carmel, IN | RELUXE Med Spa',
+      description:
+        'Our 3D skin consultation pairs Alma IQ AI analysis with expert esthetician guidance to create a program that actually fits your skin, lifestyle, and goals.',
+      image: '/images/seo/skin-iq.png',
+    },
+    overview: {
+      p1: 'Skin IQ maps texture, pores, pigment, and tone in 3D, then uses AI insights to spotlight what matters most for *your* skin.',
+      p2: 'Your esthetician translates the data into a practical plan—clinic treatments, at-home products, and check-ins—so you can track progress over time.',
+    },
+    whyReluxe: [
+      { title: 'AI + human expertise', body: 'Alma IQ analysis interpreted by experienced RELUXE estheticians.' },
+      { title: 'Clear plan, not guesswork', body: 'Treatment roadmap and product routine tailored to your skin and schedule.' },
+      { title: 'Trackable results', body: 'Re-scan to see measurable changes and fine-tune your plan.' },
     ],
-  },
-  prepAftercare: d(basePrepAfter),
-  faq: d(baseFAQ),
-},
-micropeels: {
-  indexable: true,
-  slug: 'micropeels',
-  name: 'Micropeels (Chemical Peels)',
-  heroImage: '/images/service/default/1.png',
-  images: {
-    primaryCallout: '/images/service/default/2.png',
-    secondaryCallout: '/images/service/default/3.png',
-    testimonialBg: '/images/service/default/4.png',
-    ctaBanner: '/images/service/default/5.png',
-    stepByStep: '/images/service/default/6.png',
-    deviceShot: '/images/service/default/7.png',
-    techniqueShot: '/images/service/default/8.png',
-    benefitHighlight: '/images/service/default/9.png',
-    financingVisual: '/images/service/default/10.png',
-    packageVisual: '/images/service/default/11.png',
-    beforeAfterBg: '/images/service/default/12.png',
-    overviewVisual: '/images/service/default/13.jpg',
-  },
-  seo: {
-    title: 'Chemical Peels in Westfield & Carmel, IN | RELUXE Med Spa',
-    description:
-      'Customized superficial-to-medium peels to smooth texture, fade discoloration, clear breakouts, and boost glow—calibrated to your skin and downtime.',
-    image: '/images/seo/micropeels.png',
-  },
-  overview: {
-    p1: 'Our Micropeels use clinical acids—lactic, glycolic, salicylic, TCA, and modern blended formulas—chosen to match your goals and tolerance.',
-    p2: 'Your esthetician tunes strength, layers, and aftercare so you get visible results with the right amount of downtime. Great as a series or seasonal refresh.',
-  },
-  whyReluxe: [
-    { title: 'Truly custom', body: 'From gentle brightening to acne control to pigment lifting—we match actives and depth to your skin.' },
-    { title: 'Safe protocols', body: 'Thoughtful prep and aftercare with options for sensitive skin and all skin tones.' },
-    { title: 'Series-driven results', body: 'A plan of 3–6 treatments with homecare and progress photos to track change.' },
-  ],
-  tagline: 'Smoother, brighter, clearer skin—on your terms.',
-  bookingLink: bookingLink('chemical-peel'), // or bookingLink('micropeels') if you wire a dedicated slug
-  quickFacts: [
-    qf.resultsFast,
-    { iconKey: 'clock', label: 'Time', value: '30–45 min' },
-    { iconKey: 'calendar', label: 'Downtime', value: '0–7 days (varies)' },
-  ],
-  benefits: [
-    'Refines rough or uneven texture',
-    'Brightens dullness and discoloration',
-    'Clears congestion and breakouts',
-    'Softens fine lines',
-  ],
-  howItWorks: d(baseHow),
-  candidates: d(baseCandidates),
-  appointmentSteps: d(baseSteps), // cleanse • analyze • prep • peel • neutralize • calm • plan
-  pricing: { single: '$150+' }, // adjust once tiers are finalized
-  flexEverything: {
-    intro: 'Peel families & add-ons',
-    items: [
-      { heading: 'Brightening', body: 'Lactic/glycolic blends to even tone with minimal downtime.' },
-      { heading: 'Clarifying', body: 'Salicylic-focused peels for congestion and blemish-prone skin.' },
-      { heading: 'Advanced', body: 'TCA or layered blends for stubborn pigment and texture.' },
-      { heading: 'Boosters', body: 'Dermaplane, LED, hydration masks to enhance glow and comfort.' },
+    tagline: 'See beneath the surface. Plan smarter.',
+    bookingLink: bookingLink('consult'), // or bookingLink('skiniq') if you wire a dedicated slug
+    quickFacts: [
+      qf.fast,
+      qf.noneDT,
+      qf.resultsFast,
+      { iconKey: 'camera', label: 'Imaging', value: '3D + AI' }
     ],
+    benefits: [
+      'Personalized treatment roadmap',
+      'Objective skin analysis',
+      'Product recommendations that make sense',
+      'Progress photos & metrics over time',
+    ],
+    howItWorks: d(baseHow),        // optionally replace with custom steps when you have assets
+    candidates: d(baseCandidates),  // works for all skin types & tones
+    appointmentSteps: d(baseSteps), // capture • analyze • plan • follow-up
+    pricing: { single: 'Varies' },  // set real price when finalized (e.g., Complimentary / $XX)
+    flexEverything: {
+      intro: 'What Skin IQ measures',
+      items: [
+        { heading: 'Texture & pores', body: 'Surface evenness and pore visibility.' },
+        { heading: 'Pigment & redness', body: 'Brown spots, UV signatures, and vascular redness.' },
+        { heading: 'Lines & firmness', body: 'Fine lines, laxity markers, and tone.' },
+        { heading: 'Progress tracking', body: 'Re-scan to visualize change and refine your plan.' },
+      ],
+    },
+    prepAftercare: d(basePrepAfter),
+    faq: d(baseFAQ),
   },
-  prepAftercare: d(basePrepAfter),
-  faq: d(baseFAQ),
-},
+  micropeels: {
+    indexable: true,
+    slug: 'micropeels',
+    name: 'Micropeels (Chemical Peels)',
+    heroImage: '/images/service/default/1.png',
+    images: {
+      primaryCallout: '/images/service/default/2.png',
+      secondaryCallout: '/images/service/default/3.png',
+      testimonialBg: '/images/service/default/4.png',
+      ctaBanner: '/images/service/default/5.png',
+      stepByStep: '/images/service/default/6.png',
+      deviceShot: '/images/service/default/7.png',
+      techniqueShot: '/images/service/default/8.png',
+      benefitHighlight: '/images/service/default/9.png',
+      financingVisual: '/images/service/default/10.png',
+      packageVisual: '/images/service/default/11.png',
+      beforeAfterBg: '/images/service/default/12.png',
+      overviewVisual: '/images/service/default/13.jpg',
+    },
+    seo: {
+      title: 'Chemical Peels in Westfield & Carmel, IN | RELUXE Med Spa',
+      description:
+        'Customized superficial-to-medium peels to smooth texture, fade discoloration, clear breakouts, and boost glow—calibrated to your skin and downtime.',
+      image: '/images/seo/micropeels.png',
+    },
+    overview: {
+      p1: 'Our Micropeels use clinical acids—lactic, glycolic, salicylic, TCA, and modern blended formulas—chosen to match your goals and tolerance.',
+      p2: 'Your esthetician tunes strength, layers, and aftercare so you get visible results with the right amount of downtime. Great as a series or seasonal refresh.',
+    },
+    whyReluxe: [
+      { title: 'Truly custom', body: 'From gentle brightening to acne control to pigment lifting—we match actives and depth to your skin.' },
+      { title: 'Safe protocols', body: 'Thoughtful prep and aftercare with options for sensitive skin and all skin tones.' },
+      { title: 'Series-driven results', body: 'A plan of 3–6 treatments with homecare and progress photos to track change.' },
+    ],
+    tagline: 'Smoother, brighter, clearer skin—on your terms.',
+    bookingLink: bookingLink('chemical-peel'), // or bookingLink('micropeels') if you wire a dedicated slug
+    quickFacts: [
+      qf.resultsFast,
+      { iconKey: 'clock', label: 'Time', value: '30–45 min' },
+      { iconKey: 'calendar', label: 'Downtime', value: '0–7 days (varies)' },
+    ],
+    benefits: [
+      'Refines rough or uneven texture',
+      'Brightens dullness and discoloration',
+      'Clears congestion and breakouts',
+      'Softens fine lines',
+    ],
+    howItWorks: d(baseHow),
+    candidates: d(baseCandidates),
+    appointmentSteps: d(baseSteps), // cleanse • analyze • prep • peel • neutralize • calm • plan
+    pricing: { single: '$150+' }, // adjust once tiers are finalized
+    flexEverything: {
+      intro: 'Peel families & add-ons',
+      items: [
+        { heading: 'Brightening', body: 'Lactic/glycolic blends to even tone with minimal downtime.' },
+        { heading: 'Clarifying', body: 'Salicylic-focused peels for congestion and blemish-prone skin.' },
+        { heading: 'Advanced', body: 'TCA or layered blends for stubborn pigment and texture.' },
+        { heading: 'Boosters', body: 'Dermaplane, LED, hydration masks to enhance glow and comfort.' },
+      ],
+    },
+    prepAftercare: d(basePrepAfter),
+    faq: d(baseFAQ),
+  },
   men: {
     indexable: true,
     slug: 'men',

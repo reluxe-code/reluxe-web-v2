@@ -4,7 +4,7 @@ export const serviceCategories = [
   {
     title: 'Botox, Dysport, & Jeuveau',
     image: '/images/service/categories/tox.png',
-    href: '/services/botox',
+    href: '/services/tox',
     featured: true
   },
   {
@@ -16,7 +16,7 @@ export const serviceCategories = [
   {
     title: 'Facial Balancing',
     image: '/images/service/categories/balancing.png',
-    href: '/services/facialbalancing',
+    href: '/services/facial-balancing',
     featured: false
   },
   {

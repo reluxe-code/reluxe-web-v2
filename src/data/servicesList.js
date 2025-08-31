@@ -18,6 +18,7 @@ import restylane from './services/restylane';
 
 import sculptra from './services/sculptra';
 import prp from './services/prp';
+import prp from './services/facial-balancing';
 
 import facials from './services/facials';
 import glo2facial from './services/glo2facial';
@@ -43,13 +44,14 @@ import opus from './services/opus';
 import lashlift from './services/lashlift';
 import browwax from './services/browwax';
 import men from './services/men';
+import skiniq from './services/skiniq';
 
 const REGISTRY = [
   tox, botox, dysport, jeuveau, daxxify,
   filler, juvederm, rha, versa, restylane,
   sculptra, prp, facials, glo2facial, hydrafacial, peels, massage,
   evolvex, laserhair, ipl, vascupen, clearlift, clearskin, morpheus8, skinpen, co2,
-  consultations, reveal, dissolving, saltsauna, opus, lashlift, browwax, men,
+  consultations, reveal, dissolving, saltsauna, opus, lashlift, browwax, men, skiniq, facial-balancing
 ];
 
 // Safety: if a file is missing, fall back to default for that slug
