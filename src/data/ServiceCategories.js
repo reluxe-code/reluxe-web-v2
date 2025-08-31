@@ -16,7 +16,7 @@ export const serviceCategories = [
   {
     title: 'Facial Balancing',
     image: '/images/service/categories/balancing.png',
-    href: '/services/facial-balancing',
+    href: '/services/facialbalancing',
     featured: false
   },
   {
@@ -28,7 +28,7 @@ export const serviceCategories = [
   {
     title: 'Skin IQ Consultation',
     image: '/images/service/categories/skiniq.png',
-    href: '/services/skiniq',
+    href: '/services/skin-iq',
     featured: false
   },
   {
