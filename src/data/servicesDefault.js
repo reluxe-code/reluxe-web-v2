@@ -405,7 +405,7 @@ const SERVICES_DEFAULTS = {
   },
   facialbalancing: {
     indexable: true,
-    slug: 'facialbalancing',
+    slug: 'facial-balancing',
     heroImage: '/images/service/default/1.png',
     images: {
       primaryCallout: '/images/service/default/2.png',
