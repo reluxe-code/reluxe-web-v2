@@ -8,6 +8,8 @@ import '@/lib/fontawesome' // ✅ import once
 import { config } from '@fortawesome/fontawesome-svg-core'
 import Script from 'next/script'
 import 'leaflet/dist/leaflet.css'
+import { Analytics } from '@vercel/analytics/react'
+
 
 // 🔁 Location preference provider & chooser
 import { LocationProvider } from '@/context/LocationContext'
@@ -304,6 +306,7 @@ function MyApp({ Component, pageProps }) {
           <LocationChooserModal />
         </Layout>
       </LocationProvider>
+      <Analytics />
     </>
   )
 }
