@@ -20,7 +20,7 @@ import Script from 'next/script';
 
 import { getServicesList } from '@/data/servicesList';
 // src/pages/services/[slug].js  (add the import near the top)
-import ServiceSEO from '@/components/seo/ServiceSEO'
+import ServiceSEO from '@/components/seo/serviceSEO'
 
 
 const ICON_MAP = { clock: ClockIcon, fire: FireIcon, sparkles: SparklesIcon, user: UserIcon, check: CheckCircleIcon };
