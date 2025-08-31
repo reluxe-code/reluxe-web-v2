@@ -7,16 +7,7 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "dev": "next",
-        "build": "next build",
-        "start": "next start",
-        "lint": "next lint",
-        "prepare": "husky install",
-        "pre-commit": "yarn format & yarn lint --fix",
-        "format": "prettier --ignore-path .prettierignore --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-        "export": "next export",
-        "postexport": "node scripts/build-search-index.mjs",
-        "build:static": "next build && next export && node scripts/build-search-index.mjs"
+        "build": "next build"
     },
     "dependencies": {
         "@apollo/client": "^3.13.9",

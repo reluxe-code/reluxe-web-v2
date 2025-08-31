@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import HeaderTwo from '@/components/header/header-2'
 import PricingGrid from '@/components/pricing/PricingGrid'
-import { servicesData } from '@/data/pricing'
+import servicesData from '@/data/pricing'
 
 // ---------- deterministic slug guessing (pure string match)
 const NAME_TO_SLUG = [
