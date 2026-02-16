@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocationPref } from '@/context/LocationContext';
 import { LOCATIONS } from '@/lib/location';
 
-const ABBR = { westfield: 'WF', carmel: 'CR' };
+const ABBR = { westfield: 'WSTFLD', carmel: 'CRML' };
 
 export default function LocationSwitcherMini({ variant = 'pill', className = '' }) {
   if (variant === 'segmented') return <Segmented className={className} />;
@@ -170,9 +170,10 @@ function IconDropdown({ className = '' }) {
         aria-expanded={open}
         aria-label="Change location"
       >
-        {/* pin icon */}
+        {/* building icon */}
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-          <path d="M10 2a6 6 0 00-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/>
+          <path d="M3 18.5V7a2 2 0 0 1 2-2h3V3h4v2h3a2 2 0 0 1 2 2v11.5h-4v-4H7v4H3z" />
+          <path d="M8 9h2v2H8zM12 9h2v2h-2zM8 13h2v2H8zM12 13h2v2h-2z" />
         </svg>
 
         {/* badge */}

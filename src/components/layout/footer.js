@@ -9,10 +9,10 @@ import { useRouter } from 'next/router';
 // --- Mobile Tab Bar (sticky, black, white icons/text) ---
 function MobileTabBar({ isActivePath }) {
   const tabs = [
-    { href: '/book',        label: 'Book',      Icon: FiCalendar },
     { href: '/services',    label: 'Services',  Icon: FiGrid },
-    { href: '/conditions',  label: 'Treat',     Icon: FiHeart },
-    { href: '/deals',      label: 'Offers',    Icon: FiTag },   // update/rename if needed
+    { href: '/deals',      label: 'Deals',    Icon: FiTag },   // update/rename if needed
+    { href: '/book/westfield',        label: 'Book WSTFLD',      Icon: FiCalendar },
+    { href: '/book/carmel',        label: 'Book CRML',      Icon: FiCalendar },
     { href: '/locations',   label: 'Locations', Icon: FiMapPin },
   ];
 
@@ -124,6 +124,7 @@ function Footer() {
                       <b>Carmel</b><br />
                       RELUXE x House of Health<br />
                       10485 N Pennsylvania St.<br />
+                      Suite 150<br />
                       Carmel, IN 46280<br />
                       <a href="tel:+13177631142" className="hover:text-black transition-all">
                         317-763-1142
@@ -159,9 +160,10 @@ function Footer() {
                   <h2 className="title">About Us</h2>
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/about">About</Link></li>
+                    <li><Link href="/skincare">Skincare Lines</Link></li>
                     <li><Link href="/affiliations">Affiliations</Link></li>
-                    <li><Link href="/financing/cherry">Cherry</Link></li>
-                    <li><Link href="/gifts/spafinder">SpaFinder</Link></li>
+                    <li><Link href="https://pay.withcherry.com/reluxe-med-spa?utm_source=practice&utm_medium=website&m=20441">We Accept Cherry</Link></li>
+                    <li>We Accept SpaFinder</li>
                     <li><Link href="/blog">Beauty Notes</Link></li>
                   </ul>
                 </div>

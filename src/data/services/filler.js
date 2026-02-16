@@ -41,7 +41,7 @@ s.blockPriorities = {
 
 s.tagline = s.tagline || 'Restore volume, refine contours, and hydrate—beautifully.';
 s.quickFacts = s.quickFacts?.length ? s.quickFacts : [
-  { iconKey: 'clock', label: 'Treatment Time', value: '30–45 min' },
+  { iconKey: 'clock', label: 'Treatment Time', value: '60-90 min' },
   { iconKey: 'sparkles', label: 'Downtime', value: 'Minimal' },
   { iconKey: 'user', label: 'Areas', value: 'Lips • Cheeks • Chin • Jaw' },
   { iconKey: 'fire', label: 'Duration', value: '6–18 months' },
@@ -67,6 +67,10 @@ s.resultsGallery = [
     alt: 'Forehead lines before/after – smoother after 2 weeks'
   },
   {
+    src: '/images/service/filler/krista-filler-4.png',
+    alt: 'Forehead lines before/after – smoother after 2 weeks'
+  },
+  {
     src: '/images/results/filler/injector.hannah - 4.png',
     alt: 'Forehead lines before/after – smoother after 2 weeks'
   },
@@ -79,6 +83,10 @@ s.resultsGallery = [
     alt: 'Forehead lines before/after – smoother after 2 weeks'
   },
   {
+    src: '/images/service/filler/krista-filler-2.png',
+    alt: 'Forehead lines before/after – smoother after 2 weeks'
+  },
+  {
     src: '/images/results/filler/injector.hannah - 16.png',
     alt: 'Forehead lines before/after – smoother after 2 weeks'
   },
@@ -86,20 +94,60 @@ s.resultsGallery = [
     src: '/images/results/filler/injector.hannah - 22.png',
     alt: 'Forehead lines before/after – smoother after 2 weeks'
   },
+  {
+    src: '/images/service/filler/krista-filler-1.png',
+    alt: 'Forehead lines before/after – smoother after 2 weeks'
+  },
+    {
+    src: '/images/service/filler/krista-filler-3.png',
+    alt: 'Forehead lines before/after – smoother after 2 weeks'
+  },
+    {
+    src: '/images/service/filler/krista-filler-4.png',
+    alt: 'Forehead lines before/after – smoother after 2 weeks'
+  },
 ];
 s.appointmentSteps = [
   'Photos (for symmetry planning).',
-  'Topical numbing (optional).',
+  'Topical numbing.',
   'Precise placement with needle or cannula.',
   'Mild swelling 24–72 hrs; final look ~2 weeks.',
 ];
-s.pricing = {
-  single: '$650/syringe',
-  packages: [
-    { label: '2-Syringe Plan', value: '$1,200 (save $100)' },
-    { label: '3-Syringe Balancing', value: '$1,750 (save $200)' },
+s.pricingMatrix = {
+  subtitle: 'Per-syringe pricing with member savings.',
+  sections: [
+    {
+      title: 'Dermal Fillers',
+      membershipCallout: 'Members save on every syringe',
+      rows: [
+        // --- Value options ---
+        { label: 'Revanesse® Versa', subLabel: 'Lips, nasolabial folds, marionette lines', single: '$650', membership: '$600' },
+
+        // --- RHA family (1–4) ---
+        { label: 'RHA® 1', subLabel: 'Fine dynamic lines, perioral (lip lines)', single: '$650', membership: '$600' },
+        { label: 'RHA® 2', subLabel: 'Moderate dynamic lines, lips, perioral', single: '$650', membership: '$600' },
+        { label: 'RHA® 3', subLabel: 'Deeper folds (NLF), marionette lines, corners of mouth', single: '$650', membership: '$600' },
+        { label: 'RHA® 4', subLabel: 'Cheek & jawline structure, deeper dynamic folds', single: '$650', membership: '$600' },
+
+        // --- JUVÉDERM family ---
+        { label: 'JUVÉDERM® Volux XC', subLabel: 'Jawline definition, chin sculpting', single: '$800', membership: '$750' },
+        { label: 'JUVÉDERM® Voluma XC', subLabel: 'Cheeks / midface lift, chin', single: '$800', membership: '$750' },
+        { label: 'JUVÉDERM® Vollure XC', subLabel: 'Smile lines (NLF), marionette lines', single: '$750', membership: '$700' },
+        { label: 'JUVÉDERM® Volbella XC', subLabel: 'Lips (subtle), vertical lip lines', single: '$750', membership: '$700' },
+        { label: 'JUVÉDERM® Volbella (½ syringe)', subLabel: 'Touch-ups, subtle lip/line work', single: '$500', membership: '$450' },
+
+        // --- Restylane family ---
+        { label: 'Restylane® Lyft', subLabel: 'Cheeks / midface support, hands', single: '$750', membership: '$700' },
+        { label: 'Restylane® Contour', subLabel: 'Cheek contour with natural expression', single: '$750', membership: '$700' },
+        { label: 'Restylane® Defyne', subLabel: 'Deep expression lines, chin/jawline flexibility', single: '$750', membership: '$700' },
+        { label: 'Restylane® Kysse', subLabel: 'Lips (soft, flexible volume) & definition', single: '$750', membership: '$700' },
+      ],
+      promo: 'Save $100 when you purchase 2+ syringes in the same visit.',
+      ctaText: 'Book filler consult',
+    },
   ],
 };
+
 s.faq = [
   { q: 'Will it look natural?', a: 'Yes—our goal is balance and harmony, not “done”.' },
   { q: 'How long does swelling last?', a: 'Usually 24–72 hours; lips may swell a bit longer.' },

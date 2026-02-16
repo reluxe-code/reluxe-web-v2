@@ -43,7 +43,7 @@ s.blockPriorities = {
   bookingEmbed: 150,
 };
 
-s.heroImage = '/images/service/M8/1.png';
+s.heroImage = '/images/service/m8/1.png';
 s.tagline = s.tagline || 'Tighten, smooth, and refine with RF microneedling.';
 s.quickFacts = [
   { iconKey: 'clock', label: 'Treatment Time', value: '90 min with numbing' },

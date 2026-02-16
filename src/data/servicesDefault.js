@@ -5,11 +5,11 @@ const d = (v) => JSON.parse(JSON.stringify(v)); // deep clone helper
 
 // Reusable snippets
 const qf = {
-  fast: { iconKey: 'clock', label: 'Duration', value: '15–45 min' },
-  noneDT: { iconKey: 'fire', label: 'Downtime', value: 'None–Minimal' },
-  resultsFast: { iconKey: 'sparkles', label: 'Results', value: 'Immediate → 2 wks' },
-  comfort: { iconKey: 'user', label: 'Comfort', value: 'Low–Moderate' },
-  lasts34: { iconKey: 'user', label: 'Lasts', value: '3–4 months' },
+  fast:        { iconKey: 'clock',    label: 'Duration', value: '15–45 min' },
+  noneDT:      { iconKey: 'fire',     label: 'Downtime', value: 'None–Minimal' },
+  resultsFast: { iconKey: 'sparkles', label: 'Results',  value: 'Immediate → 2 wks' },
+  comfort:     { iconKey: 'user',     label: 'Comfort',  value: 'Low–Moderate' },
+  lasts34:     { iconKey: 'user',     label: 'Lasts',    value: '3–4 months' },
 };
 
 const baseHow = [
@@ -31,13 +31,75 @@ const baseSteps = [
 ];
 
 const basePrepAfter = {
-  prep: { title: 'Before your visit', points: ['Arrive with clean skin', 'Avoid alcohol 24 hrs prior', 'Pause retinoids 48 hrs prior'] },
-  after: { title: 'After your visit', points: ['SPF daily', 'Avoid intense heat 24 hrs', 'Follow your custom care sheet'] },
+  prep:  { title: 'Before your visit', points: ['Arrive with clean skin', 'Avoid alcohol 24 hrs prior', 'Pause retinoids 48 hrs prior'] },
+  after: { title: 'After your visit',  points: ['SPF daily', 'Avoid intense heat 24 hrs', 'Follow your custom care sheet'] },
 };
 
 const baseFAQ = [
   { q: 'Does it hurt?', a: 'Most patients describe mild, brief discomfort. We can use numbing when appropriate.' },
   { q: 'When will I see results?', a: 'Some results are immediate; full effect often appears by 1–2 weeks depending on service.' },
+];
+
+// —————————————————————————————————————————————
+// Laser Hair Removal – service-specific helpers
+// —————————————————————————————————————————————
+const qfLHR = {
+  duration:   { iconKey: 'clock',    label: 'Duration',   value: '5–45 min (area-dependent)' },
+  downtime:   { iconKey: 'fire',     label: 'Downtime',   value: 'None' },
+  shedding:   { iconKey: 'sparkles', label: 'Shedding',   value: '7–14 days post-treatment' },
+  comfort:    { iconKey: 'user',     label: 'Comfort',    value: 'Low–Moderate (cooling)' },
+  sessions:   { iconKey: 'calendar', label: 'Sessions',   value: '6–10+ (every 4–8 wks)' },
+  skinTypes:  { iconKey: 'user',     label: 'Skin Types', value: 'I–VI (device-dependent)' },
+};
+
+const lhrHow = [
+  { title: 'Consultation + test spot', body: 'Assess hair/skin type, goals, contraindications; optional test pulse for settings.' },
+  { title: 'Treatment with cooling',   body: 'Target follicles in their growth phase using chilled tip & smooth passes for comfort.' },
+  { title: 'Aftercare & schedule',     body: 'Soothe, protect from sun, and plan your series for best reduction.' },
+];
+
+const lhrSteps = [
+  'Consultation & settings',
+  'Cleanse + shave-check',
+  'Precision laser passes with cooling',
+  'Aftercare + series plan',
+];
+
+const lhrCandidates = [
+  'Dark, coarse hair (light–medium skin): fastest responders.',
+  'Ingrowns & razor burn: bikini, underarms, neck—fewer bumps, smoother skin.',
+  'Hormonal hair (PCOS/postpartum): helps reduce stubborn chin/jawline growth.',
+  'Low-maintenance seekers (athletes, frequent shavers): legs, back, chest.',
+];
+
+const lhrPrepAfter = {
+  prep: {
+    title: 'Before your visit',
+    points: [
+      'Shave the area 12–24 hrs before (no waxing, plucking, or threading for 4+ weeks).',
+      'Avoid self-tanner & significant sun for 2 weeks pre-treatment.',
+      'Pause photosensitizing products/meds as advised by your provider.',
+      'Arrive with clean, lotion-/deodorant-free skin on the area.',
+    ],
+  },
+  after: {
+    title: 'After your visit',
+    points: [
+      'Mild redness/follicular bumps are normal and fade within hours–1 day.',
+      'Cool compresses + gentle lotion/aloe as needed; avoid hot tubs/sauna 24–48 hrs.',
+      'No plucking/waxing between sessions—shaving only.',
+      'Expect shedding of treated hairs in 1–2 weeks (looks like “pepper spots”).',
+      'SPF daily; limit sun for 2 weeks post.',
+    ],
+  },
+};
+
+const lhrFAQ = [
+  { q: 'Does it hurt?', a: 'Most describe brief snaps with warmth. Our cooling + settings keep it very tolerable; numbing is rarely needed for most areas.' },
+  { q: 'How many sessions will I need?', a: 'Most areas need 6–10+ sessions spaced 4–8 weeks apart. Hair thickness, hormones, and area affect totals.' },
+  { q: 'Is it permanent?', a: 'It delivers long-term reduction. Some follicles go dormant; maintenance sessions may be needed due to hormones or new growth cycles.' },
+  { q: 'Can darker skin be treated?', a: 'Yes—device/setting dependent. We adjust wavelength/fluence and use test spots to treat Fitzpatrick I–VI safely.' },
+  { q: 'Can I wax or tweeze between sessions?', a: 'No—stick to shaving so we keep follicles intact for the next treatment.' },
 ];
 
 const bookingLink = (slug) => `/book/${slug}`;
@@ -83,7 +145,7 @@ const SERVICES_DEFAULTS = {
     whyReluxe: [
       { title: 'Movement-mapping consults', body: 'We study how you animate to place toxin precisely for natural expression.' },
       { title: 'Brand-agnostic guidance', body: 'We stock multiple neurotoxins and match you to the one that best fits your goals.' },
-      { title: ' follow-up you can count on', body: 'Optional 2-week check to fine-tune symmetry or dosing if needed.' },
+      { title: 'Follow-up you can count on', body: 'Optional 2-week check to fine-tune symmetry or dosing if needed.' },
     ],
     bookingLink: bookingLink('tox'),
     quickFacts: [qf.fast, qf.noneDT, { iconKey: 'sparkles', label: 'Onset', value: '2–7 days' }, qf.lasts34],
@@ -98,7 +160,7 @@ const SERVICES_DEFAULTS = {
     appointmentSteps: d(baseSteps),
     pricing: {
       packages: [
-        { label: 'Botox:', value: '$14/unit' },
+        { label: 'Botox',   value: '$14/unit' },
         { label: 'Dysport', value: '$4.50/unit' },
         { label: 'Jeuveau', value: '$12/unit' },
         { label: 'Daxxify', value: '$7/unit' },
@@ -145,7 +207,7 @@ const SERVICES_DEFAULTS = {
     slug: 'botox',
     name: 'Botox',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -158,7 +220,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     consultLink: consultLink('/book/tox-consult'),
     seo: {
       title: 'Botox® in Westfield & Carmel, IN | RELUXE Med Spa',
@@ -198,12 +260,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   dysport: {
     indexable: true,
     slug: 'dysport',
     name: 'Dysport',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -216,7 +279,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     consultLink: consultLink('/book/tox-consult'),
     seo: {
       title: 'Dysport® in Westfield & Carmel, IN | RELUXE Med Spa',
@@ -235,12 +298,7 @@ const SERVICES_DEFAULTS = {
     ],
     tagline: 'Smooths fast. Feels natural.',
     bookingLink: bookingLink('dysport'),
-    quickFacts: [
-      qf.fast,
-      qf.noneDT,
-      { iconKey: 'sparkles', label: 'Onset', value: '2–5 days' },
-      qf.lasts34,
-    ],
+    quickFacts: [qf.fast, qf.noneDT, { iconKey: 'sparkles', label: 'Onset', value: '2–5 days' }, qf.lasts34],
     benefits: ['Rapid onset', 'Natural movement', 'Targets dynamic lines'],
     howItWorks: d(baseHow),
     candidates: d(baseCandidates),
@@ -250,12 +308,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   jeuveau: {
     indexable: true,
     slug: 'jeuveau',
     name: 'Jeuveau',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -268,7 +327,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     consultLink: consultLink('/book/tox-consult'),
     seo: {
       title: 'Jeuveau® (Newtox) in Westfield & Carmel, IN | RELUXE Med Spa',
@@ -297,12 +356,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   daxxify: {
     indexable: true,
     slug: 'daxxify',
     name: 'Daxxify',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -315,7 +375,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     consultLink: consultLink('/book/tox-consult'),
     seo: {
       title: 'DAXXIFY® in Westfield & Carmel, IN | RELUXE Med Spa',
@@ -345,12 +405,12 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 3. Filler (general) + 4) individual families
+  // 3. Filler (general)
   filler: {
     indexable: true,
     slug: 'filler',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -363,7 +423,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     name: 'Dermal Filler (Juvéderm • RHA • Versa • Restylane)',
     seo: {
       title: 'Dermal Filler (Juvéderm®, RHA®, Versa™, Restylane®) in Westfield & Carmel, IN | RELUXE Med Spa',
@@ -383,7 +443,7 @@ const SERVICES_DEFAULTS = {
     tagline: 'Shape, hydrate, and smooth—beautifully.',
     bookingLink: bookingLink('filler'),
     quickFacts: [
-      { iconKey: 'clock', label: 'Duration', value: '30–60 min' },
+      { iconKey: 'clock', label: 'Duration', value: '60-90 min' },
       qf.noneDT,
       { iconKey: 'sparkles', label: 'Results', value: 'Immediate' },
       { iconKey: 'user', label: 'Lasts', value: '6–18 months' },
@@ -403,11 +463,12 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   facialbalancing: {
     indexable: true,
     slug: 'facial-balancing',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -420,7 +481,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     name: 'Facial Balancing Consultation',
     seo: {
       title: 'Facial Balancing Consultation in Westfield & Carmel, IN | RELUXE Med Spa',
@@ -437,43 +498,42 @@ const SERVICES_DEFAULTS = {
       { title: 'Budget-friendly staging', body: 'Stepwise plans with visible wins at each visit.' },
       { title: 'Honest guidance', body: 'Clear options and timelines—no pressure, just good planning.' },
     ],
-    tagline: 'Shape, hydrate, and smooth—beautifully.',
+    tagline: 'A proportion-first roadmap to harmonize features.',
     bookingLink: bookingLink('facialbalancing'),
     consultLink: bookingLink('facialbalancing'),
     quickFacts: [
       { iconKey: 'clock', label: 'Duration', value: '30 min' },
       qf.noneDT,
-      { iconKey: 'sparkles', label: 'Results', value: 'Varies' },
-      { iconKey: 'user', label: 'Benefits', value: 'Harmonized Features' },
-      { iconKey: 'user', label: 'Benefits', value: 'Natural-Looking Enhancement' },
-      { iconKey: 'user', label: 'Benefits', value: 'Personalized Results' },
-      { iconKey: 'user', label: 'Benefits', value: 'Get the look you want' },
+      { iconKey: 'sparkles', label: 'Outcome', value: 'Personalized plan' },
+      { iconKey: 'user', label: 'Approach', value: 'Proportion-first' },
     ],
-    benefits: ['Restores volume & contours', 'Immediate results', 'Natural, balanced outcomes'],
+    benefits: ['Harmonized features', 'Natural-looking enhancement', 'Clear, staged plan'],
     howItWorks: d(baseHow),
     candidates: d(baseCandidates),
     appointmentSteps: d(baseSteps),
-    pricing: { single: 'Free Consultation', packages: [{ label: 'Signature Lip Package', value: 'Buy 2 Syringes, Get 1' }] },
+    pricing: { single: 'Free Consultation' },
     flexEverything: {
-      intro: 'Everything you need to know about filler at RELUXE.',
+      intro: 'What we assess',
       items: [
-        { heading: 'Areas', body: 'Lips, cheeks, chin, jawline, nasolabial folds, under-eyes (select cases).' },
-        { heading: 'Pairings', body: 'Tox for muscle lines; ClearLift for texture; Hydrafacial for glow.' },
+        { heading: 'Proportions', body: 'Front + profile balance across lips, chin, cheeks, jaw.' },
+        { heading: 'Priorities',  body: 'Sequence by impact and budget.' },
+        { heading: 'Timeline',    body: 'Plan stages around events.' },
       ],
     },
     prepAftercare: d(basePrepAfter),
     faq: [
-      { q: 'Why Facial Balancing?', a: 'Most patients describe mild, brief discomfort. We can use numbing when appropriate.' },
-      { q: 'Am I a good candidate for facial balancing?', a: 'Most patients describe mild, brief discomfort. We can use numbing when appropriate.' },
-      { q: 'What is included?', a: 'Our facial balancing consultations & packages are custom designed to meet your needs. We give you options to get the best result for you!' },
+      { q: 'Why facial balancing?', a: 'It harmonizes features for a natural look, rather than chasing single areas in isolation.' },
+      { q: 'Am I a good candidate?', a: 'Most healthy adults with realistic goals; we avoid active infections and tailor timing around events.' },
+      { q: 'What is included?', a: 'Assessment, photo mapping, and a stepwise plan with options by priority and budget.' },
     ],
   },
+
   juvederm: {
     indexable: true,
     slug: 'juvederm',
     name: 'Juvéderm',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -486,7 +546,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Juvéderm® Filler in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -514,12 +574,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   rha: {
     indexable: true,
     slug: 'rha',
     name: 'RHA Collection',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -532,7 +593,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'RHA® Collection Fillers in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -560,12 +621,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   versa: {
     indexable: true,
     slug: 'versa',
     name: 'Revanesse Versa',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -578,7 +640,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Revanesse® Versa™ Filler in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -606,12 +668,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   restylane: {
     indexable: true,
     slug: 'restylane',
     name: 'Restylane',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -624,7 +687,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Restylane® Filler in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -659,7 +722,7 @@ const SERVICES_DEFAULTS = {
     slug: 'sculptra',
     name: 'Sculptra',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -672,7 +735,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Sculptra® in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -707,7 +770,7 @@ const SERVICES_DEFAULTS = {
     slug: 'prp',
     name: 'PRP Injections',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -720,7 +783,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'PRP Injections in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -749,13 +812,98 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
+   // 7. Injectables
+    injectables: {
+      indexable: true,
+      slug: 'injectables',
+      name: 'Injectables: Tox, Filler, Sculptra & PRP',
+      heroImage: '/images/service/default/1.png',
+      images: d({
+        primaryCallout: '/images/service/default/2.png',
+        secondaryCallout: '/images/service/default/3.png',
+        testimonialBg: '/images/service/default/4.png',
+        ctaBanner: '/images/service/default/5.png',
+        stepByStep: '/images/service/default/6.png',
+        deviceShot: '/images/service/default/7.png',
+        techniqueShot: '/images/service/default/8.png',
+        benefitHighlight: '/images/service/default/9.png',
+        financingVisual: '/images/service/default/10.png',
+        packageVisual: '/images/service/default/11.png',
+        beforeAfterBg: '/images/service/default/12.png',
+        overviewVisual: '/images/service/default/13.jpg',
+      }),
+      seo: {
+        title: 'Injectables (Tox, Filler, Sculptra, PRP) in Westfield & Carmel, IN | RELUXE Med Spa',
+        description:
+          'Smooth lines with tox, restore shape with filler, build collagen with Sculptra, and boost glow with PRP. Personalized plans, natural-looking results.',
+        image: '/images/seo/filler.png', // uses an existing SEO asset; swap if you have /images/seo/injectables.png
+      },
+      overview: {
+        p1: 'From quick wrinkle relaxers (tox) to shape-restoring fillers, collagen-stimulating Sculptra, and your-own-platelet PRP, injectables can be tailored to smooth, lift, and refresh with minimal downtime.',
+        p2: 'At RELUXE, we map your goals and calendar to the right modality—or a smart combo—so results look natural and last. Expect clear guidance on dose, number of syringes or vials, and series timing.',
+      },
+      whyReluxe: [
+        { title: 'Plan by goals (not products)', body: 'Tox, filler, Sculptra, and PRP are matched to your priorities and event timing.' },
+        { title: 'Brand-agnostic + precise', body: 'Multiple neurotoxins & filler families on hand; dosing and placement customized to you.' },
+        { title: 'Safety & follow-through', body: 'Anatomy-first technique, conservative approach, and clear aftercare with optional check-ins.' },
+      ],
+      tagline: 'Smooth, shape, and stimulate—custom injectables for natural results.',
+      bookingLink: bookingLink('injectables'), // or consultLink('/book/tox-consult') if you prefer consult-first
+      quickFacts: [
+        { iconKey: 'clock', label: 'Duration', value: '30-90 min (service dependent)' },
+        { iconKey: 'fire',  label: 'Downtime', value: 'None–Moderate (varies by service)' },
+        { iconKey: 'sparkles', label: 'Results', value: 'Immediate → 2 wks' }, // filler immediate; tox peaks ~2 wks
+        { iconKey: 'user',  label: 'Longevity', value: '3–18+ months (by product/area)' },
+        { iconKey: 'user',  label: 'Options', value: 'Tox • Filler • Sculptra • PRP' },
+      ],
+      benefits: [
+        'Softens dynamic lines (tox)',
+        'Restores or refines shape (filler)',
+        'Stimulates collagen over time (Sculptra)',
+        'Uses your own growth factors (PRP)',
+      ],
+      howItWorks: [
+        { title: 'Consult & mapping', body: 'We review goals, expressions, and facial balance to choose tox, filler, Sculptra, PRP—or a combo.' },
+        { title: 'Precision treatment', body: 'Measured dosing and placement for natural motion, shape, and glow.' },
+        { title: 'Aftercare & plan', body: 'Simple care, optional 2-week tox check, and guidance on maintenance or series timing.' },
+      ],
+      candidates: d(baseCandidates),
+      appointmentSteps: d(baseSteps),
+      pricing: {
+        single: 'Varies by service',
+        packages: [
+          { label: 'Tox',      value: '$12–$14 per unit' },
+          { label: 'Filler',   value: 'Per syringe (area-dependent)' },
+          { label: 'Sculptra', value: 'Per vial (series often 2–3)' },
+          { label: 'PRP',      value: 'Per session • Series pricing available' },
+        ],
+      },
+      flexEverything: {
+        intro: 'We tailor modality, dose, and sequence to your goals and calendar.',
+        items: [
+          { heading: 'Combos & sequencing', body: 'Plan tox + filler for expression & shape; add PRP for glow; layer Sculptra for long-term support.' },
+          { heading: 'Event timing', body: 'Tox peaks ~2 weeks; filler is immediate but can swell 24–72 hrs; plan accordingly.' },
+          { heading: 'Member value', body: 'Predictable pricing and perks for maintenance visits.' },
+          { heading: 'Safety & reversibility', body: 'Anatomy-first technique; HA fillers can be dissolved if needed.' },
+        ],
+      },
+      prepAftercare: d(basePrepAfter),
+      faq: [
+        { q: 'Which injectable is right for me?', a: 'We match options to your goals: tox for movement lines, filler for shape/volume, Sculptra for collagen, PRP for glow and support.' },
+        { q: 'How many syringes/units will I need?', a: 'It depends on area and goals. We give clear estimates up front and can stage over visits.' },
+        { q: 'When will I see results?', a: 'Filler is immediate; tox typically peaks around 2 weeks; Sculptra builds gradually over weeks; PRP glow builds in a series.' },
+        { q: 'Is there downtime?', a: 'Most treatments have little to none. Expect possible swelling or bruising for 24–72 hours with filler or PRP; plan tox 2 weeks before events.' },
+      ],
+    },
+
+
   // 7. Facials
   facials: {
     indexable: true,
     slug: 'facials',
     name: 'Facials',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -768,7 +916,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Facials in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -792,6 +940,20 @@ const SERVICES_DEFAULTS = {
     candidates: d(baseCandidates),
     appointmentSteps: d(baseSteps),
     pricing: { single: 'From $99' },
+    pricingMatrix: {
+      sections: [
+        {
+          title: 'Facials',
+          membershipCallout: 'Included in $100/mo Facial Membership',
+          rows: [
+            { label: 'Signature', single: '$150',  membership: 'Included' },
+            { label: 'Teen',      single: '$85',  membership: 'N/A' },
+            { label: 'Monthly',   single: '$99', membership: 'Included' },
+          ],
+          ctaText: 'Reserve your spot',
+        },
+      ],
+    },
     flexEverything: { intro: 'Signature & Teen options. Each facial includes a dermaplane for extra-smooth results.', items: [{ heading: 'Perfect for', body: 'Events, monthly maintenance, and skincare resets.' }] },
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
@@ -803,7 +965,7 @@ const SERVICES_DEFAULTS = {
     slug: 'glo2facial',
     name: 'Glo2Facial',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -816,7 +978,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Glo2Facial® in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -839,7 +1001,21 @@ const SERVICES_DEFAULTS = {
     howItWorks: d(baseHow),
     candidates: d(baseCandidates),
     appointmentSteps: d(baseSteps),
-    pricing: { single: 'From $159' },
+    pricing: { single: 'From $150' },
+    pricingMatrix: {
+      sections: [
+        {
+          title: 'Glo2Facial',
+          membershipCallout: 'RELUXE included in $200/mo Premium Membership',
+          rows: [
+            { label: 'Express',  single: '$150',  membership: 'N/A' },
+            { label: 'RELUXE',   single: '$250', membership: 'Premium Voucher' },
+            { label: 'Platinum', single: '$325', membership: 'Premium Voucher +$50' },
+          ],
+          ctaText: 'Book your Glo2Facial',
+        },
+      ],
+    },
     flexEverything: { intro: 'A celebrity-favorite facial technology.', items: [{ heading: 'When to book', body: 'Ideal 1–3 days pre-event for glow.' }] },
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
@@ -851,7 +1027,7 @@ const SERVICES_DEFAULTS = {
     slug: 'hydrafacial',
     name: 'Hydrafacial',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -864,7 +1040,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'HydraFacial® in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -887,7 +1063,22 @@ const SERVICES_DEFAULTS = {
     howItWorks: d(baseHow),
     candidates: d(baseCandidates),
     appointmentSteps: d(baseSteps),
-    pricing: { single: 'From $199' },
+    pricing: { single: 'From $150' },
+    pricingMatrix: {
+      sections: [
+        {
+          title: 'Hydrafacial',
+          membershipCallout: 'RELUXE included in $200/mo Premium Membership',
+          rows: [
+            { label: 'Express',  single: '$150',  membership: 'N/A' },
+            { label: 'Signature',   single: '$195', membership: 'N/A' },
+            { label: 'RELUXE',   single: '$275', membership: 'Premium Voucher' },
+            { label: 'Platinum', single: '$325', membership: 'Premium Voucher +$50' },
+          ],
+          ctaText: 'Book your Hydrafacial',
+        },
+      ],
+    },
     flexEverything: { intro: 'Loved for a reason—consistent, noticeable glow.', items: [{ heading: 'Upgrades', body: 'Boosters, LED, and lymphatic add-ons available.' }] },
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
@@ -899,7 +1090,7 @@ const SERVICES_DEFAULTS = {
     slug: 'peels',
     name: 'Chemical Peels (BioRePeel • The Perfect DermaPeel)',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -912,7 +1103,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Chemical Peels (BioRePeel®, The Perfect Derma™ Peel) in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -935,8 +1126,21 @@ const SERVICES_DEFAULTS = {
     howItWorks: d(baseHow),
     candidates: d(baseCandidates),
     appointmentSteps: d(baseSteps),
-    pricing: { single: 'From $199', packages: [{ label: 'Series of 3', value: 'Save with bundle' }] },
-    flexEverything: { intro: 'Choose BioRePeel for low-downtime refresh or Perfect Derma for deeper correction.', items: [{ heading: 'Prep', body: 'Pause retinoids 5–7 days pre-peel unless directed otherwise.' }] },
+    pricing: { single: 'From $150', packages: [{ label: 'Series of 5', value: 'Save with bundle' }] },
+    pricingMatrix: {
+      sections: [
+        {
+          title: 'Peels',
+          rows: [
+            { label: 'Micro Peel',    single: '$150',  package: '$600 for 5 (Buy 4, get 1 free)' },
+            { label: 'BioRepeel',    single: '$175',  package: '$700 for 5. (Save 20%)' },
+            { label: 'The Perfect Dermapeel',    single: '$325',  package: '$780 for 3 (Save 20%)' },
+          ],
+          ctaText: 'Book your Peel',
+        },
+      ],
+    },
+    flexEverything: { intro: 'Choose Micro Peel for correction, BioRePeel for low-downtime refresh or Perfect Derma for deeper correction.', items: [{ heading: 'Prep', body: 'Pause retinoids 5–7 days pre-peel unless directed otherwise.' }] },
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
@@ -947,7 +1151,7 @@ const SERVICES_DEFAULTS = {
     slug: 'massage',
     name: 'Massage Therapy',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -960,7 +1164,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Massage Therapy in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1003,7 +1207,7 @@ const SERVICES_DEFAULTS = {
     slug: 'evolvex',
     name: 'Body Contouring with EvolveX',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1016,7 +1220,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'EvolveX® Body Contouring in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1047,12 +1251,12 @@ const SERVICES_DEFAULTS = {
   },
 
   // 13. Laser Hair Removal
-  "laser-hair-removal": {
+  'laser-hair-removal': {
     indexable: true,
     slug: 'laser-hair-removal',
     name: 'Laser Hair Removal',
-    heroImage: '/images/service/default/1.png',
-    images: {
+    heroImage: '/images/service/laser-hair-removal/hero.png',
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1065,11 +1269,11 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Laser Hair Removal in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
-        'Fast, effective laser hair removal for lasting reduction. Flexible plans: Unlimited 24-month, 12-month area, or single sessions.',
+        'Fast, effective laser hair removal for lasting reduction. Flexible plans: Unlimited 18-month, package of 8 (buy 5, get 3 free), or single sessions.',
       image: '/images/seo/laserhair.png',
     },
     overview: {
@@ -1082,17 +1286,34 @@ const SERVICES_DEFAULTS = {
       { title: 'Fast, friendly visits', body: 'Efficient appointments that fit busy calendars.' },
     ],
     tagline: 'Smooth skin with lasting reduction.',
-    bookingLink: bookingLink('laserhair'),
-    quickFacts: [{ iconKey: 'clock', label: 'Duration', value: '15–45 min' }, qf.noneDT, { iconKey: 'sparkles', label: 'Sessions', value: '6–10+' }, { iconKey: 'user', label: 'Skin Types', value: 'Device dependent' }],
+    bookingLink: bookingLink('laser-hair-removal'),
+    quickFacts: [qfLHR.duration, qfLHR.downtime, qfLHR.sessions, qfLHR.shedding, qfLHR.skinTypes, qfLHR.comfort],
     benefits: ['Significant hair reduction', 'Fast appointments', 'No more shaving rash'],
-    howItWorks: d(baseHow),
-    candidates: d(baseCandidates),
-    appointmentSteps: d(baseSteps),
-    lasers: [{ machine: 'Diode/SHR (example)', whatItTreats: ['Unwanted hair'], whyWeChoseIt: 'Effective + comfortable settings across types.' }],
-    pricing: { single: 'Per area', packages: [{ label: 'Unlimited 24-month', value: 'Best value' }, { label: 'Single Area 12-month', value: 'Flexible' }, { label: 'Single Session', value: 'Pay-as-you-go' }] },
+    howItWorks: lhrHow,
+    candidates: lhrCandidates,
+    appointmentSteps: d(lhrSteps),
+    lasers: [{ machine: 'InMode Triton & Alma Harmony', whatItTreats: ['Unwanted hair'], whyWeChoseIt: 'Effective + comfortable settings across types.' }],
+    pricing: { single: 'Per area', packages: [{ label: 'Unlimited 18-month', value: '$5000' }, { label: 'Area Packages', value: 'Buy 5, Get 3' }, { label: 'Single Session', value: 'Pay-as-you-go' }] },
+    pricingMatrix: {
+      sections: [
+        {
+          title: 'Laser Hair Removal',
+          note: 'Area guides: Small • Standard • Large • X-Large',
+          rows: [
+            { label: 'Small Area',    single: '$100',  package: '$500 (Buy 5, get 3 free)' ,subLabel: 'Areas: Upper Lip, Chin, Hands, Feet' },
+            { label: 'Standard Area', single: '$250',  package: '$1250 (Buy 5, get 3 free',subLabel: 'Areas: Under Arms, Bikini Lines, Face, Half Arms, Half Back, Stomach, Shoulder' },
+            { label: 'Large Area',    single: '$450', package: '$2250 (Buy 5, get 3 free' ,subLabel: 'Areas: Brazilian (female only), Lower Legs, Full Back, Full Chest' },
+            { label: 'X-Large Area',  single: '$750', package: '$3750 (Buy 5, get 3 free',subLabel: 'Areas: Full Legs' },
+            { label: 'Truly Unlimited',  single: '$5000', package: '18-Months',subLabel: 'Unlimited sessions. Unlimited areas. 18-months' },
+          ],
+          promo: 'Additional areas 50% off (same visit). Additional Packages 50% off (lowest price)',
+          ctaText: 'Book Your Treatment',
+        },
+      ],
+    },
     flexEverything: { intro: 'We tailor settings for safety and efficacy by skin type and area.', items: [{ heading: 'Prep', body: 'Shave 24 hrs before; no waxing 4+ weeks prior.' }] },
-    prepAftercare: d(basePrepAfter),
-    faq: d(baseFAQ),
+    prepAftercare: d(lhrPrepAfter),
+    faq: d(lhrFAQ),
   },
 
   // 14. Lasers (IPL + VascuPen)
@@ -1101,7 +1322,7 @@ const SERVICES_DEFAULTS = {
     slug: 'lasers',
     name: 'Lasers',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1114,7 +1335,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Laser Treatments (IPL & Vascular) in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1146,12 +1367,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   ipl: {
     indexable: true,
     slug: 'ipl',
     name: 'IPL (Intense Pulsed Light)',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1164,7 +1386,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'IPL Photofacial in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1196,12 +1418,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   vascupen: {
     indexable: true,
     slug: 'vascupen',
     name: 'VascuPen',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1214,7 +1437,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'VascuPen (Vascular Pen) in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1243,13 +1466,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 13. ClearLift
+  // 15. ClearLift
   clearlift: {
     indexable: true,
     slug: 'clearlift',
     name: 'ClearLift',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1262,7 +1485,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'ClearLift® Laser in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1292,13 +1515,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 14. ClearSkin
+  // 16. ClearSkin
   clearskin: {
     indexable: true,
     slug: 'clearskin',
     name: 'ClearSkin',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1311,7 +1534,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'ClearSkin® Acne Laser in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1341,13 +1564,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 15. Morpheus8
+  // 17. Morpheus8
   morpheus8: {
     indexable: true,
     slug: 'morpheus8',
     name: 'Morpheus8',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1360,7 +1583,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Morpheus8® RF Microneedling in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1390,13 +1613,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 16. SkinPen
+  // 18. SkinPen
   skinpen: {
     indexable: true,
     slug: 'skinpen',
     name: 'SkinPen Microneedling',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1409,7 +1632,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'SkinPen® Microneedling in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1438,13 +1661,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 17. CO2 (Solaria)
+  // 19. CO2 (Solaria)
   co2: {
     indexable: true,
     slug: 'co2',
     name: 'CO₂ Resurfacing (Light)',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1457,7 +1680,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'CO₂ Laser Resurfacing with Solaria in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1487,13 +1710,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 18. Consultations - General
+  // 20. Consultations - General
   consultations: {
     indexable: true,
     slug: 'consultations',
     name: 'Consultations — General',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1506,7 +1729,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Aesthetic Consultations in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1535,13 +1758,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 19. REVEAL (3D SkinCare IQ)
-  reveal: {
+  // 20. Consultations - General
+  consult: {
     indexable: true,
-    slug: 'reveal',
-    name: 'REVEAL by RELUXE — 3D SkinCare IQ',
+    slug: 'consultations',
+    name: 'Consultations — General',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1554,7 +1777,55 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
+    }),
+    seo: {
+      title: 'Aesthetic Consultations in Westfield & Carmel, IN | RELUXE Med Spa',
+      description:
+        'Personalized roadmap to your best skin. We assess goals, budget, and timeline to map a smart, stepwise plan.',
+      image: '/images/seo/consultations.png',
     },
+    overview: {
+      p1: 'Not sure where to start? A consult clarifies goals, timelines, and budget so you know exactly what to do—and when.',
+      p2: 'We’ll map options, prioritize wins, and build a plan that fits life, not just a treatment menu.',
+    },
+    whyReluxe: [
+      { title: 'Zero-pressure vibe', body: 'Honest advice with options—not sales.' },
+      { title: 'Plan you can follow', body: 'Clear sequence and cost so you can decide confidently.' },
+      { title: 'Photo-based tracking', body: 'We measure progress so you see what’s working.' },
+    ],
+    tagline: 'Personalized roadmap to your best skin.',
+    bookingLink: bookingLink('consultations'),
+    quickFacts: [qf.fast, qf.noneDT, qf.resultsFast, { iconKey: 'user', label: 'Format', value: 'In-person' }],
+    benefits: ['Expert assessment', 'Clear plan & timeline'],
+    howItWorks: d(baseHow),
+    candidates: d(baseCandidates),
+    appointmentSteps: ['Book consult', 'Assessment & photos', 'Plan & budget review', 'Next steps & scheduling'],
+    pricing: { single: 'Complimentary' },
+    flexEverything: { intro: 'We’ll cover your goals, timeline, and budget—and map the smartest path.', items: [{ heading: 'Bring', body: 'Current skincare + past treatment history.' }] },
+    prepAftercare: d(basePrepAfter),
+    faq: d(baseFAQ),
+  },
+
+  // 21. REVEAL (3D SkinCare IQ)
+  reveal: {
+    indexable: true,
+    slug: 'reveal',
+    name: 'REVEAL by RELUXE — 3D SkinCare IQ',
+    heroImage: '/images/service/default/1.png',
+    images: d({
+      primaryCallout: '/images/service/default/2.png',
+      secondaryCallout: '/images/service/default/3.png',
+      testimonialBg: '/images/service/default/4.png',
+      ctaBanner: '/images/service/default/5.png',
+      stepByStep: '/images/service/default/6.png',
+      deviceShot: '/images/service/default/7.png',
+      techniqueShot: '/images/service/default/8.png',
+      benefitHighlight: '/images/service/default/9.png',
+      financingVisual: '/images/service/default/10.png',
+      packageVisual: '/images/service/default/11.png',
+      beforeAfterBg: '/images/service/default/12.png',
+      overviewVisual: '/images/service/default/13.jpg',
+    }),
     seo: {
       title: 'REVEAL by RELUXE — 3D SkinCare IQ in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1583,13 +1854,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 20. Dissolving & Cosmetic Correction
+  // 22. Dissolving & Cosmetic Correction
   dissolving: {
     indexable: true,
     slug: 'dissolving',
     name: 'Dissolving & Cosmetic Correction',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1602,7 +1873,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Filler Dissolving & Cosmetic Correction in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1631,13 +1902,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 21. Salt Sauna
+  // 23. Salt Sauna
   saltsauna: {
     indexable: true,
     slug: 'saltsauna',
     name: 'Salt Sauna',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1650,7 +1921,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Salt Sauna in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1679,13 +1950,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 22. Opus
+  // 24. Opus
   opus: {
     indexable: true,
     slug: 'opus',
     name: 'Opus Plasma',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1698,7 +1969,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Opus Plasma® in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1728,13 +1999,13 @@ const SERVICES_DEFAULTS = {
     faq: d(baseFAQ),
   },
 
-  // 22b. Lashes/Brows
+  // 25. Lashes/Brows
   lashlift: {
     indexable: true,
     slug: 'lashlift',
     name: 'Lash Lift & Tint',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1747,7 +2018,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Lash Lift & Tint in Westfield & Carmel, IN | RELUXE Med Spa',
       description:
@@ -1775,12 +2046,13 @@ const SERVICES_DEFAULTS = {
     prepAftercare: d(basePrepAfter),
     faq: d(baseFAQ),
   },
+
   browwax: {
     indexable: true,
     slug: 'browwax',
     name: 'Eyebrow Wax',
     heroImage: '/images/service/default/1.png',
-    images: {
+    images: d({
       primaryCallout: '/images/service/default/2.png',
       secondaryCallout: '/images/service/default/3.png',
       testimonialBg: '/images/service/default/4.png',
@@ -1793,7 +2065,7 @@ const SERVICES_DEFAULTS = {
       packageVisual: '/images/service/default/11.png',
       beforeAfterBg: '/images/service/default/12.png',
       overviewVisual: '/images/service/default/13.jpg',
-    },
+    }),
     seo: {
       title: 'Eyebrow Waxing in Westfield & Carmel, IN | RELUXE Med Spa',
       description:

@@ -14,7 +14,7 @@ export const servicesData = [
     name: 'Jeuveau',
     slug: 'jeuveau',
     price: 12,
-    memberPrice: 9,
+    memberPrice: 9.50,
     unit: 'unit',
     description: 'A fast-acting neuromodulator similar to Botox, great for softening dynamic lines with a natural finish.'
   },
@@ -22,7 +22,7 @@ export const servicesData = [
     name: 'Dysport',
     slug: 'dysport',
     price: 4.5,
-    memberPrice: 4,
+    memberPrice: 3.95,
     unit: 'unit',
     description: 'A fast-acting neuromodulator similar to Botox, great for softening dynamic lines with a natural finish.'
   },
@@ -43,7 +43,7 @@ export const servicesData = [
   {
     name: 'Truly Unlimited Laser Hair Removal (12 months)',
     slug: 'laser-hair-removal-unlimited',
-    price: 2400,
+    price: 3600,
     description: 'Twelve months of unlimited laser hair removal treatments—smooth skin made simple.'
   },
   {

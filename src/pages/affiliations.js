@@ -42,7 +42,7 @@ export default function AffiliationsPage() {
   return (
     <>
       <Head>
-        <title>Professional Affiliations | RELUXE Med Spa</title>
+        <title>Professional Affiliations | RELUXE Med Spa Westfield, Carmel, Indianapolis, IN</title>
         <meta
           name="description"
           content="RELUXE Med Spa proudly partners with trusted medical and skincare brands including Allergan, Galderma, Evolus, InMode, Alma, Skinbetter Science, and more."

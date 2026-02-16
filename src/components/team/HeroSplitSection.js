@@ -10,9 +10,30 @@ const ICON_MAP = {
   facebook: ['fab', 'facebook-f'],
   linkedin: ['fab', 'linkedin-in'],
   youtube: ['fab', 'youtube'],
-  twitter: ['fab', 'twitter'],   // or ['fab', 'x-twitter'] if you’ve loaded it
+  twitter: ['fab', 'twitter'], // or ['fab', 'x-twitter'] if you’ve loaded it
   website: ['fas', 'globe'],
   site: ['fas', 'globe'],
+}
+
+const BOOK_WESTFIELD_DEFAULT = '/book/westfield'
+const BOOK_CARMEL_DEFAULT    = '/book/carmel'
+
+// Persist the user's intended location so any global picker/cookie is overridden.
+function setForcedLocation(loc) {
+  try { localStorage.setItem('reluxe.location', loc) } catch {}
+  try { document.cookie = `reluxe_location=${loc}; path=/; max-age=31536000` } catch {}
+}
+
+function getFlagsFromLocations(locations) {
+  const list = Array.isArray(locations) ? locations : (locations ? [locations] : [])
+  let carmel = false
+  let westfield = false
+  for (const l of list) {
+    const s = String(l?.slug || l?.title || '').toLowerCase()
+    if (s.includes('carmel')) carmel = true
+    if (s.includes('westfield')) westfield = true
+  }
+  return { carmel, westfield }
 }
 
 export default function HeroSplitSection({
@@ -20,8 +41,16 @@ export default function HeroSplitSection({
   subtitle = '',
   bio,
   imageUrl,
-  bookingUrl = '',
+
+  // New props:
+  locations = [],                // pass ACF relationship field here
+  bookCarmelUrl = BOOK_CARMEL_DEFAULT,
+  bookWestfieldUrl = BOOK_WESTFIELD_DEFAULT,
+
+  // Kept for compatibility (ignored for main booking button behavior)
+  bookingUrl = '',               // will be ignored in favor of location logic
   consultationUrl = '',
+
   socials = [],
 }) {
   const truncatedBio =
@@ -37,6 +66,8 @@ export default function HeroSplitSection({
           return { ...s, _icon: ICON_MAP[key], _label: label || 'social' }
         })
     : []
+
+  const { carmel, westfield } = getFlagsFromLocations(locations)
 
   return (
     <section className="w-full bg-azure">
@@ -77,19 +108,33 @@ export default function HeroSplitSection({
               <p className="text-md text-gray-600 leading-relaxed">{truncatedBio}</p>
             </div>
 
-            {/* Buttons (show only if we have URLs) */}
-            {(bookingUrl || consultationUrl) && (
+            {/* Booking buttons based on locations */}
+            {(carmel || westfield || consultationUrl) && (
               <div className="pt-8 flex justify-left flex-wrap gap-4 mb-10">
-                {bookingUrl && (
+                {carmel && (
                   <Link
-                    href={bookingUrl}
+                    href={bookCarmelUrl || BOOK_CARMEL_DEFAULT}
+                    onClick={() => setForcedLocation('carmel')}
                     className="bg-black text-white px-6 py-3 rounded-md font-semibold hover:bg-gray-800 transition"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Book Service
+                    Book in Carmel
                   </Link>
                 )}
+
+                {westfield && (
+                  <Link
+                    href={bookWestfieldUrl || BOOK_WESTFIELD_DEFAULT}
+                    onClick={() => setForcedLocation('westfield')}
+                    className="bg-white border border-black px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Book in Westfield
+                  </Link>
+                )}
+
                 {consultationUrl && (
                   <Link
                     href={consultationUrl}
@@ -123,8 +168,27 @@ HeroSplitSection.propTypes = {
   subtitle: PropTypes.string,
   bio: PropTypes.string,
   imageUrl: PropTypes.string,
+
+  // New props for location-aware booking
+  locations: PropTypes.oneOfType([
+    PropTypes.arrayOf(
+      PropTypes.shape({
+        slug: PropTypes.string,
+        title: PropTypes.string,
+      })
+    ),
+    PropTypes.shape({
+      slug: PropTypes.string,
+      title: PropTypes.string,
+    }),
+  ]),
+  bookCarmelUrl: PropTypes.string,
+  bookWestfieldUrl: PropTypes.string,
+
+  // Legacy props kept for compatibility
   bookingUrl: PropTypes.string,
   consultationUrl: PropTypes.string,
+
   socials: PropTypes.arrayOf(
     PropTypes.shape({
       label: PropTypes.string,

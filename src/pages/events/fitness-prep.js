@@ -119,7 +119,7 @@ export default function FitnessPrepPage() {
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <ServiceCard title="EvolveX Body Contouring" subtitle="Tone & tighten" copy="Target abs, glutes, thighs, or arms with a series that complements training." image="/images/treatments/body.jpg" href="/book/body/" />
-            <ServiceCard title="Laser Hair Removal" subtitle="Stage-ready finish" copy="Plan areas in advance for clean lines and low-maintenance grooming." image="/images/men/lhr.jpg" href="/book/lhr/" />
+            <ServiceCard title="Laser Hair Removal" subtitle="Stage-ready finish" copy="Plan areas in advance for clean lines and low-maintenance grooming." image="/images/men/lhr.jpg" href="/book/laser-hair-removal/" />
             <ServiceCard title="HydraFacial® / Glo2Facial®" subtitle="Clarity under lights" copy="Reduce dullness and enhance clarity so definition reads cleanly." image="/images/treatments/facials.jpg" href="/book/facials/" />
             <ServiceCard title="Dermaplane + Polish" subtitle="Smooth canvas" copy="Even, soft texture that pairs well with tan and stage makeup." image="/images/treatments/dermaplane.jpg" href="/book/facials/" />
             <ServiceCard title="SkinPen® Microneedling" subtitle="Texture & scars" copy="If you have runway, refine texture and scars before the big day." image="/images/treatments/skinpen.jpg" href="/book/microneedling/" />

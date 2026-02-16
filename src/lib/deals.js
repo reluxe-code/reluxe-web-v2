@@ -1,10 +1,10 @@
 // src/lib/deals.js
 // Isomorphic fetch of RELUXE deals from WP; caches (SSR + browser)
 
-const WP_BASE = 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/';
+const WP_BASE = 'https://wordpress-74434-5742908.cloudwaysapps.com/cms';
 const ENDPOINT =
   `${WP_BASE}/wp-json/wp/v2/monthly_special` +
-  '?per_page=20&orderby=date&order=desc' +
+  '?per_page=50&orderby=date&order=desc' +
   '&acf_format=standard' +
   '&_fields=id,link,slug,status,date,modified,title,acf';
 
@@ -14,23 +14,29 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 // ---------- dates ----------
 const yyyymmddToDate = (s) => {
   if (!s) return null;
-  const str = String(s);
+  const str = String(s).trim();
   if (str.length !== 8) return null;
-  const y = +str.slice(0, 4);
-  const m = +str.slice(4, 6) - 1;
-  const d = +str.slice(6, 8);
+
+  const y = Number(str.slice(0, 4));
+  const m = Number(str.slice(4, 6)) - 1;
+  const d = Number(str.slice(6, 8));
+
   const dt = new Date(Date.UTC(y, m, d, 12, 0, 0));
   return Number.isNaN(dt.getTime()) ? null : dt;
 };
 
 const isActive = (acf) => {
   const start = yyyymmddToDate(acf?.start_date);
-  const end   = yyyymmddToDate(acf?.end_date);
+  const end = yyyymmddToDate(acf?.end_date);
+
+  // If dates aren’t set, treat as active
   if (!start || !end) return true;
+
   const today = new Date();
   const t = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   const s = new Date(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()).getTime();
-  const e = new Date(end.getUTCFullYear(),   end.getUTCMonth(),   end.getUTCDate()).getTime();
+  const e = new Date(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()).getTime();
+
   return s <= t && t <= e;
 };
 
@@ -78,10 +84,15 @@ function getCachedClient() {
     if (!ls) return null;
     const raw = ls.getItem(CACHE_KEY);
     if (!raw) return null;
-    const { ts, data } = JSON.parse(raw);
-    if (Date.now() - ts > CACHE_TTL_MS) return null;
-    return data;
-  } catch { return null; }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.ts || !parsed?.data) return null;
+
+    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
 }
 
 function setCachedClient(data) {
@@ -94,17 +105,25 @@ function setCachedClient(data) {
 
 // ---------- fetchers ----------
 async function fetchFromWP() {
-  const res = await fetch(ENDPOINT, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const res = await fetch(ENDPOINT, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Deals fetch failed: HTTP ${res.status}`);
+  }
+
   const items = await res.json();
   return normalize(items);
 }
 
-// Server use (getServerSideProps / API route)
+// Server use (getStaticProps / getServerSideProps / API route)
 export async function getDealsSSR({ force = false } = {}) {
   if (!force && ssrCache.data.length && Date.now() - ssrCache.ts < CACHE_TTL_MS) {
     return ssrCache.data;
   }
+
   const data = await fetchFromWP();
   ssrCache = { ts: Date.now(), data };
   return data;
@@ -116,13 +135,17 @@ export async function getDealsClient({ force = false } = {}) {
     const cached = getCachedClient();
     if (cached) return cached;
   }
+
   const res = await fetch('/api/deals');
   if (!res.ok) throw new Error('Failed to load deals');
+
   const data = await res.json();
   setCachedClient(data);
   return data;
 }
 
 export function clearDealsClientCache() {
-  try { getLS()?.removeItem(CACHE_KEY); } catch {}
+  try {
+    getLS()?.removeItem(CACHE_KEY);
+  } catch {}
 }

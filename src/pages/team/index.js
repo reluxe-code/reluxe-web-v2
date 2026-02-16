@@ -1,5 +1,4 @@
 // src/pages/team/index.js
-import { gql } from '@apollo/client'
 import client from '@/lib/apollo'
 import Head from 'next/head'
 import HeaderTwo from '@/components/header/header-2'
@@ -7,22 +6,30 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { GET_STAFF_LIST } from '@/lib/queries/getStaffList'
 import { CheckCircleIcon } from '@heroicons/react/24/solid'
-import dynamic from 'next/dynamic'
-const StaffCard = dynamic(() => import('@/components/team/StaffCard'), { ssr: false })
+import StaffCard from '@/components/team/StaffCard'
 
 // -------------------------------------------------------------
-// Turn this off after confirming categories look right in UI
-const DEBUG_CATS = false;
+// Turn this ON temporarily if you want to see category + subtitle
+const DEBUG_CATS = false
 // -------------------------------------------------------------
 
 const lower = (v) => (v ?? '').toString().toLowerCase().trim()
 
 /**
- * Try to extract the *same* subtitle your StaffCard shows under the name.
- * We probe a bunch of common fields/ACF keys and return the first non-empty.
+ * Extract the same subtitle your StaffCard shows.
+ * Order matters — real title fields FIRST, excerpt LAST.
  */
 function deriveSubtitle(staff) {
   const candidates = [
+    // ✅ Common WPGraphQL ACF group pattern
+    staff?.staffFields?.staffTitle,
+    staff?.staffFields?.staff_title,
+    staff?.staffFields?.title,
+    staff?.staffFields?.jobTitle,
+    staff?.staffFields?.role,
+    staff?.staffFields?.position,
+
+    // Flat fields
     staff?.staff_title,
     staff?.staffTitle,
     staff?.jobTitle,
@@ -30,6 +37,8 @@ function deriveSubtitle(staff) {
     staff?.position,
     staff?.role,
     staff?.subtitle,
+
+    // ACF direct
     staff?.acf?.staff_title,
     staff?.acf?.title,
     staff?.acf?.job_title,
@@ -37,9 +46,14 @@ function deriveSubtitle(staff) {
     staff?.acf?.position,
     staff?.acf?.role,
     staff?.acf?.subtitle,
-    staff?.excerpt,
+
+    // Meta
     staff?.meta?.subtitle,
+
+    // ❌ LAST RESORT ONLY (often contains “aesthetician” and can mis-bucket people)
+    staff?.excerpt,
   ]
+
   for (const v of candidates) {
     if (v && String(v).trim()) return String(v).trim()
   }
@@ -47,31 +61,52 @@ function deriveSubtitle(staff) {
 }
 
 /**
- * Bucket logic using the *derived* subtitle first, then fallbacks.
- * Uses word boundaries so "spa" doesn't match "pa", etc.
+ * Category selection
+ * Priority matters: Injectors > Aestheticians > Support > Massage
  */
 function pickCategory(staff) {
   const title = lower(deriveSubtitle(staff))
   const has = (re) => re.test(title)
 
-  if (has(/\b(aesthetician|esthetician|medical aesthetician|lead aesthetician|lead medical aesthetician|licensed aesthetician|master aesthetician)\b/)) {
-    return 'Aestheticians'
-  }
-  if (has(/\binjector\b/) || has(/\bnurse\s+injector\b/) || has(/\bnurse\s+practitioner\b/) || has(/\bphysician\s+assistant\b/) || has(/\bmd\b/) || has(/\bdo\b/) || has(/\brn\b/) || has(/\bnp\b/) || has(/\bpa\b/)) {
+  // ✅ INJECTORS FIRST (fixes Krista)
+  if (
+    has(/\binjector\b/) ||
+    has(/\bnurse\s+injector\b/) ||
+    has(/\bnurse\s+practitioner\b/) ||
+    has(/\bphysician\s+assistant\b/) ||
+    has(/\bmd\b/) ||
+    has(/\bdo\b/) ||
+    has(/\brn\b/) ||
+    has(/\bnp\b/) ||
+    has(/\bpa\b/)
+  ) {
     return 'Injectors'
   }
-  if (has(/\b(front\s*desk|reception|coordinator|support|manager|director|admin|assistant|executive|patient|concierge|operations|ops|lead|team\s*lead)\b/)) {
+
+  // Aestheticians
+  if (
+    has(/\b(aesthetician|esthetician|medical aesthetician|lead aesthetician|lead medical aesthetician|licensed aesthetician|master aesthetician)\b/)
+  ) {
+    return 'Aestheticians'
+  }
+
+  // Support
+  if (
+    has(/\b(front\s*desk|reception|coordinator|support|manager|director|admin|assistant|executive|patient|concierge|operations|ops|team\s*lead)\b/)
+  ) {
     return 'Support Staff'
   }
 
-  // broad haystack fallback
+  // ---------- Broad fallback scan ----------
   const hay = lower(JSON.stringify(staff || {}))
   const hit = (re) => re.test(hay)
-  if (hit(/\b(aesthetician|esthetician)\b/)) return 'Aestheticians'
+
   if (hit(/\binjector\b|\bnurse\s+injector\b|\brn\b|\bnp\b|\bpa\b|\bnurse\s+practitioner\b/)) return 'Injectors'
+  if (hit(/\b(aesthetician|esthetician)\b/)) return 'Aestheticians'
   if (hit(/\b(front\s*desk|reception|coordinator|support|manager|director|admin|assistant|executive|concierge|operations|ops)\b/)) {
     return 'Support Staff'
   }
+
   return 'Massage Therapists'
 }
 
@@ -103,7 +138,6 @@ export async function getStaticProps() {
     props: {
       staffList: data?.staffs?.nodes || [],
     },
-    
   }
 }
 
@@ -113,55 +147,57 @@ export default function TeamPage({ staffList }) {
   const nonEmpty = order.filter((k) => (groups[k] || []).length > 0)
   const totalCount = staffList?.length || 0
 
-  // ---------- JSON-LD: ItemList of Person (lightweight) ----------
+  // ---------- SEO: JSON-LD ItemList of Person ----------
   const peopleForSchema = (staffList || []).map((s, i) => {
     const job = deriveSubtitle(s) || undefined
-    // Try common WP featured image shapes
     const img =
       s?.featuredImage?.node?.sourceUrl ||
       s?.featuredImage?.sourceUrl ||
       s?.image?.sourceUrl ||
       undefined
+
     return {
-      "@type": "ListItem",
-      "position": i + 1,
-      "item": {
-        "@type": "Person",
-        "name": s?.name || s?.title || s?.slug || "RELUXE Provider",
-        ...(job ? { "jobTitle": job } : {}),
-        "url": `https://reluxemedspa.com/team/${s?.slug}`,
-        "affiliation": { "@type": "Organization", "name": "RELUXE Med Spa" },
-        ...(img ? { "image": img } : {})
-      }
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Person',
+        name: s?.name || s?.title || s?.slug || 'RELUXE Provider',
+        ...(job ? { jobTitle: job } : {}),
+        url: `https://reluxemedspa.com/team/${s?.slug}`,
+        affiliation: { '@type': 'Organization', name: 'RELUXE Med Spa' },
+        ...(img ? { image: img } : {}),
+      },
     }
   })
 
   const itemListSchema = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": "RELUXE Med Spa Team",
-    "itemListElement": peopleForSchema
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'RELUXE Med Spa Team',
+    itemListElement: peopleForSchema,
   }
 
   const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://reluxemedspa.com/" },
-      { "@type": "ListItem", "position": 2, "name": "Our Team", "item": "https://reluxemedspa.com/team" }
-    ]
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://reluxemedspa.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Our Team', item: 'https://reluxemedspa.com/team' },
+    ],
   }
-  // ---------------------------------------------------------------
+
+  // ---------- Best SEO Meta ----------
+  const title =
+    'Meet the RELUXE Med Spa Team | Expert Injectors & Licensed Aestheticians in Westfield & Carmel, IN'
+  const description =
+    'Meet the RELUXE Med Spa team serving Westfield and Carmel, Indiana. Expert injectors, licensed aestheticians, and massage therapists delivering natural results with concierge-level care.'
 
   return (
     <>
       <Head>
         {/* Title & Meta */}
-        <title>Our Team | Expert Injectors & Aestheticians | RELUXE Med Spa Westfield & Carmel</title>
-        <meta
-          name="description"
-          content="Meet the RELUXE Med Spa team in Westfield & Carmel: expert injectors, licensed aestheticians, and concierge support delivering natural, confidence-building results."
-        />
+        <title>{title}</title>
+        <meta name="description" content={description} />
         <link rel="canonical" href="https://reluxemedspa.com/team" />
 
         {/* Open Graph / Twitter */}
@@ -188,13 +224,12 @@ export default function TeamPage({ staffList }) {
         <div className="relative h-[360px] md:h-[420px]">
           <Image
             src="/images/team/team-header.png"
-            alt="RELUXE Med Spa team"
+            alt="RELUXE Med Spa team in Westfield and Carmel, Indiana"
             fill
             priority
             sizes="100vw"
             style={{ objectFit: 'cover' }}
           />
-          {/* 70% black overlay for legibility */}
           <div className="absolute inset-0 bg-black/70" aria-hidden="true" />
           <div className="relative z-10 h-full max-w-7xl mx-auto px-6 flex flex-col items-center justify-center text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
@@ -215,17 +250,18 @@ export default function TeamPage({ staffList }) {
         </div>
       </section>
 
-      {/* ABOUT THE TEAM (new, stylish, E-E-A-T forward) */}
+      {/* ABOUT THE TEAM */}
       <section className="px-4 py-12 md:py-16">
         <div className="max-w-7xl mx-auto grid md:grid-cols-12 gap-8 items-center">
           <div className="md:col-span-7">
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900">Patient-first. Results-obsessed.</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900">
+              Patient-first. Results-obsessed.
+            </h2>
             <p className="mt-4 text-neutral-700 leading-relaxed">
               At RELUXE Med Spa, every plan begins with listening. Our injectors and licensed aestheticians
               pair medical-grade techniques with a modern, artistic approach—so your results look natural, fresh,
               and authentically you. With locations in <strong>Westfield</strong> and <strong>Carmel</strong>, we make it easy
-              to see the right expert for Botox &amp; Jeuveau, SkinPen microneedling, facials, IPL, laser hair removal,
-              and skin tightening.
+              to see the right expert for tox, SkinPen microneedling, facials, IPL, laser hair removal, and skin tightening.
             </p>
             <ul className="mt-6 grid sm:grid-cols-2 gap-3 text-neutral-800">
               <li className="flex items-start gap-2">
@@ -246,10 +282,15 @@ export default function TeamPage({ staffList }) {
               </li>
             </ul>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/book/consult" className="rounded-xl bg-neutral-900 text-white px-5 py-3 font-semibold hover:bg-neutral-800">Book a Consult</Link>
-              <Link href="/services" className="rounded-xl bg-white text-black px-5 py-3 font-semibold ring-1 ring-black/10 hover:bg-neutral-50">View Services</Link>
+              <Link href="/book/consult" className="rounded-xl bg-neutral-900 text-white px-5 py-3 font-semibold hover:bg-neutral-800">
+                Book a Consult
+              </Link>
+              <Link href="/services" className="rounded-xl bg-white text-black px-5 py-3 font-semibold ring-1 ring-black/10 hover:bg-neutral-50">
+                View Services
+              </Link>
             </div>
           </div>
+
           <div className="md:col-span-5">
             <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5">
               <Image
@@ -293,6 +334,7 @@ export default function TeamPage({ staffList }) {
       {order.map((k) => {
         const people = groups[k] || []
         if (!people.length) return null
+
         return (
           <section
             key={k}
@@ -303,10 +345,12 @@ export default function TeamPage({ staffList }) {
               <h3 className="text-2xl font-bold">{k}</h3>
               <span className="text-sm text-gray-500">{people.length} total</span>
             </div>
+
             <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-6">
               {people.map((staff) => {
                 const subtitle = deriveSubtitle(staff)
                 const cat = pickCategory(staff)
+
                 return (
                   <Link
                     key={staff.slug}
@@ -319,7 +363,7 @@ export default function TeamPage({ staffList }) {
                         {cat} · {subtitle || '—'}
                       </div>
                     )}
-                    
+
                     <StaffCard staff={staff} />
                   </Link>
                 )

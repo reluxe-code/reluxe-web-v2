@@ -34,6 +34,7 @@ s.blockPriorities = {
   candidates: 60,
   process: 65,
   pricing: 70,
+  pricingMatrix: 36,
   financing: 80,
   faq: 85,
   providerSpotlight: 110,
@@ -47,39 +48,24 @@ s.blockPriorities = {
 // ✨ Default content (safe to keep/grow)
 s.heroImage = '/images/service/tox/1.png';
 s.images = {
-      primaryCallout: '/images/service/tox/2.png',     // Big 50/50 split block
-      secondaryCallout: '/images/service/default/3.png', // Smaller supporting visual
-      testimonialBg: '/images/service/default/4.png', // Faded background for testimonial section
-      ctaBanner: '/images/service/tox/5.png',                   // Bold mid-page “Book Now” visual
-      stepByStep: '/images/service/tox/6.png',               // “What to Expect” or process section
-      deviceShot: '/images/service/default/7.png',            // Equipment showcase (if relevant)
-      techniqueShot: '/images/service/default/8.png',  // Treatment technique photo
-      benefitHighlight: '/images/service/default/9.png',   // Used in benefits/features grid
-      financingVisual: '/images/service/default/10.png', // Financing options callout
-      packageVisual: '/images/service/default/11.png',     // Packages & pricing block
-      beforeAfterBg: '/images/service/default/12.png', // Optional overlay or background for before/after slider
-    };
+  primaryCallout: '/images/service/tox/2.png',       // Big 50/50 split block
+  secondaryCallout: '/images/service/default/3.png', // Smaller supporting visual
+  testimonialBg: '/images/service/default/4.png',    // Faded background for testimonial section
+  ctaBanner: '/images/service/tox/5.png',            // Bold mid-page “Book Now” visual
+  stepByStep: '/images/service/tox/6.png',           // “What to Expect” or process section
+  deviceShot: '/images/service/default/7.png',       // Equipment showcase (if relevant)
+  techniqueShot: '/images/service/default/8.png',    // Treatment technique photo
+  benefitHighlight: '/images/service/default/9.png', // Used in benefits/features grid
+  financingVisual: '/images/service/default/10.png', // Financing options callout
+  packageVisual: '/images/service/default/11.png',   // Packages & pricing block
+  beforeAfterBg: '/images/service/default/12.png',   // Optional overlay/background for before/after
+};
 s.resultsGallery = [
-  {
-    src: '/images/results/tox/injector.hannah - 25.png',
-    alt: 'Forehead lines before/after – smoother after 2 weeks'
-  },
-  {
-    src: '/images/results/tox/injector.krista - 01.png',
-    alt: 'Forehead lines before/after – smoother after 2 weeks'
-  },
-  {
-    src: '/images/results/tox/injector.hannah - 26.png',
-    alt: 'Forehead lines before/after – smoother after 2 weeks'
-  },
-  {
-    src: '/images/results/tox/injector.hannah - 27.png',
-    alt: 'Forehead lines before/after – smoother after 2 weeks'
-  },
-  {
-    src: '/images/results/tox/injector.hannah - 30.png',
-    alt: 'Forehead lines before/after – smoother after 2 weeks'
-  },
+  { src: '/images/results/tox/injector.hannah - 25.png', alt: 'Forehead lines before/after – smoother after 2 weeks' },
+  { src: '/images/results/tox/injector.krista - 01.png', alt: 'Forehead lines before/after – smoother after 2 weeks' },
+  { src: '/images/results/tox/injector.hannah - 26.png', alt: 'Forehead lines before/after – smoother after 2 weeks' },
+  { src: '/images/results/tox/injector.hannah - 27.png', alt: 'Forehead lines before/after – smoother after 2 weeks' },
+  { src: '/images/results/tox/injector.hannah - 30.png', alt: 'Forehead lines before/after – smoother after 2 weeks' },
 ];
 s.tagline = s.tagline || 'Smoother lines, natural movement—done right.';
 s.quickFacts = s.quickFacts?.length ? s.quickFacts : [
@@ -96,7 +82,7 @@ s.benefits = [
 ];
 s.howItWorks = [
   { title: 'Consult & Map', body: 'We assess movement, anatomy, and goals.' },
-  { title: 'Micro-injections', body: 'Targeted dosing for balanced results.' },
+  { title: 'Dosing for Personalized Goals', body: 'Targeted dosing for balanced results.' },
   { title: 'Review & Plan', body: 'Follow-up for refinement if desired.' },
 ];
 
@@ -120,9 +106,9 @@ s.candidates = {
 };
 s.appointmentSteps = [
   'Arrive makeup-free or we’ll cleanse.',
-  'Photos for tracking (optional).',
+  'Photos for tracking.',
   'Treatment: 10–20 tiny pinches.',
-  'Back to life—avoid workouts 24 hrs.',
+  'Back to life, avoid workouts 24 hrs.',
 ];
 
 s.seo = {
@@ -132,19 +118,44 @@ s.seo = {
   image: s.images?.ctaBanner || s.heroImage || '/images/seo/tox.png',
 };
 
-s.pricing = {
-  packages: [
-    { label: 'Botox', value: '$14/unit' },
-    { label: 'Jeuveau', value: '$12/unit' },
-    { label: 'Dysport', value: '$4.50/unit' },
-    { label: 'Daxxify', value: '$7/unit' },
+/**
+ * NEW: Pricing Matrix — per-unit pricing + membership savings.
+ * Renders in the new <PricingMatrix> block added to the page.
+ */
+/**
+ * ✅ 2026 Pricing Matrix (Botox-style cards, all 4 tox)
+ */
+
+s.pricingMatrix = {
+  subtitle: 'Per-unit pricing with member savings.',
+  sections: [
+    {
+      title: 'TOX',
+      membershipCallout: 'Members save on every visit',
+      rows: [
+        { label: 'Botox® Foundations',  single: '$280 for 20 Units ($14/ unit)',   membership: '$10/unit'},
+        { label: 'Additional Units',  single: 'Returning: $10/unit',   membership: 'New: $9/unit'},
+        { label: 'Jeuveau® Foundations', single: '$200 for 20 Units ($12/unit) after $40 Evolus Rewards',   membership: '$9 / unit' },
+        { label: 'Additional Units', single: 'Returning: $8/unit',   membership: 'New: $6/unit'},
+        { label: 'Dysport® Foundations', single: '$225 for 50 Units ($4.50/unit)', membership: '$4.00 / unit' },
+        { label: 'Additional Units', single: 'Returning: $3.50/unit',   membership: 'New: $3/unit'},
+        { label: 'DAXXIFY® Foundations', single: '$280 for 40 Units ($7/unit)',   membership: '$5/unit' },
+        { label: 'Additional Units', single: 'Returning: $5/unit',   membership: 'New: $4/unit'},
+      ],
+      ctaText: 'Book your tox',
+      // promo: 'Example: 50-unit first-time bundle available — ask at check-in',
+    },
   ],
 };
+
+// ✅ IMPORTANT: remove legacy pricing display for tox to avoid duplicate pricing.
+s.pricing = { single: '', packages: [] };
+
 s.comparison = {
   columns: ['Botox®', 'Dysport®', 'Jeuveau®', 'Daxxify®'],
   rows: [
-    { label: 'Onset', options: [{value:'3–7d'},{value:'2–4d'},{value:'2–4d'},{value:'2–4d'}] },
-    { label: 'Typical Duration', options: [{value:'3–4mo'},{value:'3–4mo'},{value:'3–4mo'},{value:'4–6mo*'}] },
+    { label: 'Onset', options: [{value:'3–7 days'},{value:'2–5 days'},{value:'2–5 days'},{value:'2–4 days'}] },
+    { label: 'Typical Duration', options: [{value:'3–4 months'},{value:'3–4 months'},{value:'3–4 months'},{value:'4–6 months'}] },
     { label: 'Spread', options: [{value:'Standard'},{value:'Slightly broader'},{value:'Standard'},{value:'Tight'}] },
     { label: 'Good For', options: [{value:'Balanced control'},{value:'Larger areas'},{value:'Fast onset'},{value:'Longevity focus'}] },
   ],
@@ -159,7 +170,7 @@ s.faq = [
 s.flexEverything = {
   intro: 'Small, precise doses customized to your muscle pattern.',
   items: [
-    { heading: 'Micro-dosing strategy', body: 'Prevents over-treatment while smoothing lines.' },
+    { heading: 'Dosing strategy', body: 'Prevents over-treatment while smoothing lines.' },
     { heading: 'Follow-up at 2–3 weeks', body: 'Optional fine-tuning to perfect symmetry.' },
     { heading: 'Maintenance cadence', body: 'Plan 3–4 months; longer for Daxxify.' },
     { heading: 'Pairing tips', body: 'Lip flip, masseter slimming, or facial balancing.' },
@@ -173,7 +184,7 @@ s.testimonials = [
     service: "Tox",
     rating: 5,
     text: "The whole visit was so easy—and I loved my results! Krista was incredibly gentle and explained everything step-by-step.",
-    monthYear: "Feb 2025" // or use date: "2025-02"
+    monthYear: "Feb 2025"
   },
   {
     author: "Marcus L.",
@@ -181,7 +192,7 @@ s.testimonials = [
     service: "Tox (Forehead + 11s)",
     rating: 5,
     text: "Natural look, no heaviness. Booking again before my next event.",
-    date: "2025-01" // will render as "Jan 2025"
+    date: "2025-01"
   },
   {
     author: "Priya A.",
@@ -213,9 +224,9 @@ s.providers = [
     title: 'Nurse Practitioner Injector',
     headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/krista.png',
     bio: 'Detail-obsessed injector focused on natural movement and balanced facial aesthetics.',
-    href: '/book/tox', // provider-specific link if available
+    href: '/book/tox',
     instagram: 'https://instagram.com/injector.krista',
-    specialties: ['Tox', 'Lip Filler', 'Facial Balancing'],
+    specialties: ['Tox', 'Lip Filler', 'Morpheus8', 'Facial Balancing'],
   },
   {
     name: 'Hannah, RN',
@@ -224,17 +235,26 @@ s.providers = [
     bio: 'Gentle technique + great communication—Hannah makes first-time tox feel easy.',
     href: '/book/tox',
     instagram: 'https://instagram.com/injector.hannah',
-    specialties: ['Tox', 'Lip Filler', 'Facial Balancing'],
+    specialties: ['Tox', 'Lip Filler', 'Morpheus8', 'Facial Balancing'],
   },
   {
-     name: 'Alexis, RN',
-     title: 'Nurse Injector',
-     headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/alexis.png',
-     bio: 'Add Alexis’s short bio here (1–2 lines).',
-     href: '/book/tox',
-     instagram: 'https://instagram.com/____',
-     specialties: ['Tox', 'Lip Filler', 'Facial Balancing'],
-   },
+    name: 'Alexis, RN',
+    title: 'Nurse Injector',
+    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/alexis.png',
+    bio: 'Alexis is a skilled and compassionate cosmetic injector with a passion for helping clients look and feel their best.',
+    href: '/book/tox',
+    instagram: 'https://instagram.com/',
+    specialties: ['Tox', 'Facial Balancing'],
+  },
+  {
+    name: 'Melissa, RN',
+    title: 'Nurse Injector',
+    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/09/Melissa.png',
+    bio: 'Melissa brings extensive nursing experience to her dual role as a Registered Nurse at House of Health and Injector at Reluxe Medical Spa, where she’s expanding her passion for aesthetics and functional wellness.',
+    href: '/book/tox',
+    instagram: 'https://instagram.com/____',
+    specialties: ['Tox', 'Lip Filler', 'Facial Balancing'],
+  },
 ];
 
 export default s;

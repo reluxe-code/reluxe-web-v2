@@ -4,31 +4,67 @@ import { gql } from '@apollo/client'
 import client from '@/lib/apollo'
 import Head from 'next/head'
 import HeaderTwo from '@/components/header/header-2'
-import Layout from '@/components/layout/layout'
-import ResultsSection from '@/components/gallery/ResultsSection'
+import dynamic from 'next/dynamic'
 import HeroSplitSection from '@/components/team/HeroSplitSection'
-import ServiceSlider from '@/components/team/ServiceSlider'
 import MoreAboutMeSliderSection from '@/components/team/MoreAboutMeSliderSection'
+
+// 🚫 SSR can mismatch on browser-only code inside sliders/galleries.
+// ✅ Load ResultsSection only on the client to avoid hydration errors.
+const ResultsSection = dynamic(() => import('@/components/gallery/ResultsSection'), {
+  ssr: false,
+  loading: () => null,
+})
+
+// —————————————————————————————————————————————
+// GraphQL (paginated slugs for getStaticPaths)
+// —————————————————————————————————————————————
+const GET_STAFF_SLUGS = gql`
+  query GetStaffSlugs($first: Int = 100, $after: String) {
+    staffs(
+      first: $first
+      after: $after
+      where: { status: PUBLISH, orderby: { field: TITLE, order: ASC } }
+    ) {
+      pageInfo { hasNextPage endCursor }
+      nodes { slug }
+    }
+  }
+`
 
 // —————————————————————————————————————————————
 // Data fetching
 // —————————————————————————————————————————————
 export async function getStaticPaths() {
-  const { data } = await client.query({
-    query: gql`
-      query {
-        staffs(first: 200) {
-          nodes { slug }
-        }
-      }
-    `
-  })
+  // Pull ALL staff slugs via cursor pagination
+  let after = null
+  const slugs = []
 
-  const paths = (data?.staffs?.nodes || []).map((person) => ({
-    params: { slug: person.slug }
-  }))
+  try {
+    for (;;) {
+      const { data } = await client.query({
+        query: GET_STAFF_SLUGS,
+        variables: { first: 100, after },
+        fetchPolicy: 'no-cache',
+      })
+      const page = data?.staffs
+      if (page?.nodes?.length) slugs.push(...page.nodes.map(n => n.slug).filter(Boolean))
+      if (!page?.pageInfo?.hasNextPage) break
+      after = page.pageInfo.endCursor
+    }
+  } catch {}
 
+  const uniq = Array.from(new Set(slugs)).filter(Boolean)
+  const paths = uniq.map((slug) => ({ params: { slug } }))
   return { paths, fallback: 'blocking' }
+}
+
+// Generate a stable, server-only rotation key to avoid SSR/CSR mismatch
+function buildRotationKey(d = new Date()) {
+  const startOfYearUTC = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const ms = d - startOfYearUTC
+  const dayMs = 86400000
+  const week = Math.ceil(((ms / dayMs) + startOfYearUTC.getUTCDay() + 1) / 7)
+  return `${d.getUTCFullYear()}-W${week}`
 }
 
 export async function getStaticProps({ params }) {
@@ -45,6 +81,15 @@ export async function getStaticProps({ params }) {
             stafffunfact
             videoIntro
             staffBio
+
+            # ACF Relationship field named "location"
+            location {
+              ... on Location {
+                slug
+                title
+              }
+            }
+
             transparentbg {
               id
               altText
@@ -59,88 +104,95 @@ export async function getStaticProps({ params }) {
         }
       }
     `,
-    variables: { slug: params.slug }
+    variables: { slug: params.slug },
+    fetchPolicy: 'no-cache',
   })
 
   if (!data?.staff) return { notFound: true }
 
+  // ✅ compute on server, serialize to client
+  const rotationKey = buildRotationKey()
+
   return {
-    props: { person: data.staff },
-    
+    props: { person: data.staff, rotationKey },
+    revalidate: 300,
   }
 }
 
 // —————————————————————————————————————————————
-// Helpers to build UI from queried fields
+// Helpers
 // —————————————————————————————————————————————
-const sliderSettings = {
-  slidesPerView: 2,
-  breakpoints: { 640: { slidesPerView: 3 }, 1024: { slidesPerView: 5 } },
-  loop: true
-}
-
-// Map specialties -> logo + href (extend as you add specialties)
 const SPECIALTY_ASSETS = [
-  { key: /tox|botox|jeuveau|xeomin|dysport/i, title: 'Tox',       img: '/images/service/210x70/jeuveau.png', href: '/services/tox' },
-  { key: /filler|lip/i,                         title: 'Filler',    img: '/images/service/210x70/filler.png',  href: '/services/filler' },
-  { key: /sculptra/i,                           title: 'Sculptra',  img: '/images/service/210x70/sculptra.png',href: '/services/sculptra' },
-  { key: /morpheus/i,                           title: 'Morpheus8', img: '/images/service/210x70/m8.png',      href: '/services/morpheus8' },
-  { key: /skinpen|microneed/i,                  title: 'SkinPen',   img: '/images/service/210x70/skinpen.png', href: '/services/skinpen' },
-  { key: /ipl|photofacial/i,                    title: 'IPL',       img: '/images/service/210x70/ipl.png',     href: '/services/ipl' },
-  { key: /laser hair/i,                         title: 'Hair Removal', img: '/images/service/210x70/lhr.png',  href: '/services/laser-hair-removal' },
-  { key: /hydrafacial/i,                        title: 'HydraFacial', img: '/images/service/210x70/hydrafacial.png', href: '/services/hydrafacial' },
-  { key: /glo2/i,                               title: 'Glo2Facial', img: '/images/service/210x70/glo2.png',   href: '/services/glo2facial' },
+  { key: /tox|botox|jeuveau|xeomin|dysport/i, title: 'Tox',       img: '/images/service/210x70/jeuveau.png', href: '/services/tox', slug: 'tox' },
+  { key: /filler|lip/i,                         title: 'Filler',    img: '/images/service/210x70/filler.png',  href: '/services/filler', slug: 'filler' },
+  { key: /sculptra/i,                           title: 'Sculptra',  img: '/images/service/210x70/sculptra.png',href: '/services/sculptra', slug: 'sculptra' },
+  { key: /morpheus/i,                           title: 'Morpheus8', img: '/images/service/210x70/m8.png',      href: '/services/morpheus8', slug: 'morpheus8' },
+  { key: /skinpen|microneed/i,                  title: 'SkinPen',   img: '/images/service/210x70/skinpen.png', href: '/services/skinpen', slug: 'skinpen' },
+  { key: /ipl|photofacial/i,                    title: 'IPL',       img: '/images/service/210x70/ipl.png',     href: '/services/ipl', slug: 'ipl' },
+  { key: /laser hair/i,                         title: 'Hair Removal', img: '/images/service/210x70/lhr.png',  href: '/services/laser-hair-removal', slug: 'laser-hair-removal' },
+  { key: /hydrafacial/i,                        title: 'HydraFacial', img: '/images/service/210x70/hydrafacial.png', href: '/services/hydrafacial', slug: 'hydrafacial' },
+  { key: /glo2/i,                               title: 'Glo2Facial', img: '/images/service/210x70/glo2.png',   href: '/services/glo2facial', slug: 'glo2facial' },
 ]
 
-// e.g., getStaticProps or getServerSideProps
-const now = new Date()
-const rotationKey = `${now.getUTCFullYear()}-W${Math.ceil((((now - new Date(Date.UTC(now.getUTCFullYear(),0,1))) / 86400000) + new Date(Date.UTC(now.getUTCFullYear(),0,1)).getUTCDay()+1) / 7)}`
+const BOOK_WESTFIELD_DEFAULT = '/book/westfield'
+const BOOK_CARMEL_DEFAULT    = '/book/carmel'
 
-
-function buildBrandItemsFromSpecialties(specialties = []) {
+function brandItemsFromSpecialties(specialties = []) {
   const items = []
   const seen = new Set()
-
   specialties.forEach((sObj) => {
     const name = (sObj?.specialty || '').trim()
     if (!name) return
-    // find first matching asset
     const match = SPECIALTY_ASSETS.find(a => a.key.test(name))
     if (match && !seen.has(match.title)) {
       seen.add(match.title)
       items.push({
         id: items.length + 1,
         title: match.title,
-        clientimage: match.img,
-        href: match.href
+        href: match.href,
+        slug: match.slug,
       })
     }
   })
-
   return items
 }
 
-function formatCredentials(credentials = []) {
+function formatCredentialsHTML(credentials = []) {
   const list = credentials.map(c => c?.credentialItem).filter(Boolean)
-  return list.length ? list.join(' • ') : ''
+  return list.length ? list.join('<br/>') : ''
 }
-
-function formatAvailability(avail = []) {
+function formatAvailabilityHTML(avail = []) {
   const list = avail
     .filter(a => a?.day && a?.hours)
     .map(a => `${a.day}: ${a.hours}`)
-  return list.length ? list.join(' • ') : ''
+  return list.length ? list.join('<br/>') : ''
+}
+function formatSpecialtiesHTML(specialties = []) {
+  const list = specialties.map(s => s?.specialty).filter(Boolean)
+  return list.length ? list.join('<br/>') : ''
 }
 
-function formatSpecialties(specialties = []) {
-  const list = specialties.map(s => s?.specialty).filter(Boolean)
-  return list.length ? list.join(' • ') : ''
+function buildBookingHref({ location, serviceSlug }) {
+  const base = location === 'carmel' ? BOOK_CARMEL_DEFAULT : BOOK_WESTFIELD_DEFAULT
+  return serviceSlug ? `${base}?service=${encodeURIComponent(serviceSlug)}` : base
+}
+
+function getLocationFlagsFromAcfLocation(acfLocation) {
+  const locs = Array.isArray(acfLocation) ? acfLocation : (acfLocation ? [acfLocation] : [])
+  let carmel = false
+  let westfield = false
+  for (const l of locs) {
+    const s = String(l?.slug || l?.title || '').toLowerCase()
+    if (s.includes('carmel')) carmel = true
+    if (s.includes('westfield')) westfield = true
+  }
+  return { carmel, westfield }
 }
 
 // —————————————————————————————————————————————
 // Page
 // —————————————————————————————————————————————
-export default function StaffProfile({ person }) {
+export default function StaffProfile({ person, rotationKey }) {
   const f = person?.staffFields || {}
 
   const specialties = f?.specialties || []
@@ -148,47 +200,16 @@ export default function StaffProfile({ person }) {
   const availability = f?.availability || []
   const socials = f?.socialProfiles || []
 
-  // Prefer transparent bg if provided
   const transparentBgUrl = f?.transparentbg?.sourceUrl || f?.transparentbg?.mediaItemUrl || null
   const featuredUrl = person?.featuredImage?.node?.sourceUrl || null
   const heroImageUrl = transparentBgUrl || featuredUrl
 
-  // Build dynamic sections from query
-  const brandItems = buildBrandItemsFromSpecialties(specialties)
+  const brandItems = brandItemsFromSpecialties(specialties)
+  const { carmel, westfield } = getLocationFlagsFromAcfLocation(f?.location)
 
-  const credentialsText = formatCredentials(credentials)
-  const availabilityText = formatAvailability(availability)
-  const specialtiesText = formatSpecialties(specialties)
-
-  const moreItems = []
-  if (credentialsText) {
-    moreItems.push({
-      title: 'Credentials',
-      description: credentialsText,
-      footer: 'Verified'
-    })
-  }
-  if (availabilityText) {
-    moreItems.push({
-      title: 'Availability',
-      description: availabilityText,
-      footer: 'Current Hours'
-    })
-  }
-  if (specialtiesText) {
-    moreItems.push({
-      title: 'My Specialties',
-      description: specialtiesText,
-      footer: 'Most Popular'
-    })
-  }
-  if (f?.stafffunfact) {
-    moreItems.push({
-      title: 'Fun Fact',
-      description: f.stafffunfact,
-      footer: person.title
-    })
-  }
+  const credentialsHTML  = formatCredentialsHTML(credentials)
+  const availabilityHTML = formatAvailabilityHTML(availability)
+  const specialtiesHTML  = formatSpecialtiesHTML(specialties)
 
   return (
     <>
@@ -206,19 +227,14 @@ export default function StaffProfile({ person }) {
             subtitle={f?.stafftitle || ''}
             bio={(f?.staffBio || '').replace(/<[^>]*>/g, '')}
             imageUrl={heroImageUrl}
-            bookingUrl={f?.staffbookingurl || ''}
+            locations={f?.location}
             socials={socials}
           />
         </div>
       </section>
 
-      {brandItems.length > 0 && (
-        <section className="w-full bg-white">
-          <ServiceSlider brandItems={brandItems} settings={sliderSettings} />
-        </section>
-      )}
-
       <section name="XXXX" className="w-full bg-white">
+        {/* ✅ ResultsSection loads only on the client; rotationKey is server-stable */}
         <ResultsSection providerSlug={person.title} rotationKey={rotationKey} />
       </section>
 
@@ -227,8 +243,72 @@ export default function StaffProfile({ person }) {
           title={`About ${person.title}`}
           bio={f?.staffBio || ''}
           backgroundImage={heroImageUrl || '/images/staff/default-blur.png'}
-          items={moreItems}
+          items={[]}
         />
+
+        <div className="max-w-5xl mx-auto px-6 mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {credentialsHTML && (
+            <div className="rounded-2xl border shadow-sm p-5">
+              <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Credentials</div>
+              <div className="prose text-sm" dangerouslySetInnerHTML={{ __html: credentialsHTML }} />
+              <div className="mt-3 text-xs text-gray-400">Verified</div>
+            </div>
+          )}
+          {availabilityHTML && (
+            <div className="rounded-2xl border shadow-sm p-5">
+              <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Availability</div>
+              <div className="prose text-sm" dangerouslySetInnerHTML={{ __html: availabilityHTML }} />
+              <div className="mt-3 text-xs text-gray-400">Current Hours</div>
+            </div>
+          )}
+          {specialtiesHTML && (
+            <div className="rounded-2xl border shadow-sm p-5">
+              <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">My Specialties</div>
+              <div className="prose text-sm" dangerouslySetInnerHTML={{ __html: specialtiesHTML }} />
+              <div className="mt-3 text-xs text-gray-400">Most Popular</div>
+            </div>
+          )}
+        </div>
+
+        {brandItems?.length > 0 && (
+          <div className="max-w-5xl mx-auto px-6 mt-10 mb-6">
+            <h2 className="text-xl font-semibold mb-4">Book by Specialty</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {brandItems.map(item => {
+                const carmelHref    = buildBookingHref({ location: 'carmel', serviceSlug: item.slug })
+                const westfieldHref = buildBookingHref({ location: 'westfield', serviceSlug: item.slug })
+                return (
+                  <div key={item.id} className="rounded-2xl border shadow-sm p-4 flex flex-col">
+                    <div className="flex items-center gap-3">
+                      <img src={item.clientimage} alt={item.title} className="h-10 w-auto" />
+                      <div className="font-semibold">{item.title}</div>
+                    </div>
+                    <a href={item.href} className="text-sm mt-2 underline">Learn about {item.title}</a>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {carmel && (
+                        <a
+                          href={carmelHref}
+                          className="text-sm inline-flex items-center rounded-lg px-3 py-1 border font-medium hover:bg-gray-50"
+                        >
+                          Book in Carmel
+                        </a>
+                      )}
+                      {westfield && (
+                        <a
+                          href={westfieldHref}
+                          className="text-sm inline-flex items-center rounded-lg px-3 py-1 border font-medium hover:bg-gray-50"
+                        >
+                          Book in Westfield
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {f?.videoIntro && (
           <div className="mt-10 max-w-5xl mx-auto px-6">

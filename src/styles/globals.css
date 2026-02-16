@@ -415,3 +415,27 @@ textarea:focus-visible {
   border-color: rgba(255,255,255,0.25);
   background-color: rgba(0,0,0,0.2);
 }
+
+/* Keep header the same size when sticky */
+.header-section {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-section .grid {
+  /* same as Tailwind h-16/lg:h-20 but as a safety net */
+  min-height: 4rem;            /* 64px = h-16 */
+}
+
+@media (min-width: 1024px) {
+  .header-section .grid { min-height: 5rem; } /* 80px = h-20 */
+}
+
+/* Neutralize template sticky paddings that might inflate the bar */
+.header-section.is-sticky,
+.header-section.is-sticky .custom-container,
+.header-section.is-sticky .grid {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}

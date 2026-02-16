@@ -13,6 +13,12 @@ export default function ConditionsPage() {
       image: '/images/conditions/wrinkles-hero.jpg',
     },
     {
+      slug: 'weight-loss-laxity-volume-loss',
+      title: 'Skin Laxity & Volume Loss from Weight Loss',
+      copy: 'Restore firmness and balanced volume after weight loss (GLP-1 included) with Sculptra®, Morpheus8, and precision filler in Carmel & Westfield.',
+      image: '/images/conditions/weight-loss-laxity-hero.jpg',
+    },
+    {
       slug: 'volume-loss',
       title: 'Volume Loss & Facial Balancing',
       copy: 'Restore youthful contours with filler, Sculptra, and advanced balancing techniques.',

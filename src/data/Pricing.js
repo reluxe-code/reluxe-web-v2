@@ -7,6 +7,8 @@ export const servicesData = [
       { name: 'Botox', price: '$14/unit' },
       { name: 'Dysport', price: '$4.50/unit' },
       { name: 'Daxxify', price: '$7.00/unit' },
+      { name: 'Lip Flip', price: '$100' },
+      { name: 'Tox Consultation', price: 'Complementary' },
       { name: 'Facial Balancing', price: 'Consult Required' }
     ]
   },
@@ -15,38 +17,65 @@ export const servicesData = [
     items: [
       { name: 'Juvederm', price: 'Starting at $800' },
       { name: 'RHA', price: '$650' },
-      { name: 'Restlyn', price: '$700' },
+      { name: 'Restylane', price: '$700' },
       { name: 'PRP', price: '$500/injection' },
+      { name: 'Filler Disolving', price: 'Consult Required' },
       { name: 'Facial Balancing', price: 'Consult Required' },
       { name: 'Sculptra', price: '$800/vial' }
     ]
   },
   {
-    title: 'Facials & Skin',
+    title: 'Signature & Premium Facials',
     items: [
       { name: 'Hydrafacial', price: '$195 / $275 / $375' },
-      { name: 'Glo2Facial', price: '$250' },
-      { name: 'Signature Facial', price: '$125' },
-      { name: 'Chemical Peel', price: '$149+' },
+      { name: 'Glo2Facial', price: '$195 / $250 / $350' },
+      { name: 'Signature Facial', price: '$150' },
+      { name: 'Teen Facial', price: '$85' },
       { name: 'Monthly Facial', price: '$99' },
+      { name: 'Dermapeel', price: '$75' }
+    ]
+  },
+  {
+    title: 'Peels & Facial Services',
+    items: [
+      { name: 'Micro Peel', price: '$150' },
+      { name: 'The Perfect Dermapeel', price: '$195 / $250 / $350' },
+      { name: 'BioRepeel (aka Princess Peel)', price: '$125' },
+      { name: 'Lash Lift', price: '$125' },
+      { name: 'Eyebrow Wax & Tint', price: '$99' }
     ]
   },
   {
     title: 'Lasers',
     items: [
-      { name: 'IPL Photofacial', price: '$225' },
-      { name: 'ClearLift Skin Tightening', price: '$295' },
-      { name: 'CO2 Skin Resurfacing', price: '$600' },
-      { name: 'CO2 Skin Rejuvination', price: '$2500' },
-      { name: 'Laser Hair Removal Session', price: '$300' },
-      { name: 'Laser Hair Removal (24 month unlimited)', price: '$2400' }
+      { name: 'CO2 Skin Resurfacing', price: '$800' },
+      { name: 'CO2 Skin Rejuvination', price: '$2400' },
+      { name: 'IPL Photofacial', price: '$350' },
+      { name: 'ClearLift Skin Tightening', price: '$250' },
+      { name: 'ClearSkin', price: '$300' },
+      { name: 'Vascupen', price: '$200' },
+      { name: 'Opus Plasma', price: '$2400' }
+    ]
+  },
+  {
+    title: 'Laser Hair Removal',
+    items: [
+      { name: 'Laser Hair Removal - Small Area', price: '$100' },
+      { name: 'Laser Hair Removal - Standard Area', price: '$250' },
+      { name: 'Laser Hair Removal - Large Area', price: '$450' },
+      { name: 'Laser Hair Removal - X-Large Area', price: '$750' },
+      { name: 'Truly Unlimited Laser Hair Removal', price: '$5000' }
     ]
   },
   {
     title: 'Microneedling & RF Microneedling',
     items: [
-      { name: 'SkinPen Microneedling', price: '$325' },
-      { name: 'Morpheus8', price: '$1100' }
+      { name: 'SkinPen Microneedling', price: '$350' },
+      { name: 'SkinPen w/VAMP', price: '$500' },
+      { name: 'SkinPen w/Micro Peel', price: '$450' },
+      { name: 'SkinPen w/PRP', price: '$500' },
+      { name: 'Morpheus8 Face & Neck', price: '$1100' },
+      { name: 'Morpheus8 + CO2 Skin Resurfacing', price: '$1750' }
     ]
   },
   {
@@ -58,6 +87,22 @@ export const servicesData = [
       { name: 'Add Deep Tissue', price: '$25' },
       { name: 'Add 15 min', price: '$20' },
       { name: 'Add 30 min', price: '$40' }
+    ]
+  },
+  {
+    title: 'Body Contouring with EvolveX',
+    items: [
+      { name: 'First Session', price: '$100' },
+      { name: 'Single Treatment', price: '$150' },
+      { name: 'Package of 8 Treatments', price: '$1000' }
+    ]
+  },
+  {
+    title: 'Salt Sauna',
+    items: [
+      { name: 'First Session', price: '$0' },
+      { name: '40 Minute Session', price: '$40' },
+      { name: '20 Minute Session', price: '$25' }
     ]
   }
 ]

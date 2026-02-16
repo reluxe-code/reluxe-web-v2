@@ -1,0 +1,69 @@
+"Reporting starts","Reporting ends","Ad name","Ad delivery","Attribution setting",Results,"Result indicator",Reach,Frequency,"Cost per results","Ad set budget","Ad set budget type","Amount spent (USD)",Ends,"Quality ranking","Engagement rate ranking","Conversion rate ranking",Impressions,"CPM (cost per 1,000 impressions) (USD)","Link clicks",shop_clicks,"CPC (cost per link click) (USD)","CTR (link click-through rate)","Clicks (all)","CTR (all)","CPC (all) (USD)",actions:omni_landing_page_view," (USD)"
+2025-08-01,2025-10-05,"Jeuveau Leads #1",active,"7-day click or 1-day view",20,actions:onsite_conversion.lead_grouped,5211,2.779889,13.925,35,Daily,278.5,Ongoing,Average,Average,"Below average - Bottom 20% of ads",14486,19.225459,102,,2.730392,0.704128,247,1.705095,1.12753,18,15.472222
+2025-08-01,2025-10-05,"Jeuveau Leads #2 - New",active,"7-day click or 1-day view",152,actions:onsite_conversion.lead_grouped,33745,3.936554,13.17644737,35,Daily,2002.82,Ongoing,Average,Average,"Below average - Bottom 20% of ads",132839,15.077048,924,,2.167554,0.695579,1961,1.476223,1.021326,223,8.981256
+2025-08-01,2025-10-05,"$55 Massage Sales",active,"7-day click, 1-day view, or 1-day engaged-view",85,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,12535,2.843797,3.64270588,10,Daily,309.63,Ongoing,Average,-,-,35647,8.686004,354,,0.874661,0.993071,809,2.269476,0.382732,316,0.979842
+2025-08-01,2025-10-05,"$55 Massage Sales - img",active,"7-day click, 1-day view, or 1-day engaged-view",29,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,5134,2.377678,3.81310345,10,Daily,110.58,Ongoing,Average,-,-,12207,9.058737,123,,0.899024,1.007619,270,2.211846,0.409556,105,1.053143
+2025-08-01,2025-10-05,"$55 Massage Sales - Copy",active,"7-day click, 1-day view, or 1-day engaged-view",1,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,403,2.176179,9.19,10,Daily,9.19,Ongoing,-,-,-,877,10.478905,3,,3.063333,0.342075,13,1.482326,0.706923,4,2.2975
+2025-08-01,2025-10-05,"$55 Massage Sales - search",inactive,-,,,0,0,,10,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"$85 Massage Sales - #1 IMG",active,"7-day click, 1-day view, or 1-day engaged-view",1,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,1428,1.612045,23.1,10,Daily,23.1,Ongoing,-,-,-,2302,10.034752,19,,1.215789,0.825369,42,1.8245,0.55,14,1.65
+2025-08-01,2025-10-05,"$85 Massage Sales - #2 Video",active,"7-day click, 1-day view, or 1-day engaged-view",43,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,5813,2.239807,3.20395349,10,Daily,137.77,Ongoing,-,-,-,13020,10.581413,135,,1.020519,1.036866,250,1.920123,0.55108,102,1.350686
+2025-08-01,2025-10-05,"July Tox Deals - All #2",not_delivering,"7-day click or 1-day view",240,estimated_ad_recallers,8005,1.678951,0.1545,3,Daily,37.08,Ongoing,-,-,-,13440,2.758929,14,,2.648571,0.104167,22,0.16369,1.685455,11,3.370909
+2025-08-01,2025-10-05,"Beauty Bash - Westfield",not_delivering,"7-day click or 1-day view",6718,reach,6718,1.27791,2.58261387,5,Daily,17.35,Ongoing,-,-,-,8585,2.020967,9,,1.927778,0.104834,27,0.314502,0.642593,,
+2025-08-01,2025-10-05,"Beauty Bash Carmel",not_delivering,"7-day click or 1-day view",9460,reach,9460,1.163108,1.84672304,5,Daily,17.47,Ongoing,-,-,-,11003,1.587749,12,,1.455833,0.109061,19,0.17268,0.919474,,
+2025-08-01,2025-10-05,"Invite Carmel",not_delivering,"7-day click or 1-day view",11987,reach,11987,1.300159,3.24267957,10,Daily,38.87,Ongoing,-,-,-,15585,2.494065,20,,1.9435,0.128329,33,0.211742,1.177879,,
+2025-08-01,2025-10-05,"Tox Grand Opening",not_delivering,"7-day click, 1-day view, or 1-day engaged-view",15,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,2556,1.874022,3.52066667,5,Daily,52.81,Ongoing,"Below average - Bottom 35% of ads",-,-,4790,11.025052,53,,0.996415,1.106472,162,3.382046,0.325988,44,1.200227
+2025-08-01,2025-10-05,"Jeuveau Leads #1  -Carmel",active,"7-day click or 1-day view",12,actions:onsite_conversion.lead_grouped,6166,2.389231,21.6175,25,Daily,259.41,Ongoing,"Below average - Bottom 35% of ads",Average,"Below average - Bottom 10% of ads",14732,17.608607,106,,2.447264,0.719522,194,1.316861,1.337165,24,10.80875
+2025-08-01,2025-10-05,"Carmel Unicorn Jeuveau Offer #1",not_delivering,"7-day click or 1-day view",10,actions:onsite_conversion.lead_grouped,4105,1.933983,13.068,"Using campaign budget",0,130.68,Ongoing,Average,Average,"Below average - Bottom 20% of ads",7939,16.460511,96,,1.36125,1.20922,221,2.783726,0.591312,9,14.52
+2025-08-01,2025-10-05,"Jeuveau Leads #1  -Carmel - Melissa",inactive,"7-day click or 1-day view",1,actions:onsite_conversion.lead_grouped,1948,1.337269,51.73,25,Daily,51.73,Ongoing,Average,Average,"Below average - Bottom 20% of ads",2605,19.857965,19,,2.722632,0.729367,39,1.497121,1.32641,,
+2025-08-01,2025-10-05,"Jeuveau Leads #1  -Carmel - Krista",inactive,"7-day click or 1-day view",,,107,1.196262,,25,Daily,1.72,Ongoing,-,-,-,128,13.4375,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Carmel Unicorn Jeuveau Offer - Krista",not_delivering,"7-day click or 1-day view",3,actions:onsite_conversion.lead_grouped,1207,1.413422,10.09333333,"Using campaign budget",0,30.28,Ongoing,"Below average - Bottom 35% of ads",Average,"Below average - Bottom 10% of ads",1706,17.749121,12,,2.523333,0.7034,18,1.0551,1.682222,,
+2025-08-01,2025-10-05,"Carmel Unicorn Jeuveau Offer - Melissa - Copy",not_delivering,"7-day click or 1-day view",14,actions:onsite_conversion.lead_grouped,3732,1.720793,7.70714286,"Using campaign budget",0,107.9,Ongoing,Average,Average,"Below average - Bottom 20% of ads",6422,16.801619,60,,1.798333,0.934288,117,1.821862,0.922222,7,15.414286
+2025-08-01,2025-10-05,"Carmel Unicorn Jeuveau Offer #4",not_delivering,"7-day click or 1-day view",20,actions:onsite_conversion.lead_grouped,4891,2.272541,8.2555,"Using campaign budget",0,165.11,Ongoing,Average,Average,"Below average - Bottom 10% of ads",11115,14.854701,124,,1.331532,1.11561,197,1.77238,0.838122,6,27.518333
+2025-08-01,2025-10-05,"Carmel Consults #1",active,"7-day click, 1-day view, or 1-day engaged-view",,,35,1.4,,8,Daily,0.78,Ongoing,-,-,-,49,15.918367,2,,0.39,4.081633,2,4.081633,0.39,,
+2025-08-01,2025-10-05,"Carmel Consults #2",active,"7-day click, 1-day view, or 1-day engaged-view",,,26,1.153846,,8,Daily,0.36,Ongoing,-,-,-,30,12,,,,,4,13.333333,0.09,,
+2025-08-01,2025-10-05,"Carmel Consults #3",active,"7-day click, 1-day view, or 1-day engaged-view",1,conversions:offsite_conversion.fb_pixel_custom.add_to_cart,607,1.423394,11.26,8,Daily,11.26,Ongoing,-,-,-,864,13.032407,9,,1.251111,1.041667,46,5.324074,0.244783,8,1.4075
+2025-08-01,2025-10-05,"Carmel Consults #4",active,"7-day click, 1-day view, or 1-day engaged-view",,,50,1.52,,8,Daily,1.43,Ongoing,-,-,-,76,18.815789,,,,,5,6.578947,0.286,,
+2025-08-01,2025-10-05,"Carmel Consults #3 - Copy",active,"7-day click, 1-day view, or 1-day engaged-view",,,221,1.276018,,8,Daily,5.23,Ongoing,-,-,-,282,18.546099,2,,2.615,0.70922,20,7.092199,0.2615,2,2.615
+2025-08-01,2025-10-05,"Dysport 100 for $250",inactive,-,,,0,0,,28,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau $360 - 2025 #1",inactive,-,,,0,0,,25,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,Glo2-Glass,not_delivering,-,,,0,0,,4,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads #1 - New",inactive,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"July Tox Deals - All",not_delivering,-,,,0,0,,12,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox July #1",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox July #2",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox July Team #3",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"July Tox Deals - All #2",not_delivering,-,,,0,0,,12,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"July Tox Deals - All #3",not_delivering,-,,,0,0,,12,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"LHR - Underarms $500",not_delivering,-,,,0,0,,2.5,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"LHR - Underarms $500 - Video",not_delivering,-,,,0,0,,2.5,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox 400 - July #3 simple",inactive,-,,,0,0,,25,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox 400 - July #4 simple",not_delivering,-,,,0,0,,25,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox July Video #1",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox July Video #2",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox July Video #3",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"REBALANCE by RELUXE Img #1",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"REBALANCE by RELUXE Video #1",not_delivering,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"REBALANCE by RELUXE Video #2",inactive,-,,,0,0,,8,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox Get Prepared",not_delivering,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox Get Prepared - #2",not_delivering,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox Lines",not_delivering,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox Lines - img",not_delivering,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"REBALANCE by RELUXE Img #1",inactive,-,,,0,0,,3,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads #2",inactive,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads #3",inactive,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"$99 Facial Get Times",not_delivering,-,,,0,0,,10,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"$99 Facial Get Times - Vid - Words",not_delivering,-,,,0,0,,10,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"$99 Facial Get Times - Vid - Plain - Copy",not_delivering,-,,,0,0,,10,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads - Carousel #1",inactive,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads - Carousel #2",inactive,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads - Carousel #3",inactive,-,,,0,0,,35,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Alexis Weekend #1",not_delivering,-,,,0,0,,15,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Alexis Weekend #2",not_delivering,-,,,0,0,,15,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads #1 - New",not_delivering,-,,,0,0,,"Using campaign budget",0,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads Kri",not_delivering,-,,,0,0,,"Using campaign budget",0,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads -Alexis",not_delivering,-,,,0,0,,"Using campaign budget",0,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Jeuveau Leads - Hannah",not_delivering,-,,,0,0,,"Using campaign budget",0,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Alexis Weekend #4",not_delivering,-,,,0,0,,15,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Alexis Weekend #3",not_delivering,-,,,0,0,,15,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox 400 - July #1",not_delivering,-,,,0,0,,25,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,
+2025-08-01,2025-10-05,"Botox 400 - July #2",inactive,-,,,0,0,,25,Daily,0,Ongoing,-,-,-,0,0,,,,,0,0,0,,

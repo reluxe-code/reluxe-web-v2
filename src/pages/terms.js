@@ -81,45 +81,74 @@ export default function TermsOfServicePage() {
             <li>RELUXE reserves the right to set eligibility requirements for promotional pricing or event offers.</li>
           </ul>
 
-          <h3 className="mt-8 text-2xl font-bold">5. Electronic Communications</h3>
+          <h3 className="mt-8 text-2xl font-bold">5. Packages, Vouchers & Gift Cards</h3>
+          <p className="mt-2">
+            RELUXE may offer prepaid service packages, promotional vouchers, memberships, and gift cards.
+            Additional terms may apply depending on the product or offer.
+          </p>
+          <ul className="list-disc pl-6 mt-2 space-y-1">
+            <li>
+              <strong>Packages & Service Vouchers:</strong> Packages and service vouchers are governed by our{' '}
+              <Link href="/package-voucher-policy" className="underline">
+                Package &amp; Voucher Policy
+              </Link>
+              , which outlines validity periods, expiration, and usage rules.
+            </li>
+            <li>
+              <strong>Gift Cards:</strong> Gift cards are governed by our{' '}
+              <Link href="/gift-card-terms" className="underline">
+                Gift Card Terms
+              </Link>
+              .
+            </li>
+            <li>
+              <strong>Memberships:</strong> Membership billing, credits, rollover, and cancellation are governed by our{' '}
+              <Link href="/membership-terms" className="underline">
+                Membership Terms
+              </Link>
+              .
+            </li>
+          </ul>
+
+          <h3 className="mt-8 text-2xl font-bold">6. Electronic Communications</h3>
           <p className="mt-2">
             By using the Site or contacting us electronically, you consent to receive communications from RELUXE Med Spa electronically
             (via email, SMS, or website notices). You agree that such communications satisfy legal requirements for written communications.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">6. Third-Party Links & Services</h3>
+          <h3 className="mt-8 text-2xl font-bold">7. Third-Party Links & Services</h3>
           <p className="mt-2">
             The Site may contain links to third-party sites or integrate with booking, payment, or analytics services.
             RELUXE is not responsible for third-party content, practices, or policies. Use of such services is at your own risk.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">7. Intellectual Property</h3>
+          <h3 className="mt-8 text-2xl font-bold">8. Intellectual Property</h3>
           <p className="mt-2">
             All trademarks, logos, graphics, and content on the Site are the property of RELUXE Med Spa or its licensors.
             You may not copy, reproduce, modify, or distribute materials without prior written consent.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">8. Termination of Access</h3>
+          <h3 className="mt-8 text-2xl font-bold">9. Termination of Access</h3>
           <p className="mt-2">
             RELUXE reserves the right to suspend or terminate your access to the Site at our discretion, without notice,
             for conduct that violates these Terms or is otherwise harmful.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">9. Limitation of Liability</h3>
+          <h3 className="mt-8 text-2xl font-bold">10. Limitation of Liability</h3>
           <p className="mt-2">
             To the fullest extent permitted by law, RELUXE Med Spa, its affiliates, and providers are not liable for any indirect,
             incidental, consequential, special, or punitive damages arising out of your use of the Site or services—even if advised of the possibility.
             Our liability is limited to the amount you paid for the service or product giving rise to the claim.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">10. Indemnification</h3>
+          <h3 className="mt-8 text-2xl font-bold">11. Indemnification</h3>
           <p className="mt-2">
             You agree to defend, indemnify, and hold harmless RELUXE Med Spa, its owners, employees, and affiliates from and against any claims,
             damages, liabilities, costs, or expenses (including attorneys’ fees) arising out of your use of the Site, your breach of these Terms,
             or your violation of any law or rights of a third party.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">11. Governing Law & Dispute Resolution</h3>
+          <h3 className="mt-8 text-2xl font-bold">12. Governing Law & Dispute Resolution</h3>
           <p className="mt-2">
             These Terms are governed by the laws of the State of Indiana, without regard to conflict of law principles.
             Any disputes shall be resolved in the state or federal courts located in Hamilton County, Indiana.
@@ -128,13 +157,13 @@ export default function TermsOfServicePage() {
             At RELUXE’s discretion, disputes may also be subject to binding arbitration under the rules of the American Arbitration Association.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">12. Changes to Terms</h3>
+          <h3 className="mt-8 text-2xl font-bold">13. Changes to Terms</h3>
           <p className="mt-2">
             We may update these Terms periodically. Updates will be effective immediately upon posting.
             Your continued use of the Site constitutes acceptance of the revised Terms.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">13. Contact Us</h3>
+          <h3 className="mt-8 text-2xl font-bold">14. Contact Us</h3>
           <address className="not-italic mt-2 space-y-1">
             <div><strong>RELUXE Med Spa</strong></div>
             <div>514 E State Road 32, Westfield, IN 46074</div>

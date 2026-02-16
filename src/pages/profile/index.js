@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import HeaderTwo from '@/components/header/header-3'
+import HeaderTwo from '@/components/header/header-2'
 import { menu } from '@/data/ProfileMenu'
 
 export default function ProfileDashboard() {
@@ -25,7 +25,7 @@ export default function ProfileDashboard() {
 
   return (
     <>
-      <HeaderTwo />
+      <HeaderTwo sticky={false} />
       <div className="flex flex-col md:flex-row h-screen">
         {/* Sidebar */}
         <div className="w-full md:w-1/4 bg-gray-50 border-r p-6 space-y-4">
@@ -40,14 +40,15 @@ export default function ProfileDashboard() {
             />
           </div>
           {menu.map((item, i) => (
-            <button
+            <a
               key={i}
+              href={item.url}
               className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-md shadow hover:bg-gray-50 transition-all duration-150"
-              onClick={() => handleLinkClick(item.url)}
+              target="_blank" rel="noopener noreferrer"
             >
               <span className="text-xl">{item.icon}</span>
               <span className="font-semibold text-gray-800">{item.title}</span>
-            </button>
+            </a>
           ))}
         </div>
 

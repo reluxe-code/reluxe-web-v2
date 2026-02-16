@@ -10,8 +10,7 @@ import WhiteLogo from './white-logo';
 import { FiPhone, FiMessageSquare } from 'react-icons/fi';
 import LocationSwitcherMini from '@/components/location/LocationSwitcherMini';
 
-
-function HeaderTwo() {
+function HeaderTwo({ sticky = true }) {
   const [offcanvas, setOffcanvas] = useState(false);
   const router = useRouter();
   const header = useRef(null);
@@ -23,17 +22,29 @@ function HeaderTwo() {
     setOffcanvas((prev) => (typeof next === 'boolean' ? next : !prev));
   }, []);
 
-  // Sticky header
+  // Sticky header (respect the `sticky` prop)
   useEffect(() => {
+    // If sticky is disabled, ensure class is removed and skip listeners
+    if (!sticky) {
+      header.current?.classList.remove('is-sticky');
+      return;
+    }
+
     const isSticky = () => {
-      const scrollTop = window.scrollY;
+      const scrollTop = window.scrollY || 0;
       if (scrollTop >= 90) header.current?.classList.add('is-sticky');
       else header.current?.classList.remove('is-sticky');
     };
+
     window.addEventListener('scroll', isSticky);
-    isSticky();
-    return () => window.removeEventListener('scroll', isSticky);
-  }, []);
+    isSticky(); // run once on mount
+
+    return () => {
+      window.removeEventListener('scroll', isSticky);
+      // On unmount (or when sticky toggles off), clean up the class
+      header.current?.classList.remove('is-sticky');
+    };
+  }, [sticky]);
 
   // Body scroll lock + focus management
   useEffect(() => {
@@ -122,7 +133,7 @@ function HeaderTwo() {
 
   return (
     <>
-      <header className="header-section bg-black" ref={header}>
+      <header className="header-section bg-black" ref={header} data-sticky={sticky ? 'on' : 'off'}>
         <div className="custom-container container">
           <div className="grid grid-cols-12 items-center py-4">
             {/* Logo */}
@@ -195,8 +206,8 @@ function HeaderTwo() {
                     {(() => {
                       const active = isActivePath('/shop');
                       return (
-                        <Link href="/shop" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Shop</span>
+                        <Link href="https://blvd.me/reluxemedspa/gift-cards" className={linkShell} aria-current={active ? 'page' : undefined}>
+                          <span className={labelClass(active)}>Gift Cards</span>
                         </Link>
                       );
                     })()}
@@ -217,9 +228,8 @@ function HeaderTwo() {
             </div>
 
             {/* CTA + Mobile Controls */}
-            <div className="lg:col-span-4 col-span-7">
+            <div className="lg:col-span-4 col-span-6">
               <div className="flex justify-end items-center gap-2 pr-2">
-                
                 <Link
                   href="/book"
                   className="hidden sm:inline-block bg-black border border-white text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition"
@@ -236,11 +246,11 @@ function HeaderTwo() {
                   href="tel:+13177631142"
                   className="hidden sm:inline-block bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition"
                 >
-                 <FiPhone className="h-5 w-5" />
+                  <FiPhone className="h-5 w-5" />
                 </Link>
-                
+
                 <LocationSwitcherMini variant="icon" className="flex-none z-20" />
-                
+
                 <button
                   type="button"
                   className="menu-bars flex text-[24px] ml-2 sm:ml-3"
@@ -279,7 +289,7 @@ function HeaderTwo() {
           onKeyDown={onKeyDownDrawer}
           className={`absolute right-0 top-0 h-full w-[84%] max-w-xs bg-white shadow-xl transform transition-transform
             ${offcanvas ? 'translate-x-0' : 'translate-x-full'}
-            flex flex-col`}  // <-- flex column; lets us pin header and scroll the middle
+            flex flex-col`}
         >
           {/* Drawer header (fixed) */}
           <div className="flex items-center justify-between p-4 border-b flex-none">
@@ -344,8 +354,9 @@ function HeaderTwo() {
                 </span>
               </a>
             </div>
-            <a
-                href="sms:+13177631142" className="text-center"><span className="text-xs tracking-wide text-black text-center">317-763-1142</span></a>
+            <a href="sms:+13177631142" className="text-center">
+              <span className="text-xs tracking-wide text-black text-center">317-763-1142</span>
+            </a>
           </div>
 
           {/* SCROLLABLE CONTENT AREA */}
@@ -358,22 +369,30 @@ function HeaderTwo() {
               const linkCls = (href) =>
                 [
                   'block w-full px-3 py-2 rounded transition',
-                  isActivePath(href) ? 'bg-gray-100 text-neutral-900 font-semibold' : 'hover:bg-gray-100'
-                ].join(' ')
+                  isActivePath(href) ? 'bg-gray-100 text-neutral-900 font-semibold' : 'hover:bg-gray-100',
+                ].join(' ');
 
               const Section = ({ title, children }) => (
                 <section className="mb-6 px-4">
                   <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-2">{title}</h3>
                   {children}
                 </section>
-              )
+              );
 
               const Group = ({ title, items = [], defaultOpen = false }) => (
                 <details className="group border rounded-lg mx-4 mb-4" open={defaultOpen}>
                   <summary className="flex items-center justify-between cursor-pointer px-3 py-2 text-sm font-semibold">
                     <span>{title}</span>
-                    <svg className="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd" />
+                    <svg
+                      className="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </summary>
                   <ul className="px-2 pb-2 space-y-1">
@@ -386,86 +405,91 @@ function HeaderTwo() {
                     ))}
                   </ul>
                 </details>
-              )
+              );
+
+              const deals = [
+                { href: '/deals', label: 'Monthly Deals' },
+                { href: 'https://blvd.me/reluxemedspa/gift-cards', label: 'Gift Cards' },
+              ];
 
               const quickBook = [
-                { href: '/book/',         label: 'Book Now' },
-                { href: '/book/tox/',     label: 'Tox' },
+                { href: '/book/', label: 'Book Now' },
+                { href: '/book/tox/', label: 'Tox' },
                 { href: '/book/facials/', label: 'Facial' },
-                { href: '/book/lhr/',     label: 'Hair Removal' },
-              ]
+                { href: '/book/laser-hair-removal/', label: 'Hair Removal' },
+              ];
 
               const services = [
-                { href: '/services',             label: 'All Services' },
+                { href: '/services', label: 'All Services' },
                 { href: '/services/injectables', label: 'Injectables' },
-                { href: '/services/laser',       label: 'Skin & Laser' },
-                { href: '/services/facials',     label: 'Facials' },
-                { href: '/services/lhr',         label: 'Laser Hair Removal' },
-                { href: '/services/body',        label: 'Body Contouring' },
-                { href: '/services/massage',     label: 'Massage' },
-              ]
+                { href: '/services/laser', label: 'Skin & Laser' },
+                { href: '/services/facials', label: 'Facials' },
+                { href: '/services/laser-hair-removal', label: 'Laser Hair Removal' },
+                { href: '/services/body', label: 'Body Contouring' },
+                { href: '/services/massage', label: 'Massage' },
+              ];
 
               const about = [
-                { href: '/about',                        label: 'About RELUXE' },
-                { href: '/team',                         label: 'Team' },
-                { href: '/locations',                    label: 'Locations & Hours' },
-                { href: '/affiliations',                 label: 'Professional Affiliations' },
-                { href: '/partners/house-of-health',     label: 'House of Health' },
-              ]
+                { href: '/about', label: 'About RELUXE' },
+                { href: '/team', label: 'Team' },
+                { href: '/locations', label: 'Locations & Hours' },
+                { href: '/affiliations', label: 'Professional Affiliations' },
+                { href: '/partners/house-of-health', label: 'House of Health' },
+              ];
 
               const conditions = [
-                { href: '/conditions',                     label: 'All Conditions' },
+                { href: '/conditions', label: 'All Conditions' },
                 { href: '/conditions/wrinkles-fine-lines', label: 'Wrinkles & Fine Lines' },
-                { href: '/conditions/volume-loss',         label: 'Volume Loss / Facial Balancing' },
-                { href: '/conditions/under-eye',           label: 'Under-Eye Hollows & Dark Circles' },
-                { href: '/conditions/double-chin',         label: 'Double Chin / Submental Fullness' },
-                { href: '/conditions/loose-skin',          label: 'Loose or Sagging Skin' },
-                { href: '/conditions/unwanted-hair',       label: 'Unwanted Hair' },
-                { href: '/conditions/rosacea',             label: 'Rosacea & Redness' },
-                { href: '/conditions/acne-scars',          label: 'Acne & Acne Scars' },
-                { href: '/conditions/sun-damage',          label: 'Sun Damage & Pigmentation' },
-                { href: '/conditions/skin-texture',        label: 'Uneven Skin Tone & Texture' },
-              ]
+                { href: '/conditions/volume-loss', label: 'Volume Loss / Facial Balancing' },
+                { href: '/conditions/under-eye', label: 'Under-Eye Hollows & Dark Circles' },
+                { href: '/conditions/double-chin', label: 'Double Chin / Submental Fullness' },
+                { href: '/conditions/loose-skin', label: 'Loose or Sagging Skin' },
+                { href: '/conditions/unwanted-hair', label: 'Unwanted Hair' },
+                { href: '/conditions/rosacea', label: 'Rosacea & Redness' },
+                { href: '/conditions/acne-scars', label: 'Acne & Acne Scars' },
+                { href: '/conditions/sun-damage', label: 'Sun Damage & Pigmentation' },
+                { href: '/conditions/skin-texture', label: 'Uneven Skin Tone & Texture' },
+              ];
 
               const events = [
-                { href: '/events',            label: 'Events Hub' },
-                { href: '/weddings',          label: 'Weddings & Bridal Prep' },
-                { href: '/events/proms',      label: 'Proms & Formals' },
+                { href: '/events', label: 'Events Hub' },
+                { href: '/weddings', label: 'Weddings & Bridal Prep' },
+                { href: '/events/proms', label: 'Proms & Formals' },
                 { href: '/events/red-carpet', label: 'Red Carpet & Galas' },
-                { href: '/events/local',      label: 'Local Indy • Carmel • Westfield' },
-              ]
+                { href: '/events/local', label: 'Local Indy • Carmel • Westfield' },
+              ];
 
               const forYou = [
-                { href: '/men',               label: 'For Men' },
-                { href: '/financing/cherry',  label: 'Financing (Cherry)' },
-                { href: '/gifts/spafinder',   label: 'SpaFinder Gift Cards' },
-              ]
+                { href: '/men', label: 'For Men' },
+                { href: '/financing/cherry', label: 'Financing (Cherry)' },
+                { href: '/gifts/spafinder', label: 'SpaFinder Gift Cards' },
+              ];
 
               const results = [
                 { href: '/results', label: 'Before & After' },
                 { href: '/reviews', label: 'Reviews' },
-              ]
+              ];
 
               const learn = [
                 { href: '/blog', label: 'Blog / Guides' },
-                { href: '/faq',  label: 'FAQs' },
-              ]
+                { href: '/faq', label: 'FAQs' },
+              ];
 
               const legal = [
-                { href: '/legal',           label: 'Policies & Legal Hub' },
-                { href: '/legal/terms',     label: 'Terms of Service' },
-                { href: '/legal/privacy',   label: 'Privacy Policy' },
+                { href: '/legal', label: 'Policies & Legal Hub' },
+                { href: '/legal/terms', label: 'Terms of Service' },
+                { href: '/privacy-policy', label: 'Privacy Policy' },
                 { href: '/legal/messaging', label: 'Messaging Terms' },
-                { href: '/legal/returns',   label: 'Product Return Policy' },
-              ]
+                { href: '/legal/returns', label: 'Product Return Policy' },
+              ];
 
               // For tel/sms, use <a>, not <Link>
               const contact = [
-                { href: '/contact',         label: 'Contact',       internal: true },
+                { href: '/contact', label: 'Contact', internal: true },
                 { href: 'tel:+13177631142', label: 'Call: (317) 763-1142' },
                 { href: 'sms:+13177631142', label: 'Text: (317) 763-1142' },
-                { href: '/locations',       label: 'Directions',    internal: true },
-              ]
+                { href: '/locations', label: 'Directions', internal: true },
+              ];
 
               return (
                 <>
@@ -479,7 +503,10 @@ function HeaderTwo() {
                         placeholder="Search treatments, concerns…"
                         className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500"
                       />
-                      <button className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-800" type="submit">
+                      <button
+                        className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-800"
+                        type="submit"
+                      >
                         Go
                       </button>
                     </form>
@@ -504,6 +531,7 @@ function HeaderTwo() {
 
                   {/* Groups */}
                   <div className="space-y-4 pb-6">
+                    <Group title="Hot Deals" items={deals} defaultOpen />
                     <Group title="Services" items={services} defaultOpen />
                     <Group title="About RELUXE" items={about} />
                     <Group title="What We Treat" items={conditions} />
@@ -517,17 +545,29 @@ function HeaderTwo() {
                     <details className="group border rounded-lg mx-4" open={false}>
                       <summary className="flex items-center justify-between cursor-pointer px-3 py-2 text-sm font-semibold">
                         <span>Contact</span>
-                        <svg className="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd" />
+                        <svg
+                          className="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </summary>
                       <ul className="px-2 pb-2 space-y-1">
                         {contact.map(({ href, label, internal }) => (
                           <li key={href}>
                             {internal ? (
-                              <Link href={href} className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>{label}</Link>
+                              <Link href={href} className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>
+                                {label}
+                              </Link>
                             ) : (
-                              <a href={href} className="block w-full px-3 py-2 rounded hover:bg-gray-100">{label}</a>
+                              <a href={href} className="block w-full px-3 py-2 rounded hover:bg-gray-100">
+                                {label}
+                              </a>
                             )}
                           </li>
                         ))}

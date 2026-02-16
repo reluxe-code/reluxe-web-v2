@@ -6,8 +6,10 @@
 // - Auto CTAs rotate 4 designs and interleave after every 3 content blocks
 // - Updated: all mid-page visuals use s.images.* (no hero reuse)
 // - NEW: side visuals auto-alternate left/right and cycle through styles
+// - NEW: Location Cards section linking to /services/[slug]/westfield and /services/[slug]/carmel
+// - UPDATED: PricingMatrix now supports per-section header labels via sec.headers.{single,pkg,member}
 
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, Fragment } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import HeaderTwo from '@/components/header/header-2';
@@ -19,8 +21,9 @@ import {
 import Script from 'next/script';
 
 import { getServicesList } from '@/data/servicesList';
-// src/pages/services/[slug].js  (add the import near the top)
-import ServiceSEO from '@/components/seo/serviceSEO'
+import { getLocation } from '@/data/locations';
+import { isServiceAvailableAtCity } from '@/data/locationAvailability';
+import { getBookLinkForCity, getConsultLinkForCity } from '@/utils/bookingLinks';
 
 
 const ICON_MAP = { clock: ClockIcon, fire: FireIcon, sparkles: SparklesIcon, user: UserIcon, check: CheckCircleIcon };
@@ -38,7 +41,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const slug = typeof params?.slug === 'string' ? params.slug : '';
-  if (!slug) return { notFound: true, };
+  if (!slug) return { notFound: true };
 
   let service = null;
 
@@ -72,10 +75,9 @@ export async function getStaticProps({ params }) {
     }
   }
 
-  if (!service) return { notFound: true, };
-  return { props: { service }, };
+  if (!service) return { notFound: true };
+  return { props: { service } };
 }
-
 
 // ---------------- Defaults & helpers ----------------
 const DEFAULT_BLOCK_PRIORITIES = {
@@ -83,12 +85,14 @@ const DEFAULT_BLOCK_PRIORITIES = {
   quickFacts: 20,
   //benefits: 30,
   overviewWhy: 30,
-  resultsGrid: 35,     // 👈 add this
+  locationCards: 32,
+  resultsGrid: 35,
   beforeAfter: 40,
   howItWorks: 50,
   testimonials: 55,
   candidates: 60,
   process: 70,
+  pricingMatrix: 79,
   pricing: 80,
   financing: 90,
   comparison: 95,
@@ -120,15 +124,14 @@ const CTA_AVOID_NEAR = ['bookingEmbed']; // avoid immediate adjacency to these
 const getBookingHref = (s) => s.bookingLink || `/book/${s.slug || ''}`;
 const getConsultHref = (s) => s.consultLink || '/book/consult';
 
-
-// ---------- NEW: side image alternation + style cycler ----------
+// ---------- side image alternation + style cycler ----------
 const SIDE_IMG_STYLES = [
-  { wrap: 'relative h-56 md:h-full rounded-2xl overflow-hidden border shadow-sm', img: 'object-cover' },                 // rounded
-  { wrap: 'relative aspect-square max-h-64 md:max-h-none rounded-full overflow-hidden border-4 border-white shadow-xl', img: 'object-cover' }, // circle
-  { wrap: 'relative h-56 md:h-full rounded-[30px] overflow-hidden ring-1 ring-black/10 shadow-md', img: 'object-cover' }, // squircle
-  { wrap: 'relative h-56 md:h-full overflow-hidden rounded-2xl shadow-xl -rotate-2', img: 'object-cover scale-[1.03]' },   // tilt
-  { wrap: 'relative h-56 md:h-full overflow-hidden rounded-2xl border-4 border-neutral-200 shadow-sm', img: 'object-cover' }, // framed
-  { wrap: 'relative h-56 md:h-full overflow-hidden rounded-3xl drop-shadow-2xl', img: 'object-cover' },                   // soft shadow
+  { wrap: 'relative h-56 md:h-full rounded-2xl overflow-hidden border shadow-sm transition', img: 'object-cover' },
+  { wrap: 'relative aspect-square max-h-64 md:max-h-none rounded-full overflow-hidden border-4 border-white shadow-xl transition', img: 'object-cover' },
+  { wrap: 'relative h-56 md:h-full rounded-[30px] overflow-hidden ring-1 ring-black/10 shadow-md transition', img: 'object-cover' },
+  { wrap: 'relative h-56 md:h-full overflow-hidden rounded-2xl shadow-xl -rotate-2 transition', img: 'object-cover scale-[1.03]' },
+  { wrap: 'relative h-56 md:h-full overflow-hidden rounded-2xl border-4 border-neutral-200 shadow-sm transition', img: 'object-cover' },
+  { wrap: 'relative h-56 md:h-full overflow-hidden rounded-3xl drop-shadow-2xl transition', img: 'object-cover' },
 ];
 
 function useSideImageChooser() {
@@ -136,7 +139,7 @@ function useSideImageChooser() {
   const styleRef = useRef(0);
   return () => {
     const index = countRef.current++;
-    const side = index % 2 === 0 ? 'right' : 'left'; // alternate each time a side image appears
+    const side = index % 2 === 0 ? 'right' : 'left';
     const style = SIDE_IMG_STYLES[styleRef.current % SIDE_IMG_STYLES.length];
     styleRef.current++;
     return { side, style };
@@ -197,7 +200,6 @@ function CtaVariant({ variant = 'black', s }) {
       </section>
     );
   }
-  // variant === 'stats'
   return (
     <section className="py-10 bg-gradient-to-r from-reluxe-primary to-reluxe-secondary text-white bg-black">
       <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -206,9 +208,9 @@ function CtaVariant({ variant = 'black', s }) {
             <div className="text-3xl font-extrabold">4.9★</div>
             <div className="text-sm opacity-90">Avg rating on Google</div>
           </div>
-        <div>
+          <div>
             <div className="text-3xl font-extrabold">1 in 4</div>
-            <div className="text-sm opacity-90">Patients from Referral </div>
+            <div className="text-sm opacity-90">Patients from Referral</div>
           </div>
           <div>
             <div className="text-3xl font-extrabold">2 Years</div>
@@ -225,7 +227,7 @@ function CtaVariant({ variant = 'black', s }) {
 const CTA_VARIANT_ORDER = ['black', 'split', 'quote', 'stats'];
 const getCtaVariantForIndex = (i) => CTA_VARIANT_ORDER[i % CTA_VARIANT_ORDER.length];
 function interleaveCTAs(ordered, s) {
-  if (s?.autoCTA === false) return ordered; // per-service kill switch
+  if (s?.autoCTA === false) return ordered;
   const keys = ordered.map(b => b.key);
   const result = [];
   let contentCountSinceCTA = 0;
@@ -246,7 +248,7 @@ function interleaveCTAs(ordered, s) {
 
     if (contentCountSinceCTA >= CTA_FREQUENCY) {
       if (CTA_AVOID_NEAR.includes(block.key) || CTA_AVOID_NEAR.includes(nextKey)) {
-        continue; // delay if neighbor is in avoid list
+        continue;
       }
       const variant = getCtaVariantForIndex(ctaCount);
       const ctaKey = `autoCta-${ctaCount}-${variant}`;
@@ -265,13 +267,12 @@ function interleaveCTAs(ordered, s) {
 // ---------------- Page ----------------
 export default function ServicePage({ service }) {
   const [lightbox, setLightbox] = useState(null);
-  const chooseSideImage = useSideImageChooser(); // NEW
+  const chooseSideImage = useSideImageChooser();
 
   const s = service ?? {};
   const pricingSingle = s.pricing?.single || '';
   const basePrice = parseFloat(pricingSingle.replace(/[^0-9.]/g, '')) || 0;
 
-  // tox services multiply by 50 (check slug; allow partials like "botox-cosmetic")
   const toxSlugs = ['botox', 'dysport', 'daxxify', 'jeuveau'];
   const slug = String(s.slug || '').toLowerCase();
   const isTox = toxSlugs.some(t => slug.includes(t));
@@ -279,29 +280,22 @@ export default function ServicePage({ service }) {
   const effectivePrice = isTox ? basePrice * 50 : basePrice;
 
   const fourPay = (effectivePrice / 4).toFixed(2);
-  // 24 months with 20% interest
   const mo24 = ((effectivePrice * 1.2) / 24).toFixed(2);
 
-
-  // ✅ Normalize hero image(s) to an array
   const heroImages = Array.isArray(s.heroImage)
     ? s.heroImage
     : s.heroImage
       ? [s.heroImage]
       : [];
 
-  // ✅ Pick one at random, fallback to gallery or default
   const heroImg =
     heroImages.length > 0
       ? heroImages[Math.floor(Math.random() * heroImages.length)]
       : (s.gallery?.[0]?.src || '/images/page-banner/skincare-header.png');
 
-  // ✅ Results gallery (1–6 square images, each already a combined Before/After)
   const results = Array.isArray(s.resultsGallery) ? s.resultsGallery.slice(0, 6) : [];
-  //const beforeAfter = Array.isArray(s.beforeAfter) ? s.beforeAfter : [];
   const packages = Array.isArray(s.pricing?.packages) ? s.pricing.packages : [];
   const quickFacts = Array.isArray(s.quickFacts) ? s.quickFacts : [];
-  //const benefits = Array.isArray(s.benefits) ? s.benefits : [];
   const appointmentSteps = Array.isArray(s.appointmentSteps) ? s.appointmentSteps : [];
   const candidates = s.candidates || null;
   const prepAftercare = s.prepAftercare || null;
@@ -314,11 +308,10 @@ export default function ServicePage({ service }) {
   const videoUrl = s.videoUrl || '';
   const bookingEmbedHtml = s.bookingEmbedHtml || '';
 
-  // ---------------- Blocks w/ variants ----------------
   const blocks = useMemo(() => {
     const list = [];
 
-    // Hero variants: 'classic' | 'split' | 'collage' | 'video'
+    // Hero
     list.push({
       key: 'hero',
       enabled: true,
@@ -395,7 +388,6 @@ export default function ServicePage({ service }) {
           );
         }
 
-        // classic
         return (
           <header className="relative h-72 md:h-[360px] bg-cover bg-center" style={{ backgroundImage: `url('${heroImg}')` }}>
             <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-center px-6">
@@ -411,7 +403,7 @@ export default function ServicePage({ service }) {
       },
     });
 
-    // Quick Facts variants: 'cards' | 'pills' | 'stickers'
+    // Quick Facts
     if (quickFacts.length) {
       list.push({
         key: 'quickFacts',
@@ -457,7 +449,6 @@ export default function ServicePage({ service }) {
               </section>
             );
           }
-          // cards (default)
           return (
             <section className="py-14 bg-gray-50">
               <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 px-4 place-items-center">
@@ -479,174 +470,191 @@ export default function ServicePage({ service }) {
                 })}
               </div>
             </section>
-
           );
         },
       });
     }
 
-    // --- Overview + Why Choose RELUXE ---
-if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
-  list.push({
-    key: 'overviewWhy',
-    enabled: true,
-    render: () => {
-      const sideImg =
-        s.images?.overviewVisual ||
-        s.images?.primaryCallout ||
-        s.gallery?.[1]?.src ||
-        null;
-      const why = Array.isArray(s.whyReluxe) ? s.whyReluxe.slice(0, 6) : [];
+    // Overview + Why
+    if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
+      list.push({
+        key: 'overviewWhy',
+        enabled: true,
+        render: () => {
+          const why = Array.isArray(s.whyReluxe) ? s.whyReluxe.slice(0, 6) : [];
 
-      return (
-        <section className="py-14">
-          <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-3 gap-8 items-start">
-            {/* Left: overview card */}
-            <div className="lg:col-span-2">
-              <div className="relative overflow-hidden rounded-3xl border shadow-sm bg-gradient-to-br from-white to-neutral-50">
-                <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-reluxe-primary/10" />
-                <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-reluxe-secondary/10" />
-                <div className="relative p-7 md:p-10">
-                  <h2 className="text-2xl md:text-3xl font-bold mb-3">{s.name}</h2>
-                  {s.overview?.p1 && (
-                    <p className="text-neutral-700 leading-relaxed">{s.overview.p1}</p>
-                  )}
-                  {s.overview?.p2 && (
-                    <p className="text-neutral-700 leading-relaxed mt-3">{s.overview.p2}</p>
-                  )}
-                  <div className="mt-6">
-                    <Link
-                      href={s.bookingLink || `/book/${s.slug}`}
-                      className="inline-flex items-center gap-2 rounded-full bg-neutral-900 text-white px-6 py-2.5 font-semibold hover:bg-neutral-800 transition"
-                    >
-                      Book {s.name} <span aria-hidden>→</span>
-                    </Link>
+          return (
+            <section className="py-14">
+              <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-3 gap-8 items-start">
+                <div className="lg:col-span-2">
+                  <div className="relative overflow-hidden rounded-3xl border shadow-sm bg-gradient-to-br from-white to-neutral-50">
+                    <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-reluxe-primary/10" />
+                    <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-reluxe-secondary/10" />
+                    <div className="relative p-7 md:p-10">
+                      <h2 className="text-2xl md:text-3xl font-bold mb-3">{s.name}</h2>
+                      {s.overview?.p1 && (
+                        <p className="text-neutral-700 leading-relaxed">{s.overview.p1}</p>
+                      )}
+                      {s.overview?.p2 && (
+                        <p className="text-neutral-700 leading-relaxed mt-3">{s.overview.p2}</p>
+                      )}
+                      <div className="mt-6">
+                        <Link
+                          href={s.bookingLink || `/book/${s.slug}`}
+                          className="inline-flex items-center gap-2 rounded-full bg-neutral-900 text-white px-6 py-2.5 font-semibold hover:bg-neutral-800 transition"
+                        >
+                          Book {s.name} <span aria-hidden>→</span>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Right: side visual + why list */}
-            <div className="space-y-4">
-              <div className="rounded-2xl border bg-white shadow-sm p-5">
-                <div className="text-sm uppercase tracking-wide text-neutral-500">
-                  Why choose
+                <div className="space-y-4">
+                  <div className="rounded-2xl border bg-white shadow-sm p-5">
+                    <div className="text-sm uppercase tracking-wide text-neutral-500">
+                      Why choose
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">RELUXE</h3>
+                    <ul className="space-y-3">
+                      {why.map((item, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-reluxe-primary text-black text-xs font-bold">
+                            ✓
+                          </span>
+                          <div>
+                            <div className="font-semibold">{item.title}</div>
+                            {item.body && (
+                              <div className="text-sm text-neutral-700">{item.body}</div>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3">RELUXE</h3>
-                <ul className="space-y-3">
-                  {why.map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-reluxe-primary text-black text-xs font-bold">
-                        ✓
-                      </span>
-                      <div>
-                        <div className="font-semibold">{item.title}</div>
-                        {item.body && (
-                          <div className="text-sm text-neutral-700">{item.body}</div>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+
               </div>
-            </div>
-          </div>
-        </section>
-      );
-    },
-  });
-}
+            </section>
+          );
+        },
+      });
+    }
 
-
-    // Primary Callout — dynamic side + style
+    // Location Cards
     list.push({
-      key: 'callout',
+      key: 'locationCards',
       enabled: true,
       render: () => {
-        const img = s.images?.primaryCallout || s.images?.secondaryCallout || s.gallery?.[1]?.src || '/images/fallbacks/callout.png';
-        const { side, style } = chooseSideImage();
-        const Side = img ? (
-          <div className={style.wrap}>
-            <Image src={img} alt={s.name || 'Service image'} fill className={style.img} />
-          </div>
-        ) : null;
+        const locs = [
+          { key: 'westfield', title: 'Westfield', blurb: 'Flagship location in Westfield.' },
+          { key: 'carmel', title: 'Carmel', blurb: 'Newest location in Carmel/North Indy + collab with House of Health' },
+        ];
 
         return (
-          <section className="py-10">
-            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 items-center px-4">
-              {side === 'left' && Side}
-              <div className="bg-reluxe-primary text-black p-8 md:p-12 rounded-3xl">
-                <h2 className="text-3xl font-bold mb-3">Personalized Care, Just for You</h2>
-                <p className="mb-6 opacity-90">Every plan is tailored to your unique needs—from consult to aftercare—ensuring optimal comfort and stunning results.</p>
-                <Link href={s.bookingLink || `/book/${s.slug}`} className="inline-block bg-white text-reluxe-primary font-semibold py-2.5 px-6 rounded-full shadow hover:bg-gray-100 transition">Get Started</Link>
+          <section className="py-12 bg-white">
+            <div className="max-w-6xl mx-auto px-4">
+              <h2 className="text-2xl font-bold mb-6">Availability of {s.name} at Westfield & Carmel</h2>
+
+              <div className="grid sm:grid-cols-2 gap-5">
+                {locs.map((loc) => {
+                  const available = isServiceAvailableAtCity({ slug: s.slug, cityKey: loc.key });
+                  const learnMoreHref = `/services/${s.slug}/${loc.key}`;
+                  const bookHref = getBookLinkForCity({ service: s, cityKey: loc.key });
+                  const consultHref = getConsultLinkForCity({ service: s, cityKey: loc.key });
+                  const locMeta = getLocation?.(loc.key) || {};
+
+                  return (
+                    <div
+                      key={loc.key}
+                      className="group rounded-3xl border overflow-hidden bg-white shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="relative h-44">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            (loc.key === 'westfield' ? s.images?.westfieldCard : s.images?.carmelCard) ||
+                            s.gallery?.[1]?.src ||
+                            (loc.key === 'westfield'
+                              ? '/images/locations/westfield-building.png'
+                              : '/images/locations/carmel-building.png')
+                          }
+                          alt={`${loc.title} — ${s.name}`}
+                          className="w-full h-full object-cover group-hover:scale-[1.02] transition"
+                        />
+                      </div>
+
+                      <div className="p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-lg font-semibold">{loc.title}</h3>
+                            {locMeta?.address && (
+                              <p className="text-sm text-neutral-600 mt-0.5">{locMeta.address}</p>
+                            )}
+                          </div>
+
+                          <span
+                            className={
+                              'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ' +
+                              (available
+                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                                : 'bg-amber-50 text-amber-800 ring-1 ring-amber-200')
+                            }
+                          >
+                            {available ? 'Available' : 'Not available'}
+                          </span>
+                        </div>
+
+                        {loc.blurb && <p className="text-sm text-neutral-600 mt-1">{loc.blurb}</p>}
+
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <Link
+                            href={bookHref}
+                            data-book-loc={loc.key}
+                            className={
+                              'inline-flex items-center gap-2 font-semibold py-2 px-5 rounded-full shadow transition ' +
+                              (available
+                                ? 'bg-reluxe-primary text-black hover:opacity-90'
+                                : 'bg-white text-neutral-900 ring-1 ring-amber-300 hover:bg-amber-50')
+                            }
+                          >
+                            {available ? 'Book now' : 'Book in Westfield'}
+                          </Link>
+
+                          <Link
+                            href={consultHref}
+                            data-book-loc={loc.key}
+                            className="inline-flex items-center gap-2 bg-white text-neutral-900 font-semibold py-2 px-5 rounded-full shadow ring-1 ring-neutral-200 hover:bg-gray-50 transition"
+                          >
+                            Book Consultation
+                          </Link>
+
+                          <Link
+                            href={learnMoreHref}
+                            data-book-loc={loc.key}
+                            className="inline-flex items-center gap-2 rounded-full px-5 py-2 border hover:bg-gray-50 transition"
+                          >
+                            Learn more
+                          </Link>
+                        </div>
+
+                        {!available && loc.key === 'carmel' && (
+                          <p className="mt-3 text-sm text-neutral-600">
+                            {s.name} isn’t currently offered at our Carmel location. You can still book at Westfield.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              {side === 'right' && Side}
             </div>
           </section>
         );
       },
     });
 
-    // Benefits variants: 'classic' | 'stickers' | 'compare' (optional bg)
-    /*
-    if (benefits.length) {
-      list.push({
-        key: 'benefits',
-        enabled: true,
-        render: () => {
-          const variant = v(s, 'benefits', 'classic');
-          const bgStyle = s.images?.benefitHighlight
-            ? { backgroundImage: `url(${s.images.benefitHighlight})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : {};
-          if (variant === 'stickers') {
-            return (
-              <section className="py-14" style={bgStyle}>
-                <div className="max-w-6xl mx-auto px-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {benefits.map((b, i) => (
-                    <motion.div key={i} {...fadeUp(i)} className="bg-white/90 backdrop-blur p-6 rounded-2xl border shadow-sm hover:shadow-md transition relative overflow-hidden">
-                      <div className="absolute -top-6 -left-6 w-20 h-20 rounded-full bg-reluxe-primary/10" />
-                      <div className="absolute -bottom-8 -right-8 w-28 h-28 rounded-full bg-reluxe-secondary/10" />
-                      <h3 className="font-semibold relative">{b}</h3>
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            );
-          }
-          if (variant === 'compare') {
-            return (
-              <section className="py-14 bg-gray-50" style={bgStyle}>
-                <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4">
-                  {benefits.slice(0,3).map((b, i) => (
-                    <motion.div key={i} {...fadeUp(i)} className="rounded-2xl border bg-white/95 backdrop-blur p-6 shadow-sm">
-                      <div className="text-xs uppercase tracking-wide text-neutral-500 mb-2">Benefit {i+1}</div>
-                      <div className="font-semibold">{b}</div>
-                      <div className="mt-3 text-sm text-neutral-600">Why it matters: better confidence and long-term skin health.</div>
-                    </motion.div>
-                  ))}
-                </div>
-              </section>
-            );
-          }
-          // classic
-          return (
-            <section className="relative py-14" style={bgStyle}>
-              <div className="absolute inset-0 bg-gradient-to-tr from-reluxe-secondary to-reluxe-primary opacity-[0.06] pointer-events-none" />
-              <div className="relative max-w-6xl mx-auto px-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {benefits.map((b, i) => (
-                  <motion.div key={i} {...fadeUp(i)} className="bg-white/95 backdrop-blur p-6 rounded-2xl border shadow-sm hover:shadow-md transition">
-                    <CheckCircleIcon className="w-6 h-6 text-reluxe-primary mb-3" />
-                    <h3 className="font-semibold">{b}</h3>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
-          );
-        },
-      });
-    } */
-
-    // RESULTS GRID (desktop: 6-up grid; mobile: 2-up slider; headline/CTA on the left)
+    // Results Grid
     if (results.length) {
       list.push({
         key: 'resultsGrid',
@@ -655,7 +663,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
           <section className="py-16 bg-white">
             <div className="max-w-6xl mx-auto px-4">
               <div className="md:grid md:grid-cols-3 md:gap-8 items-start">
-                {/* LEFT: headline + CTA (always on top for mobile, left column on desktop) */}
                 <div className="mb-8 md:mb-0">
                   <h2 className="text-4xl md:text-5xl font-extrabold leading-tight text-neutral-900">
                     Amazing results<br />for our amazing<br />patients.
@@ -668,7 +675,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                   </Link>
                 </div>
 
-                {/* DESKTOP: 3 x 2 grid (hidden on mobile) */}
                 <div className="hidden md:grid md:col-span-2 grid-cols-3 gap-6">
                   {results.map((img, i) => (
                     <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border shadow-sm">
@@ -682,10 +688,8 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                       />
                     </div>
                   ))}
-                  {/* If fewer than 6, layout still looks clean—no extra filler needed */}
                 </div>
 
-                {/* MOBILE: 2-up slider (hidden on desktop) */}
                 <div className="md:hidden">
                   <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mx-4 px-4">
                     {results.map((img, i) => (
@@ -705,6 +709,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                     ))}
                   </div>
                 </div>
+
               </div>
             </div>
           </section>
@@ -712,8 +717,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-
-    // How It Works variants: 'accordion' | 'steps' (dynamic side image)
+    // How It Works
     if (Array.isArray(s.howItWorks) && s.howItWorks.length) {
       list.push({
         key: 'howItWorks',
@@ -733,8 +737,8 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                     <ol className="relative border-s pl-6 space-y-6">
                       {s.howItWorks.map((step, i) => (
                         <li key={i} className="ms-6">
-                          <span className="absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full bg-reluxe-primary text-white text-xs font-bold">{i+1}</span>
-                          <div className="font-semibold">{step.title || `Step ${i+1}`}</div>
+                          <span className="absolute -start-3 flex h-6 w-6 items-center justify-center rounded-full bg-reluxe-primary text-white text-xs font-bold">{i + 1}</span>
+                          <div className="font-semibold">{step.title || `Step ${i + 1}`}</div>
                           {step.body && <p className="text-neutral-700">{step.body}</p>}
                         </li>
                       ))}
@@ -745,7 +749,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
               </section>
             );
           }
-          // accordion
+
           return (
             <section className="py-14">
               <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 px-4 items-start">
@@ -769,7 +773,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Candidates variants: 'columns' | 'badges'
+    // Candidates
     if (candidates?.good?.length || candidates?.notIdeal?.length) {
       list.push({
         key: 'candidates',
@@ -793,7 +797,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
               </section>
             );
           }
-          // columns
           return (
             <section className="py-14 bg-white">
               <div className="max-w-6xl mx-auto px-4 grid sm:grid-cols-2 gap-6">
@@ -814,7 +817,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Process variants: 'timeline' | 'checklist' (dynamic side image)
+    // Process
     if (appointmentSteps.length) {
       list.push({
         key: 'process',
@@ -845,7 +848,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
               </section>
             );
           }
-          // timeline
+
           return (
             <section className="py-16 bg-white">
               <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 px-4 items-start">
@@ -869,19 +872,157 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Pricing variants: 'tiers' | 'cards' (centered + deduped)
+    // ✅ UPDATED: Pricing Matrix supports sec.headers labels
+    if (Array.isArray(s.pricingMatrix?.sections) && s.pricingMatrix.sections.length) {
+      list.push({
+        key: 'pricingMatrix',
+        enabled: true,
+        render: () => {
+          const sections = s.pricingMatrix.sections;
+
+          const getActiveCols = (rows = []) => {
+            const hasSingle = rows.some(r => r.single);
+            const hasPackage = rows.some(r => r.package);
+            const hasMember = rows.some(r => r.membership || r.member);
+            return {
+              single: hasSingle,
+              pkg: hasPackage,
+              member: hasMember,
+              count: (hasSingle ? 1 : 0) + (hasPackage ? 1 : 0) + (hasMember ? 1 : 0),
+            };
+          };
+
+          const Cell = ({ value, sub }) => (
+            <div className="py-3">
+              <div className="font-medium">{value ?? '-'}</div>
+              {sub && <div className="text-xs text-neutral-500 mt-0.5">{sub}</div>}
+            </div>
+          );
+
+          return (
+            <section className="py-16 bg-white">
+              <div className="max-w-6xl mx-auto px-4">
+                <div className="mb-8 text-center">
+                  <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
+                  {s.pricingMatrix?.subtitle && (
+                    <p className="text-neutral-600 mt-2">{s.pricingMatrix.subtitle}</p>
+                  )}
+                </div>
+
+                <div className="space-y-8">
+                  {sections.map((sec, idx) => {
+                    const rows = Array.isArray(sec.rows) ? sec.rows : [];
+                    const cols = getActiveCols(rows);
+
+                    const gridCols =
+                      cols.count === 3 ? 'grid-cols-[1.2fr,1fr,1fr,1fr]'
+                        : cols.count === 2 ? 'grid-cols-[1.2fr,1fr,1fr]'
+                          : 'grid-cols-[1.2fr,1fr]';
+
+                    // ✅ NEW: allow per-section header labels
+                    const headerSingle = sec?.headers?.single || 'Single';
+                    const headerPkg = sec?.headers?.pkg || 'Package';
+                    const headerMember = sec?.headers?.member || 'Membership';
+
+                    return (
+                      <div key={idx} className="rounded-3xl border shadow-sm overflow-hidden bg-neutral-50">
+                        <div className="p-5 md:p-6 bg-white border-b">
+                          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+                            <div>
+                              <h3 className="text-xl font-bold">{sec.title || 'Pricing'}</h3>
+                              {sec.note && <p className="text-sm text-neutral-600">{sec.note}</p>}
+                            </div>
+                            {sec.membershipCallout && (
+                              <div className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full bg-black text-white">
+                                {sec.membershipCallout}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <div className={`min-w-[640px] grid ${gridCols} bg-white/80`}>
+                            <div className="px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 bg-neutral-50">Option</div>
+
+                            {cols.single && (
+                              <div className="px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 bg-neutral-50 text-right">
+                                {headerSingle}
+                              </div>
+                            )}
+                            {cols.pkg && (
+                              <div className="px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 bg-neutral-50 text-right">
+                                {headerPkg}
+                              </div>
+                            )}
+                            {cols.member && (
+                              <div className="px-4 py-3 text-xs uppercase tracking-wide text-neutral-500 bg-neutral-50 text-right">
+                                {headerMember}
+                              </div>
+                            )}
+
+                            {rows.map((r, i) => (
+                              <Fragment key={i}>
+                                <div className="px-4 border-t py-3">
+                                  <div className="font-semibold">{r.label}</div>
+                                  {r.subLabel && (
+                                    <div className="text-xs text-neutral-500 mt-0.5">{r.subLabel}</div>
+                                  )}
+                                </div>
+                                {cols.single && (
+                                  <div className="px-4 border-t text-right">
+                                    <Cell value={r.single} sub={r.singleNote} />
+                                  </div>
+                                )}
+                                {cols.pkg && (
+                                  <div className="px-4 border-t text-right">
+                                    <Cell value={r.package} sub={r.packageNote} />
+                                  </div>
+                                )}
+                                {cols.member && (
+                                  <div className="px-4 border-t text-right">
+                                    <Cell value={r.membership ?? r.member} sub={r.membershipNote} />
+                                  </div>
+                                )}
+                              </Fragment>
+                            ))}
+                          </div>
+                        </div>
+
+                        {(sec.promo || sec.ctaText) && (
+                          <div className="flex flex-col md:flex-row items-center justify-between gap-3 px-4 py-4 bg-neutral-50 border-t">
+                            <div className="text-sm text-neutral-700">
+                              {sec.promo}
+                            </div>
+                            {sec.ctaText && (
+                              <Link
+                                href={s.bookingLink || `/book/${s.slug}`}
+                                className="inline-flex items-center gap-2 rounded-full bg-neutral-900 text-white px-5 py-2 text-sm font-semibold hover:bg-neutral-800"
+                              >
+                                {sec.ctaText} <span aria-hidden>→</span>
+                              </Link>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          );
+        },
+      });
+    }
+
+    // Pricing (legacy / optional) — left as-is
     if (pricingSingle || packages.length > 0) {
       list.push({
         key: 'pricing',
         enabled: true,
         render: () => {
           const variant = v(s, 'pricing', 'tiers');
-
-          // de-dupe packages by label|value
           const pkgList = Array.isArray(packages) ? packages.filter(Boolean) : [];
-          const dedupedPkgs = Array.from(
-            new Map(pkgList.map(p => [`${p.label}|${p.value}`, p])).values()
-          );
+          const dedupedPkgs = Array.from(new Map(pkgList.map(p => [`${p.label}|${p.value}`, p])).values());
 
           return (
             <section className="py-16 bg-gray-50">
@@ -902,13 +1043,10 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                       </ul>
                     </div>
 
-                    {/* render packages ONCE */}
                     {dedupedPkgs.slice(0, 2).map((pkg, i) => (
                       <div
                         key={`${pkg.label}-${i}`}
-                        className={`rounded-2xl border bg-white p-6 shadow-sm ${
-                          i === 0 ? 'ring-2 ring-reluxe-primary' : ''
-                        }`}
+                        className={`rounded-2xl border bg-white p-6 shadow-sm ${i === 0 ? 'ring-2 ring-reluxe-primary' : ''}`}
                       >
                         <div className="text-sm text-neutral-500">{pkg.label}</div>
                         <div className="text-3xl font-bold mt-1">{pkg.value}</div>
@@ -941,9 +1079,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-
-
-    // Financing (dynamic side image)
+    // Financing
     if (basePrice > 0) {
       list.push({
         key: 'financing',
@@ -967,7 +1103,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                       <li><strong>4 payments</strong> of <strong>${fourPay}</strong> each (0% APR)</li>
                       <li><strong>24 monthly payments</strong> of <strong>${mo24}</strong> (19.99% APR)</li>
                     </ul>
-                    <a href="https://pay.withcherry.com/reluxe-med-spa" target="_blank" rel="noreferrer" class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 font-medium shadow">Apply with no impact to credit</a>
+                    <a href="https://pay.withcherry.com/reluxe-med-spa" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 font-medium shadow">Apply with no impact to credit</a>
                   </div>
                 </div>
                 {side === 'right' && sideImg && <div className={style.wrap}><Image src={sideImg} alt="Financing" fill className={style.img} /></div>}
@@ -978,7 +1114,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Comparison variants: 'table' | 'cards'
+    // Comparison
     if (comparison?.columns?.length && comparison?.rows?.length) {
       list.push({
         key: 'comparison',
@@ -1007,7 +1143,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
               </section>
             );
           }
-          // table
           return (
             <section className="py-14">
               <div className="max-w-6xl mx-auto px-4">
@@ -1039,7 +1174,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Video variants: 'cine' | 'split' (dynamic extra image when split)
+    // Video
     if (videoUrl) {
       list.push({
         key: 'video',
@@ -1061,7 +1196,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
               </section>
             );
           }
-          // cine
           return (
             <section className="py-14">
               <div className="max-w-5xl mx-auto px-4">
@@ -1076,7 +1210,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // FAQ variants: 'accordion' | 'top5'
+    // FAQ
     if (faq.length) {
       list.push({
         key: 'faq',
@@ -1084,7 +1218,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
         render: () => {
           const variant = v(s, 'faq', 'accordion');
           if (variant === 'top5') {
-            const top = faq.slice(0,6);
+            const top = faq.slice(0, 6);
             return (
               <section className="py-14">
                 <div className="max-w-5xl mx-auto px-4">
@@ -1116,7 +1250,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
               </section>
             );
           }
-          // accordion
           return (
             <section className="py-14">
               <div className="max-w-4xl mx-auto px-4">
@@ -1149,7 +1282,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
           const scrollerId = `testimonials-scroller-${s.slug || 'svc'}`;
 
           const fmtMonthYear = (iso) => {
-            // expects "YYYY-MM" or full ISO; falls back gracefully
             try {
               const d = iso?.length === 7 ? new Date(`${iso}-01`) : new Date(iso);
               return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
@@ -1165,7 +1297,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
           const scrollByCards = (dir = 1) => {
             const el = typeof document !== 'undefined' ? document.getElementById(scrollerId) : null;
             if (!el) return;
-            // Find a card width (including gap) to create a nice step
             const card = el.querySelector('[data-testimonial-card]');
             const gap = 16; // tailwind gap-4
             const step = card ? (card.clientWidth + gap) : 320;
@@ -1185,7 +1316,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                     </p>
                   </div>
 
-                  {/* Prev / Next (hidden if only 1) */}
                   {testimonials.length > 1 && (
                     <div className="hidden md:flex items-center gap-2">
                       <button
@@ -1208,13 +1338,12 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                   )}
                 </div>
 
-                {/* slider (1 card on mobile, 3 on md+) */}
+                {/* slider */}
                 <div
                   id={scrollerId}
                   className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none]"
                   style={{ scrollBehavior: 'smooth' }}
                 >
-                  {/* hide scrollbar (WebKit) */}
                   <style jsx>{`
                     #${scrollerId}::-webkit-scrollbar { display: none; }
                   `}</style>
@@ -1287,8 +1416,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-
-    // Provider Spotlight: 3-up, avatar + text side-by-side (equal heights)
+    // Provider Spotlight
     if (providers.length) {
       list.push({
         key: 'providerSpotlight',
@@ -1332,7 +1460,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
                         </p>
                       )}
 
-                      {/* Optional specialties as subtle pills */}
+                      {/* Optional specialties */}
                       {Array.isArray(p.specialties) && p.specialties.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {p.specialties.map((sp, j) => (
@@ -1361,7 +1489,6 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
         ),
       });
     }
-
 
     // Related Services variants: 'scroll' | 'grid'
     if (relatedServices.length) {
@@ -1481,7 +1608,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Lasers (unchanged structure)
+    // Lasers
     if (lasers.length) {
       list.push({
         key: 'lasers',
@@ -1507,7 +1634,7 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
       });
     }
 
-    // Booking Embed (avoid placing CTA right next to this)
+    // Booking Embed
     if (bookingEmbedHtml) {
       list.push({
         key: 'bookingEmbed',
@@ -1542,20 +1669,16 @@ if ((s.overview?.p1 || s.overview?.p2) || Array.isArray(s.whyReluxe)) {
 
   return (
     <>
-      <ServiceSEO service={s} />   {/* ✅ SEO goes here */}
       <HeaderTwo />
 
-      {/* Render content blocks + auto CTAs */}
       {orderedBlocks.map(b => <div key={b.key}>{b.render()}</div>)}
 
-      {/* LIGHTBOX */}
       {lightbox && (
         <div onClick={() => setLightbox(null)} className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <Image src={lightbox.src} alt={lightbox.alt || 'Result'} width={1200} height={800} className="object-contain" />
         </div>
       )}
 
-      {/* FLOATING CTA */}
       <Link href={s.bookingLink || `/book/${s.slug}`} className="fixed bottom-8 right-8 bg-reluxe-primary p-4 rounded-full shadow-2xl animate-pulse text-white">
         <SparklesIcon className="w-6 h-6" />
       </Link>

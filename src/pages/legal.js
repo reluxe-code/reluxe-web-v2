@@ -61,6 +61,11 @@ export default function LegalHubPage() {
           desc: 'Billing cadence, credits/rollover, cancellation, and pauses.',
         },
         {
+          name: 'Package & Voucher Policy',
+          href: '/package-voucher-policy',
+          desc: 'Validity window (24 months), scheduling guidance, and how package vouchers differ from gift cards.',
+        },
+        {
           name: 'Gift Card Terms',
           href: '/gift-card-terms',
           desc: 'Redemption, expiration (if any), and lost/stolen card policy.',

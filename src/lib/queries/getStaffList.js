@@ -3,7 +3,7 @@ import { gql } from '@apollo/client'
 
 export const GET_STAFF_LIST = gql`
   query GetStaffList {
-  staffs {
+  staffs (first: 30, where: { orderby: { field: TITLE, order: ASC } }) {
     nodes {
       id
       slug

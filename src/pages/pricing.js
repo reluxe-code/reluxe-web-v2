@@ -3,47 +3,112 @@ import Head from 'next/head'
 import Link from 'next/link'
 import HeaderTwo from '@/components/header/header-2'
 import PricingGrid from '@/components/pricing/PricingGrid'
-<<<<<<< HEAD
 import { servicesData } from '@/data/Pricing'
-=======
-import servicesData from '@/data/pricing'
->>>>>>> rescue/broken-includes
 
 // ---------- deterministic slug guessing (pure string match)
 const NAME_TO_SLUG = [
-  ['facial balancing','facialbalancing'],
+  ['facial balancing', 'facialbalancing'],
   ['daxx', 'daxxify'],
-  ['botox','botox'], ['dysport','dysport'], ['jeuveau','jeuveau'], ['tox','tox'],
-  ['filler','filler'], ['juved','juvederm'], ['rha','rha'], ['restyl','restylane'], ['versa','versa'],
-  ['sculp','sculptra'], ['hydra','hydrafacial'], ['glo2','glo2facial'],
-  ['chemical','peels'], ['signature facial','facials'], ['facial','facials'],
-  ['skinpen','skinpen'], ['morpheus','morpheus8'],
-  ['ipl','ipl'], ['laser hair','laserhair'], ['laser','lasers'],
-  ['clearlift','clearlift'], ['clearskin','clearskin'], ['opus','opus'], ['prp','prp'],
-  ['massage','massage'], ['salt sauna','saltsauna'], ['vascupen','vascupen'], ['dissolv','dissolving'],
+  ['botox', 'botox'],
+  ['dysport', 'dysport'],
+  ['jeuveau', 'jeuveau'],
+  ['tox', 'tox'],
+  ['filler', 'filler'],
+  ['juved', 'juvederm'],
+  ['rha', 'rha'],
+  ['restyl', 'restylane'],
+  ['versa', 'versa'],
+  ['sculp', 'sculptra'],
+  ['hydra', 'hydrafacial'],
+  ['glo2', 'glo2facial'],
+  ['chemical', 'peels'],
+  ['signature facial', 'facials'],
+  ['facial', 'facials'],
+  ['skinpen', 'skinpen'],
+  ['morpheus', 'morpheus8'],
+  ['ipl', 'ipl'],
+  ['laser hair', 'laserhair'],
+  ['laser', 'lasers'],
+  ['clearlift', 'clearlift'],
+  ['clearskin', 'clearskin'],
+  ['opus', 'opus'],
+  ['prp', 'prp'],
+  ['massage', 'massage'],
+  ['salt sauna', 'saltsauna'],
+  ['vascupen', 'vascupen'],
+  ['dissolv', 'dissolving'],
 ]
-const guessSlug = (label='') => {
+const guessSlug = (label = '') => {
   const s = String(label).toLowerCase().trim()
   for (const [needle, slug] of NAME_TO_SLUG) if (s.includes(needle)) return slug
   return '' // unknown -> send to /services
 }
 
+// ---------- TOX "starting at" pricing for the PRICING GRID ONLY
+// (More detailed foundation + unit logic belongs on each tox service page.)
+const TOX_STARTING = {
+  jeuveau: {
+    label: 'Starting at $200',
+    sub: '20-unit foundation treatment',
+    badge: 'Best Value',
+  },
+  botox: {
+    label: 'Starting at $280',
+    sub: '20-unit foundation treatment',
+    badge: 'Premium',
+  },
+  dysport: {
+    label: 'Starting at $225',
+    sub: '50-unit foundation treatment',
+    footnote: 'Dysport units are dosed differently than Botox.',
+    badge: 'Fast-Acting',
+  },
+  daxxify: {
+    label: 'Starting at $280',
+    sub: '40-unit foundation treatment',
+    footnote: 'May last 6 weeks longer for many patients.',
+    badge: 'Longest-Lasting',
+  },
+}
+
 // ---------- normalize once so SSR/CSR output is identical
 const isGroup = (x) => x && typeof x === 'object' && Array.isArray(x.items) && x.title
+
+const lower = (v) => (v ?? '').toString().toLowerCase().trim()
+
+const applyToxOverrides = (name = '', slug = '') => {
+  const n = lower(name)
+  const s = lower(slug)
+
+  if (s === 'jeuveau' || n.includes('jeuveau')) return { ...TOX_STARTING.jeuveau }
+  if (s === 'botox' || n.includes('botox')) return { ...TOX_STARTING.botox }
+  if (s === 'dysport' || n.includes('dysport')) return { ...TOX_STARTING.dysport }
+  if (s === 'daxxify' || n.includes('daxxify') || n.includes('daxx')) return { ...TOX_STARTING.daxxify }
+
+  return null
+}
+
 const normalizeGroups = (data) => {
   const arr = Array.isArray(data) ? data : []
   const groups = arr.filter(isGroup)
   if (!groups.length) return null
-  return groups.map(g => ({
+
+  return groups.map((g) => ({
     title: String(g.title || ''),
     items: (g.items || []).map((it, i) => {
       const name = String(it?.name || it?.title || '')
-      const price = it?.price || it?.value || it?.starting || it?.from || ''
+      const rawPrice = it?.price || it?.value || it?.starting || it?.from || ''
       const slug = it?.slug || guessSlug(name)
+      const override = applyToxOverrides(name, slug)
+
       return {
         id: `${g.title}:${name}:${i}`, // stable key
         name,
-        price: typeof price === 'string' ? price : String(price || ''),
+        // For tox items on the PRICING GRID, show "Starting at" pricing (simpler, less unit shopping)
+        price: override?.label ? override.label : typeof rawPrice === 'string' ? rawPrice : String(rawPrice || ''),
+        sub: override?.sub || '',
+        badge: override?.badge || '',
+        footnote: override?.footnote || '',
         href: slug ? `/services/${slug}` : '/services',
         hasSlug: Boolean(slug),
       }
@@ -52,30 +117,47 @@ const normalizeGroups = (data) => {
 }
 
 // ---------- icons
-function ArrowRight({ className='h-4 w-4' }) {
+function ArrowRight({ className = 'h-4 w-4' }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="M5 12h14M13 5l7 7-7 7"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
-function CheckDot({ className='h-4 w-4' }) {
+function CheckDot({ className = 'h-4 w-4' }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8.5 12.5l2.5 2 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path
+        d="M8.5 12.5l2.5 2 4.5-5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
 
 // ---------- cards
-function CategoryCard({ title, items=[] }) {
+function CategoryCard({ title, items = [] }) {
+  // collect any tox footnotes present in this category (dedupe)
+  const footnotes = Array.from(new Set(items.map((x) => x.footnote).filter(Boolean)))
+
   return (
     <section className="group relative rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
       <header className="flex items-center justify-between px-5 py-4">
         <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
       </header>
+
       <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
       <ul className="p-2">
         {items.map((it) => (
           <li key={it.id} className="relative">
@@ -87,9 +169,22 @@ function CategoryCard({ title, items=[] }) {
               className={`block ${!it.hasSlug ? 'pointer-events-none' : ''}`}
               aria-label={`View ${it.name}`}
             >
-              <div className="flex items-center justify-between gap-4 rounded-xl px-3 py-2 hover:bg-slate-50">
-                <span className="text-sm text-slate-900">{it.name}</span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-start justify-between gap-4 rounded-xl px-3 py-2 hover:bg-slate-50">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-900">{it.name}</span>
+
+                    {it.badge ? (
+                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                        {it.badge}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {it.sub ? <div className="mt-0.5 text-xs text-slate-600">{it.sub}</div> : null}
+                </div>
+
+                <div className="flex flex-shrink-0 items-center gap-2">
                   {it.price ? (
                     <span className="whitespace-nowrap text-sm font-semibold text-slate-900">
                       {it.price}
@@ -102,10 +197,24 @@ function CategoryCard({ title, items=[] }) {
           </li>
         ))}
       </ul>
+
+      {footnotes.length ? (
+        <div className="px-5 pb-4">
+          <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
+            {footnotes.map((f, i) => (
+              <div key={i} className={i ? 'mt-1' : ''}>
+                * {f}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <span className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
     </section>
   )
 }
+
 function CategoryGrid({ groups }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -124,27 +233,28 @@ function PackagesShowcase() {
       blurb: 'Fade sun spots & redness with a focused series for noticeably brighter, more even skin.',
       bullets: ['IPL 6-pack for best results', 'Optional VascuPen add-on for tiny vessels', 'Member savings & financing available'],
       href: '/services/ipl',
-      tag: 'Most Popular'
+      tag: 'Most Popular',
     },
     {
       title: 'Microneedling Glow Series',
       blurb: 'Refine texture and boost glow with a no-downtime plan you can stick to.',
       bullets: ['SkinPen 4-pack', 'Optional PRP (VAMP) upgrade', 'Great between lasers or pre-event'],
-      href: '/services/skinpen'
+      href: '/services/skinpen',
     },
     {
-      title: 'RF Microneedling Tighten Trio',
+      title: 'Morpheus8 Package of 3 Sessions',
       blurb: 'Deeper collagen remodeling to firm and smooth—excellent for laxity and scars.',
       bullets: ['Morpheus8 3-pack', 'Topical numbing + aftercare included', 'Area-based pricing'],
-      href: '/services/morpheus8'
+      href: '/services/morpheus8',
     },
     {
       title: 'Body Contouring Program',
       blurb: 'Trim, tighten, and tone with a custom EvolveX plan—hands-free and fully tailored.',
       bullets: ['EvolveX (Tite/Tone/Transform) series', 'By-area customization', 'Save more with bundles'],
-      href: '/services/evolvex'
+      href: '/services/evolvex',
     },
   ]
+
   return (
     <section className="rounded-3xl border border-slate-200 bg-white/70 p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
@@ -191,23 +301,24 @@ function MembershipDuo() {
       name: 'Essential Membership',
       price: '$100/mo',
       bullets: [
-        'One $125 credit toward any service',
-        '10% off à la carte',
-        'Priority booking',
-        'Member-only specials',
+        'Standard Voucher Every Month',
+        '10% off all packages & services',
+        '15% off all skincare products',
+        'Monthly Salt Sauna Session',
       ],
     },
     {
       name: 'Elite Membership',
       price: '$200/mo',
       bullets: [
-        'Two $150 credits toward any service',
-        '15% off à la carte',
-        'Quarterly complimentary facial',
-        'VIP event access',
+        'Premium Voucher Every Month',
+        '10% off all packages & services',
+        '15% off all skincare products',
+        'Monthly Salt Sauna Session',
       ],
     },
   ]
+
   return (
     <section className="relative">
       <div className="mb-6 flex items-center justify-between">
@@ -258,7 +369,7 @@ export default function PricingPage() {
         <title>Services & Pricing | RELUXE Med Spa</title>
         <meta
           name="description"
-          content="Explore RELUXE's full menu of services and pricing including injectables, facials, laser treatments, and membership packages."
+          content="Explore RELUXE's full menu of services and pricing including injectables, facials, laser treatments, and membership packages. Tox pricing is presented as simple starting prices with guided customization."
         />
       </Head>
 
@@ -278,8 +389,8 @@ export default function PricingPage() {
               Just great results.
             </h1>
             <p className="mt-4 text-slate-600">
-              Your favorite categories—Botox, Filler, Lasers, Massage, and more—kept exactly as you
-              know them, now in a cleaner layout.
+              We keep things simple with clear starting prices and guided customization—so you know what to expect,
+              and your provider can tailor treatment to your goals.
             </p>
           </header>
 

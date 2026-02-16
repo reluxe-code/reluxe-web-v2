@@ -13,16 +13,6 @@ const ctas = [
     buttonLink: '/memberships',
   },
   {
-    title: 'Join Us at the Beauty Bash',
-    benefits: [
-      'One-night-only deals',
-      'Live demos and giveaways',
-      'Bring a friend & get bonus spa credit',
-    ],
-    buttonLabel: 'RSVP Now',
-    buttonLink: '/events/beauty-bash',
-  },
-  {
     title: 'Book a Skin Consultation',
     benefits: [
       'Complimentary 3D skin analysis',
@@ -40,7 +30,7 @@ const ctas = [
       'Earn exclusive rewards & gifts',
     ],
     buttonLabel: 'Refer Now',
-    buttonLink: '/referral',
+    buttonLink: '#',
   },
 ]
 

@@ -96,7 +96,7 @@ export default function MenPage() {
             subtitle="Back • Chest • Neck"
             copy="Ditch razor burn and upkeep. Smooth, long‑term results where you want them most."
             image="/images/men/lhr.jpg"
-            href="/book/lhr/"
+            href="/book/laser-hair-removal/"
           />
           {/* Massage */}
           <ServiceCard

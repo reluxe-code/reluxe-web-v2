@@ -147,7 +147,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
     <>
     <ForceLocation loc={slug} />
       <Head>
-        <title>{title} | RELUXE Med Spa</title>
+        <title>RELUXE Med Spa {title} | Expert Botox, Facials & Aesthetic Treatments in Hamilton County</title>
       </Head>
 
       <HeaderTwo />

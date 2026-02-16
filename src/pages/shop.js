@@ -71,7 +71,7 @@ export default function ShopPage() {
             <h3 className="text-xl font-semibold mt-4">Cherry Payment Plans</h3>
             <p className="text-gray-600 mt-2 mb-4">Split your treatments into monthly payments with 0% interest options.</p>
             <Link
-              href="/shop/cherry"
+              href="https://pay.withcherry.com/reluxe-med-spa?utm_source=practice&utm_medium=website&m=20441"
               className="inline-block bg-black text-white py-2 px-6 rounded-full hover:bg-gray-800 transition">
               Apply Now
             </Link>
@@ -88,7 +88,7 @@ export default function ShopPage() {
             <h3 className="text-xl font-semibold mt-4">RELUXE Gift Cards</h3>
             <p className="text-gray-600 mt-2 mb-4">Give the gift of beauty. Purchase a digital RELUXE gift card instantly.</p>
             <Link
-              href="/shop/gift-card"
+              href="https://blvd.me/reluxemedspa/gift-cards"
               className="inline-block bg-black text-white py-2 px-6 rounded-full hover:bg-gray-800 transition">
               Buy Gift Card
             </Link>

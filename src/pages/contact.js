@@ -13,8 +13,8 @@ function ContactPage({ contactItems }) {
     return (
         <>
             <Head>
-                <title>Contact Us</title>
-                <meta name="description" content="Send us your messages!" />
+                <title>Contact Us | RELUXE Med Spa in Carmel & Westfield, IN</title>
+                <meta name="description" content="Send us your messages for Carmel & Westfield!" />
             </Head>
             <HeaderTwo />
             <GoogleMap height={480} />

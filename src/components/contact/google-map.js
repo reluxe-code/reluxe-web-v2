@@ -2,12 +2,27 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 
-// React-Leaflet (client only)
-const MapContainer = dynamic(() => import('react-leaflet').then(m => m.MapContainer), { ssr: false })
-const TileLayer     = dynamic(() => import('react-leaflet').then(m => m.TileLayer),     { ssr: false })
-const Marker        = dynamic(() => import('react-leaflet').then(m => m.Marker),        { ssr: false })
-const Popup         = dynamic(() => import('react-leaflet').then(m => m.Popup),         { ssr: false })
-const ZoomControl   = dynamic(() => import('react-leaflet').then(m => m.ZoomControl),   { ssr: false })
+// React-Leaflet (client only) — wrap named exports as default
+const MapContainer = dynamic(
+  () => import('react-leaflet').then(m => ({ default: m.MapContainer })),
+  { ssr: false }
+)
+const TileLayer = dynamic(
+  () => import('react-leaflet').then(m => ({ default: m.TileLayer })),
+  { ssr: false }
+)
+const Marker = dynamic(
+  () => import('react-leaflet').then(m => ({ default: m.Marker })),
+  { ssr: false }
+)
+const Popup = dynamic(
+  () => import('react-leaflet').then(m => ({ default: m.Popup })),
+  { ssr: false }
+)
+const ZoomControl = dynamic(
+  () => import('react-leaflet').then(m => ({ default: m.ZoomControl })),
+  { ssr: false }
+)
 
 // —— Basemaps (no API key required)
 const TILES = {
@@ -50,8 +65,8 @@ const LOCATIONS = [
 export default function ReluxeLocationsMap({
   height = 360,
   pinSize = 72,
-  style = 'positron',     // ← change to 'dark' | 'voyager' | 'osm'
-  maxZoomOnFit = 12,      // ← lower = zoom out a bit more
+  basemap = 'positron',   // renamed from "style" to avoid prop collisions
+  maxZoomOnFit = 12,      // lower = zoom out a bit more
 }) {
   const [LRef, setLRef] = useState(null)
   const mapRef = useRef(null)
@@ -61,13 +76,12 @@ export default function ReluxeLocationsMap({
     let mounted = true
     ;(async () => {
       const L = (await import('leaflet')).default
-      if (!mounted) return
-      setLRef(L)
+      if (mounted) setLRef(L)
     })()
     return () => { mounted = false }
   }, [])
 
-  // Build custom logo icons
+  // Build custom logo icons (once Leaflet is ready)
   const icons = useMemo(() => {
     if (!LRef) return []
     const mk = (url) =>
@@ -84,6 +98,7 @@ export default function ReluxeLocationsMap({
   // Bounds for both pins
   const bounds = useMemo(() => {
     const pts = LOCATIONS
+    if (!pts.length) return null
     const [[minLat, minLng], [maxLat, maxLng]] = pts.reduce(
       (acc, p) => [
         [Math.min(acc[0][0], p.lat), Math.min(acc[0][1], p.lng)],
@@ -108,7 +123,10 @@ export default function ReluxeLocationsMap({
 
   const fallbackCenter = [39.99, -86.13]
 
-  const tile = TILES[style] || TILES.positron
+  // Defensive: if parent accidentally passes an object to `basemap`, coerce to key
+  const basemapKey =
+    typeof basemap === 'string' && basemap in TILES ? basemap : 'positron'
+  const tile = TILES[basemapKey]
 
   return (
     <div className="w-full rounded-xl overflow-hidden border" style={{ height }}>
@@ -122,26 +140,32 @@ export default function ReluxeLocationsMap({
         whenCreated={onMapCreated}
       >
         <ZoomControl position="topright" />
-        <TileLayer attribution={tile.attribution} url={tile.url} />
 
-        {LOCATIONS.map((p, i) => (
-          <Marker key={i} position={[p.lat, p.lng]} icon={icons[i]}>
-            <Popup>
-              <div className="space-y-1">
-                <div className="font-semibold">{p.name}</div>
-                <div className="text-sm text-neutral-700">{p.address}</div>
-                <a
-                  className="text-sm underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}`}
-                >
-                  Directions
-                </a>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {/* Only render TileLayer when we have a valid tile */}
+        {tile?.url && (
+          <TileLayer attribution={tile.attribution} url={tile.url} />
+        )}
+
+        {/* Only render markers after Leaflet is loaded (icons ready) */}
+        {LRef &&
+          LOCATIONS.map((p, i) => (
+            <Marker key={`${p.name}-${i}`} position={[p.lat, p.lng]} icon={icons[i]}>
+              <Popup>
+                <div className="space-y-1">
+                  <div className="font-semibold">{p.name}</div>
+                  <div className="text-sm text-neutral-700">{p.address}</div>
+                  <a
+                    className="text-sm underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.address)}`}
+                  >
+                    Directions
+                  </a>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
 
       <style jsx global>{`

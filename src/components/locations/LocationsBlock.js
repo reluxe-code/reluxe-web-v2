@@ -27,7 +27,7 @@ const locations = [
     city: 'Carmel',
     region: 'IN',
     postalCode: '46280',
-    hours: 'Mon, Tue, Thu, Fri: 9a–5p · Sat: Appointment Only',
+    hours: 'Mon-Fri: 8a–5p · Sat: Appointment Only',
     mapImage: '/images/locations/carmel-map.png',
     locationImage: '/images/locations/carmel-building.png',
     phone: '317-763-1142',
