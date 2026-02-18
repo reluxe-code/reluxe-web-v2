@@ -22,6 +22,14 @@ export default function BachelorettePartiesPage() {
           content="RELUXE hosts bachelorette party spa packages in Carmel & Westfield. Group facials, tox parties, glow sessions, and private events."
         />
         <link rel="canonical" href="https://reluxemedspa.com/events/bachelorette-parties" />
+        <meta property="og:title" content="Bachelorette Party Packages | RELUXE Med Spa" />
+        <meta property="og:description" content="Group facials, tox parties, glow sessions & private events in Carmel & Westfield." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/events/bachelorette-parties" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Bachelorette Parties | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Group facials, tox parties & glow sessions for bachelorette parties in Carmel & Westfield." />
       </Head>
       <HeaderTwo />
 

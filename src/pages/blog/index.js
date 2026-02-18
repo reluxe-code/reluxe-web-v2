@@ -14,6 +14,14 @@ export default function BlogIndex({ posts = [], categories = [] }) {
         <title>Med Spa Blog | Skincare Tips & Injectable Guides | RELUXE Westfield & Carmel</title>
         <meta name="description" content="Expert guides on Botox, facials, laser treatments, and skincare from RELUXE Med Spa. Tips and advice from our providers in Westfield and Carmel, Indiana." />
         <link rel="canonical" href="https://reluxemedspa.com/blog" />
+        <meta property="og:title" content="Med Spa Blog | RELUXE Med Spa" />
+        <meta property="og:description" content="Expert guides on Botox, facials, laser treatments, and skincare from RELUXE Med Spa." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/blog" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Med Spa Blog | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Skincare tips and injectable guides from our providers in Westfield & Carmel, IN." />
       </Head>
 
       <HeaderTwo title="RELUXE Blog" subtitle={`${list.length} posts`} />

@@ -114,6 +114,14 @@ export default function ConditionsPage() {
           content="RELUXE Med Spa treats wrinkles, fine lines, acne scars, sun damage, sagging skin, and more in Carmel & Westfield. Explore what we treat and the treatments that work."
         />
         <link rel="canonical" href="https://reluxemedspa.com/conditions" />
+        <meta property="og:title" content="What We Treat | RELUXE Med Spa" />
+        <meta property="og:description" content="We treat wrinkles, acne scars, sun damage, sagging skin, volume loss & more in Carmel & Westfield, IN." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/conditions" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Conditions We Treat | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Expert treatments for wrinkles, acne scars, sun damage, and more in Carmel & Westfield, IN." />
       </Head>
       <SeoJsonLd data={[breadcrumbLd, itemListLd]} />
 

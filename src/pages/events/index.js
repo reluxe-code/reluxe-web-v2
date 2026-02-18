@@ -95,6 +95,14 @@ export default function EventsHubPage() {
           content="Discover RELUXE event prep: weddings, prom, red carpet, Zoobilation, Rev, holidays, graduations, photoshoots, pageants, corporate events, and fitness competitions."
         />
         <link rel="canonical" href="https://reluxemedspa.com/events" />
+        <meta property="og:title" content="Event & Special Occasion Prep | RELUXE Med Spa" />
+        <meta property="og:description" content="Look your best for weddings, prom, galas, holidays, graduations & more at RELUXE in Carmel & Westfield." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/events" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Event & Occasion Prep | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Wedding, prom, gala, and event prep treatments in Carmel & Westfield, IN." />
       </Head>
 
       <HeaderTwo />

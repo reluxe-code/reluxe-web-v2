@@ -31,8 +31,13 @@ export default function WeddingPrepPage() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/wedding" />
-        <meta property="og:image" content="/images/wedding/og-wedding.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/wedding/og-wedding.jpg" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
         <link rel="canonical" href="https://reluxemedspa.com/wedding" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Wedding Prep in Carmel & Westfield | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Your step-by-step glow plan for brides, grooms, and the whole wedding party." />
+        <meta name="twitter:image" content="https://reluxemedspa.com/images/wedding/og-wedding.jpg" />
       </Head>
 
       <HeaderTwo />

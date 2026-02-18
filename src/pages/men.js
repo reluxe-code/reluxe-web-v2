@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import HeaderTwo from '../components/header/header-2'
+import SeoJsonLd from '../components/SeoJsonLd'
 
 // --- Config ---
 const BOOK_URL = '/book/'; // Change if you prefer a /book route
@@ -19,14 +20,30 @@ export default function MenPage() {
   return (
     <>
       <Head>
-        <title>Men’s Services | RELUXE Med Spa</title>
-        <meta name="description" content="Men’s injectables, facials, HydraFacial/Glo2Facial, laser hair removal (back, chest, neck), and massage at RELUXE. Discreet, natural results that boost confidence." />
-        <meta property="og:title" content="Men’s Services at RELUXE" />
+        <title>Men's Med Spa Services in Carmel & Westfield, IN | RELUXE Med Spa</title>
+        <meta name="description" content="Men's injectables, facials, HydraFacial/Glo2Facial, laser hair removal (back, chest, neck), and massage at RELUXE. Discreet, natural results that boost confidence." />
+        <link rel="canonical" href="https://reluxemedspa.com/men" />
+        <meta property="og:title" content="Men's Med Spa Services | RELUXE Med Spa" />
         <meta property="og:description" content="The secret to looking sharp and aging gracefully. Injectables, facials, laser hair removal, and massage—tailored for men." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://reluxe.med/men" />
-        <meta property="og:image" content="/images/men/og-men.jpg" />
+        <meta property="og:url" content="https://reluxemedspa.com/men" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/men/facial2.jpg" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Men's Med Spa Services | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Discreet, natural results that boost confidence. Injectables, facials, laser hair removal, and massage—tailored for men." />
+        <meta name="twitter:image" content="https://reluxemedspa.com/images/men/facial2.jpg" />
       </Head>
+      <SeoJsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          { '@type': 'Question', name: "Will I look 'done' after injectables?", acceptedAnswer: { '@type': 'Answer', text: 'No. Our approach is conservative and anatomy-aware. Expect subtle softening that keeps your expressions natural.' } },
+          { '@type': 'Question', name: 'What facial is best for men?', acceptedAnswer: { '@type': 'Answer', text: 'HydraFacial or Glo2Facial are great monthly resets—deep cleanse, exfoliation, and hydration tailored to your skin.' } },
+          { '@type': 'Question', name: 'Does laser hair removal hurt?', acceptedAnswer: { '@type': 'Answer', text: 'Most describe it as quick snaps with manageable discomfort. Back, chest, and neck are popular for long-term convenience.' } },
+          { '@type': 'Question', name: "I'm new—where do I start?", acceptedAnswer: { '@type': 'Answer', text: "Book a low-pressure consult. We'll review goals, map a plan, and start with basics that deliver noticeable wins." } },
+        ]
+      }} />
 
       <HeaderTwo />
 

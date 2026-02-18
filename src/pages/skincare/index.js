@@ -44,7 +44,13 @@ export default function SkincareHub() {
         <meta property="og:title" content="Medical-Grade Skincare | RELUXE Med Spa (Carmel & Westfield)" />
         <meta property="og:description" content="Personalized routines with skinbetter science, Colorescience, SkinCeuticals, Hydrinity, and Universkin." />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="/images/brands/og-skincare.jpg" />
+        <meta property="og:url" content="https://reluxemedspa.com/skincare" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/brands/og-skincare.jpg" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Medical-Grade Skincare | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Personalized skincare routines with skinbetter science, Colorescience, SkinCeuticals & more." />
+        <meta name="twitter:image" content="https://reluxemedspa.com/images/brands/og-skincare.jpg" />
       </Head>
 
       <HeaderTwo />

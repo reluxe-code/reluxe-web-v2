@@ -4,6 +4,7 @@ import Head from 'next/head'
 import PropTypes from 'prop-types'
 import Breadcrumb from '@/components/breadcrumb'
 import HeaderTwo from '@/components/header/header-2'
+import SeoJsonLd from '@/components/SeoJsonLd'
 import { gql } from '@apollo/client'
 import client from '@/lib/apollo'
 import Link from 'next/link'
@@ -48,12 +49,39 @@ function LocationsPage({ locations }) {
   return (
     <>
       <Head>
-        <title>Our Locations</title>
+        <title>RELUXE Med Spa Locations | Carmel & Westfield, IN</title>
         <meta
           name="description"
-          content="Find a RELUXE location near you"
+          content="Visit RELUXE Med Spa in Carmel or Westfield, Indiana. Two convenient locations offering Botox, fillers, facials, laser treatments, body contouring & massage. Free parking at both."
         />
+        <link rel="canonical" href="https://reluxemedspa.com/locations" />
+        <meta property="og:title" content="RELUXE Med Spa Locations | Carmel & Westfield, IN" />
+        <meta property="og:description" content="Two convenient Hamilton County locations offering Botox, fillers, facials, laser treatments & more." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/locations" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="RELUXE Med Spa Locations" />
+        <meta name="twitter:description" content="Two convenient Indiana locations offering expert aesthetic treatments." />
       </Head>
+      <SeoJsonLd data={[
+        {
+          '@context': 'https://schema.org',
+          '@type': 'MedicalBusiness',
+          name: 'RELUXE Med Spa — Carmel',
+          url: 'https://reluxemedspa.com/locations/carmel',
+          telephone: '+13179228524',
+          address: { '@type': 'PostalAddress', streetAddress: '14580 River Rd #135', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46033', addressCountry: 'US' },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'MedicalBusiness',
+          name: 'RELUXE Med Spa — Westfield',
+          url: 'https://reluxemedspa.com/locations/westfield',
+          telephone: '+13179228524',
+          address: { '@type': 'PostalAddress', streetAddress: '3450 W 131st St', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074', addressCountry: 'US' },
+        },
+      ]} />
       <HeaderTwo />
       <Breadcrumb activePage="Locations" pageTitle="Our Locations" />
       <div className="max-w-5xl mx-auto px-6 py-12">

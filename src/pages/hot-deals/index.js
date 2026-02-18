@@ -42,8 +42,17 @@ export default function OffersIndex({ live = [] }) {
   return (
     <>
       <Head>
-        <title>Offers & Specials | RELUXE Med Spa Westfield & Carmel</title>
-        <meta name="description" content="Limited-time offers and patient specials. Book online in Carmel or Westfield." />
+        <title>Med Spa Offers & Specials | RELUXE Med Spa Westfield & Carmel, IN</title>
+        <meta name="description" content="Current offers and specials at RELUXE Med Spa. Save on Botox, facials, laser treatments, body contouring & more in Carmel and Westfield, Indiana." />
+        <link rel="canonical" href="https://reluxemedspa.com/hot-deals" />
+        <meta property="og:title" content="Offers & Specials | RELUXE Med Spa" />
+        <meta property="og:description" content="Limited-time offers on Botox, facials, laser treatments & more at RELUXE in Carmel & Westfield." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/hot-deals" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Offers & Specials | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Current offers and specials on Botox, facials, laser treatments & more in Carmel & Westfield." />
       </Head>
 
       <HeaderTwo />
