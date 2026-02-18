@@ -1,5 +1,6 @@
 // src/components/gallery/ResultsCarouselSingle.js
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import PropTypes from 'prop-types'
 import { getProviderResults } from '@/data/providers/providerGalleries'
 
@@ -133,7 +134,7 @@ export default function ResultsCarouselSingle({
         >
           {slides.map((s, i) => (
             <figure key={s.id ?? i} className="w-full shrink-0 h-full relative">
-              <img src={s.src} alt={s.alt || 'Before & After'} className="h-full w-full object-cover" loading="lazy" />
+              <Image src={s.src} alt={s.alt || 'RELUXE Med Spa treatment result'} fill sizes="(max-width: 500px) 100vw, 500px" className="object-cover" />
             </figure>
           ))}
         </div>

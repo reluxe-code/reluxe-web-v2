@@ -1,17 +1,22 @@
 // src/components/team/StaffCard.js
 
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function StaffCard({ staff, linked = false }) {
   const specialties = staff.staffFields?.specialties?.map((s) => s.specialty) || []
 
   const inner = (
     <>
-      <img
-        src={staff.featuredImage?.node?.sourceUrl || '/images/default-avatar.jpg'}
-        alt={staff.title}
-        className="w-full aspect-square object-cover rounded-lg mb-4"
-      />
+      <div className="relative w-full aspect-square mb-4">
+        <Image
+          src={staff.featuredImage?.node?.sourceUrl || '/images/default-avatar.jpg'}
+          alt={staff.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+          className="object-cover rounded-lg"
+        />
+      </div>
       <h3 className="text-xl font-semibold">{staff.title}</h3>
       <p className="text-sm text-gray-600">{staff.staffFields?.stafftitle}</p>
       <p className="text-sm text-gray-500 italic my-2">

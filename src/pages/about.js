@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Image from 'next/image'
 import Link from 'next/link'
 import HeaderTwo from '../components/header/header-2'
 
@@ -163,8 +164,8 @@ export default function AboutPage() {
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="grid md:grid-cols-2 gap-8">
           <Link href="/locations" className="group rounded-3xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-            <div className="aspect-[4/3] overflow-hidden">
-              <img src="/images/about/locations.jpg" alt="RELUXE Carmel and Westfield locations" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <Image src="/images/about/locations.jpg" alt="RELUXE Carmel and Westfield locations" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover transition duration-500 group-hover:scale-105" />
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold">Our Locations</h3>
@@ -174,8 +175,8 @@ export default function AboutPage() {
           </Link>
 
           <Link href="/team" className="group rounded-3xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-            <div className="aspect-[4/3] overflow-hidden">
-              <img src="/images/about/team.jpg" alt="RELUXE Med Spa providers and staff" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <Image src="/images/about/team.jpg" alt="RELUXE Med Spa providers and staff" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover transition duration-500 group-hover:scale-105" />
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold">Meet Our Team</h3>

@@ -1,11 +1,6 @@
 // components/team/TeamHeroHeader.js
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faInstagram,
-  faTiktok,
-  faFacebookF,
-} from '@fortawesome/free-brands-svg-icons'
+import { FaInstagram, FaTiktok, FaFacebookF } from 'react-icons/fa'
 import Link from 'next/link'
 
 export default function TeamHeroHeader({ name, role, shortBio, bookingUrl, consultUrl, socials = [] }) {
@@ -48,12 +43,12 @@ export default function TeamHeroHeader({ name, role, shortBio, bookingUrl, consu
         {/* Social Icons */}
         <div className="flex justify-center gap-4">
           {socials.map((s, idx) => {
-            const icon =
+            const IconComponent =
               s.label === 'Instagram'
-                ? faInstagram
+                ? FaInstagram
                 : s.label === 'TikTok'
-                ? faTiktok
-                : faFacebookF
+                ? FaTiktok
+                : FaFacebookF
 
             return (
               <a
@@ -63,7 +58,7 @@ export default function TeamHeroHeader({ name, role, shortBio, bookingUrl, consu
                 rel="noopener noreferrer"
                 className="w-12 h-12 border border-black flex items-center justify-center rounded-sm hover:bg-gray-100 transition"
               >
-                <FontAwesomeIcon icon='faInstagram' className="text-xl text-black" />
+                <IconComponent className="text-xl text-black" />
               </a>
             )
           })}

@@ -1,18 +1,19 @@
 // components/team/HeroSplitSection.js
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FaInstagram, FaTiktok, FaFacebookF, FaLinkedinIn, FaYoutube, FaTwitter, FaGlobe } from 'react-icons/fa'
+import Image from 'next/image'
 import Link from 'next/link'
 import PropTypes from 'prop-types'
 
 const ICON_MAP = {
-  instagram: ['fab', 'instagram'],
-  tiktok: ['fab', 'tiktok'],
-  facebook: ['fab', 'facebook-f'],
-  linkedin: ['fab', 'linkedin-in'],
-  youtube: ['fab', 'youtube'],
-  twitter: ['fab', 'twitter'], // or ['fab', 'x-twitter'] if you’ve loaded it
-  website: ['fas', 'globe'],
-  site: ['fas', 'globe'],
+  instagram: FaInstagram,
+  tiktok: FaTiktok,
+  facebook: FaFacebookF,
+  linkedin: FaLinkedinIn,
+  youtube: FaYoutube,
+  twitter: FaTwitter,
+  website: FaGlobe,
+  site: FaGlobe,
 }
 
 const BOOK_WESTFIELD_DEFAULT = '/book/westfield'
@@ -63,7 +64,7 @@ export default function HeroSplitSection({
           const label = String(s.label || '').toLowerCase()
           const key =
             Object.keys(ICON_MAP).find(k => label.includes(k)) || 'website'
-          return { ...s, _icon: ICON_MAP[key], _label: label || 'social' }
+          return { ...s, _IconComponent: ICON_MAP[key], _label: label || 'social' }
         })
     : []
 
@@ -91,7 +92,7 @@ export default function HeroSplitSection({
                       aria-label={s.label || 'social link'}
                       style={{ fontSize: '1.25rem' }} // ~20px
                     >
-                      <FontAwesomeIcon icon={s._icon || ['fas', 'link']} />
+                      {s._IconComponent ? <s._IconComponent /> : <FaGlobe />}
                     </a>
                   ))}
                 </div>
@@ -151,11 +152,14 @@ export default function HeroSplitSection({
         </div>
 
         {/* Right Image */}
-        <div className="w-full lg:w-1/2 relative">
-          <img
+        <div className="w-full lg:w-1/2 relative min-h-[400px]">
+          <Image
             src={imageUrl || '/images/placeholder.png'}
             alt={name || 'Team member'}
-            className="absolute inset-0 w-full h-full object-contain"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-contain"
+            priority
           />
         </div>
       </div>

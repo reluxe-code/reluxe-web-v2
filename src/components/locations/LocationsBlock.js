@@ -1,7 +1,6 @@
 // src/components/locations/LocationsBlock.js
 import { FaMapMarkerAlt, FaPhoneAlt, FaInfoCircle } from 'react-icons/fa'
 import Image from 'next/image'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 const locations = [
@@ -38,20 +37,6 @@ const locations = [
 ]
 
 export default function LocationsBlock() {
-  const router = useRouter()
-
-  const handleCardNav = (e, href) => {
-    // Avoid triggering when clicking the icon bar
-    router.push(href)
-  }
-
-  const onKeyActivate = (e, href) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      router.push(href)
-    }
-  }
-
   return (
     <section className="bg-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -88,12 +73,7 @@ export default function LocationsBlock() {
             return (
               <div
                 key={idx}
-                className="bg-gray-50 rounded-xl shadow-md overflow-hidden flex flex-col cursor-pointer transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                role="link"
-                tabIndex={0}
-                aria-label={`${loc.name} — view location details`}
-                onClick={(e) => handleCardNav(e, loc.url)}
-                onKeyDown={(e) => onKeyActivate(e, loc.url)}
+                className="relative bg-gray-50 rounded-xl shadow-md overflow-hidden flex flex-col transition hover:shadow-lg"
               >
                 <div className="relative h-40 w-full">
                   <Image
@@ -109,7 +89,12 @@ export default function LocationsBlock() {
                 <div className="p-6 flex-grow flex flex-col justify-between">
                   <div className="text-center">
                     <h3 className="text-2xl font-semibold text-gray-900 mb-1">
-                      <span className="hover:underline">{loc.name}</span>
+                      <Link
+                        href={loc.url}
+                        className="hover:underline after:absolute after:inset-0 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 rounded-xl"
+                      >
+                        {loc.name}
+                      </Link>
                     </h3>
 
                     <address className="not-italic text-lg text-gray-600 whitespace-pre-line">
@@ -125,12 +110,8 @@ export default function LocationsBlock() {
                     )}
                   </div>
 
-                  {/* Icon bar — stop click from bubbling so icons keep their own actions */}
-                  <div
-                    className="flex justify-around text-reluxeGold text-lg mt-4"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  >
+                  {/* Icon bar — relative + z-10 so these sit above the stretched heading link */}
+                  <div className="relative z-10 flex justify-around text-reluxeGold text-lg mt-4">
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${loc.streetAddress}, ${loc.city}, ${loc.region} ${loc.postalCode}`)}`}
                       target="_blank"

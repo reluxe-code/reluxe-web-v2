@@ -3,12 +3,12 @@
 // 👇 Replace these paths with your real image files.
 export const providerGalleries = {
   default: [
-    { id: 'd1', src: '/images/gallery/placeholder.png', alt: 'Before & After' },
-    { id: 'd2', src: '/images/gallery/placeholder.png', alt: 'Before & After' },
-    { id: 'd3', src: '/images/gallery/placeholder.png', alt: 'Before & After' },
-    { id: 'd4', src: '/images/gallery/placeholder.png', alt: 'Before & After' },
-    { id: 'd5', src: '/images/gallery/placeholder.png', alt: 'Before & After' },
-    { id: 'd6', src: '/images/gallery/placeholder.png', alt: 'Before & After' },
+    { id: 'd1', src: '/images/gallery/placeholder.png', alt: 'RELUXE Med Spa treatment result' },
+    { id: 'd2', src: '/images/gallery/placeholder.png', alt: 'RELUXE Med Spa treatment result' },
+    { id: 'd3', src: '/images/gallery/placeholder.png', alt: 'RELUXE Med Spa treatment result' },
+    { id: 'd4', src: '/images/gallery/placeholder.png', alt: 'RELUXE Med Spa treatment result' },
+    { id: 'd5', src: '/images/gallery/placeholder.png', alt: 'RELUXE Med Spa treatment result' },
+    { id: 'd6', src: '/images/gallery/placeholder.png', alt: 'RELUXE Med Spa treatment result' },
   ],
 
   // Injectors (examples—update to match your staff slugs)
