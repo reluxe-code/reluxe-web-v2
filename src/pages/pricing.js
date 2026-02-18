@@ -366,11 +366,20 @@ export default function PricingPage() {
   return (
     <>
       <Head>
-        <title>Services & Pricing | RELUXE Med Spa</title>
+        <title>Services & Pricing | RELUXE Med Spa in Carmel & Westfield, IN</title>
         <meta
           name="description"
-          content="Explore RELUXE's full menu of services and pricing including injectables, facials, laser treatments, and membership packages. Tox pricing is presented as simple starting prices with guided customization."
+          content="Transparent pricing for Botox, fillers, facials, laser treatments, body contouring & memberships at RELUXE Med Spa. No pressure, just great results. Carmel & Westfield, IN."
         />
+        <link rel="canonical" href="https://reluxemedspa.com/pricing" />
+        <meta property="og:title" content="Services & Pricing | RELUXE Med Spa" />
+        <meta property="og:description" content="Transparent pricing for Botox, fillers, facials, laser treatments, body contouring & memberships at RELUXE Med Spa. No pressure, just great results." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/pricing" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Services & Pricing | RELUXE Med Spa" />
+        <meta name="twitter:description" content="Transparent pricing for Botox, fillers, facials, laser treatments & memberships at RELUXE Med Spa in Carmel & Westfield, IN." />
       </Head>
 
       <HeaderTwo />

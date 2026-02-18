@@ -11,8 +11,9 @@ export default function BlogIndex({ posts = [], categories = [] }) {
   return (
     <Layout>
       <Head>
-        <title>Blog | RELUXE Med Spa</title>
-        <meta name="description" content="Latest news and guides from RELUXE Med Spa." />
+        <title>Med Spa Blog | Skincare Tips & Injectable Guides | RELUXE Westfield & Carmel</title>
+        <meta name="description" content="Expert guides on Botox, facials, laser treatments, and skincare from RELUXE Med Spa. Tips and advice from our providers in Westfield and Carmel, Indiana." />
+        <link rel="canonical" href="https://reluxemedspa.com/blog" />
       </Head>
 
       <HeaderTwo title="RELUXE Blog" subtitle={`${list.length} posts`} />
@@ -61,8 +62,9 @@ export default function BlogIndex({ posts = [], categories = [] }) {
 
 export async function getStaticProps() {
   const WP_API =
+    process.env.WP_API_ENDPOINT ||
     process.env.WP_API ||
-    'https://wordpress-74434-5742908.cloudwaysapps.com/wp-json/wp/v2';
+    'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-json/wp/v2';
 
   const safeJson = async (url, fallback = []) => {
     try {

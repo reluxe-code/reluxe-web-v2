@@ -143,11 +143,76 @@ export default function LocationDetail({ location, staff, deals = [] }) {
         { question: 'Do you take gift cards or financing?', answer: 'Yes—RELUXE accepts SpaFinder gift cards and offers Cherry payment plans for eligible purchases.' },
       ]
 
+  const cityName = f.city || title.replace('RELUXE Med Spa ', '');
+  const stateName = f.state || 'IN';
+  const seoTitle = `RELUXE Med Spa ${cityName}, ${stateName} | Botox, Facials & Aesthetic Treatments`;
+  const seoDesc = `Visit RELUXE Med Spa in ${cityName}, ${stateName}. Expert Botox, fillers, facials, laser treatments & body contouring. ${f.fullAddress ? f.fullAddress + '.' : ''} Call ${f.phone || '(317) 763-1142'} to book.`;
+  const pageUrl = `https://reluxemedspa.com/locations/${location.slug}`;
+  const seoImage = location.featuredImage?.node?.sourceUrl || 'https://reluxemedspa.com/images/locations/location-hero.jpg';
+
+  const localBusinessSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalBusiness',
+    name: `RELUXE Med Spa ${cityName}`,
+    image: seoImage,
+    url: pageUrl,
+    telephone: f.phone || '(317) 763-1142',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: f.fullAddress || '',
+      addressLocality: f.city || cityName,
+      addressRegion: f.state || 'IN',
+      postalCode: f.zip || '',
+      addressCountry: 'US',
+    },
+    ...(f.locationMap?.latitude && f.locationMap?.longitude && {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: f.locationMap.latitude,
+        longitude: f.locationMap.longitude,
+      },
+    }),
+    openingHoursSpecification: ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+      .filter(day => hours[day] && hours[day] !== 'Closed')
+      .map(day => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: day.charAt(0).toUpperCase() + day.slice(1),
+        opens: hours[day]?.split('–')?.[0]?.trim() || '',
+        closes: hours[day]?.split('–')?.[1]?.trim() || '',
+      })),
+    priceRange: '$$',
+    medicalSpecialty: 'Dermatology',
+  };
+
+  const faqSchema = faqs.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
+  } : null;
+
   return (
     <>
     <ForceLocation loc={slug} />
       <Head>
-        <title>RELUXE Med Spa {title} | Expert Botox, Facials & Aesthetic Treatments in Hamilton County</title>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        <meta property="og:type" content="place" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:image" content={seoImage} />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDesc} />
+        <meta name="twitter:image" content={seoImage} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
+        {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       </Head>
 
       <HeaderTwo />

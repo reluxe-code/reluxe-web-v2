@@ -24,13 +24,51 @@ function FancyTitle({ raw = '' }) {
 export default function PostPage({ post, featuredUrl, publishedDate }) {
   if (!post) return <Layout><p className="p-8">Post not found.</p></Layout>;
 
-  const plainExcerpt = (post.excerpt?.rendered || '').replace(/<[^>]+>/g, '');
+  const plainExcerpt = (post.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
+  const plainTitle = (post.title?.rendered || '').replace(/<[^>]+>/g, '');
+  const seoTitle = `${plainTitle} | RELUXE Med Spa Blog`;
+  const pageUrl = `https://reluxemedspa.com/blog/${post.slug}`;
+  const seoImage = featuredUrl || 'https://reluxemedspa.com/images/blog/blog-hero.jpg';
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: plainTitle,
+    description: plainExcerpt,
+    image: seoImage,
+    datePublished: post.date,
+    dateModified: post.modified || post.date,
+    author: {
+      '@type': 'Organization',
+      name: 'RELUXE Med Spa',
+      url: 'https://reluxemedspa.com',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'RELUXE Med Spa',
+      url: 'https://reluxemedspa.com',
+      logo: { '@type': 'ImageObject', url: 'https://reluxemedspa.com/images/logo.png' },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+  };
 
   return (
     <Layout>
       <Head>
-        <title>{post.title?.rendered} | RELUXE Med Spa</title>
+        <title>{seoTitle}</title>
         <meta name="description" content={plainExcerpt} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={plainExcerpt} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:image" content={seoImage} />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={plainExcerpt} />
+        <meta name="twitter:image" content={seoImage} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       </Head>
 
       <HeaderTwo

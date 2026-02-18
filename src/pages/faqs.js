@@ -37,10 +37,25 @@ export default function FAQPage() {
     return () => window.removeEventListener('resize', updateArrows)
   }, [])
 
+  // Build FAQ schema from all sections
+  const allFaqs = sections.flatMap(sec => (faqData[sec] || []))
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: allFaqs.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  }
+
   return (
     <Layout>
       <Head>
-        <title>FAQs | RELUXE Med Spa</title>
+        <title>FAQs | RELUXE Med Spa in Westfield & Carmel, IN</title>
+        <meta name="description" content="Frequently asked questions about RELUXE Med Spa. Learn about Botox, facials, injectables, booking, cancellations, and more at our Westfield & Carmel locations." />
+        <link rel="canonical" href="https://reluxemedspa.com/faqs" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       </Head>
 
       {/* Hero */}

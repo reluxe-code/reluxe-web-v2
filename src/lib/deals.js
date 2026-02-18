@@ -1,9 +1,11 @@
 // src/lib/deals.js
 // Isomorphic fetch of RELUXE deals from WP; caches (SSR + browser)
 
-const WP_BASE = 'https://wordpress-74434-5742908.cloudwaysapps.com/cms';
+const WP_API = process.env.WP_API_ENDPOINT
+  || process.env.WP_API
+  || 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-json/wp/v2';
 const ENDPOINT =
-  `${WP_BASE}/wp-json/wp/v2/monthly_special` +
+  `${WP_API}/monthly_special` +
   '?per_page=50&orderby=date&order=desc' +
   '&acf_format=standard' +
   '&_fields=id,link,slug,status,date,modified,title,acf';

@@ -6,12 +6,22 @@ export default function AboutPage() {
   return (
     <>
       <Head>
-        <title>About RELUXE Med Spa | Carmel & Westfield</title>
+        <title>About RELUXE Med Spa | Luxury Aesthetics in Carmel & Westfield, IN</title>
         <meta
           name="description"
-          content="RELUXE Med Spa in Carmel and Westfield is redefining luxury in aesthetics. Fun, fresh, bold — with expert injectors, advanced tech, and natural results you’ll love."
+          content="RELUXE Med Spa in Carmel and Westfield is redefining luxury in aesthetics. Fun, fresh, bold — with expert injectors, advanced tech, and natural results you'll love."
         />
         <link rel="canonical" href="https://reluxemedspa.com/about" />
+        <meta property="og:title" content="About RELUXE Med Spa | Luxury Aesthetics in Carmel & Westfield, IN" />
+        <meta property="og:description" content="RELUXE Med Spa in Carmel and Westfield is redefining luxury in aesthetics. Fun, fresh, bold — with expert injectors, advanced tech, and natural results you'll love." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://reluxemedspa.com/about" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/about/hero-team.jpg" />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About RELUXE Med Spa | Luxury Aesthetics in Carmel & Westfield, IN" />
+        <meta name="twitter:description" content="RELUXE Med Spa in Carmel and Westfield is redefining luxury in aesthetics. Fun, fresh, bold — with expert injectors, advanced tech, and natural results you'll love." />
+        <meta name="twitter:image" content="https://reluxemedspa.com/images/about/hero-team.jpg" />
       </Head>
 
       <HeaderTwo />

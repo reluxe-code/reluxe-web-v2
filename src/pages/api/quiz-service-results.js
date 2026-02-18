@@ -3,27 +3,7 @@
 // Matches behavior/style of /pages/api/spf-quiz.js
 // ✅ Adds attribution capture to email (UTMs, click IDs, first landing URL, referrer, device, duration, UA)
 
-import nodemailer from 'nodemailer'
-
-function safeJson(obj) {
-  try { return JSON.stringify(obj, null, 2) } catch { return String(obj) }
-}
-
-function parseToList(to) {
-  return String(to || '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean)
-}
-
-function escHtml(s) {
-  return String(s || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
+import { getSmtpConfig, parseToList, escHtml, safeJson } from '@/lib/email'
 
 function maybeLink(url) {
   const u = String(url || '')
@@ -102,40 +82,15 @@ export default async function handler(req, res) {
       smsConsent: Boolean(consent?.sms),
     }
 
-    const {
-      SMTP_HOST,
-      SMTP_PORT,
-      SMTP_USER,
-      SMTP_PASS,
-
-      // new preferred names
-      MAIL_FROM,
-      MAIL_TO,
-
-      // backwards compatibility
-      SMTP_FROM,
-      QUIZ_NOTIFY_TO,
-    } = process.env
-
-    const resolvedTo = MAIL_TO || QUIZ_NOTIFY_TO
-    const resolvedFrom = MAIL_FROM || SMTP_FROM || SMTP_USER
-
-    if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !resolvedTo) {
+    const smtp = getSmtpConfig()
+    if (!smtp || !smtp.to) {
       return res.status(500).json({
         ok: false,
-        error:
-          'Missing SMTP env vars. Need SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and MAIL_TO (or QUIZ_NOTIFY_TO). MAIL_FROM (or SMTP_FROM) optional.',
+        error: 'Missing SMTP env vars. Need SMTP_HOST, SMTP_USER, SMTP_PASS, and MAIL_TO.',
       })
     }
 
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: Number(SMTP_PORT) === 465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-    })
-
-    const toList = parseToList(resolvedTo)
+    const toList = parseToList(smtp.to)
 
     const recLines = Array.isArray(recommendations) && recommendations.length
       ? recommendations
@@ -306,8 +261,8 @@ ${safeJson(answers)}
       </div>
     `
 
-    await transporter.sendMail({
-      from: resolvedFrom,
+    await smtp.transporter.sendMail({
+      from: smtp.from,
       to: toList,
       subject,
       text: textBody,

@@ -23,7 +23,7 @@ export const LOCATIONS = [
     label: 'Carmel, IN',
     slugPrefix: '/services',
     existsNote: 'South Carmel, North Indy off of US-31 & 106th Street exit',
-    address: 'Carmel, IN)',
+    address: '10485 N Pennsylvania St, Carmel, IN 46280',
     phone: '(317) 763-1142',
     mapUrl: 'https://maps.google.com/?q=RELUXE+Med+Spa+Carmel',
     parking: 'Free lot parking available.',

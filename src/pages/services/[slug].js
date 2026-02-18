@@ -10,6 +10,7 @@
 // - UPDATED: PricingMatrix now supports per-section header labels via sec.headers.{single,pkg,member}
 
 import { useMemo, useState, useRef, Fragment } from 'react';
+import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import HeaderTwo from '@/components/header/header-2';
@@ -1667,8 +1668,81 @@ export default function ServicePage({ service }) {
     return interleaveCTAs(sorted, s);
   }, [blocks, s.blockPriorities, s?.autoCTA]);
 
+  const siteUrl = 'https://reluxemedspa.com';
+  const pageUrl = `${siteUrl}/services/${s.slug}`;
+  const seoTitle = s.seo?.title || `${s.name} in Westfield & Carmel, IN | RELUXE Med Spa`;
+  const seoDesc = s.seo?.description || s.tagline
+    || `${s.name} by expert providers at RELUXE Med Spa in Westfield & Carmel, Indiana. Book your consultation today.`;
+  const seoImage = s.seo?.image || s.images?.ctaBanner || heroImg || `${siteUrl}/images/social-preview.png`;
+  const seoImageUrl = seoImage?.startsWith('http') ? seoImage : `${siteUrl}${seoImage}`;
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: s.name,
+    description: seoDesc,
+    url: pageUrl,
+    image: seoImageUrl,
+    provider: {
+      '@type': 'MedicalBusiness',
+      name: 'RELUXE Med Spa',
+      url: siteUrl,
+      telephone: '+1-317-763-1142',
+      address: [
+        { '@type': 'PostalAddress', streetAddress: '514 E State Road 32', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074' },
+        { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280' },
+      ],
+    },
+    areaServed: [
+      { '@type': 'City', name: 'Westfield', '@id': 'https://en.wikipedia.org/wiki/Westfield,_Indiana' },
+      { '@type': 'City', name: 'Carmel', '@id': 'https://en.wikipedia.org/wiki/Carmel,_Indiana' },
+    ],
+    ...(s.pricing?.single ? { offers: { '@type': 'Offer', priceCurrency: 'USD', price: parseFloat(s.pricing.single.replace(/[^0-9.]/g, '')) || undefined, availability: 'https://schema.org/InStock' } } : {}),
+  };
+
+  const faqSchema = Array.isArray(s.faq) && s.faq.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: s.faq.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  } : null;
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Services', item: `${siteUrl}/services` },
+      { '@type': 'ListItem', position: 3, name: s.name, item: pageUrl },
+    ],
+  };
+
   return (
     <>
+      <Head>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <link rel="canonical" href={pageUrl} />
+
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:image" content={seoImageUrl} />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDesc} />
+        <meta name="twitter:image" content={seoImageUrl} />
+
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }} />
+        {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      </Head>
       <HeaderTwo />
 
       {orderedBlocks.map(b => <div key={b.key}>{b.render()}</div>)}

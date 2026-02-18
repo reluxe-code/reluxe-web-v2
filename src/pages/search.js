@@ -88,6 +88,7 @@ export default function SearchPage() {
           content="Search RELUXE Med Spa services, conditions, events, locations, and blog guides."
         />
         <link rel="canonical" href="https://reluxemedspa.com/search" />
+        <meta name="robots" content="noindex, follow" />
       </Head>
 
       <HeaderTwo />

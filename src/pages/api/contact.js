@@ -1,6 +1,6 @@
 // src/pages/api/contact.js
 import { z } from 'zod';
-import nodemailer from 'nodemailer';
+import { getSmtpConfig, escHtml } from '@/lib/email';
 
 // -------- Validation (no captcha) --------
 const schema = z.object({
@@ -47,23 +47,8 @@ async function saveToAirtable({ name, email, phone, message, location, meta }) {
 
 // --- Email via SMTP (optional) ---
 async function sendEmail({ name, email, phone, message, location, meta }) {
-  const {
-    SMTP_HOST,
-    SMTP_PORT = '587',
-    SMTP_USER,
-    SMTP_PASS,
-    MAIL_FROM = 'RELUXE Website <help@reluxemedspa.com>',
-    MAIL_TO = 'help@reluxemedspa.com',
-  } = process.env;
-
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return;
-
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: Number(SMTP_PORT) === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-  });
+  const smtp = getSmtpConfig();
+  if (!smtp) return;
 
   const subject = `New website contact${location ? ` — ${location}` : ''}: ${name}`;
 
@@ -71,37 +56,29 @@ async function sendEmail({ name, email, phone, message, location, meta }) {
     <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6">
       <h2 style="margin:0 0 12px">New Contact Submission</h2>
       <table cellpadding="6" cellspacing="0" style="border-collapse:collapse">
-        <tr><td><b>Name</b></td><td>${escapeHtml(name)}</td></tr>
-        <tr><td><b>Email</b></td><td>${escapeHtml(email)}</td></tr>
-        <tr><td><b>Phone</b></td><td>${escapeHtml(phone || '')}</td></tr>
-        <tr><td><b>Location</b></td><td>${escapeHtml(location || '')}</td></tr>
-        <tr><td valign="top"><b>Message</b></td><td>${escapeHtml(message).replace(/\n/g, '<br/>')}</td></tr>
+        <tr><td><b>Name</b></td><td>${escHtml(name)}</td></tr>
+        <tr><td><b>Email</b></td><td>${escHtml(email)}</td></tr>
+        <tr><td><b>Phone</b></td><td>${escHtml(phone || '')}</td></tr>
+        <tr><td><b>Location</b></td><td>${escHtml(location || '')}</td></tr>
+        <tr><td valign="top"><b>Message</b></td><td>${escHtml(message).replace(/\n/g, '<br/>')}</td></tr>
       </table>
       <hr style="margin:16px 0;border:none;border-top:1px solid #eee" />
       <div style="color:#666;font-size:12px">
-        <div><b>Page:</b> ${escapeHtml(meta?.url || '')}</div>
-        <div><b>IP:</b> ${escapeHtml(meta?.ip || '')}</div>
-        <div><b>UA:</b> ${escapeHtml(meta?.ua || '')}</div>
+        <div><b>Page:</b> ${escHtml(meta?.url || '')}</div>
+        <div><b>IP:</b> ${escHtml(meta?.ip || '')}</div>
+        <div><b>UA:</b> ${escHtml(meta?.ua || '')}</div>
         <div><b>Time:</b> ${new Date().toLocaleString()}</div>
       </div>
     </div>
   `;
 
-  await transporter.sendMail({
-    from: MAIL_FROM,
-    to: MAIL_TO,
+  await smtp.transporter.sendMail({
+    from: smtp.from,
+    to: smtp.to,
     replyTo: email,
     subject,
     html,
   });
-}
-
-function escapeHtml(str = '') {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
 
 export default async function handler(req, res) {

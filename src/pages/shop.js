@@ -9,6 +9,8 @@ export default function ShopPage() {
     <>
       <Head>
         <title>Shop Skincare & Payments | RELUXE Med Spa</title>
+        <meta name="description" content="Shop professional skincare from RELUXE Med Spa. Browse medical-grade products, make payments, and manage your account. Serving Westfield & Carmel, IN." />
+        <link rel="canonical" href="https://reluxemedspa.com/shop" />
       </Head>
       <HeaderTwo />
       {/* 🔥 Static hero image full width, flush with header */}

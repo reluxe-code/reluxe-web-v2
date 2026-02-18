@@ -211,11 +211,45 @@ export default function StaffProfile({ person, rotationKey }) {
   const availabilityHTML = formatAvailabilityHTML(availability)
   const specialtiesHTML  = formatSpecialtiesHTML(specialties)
 
+  const seoTitle = `${person.title}${f?.stafftitle ? `, ${f.stafftitle}` : ''} | RELUXE Med Spa Team`;
+  const seoDesc = `Meet ${person.title}${f?.stafftitle ? `, ${f.stafftitle}` : ''} at RELUXE Med Spa in Carmel & Westfield, IN.${specialties.length ? ` Specializing in ${specialties.slice(0,3).map(s=>s.specialty).join(', ')}.` : ''} Book your appointment today.`;
+  const pageUrl = `https://reluxemedspa.com/team/${person.slug}`;
+  const seoImage = heroImageUrl || 'https://reluxemedspa.com/images/team/team-hero.jpg';
+
+  const personSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: person.title,
+    jobTitle: f?.stafftitle || undefined,
+    image: seoImage,
+    url: pageUrl,
+    worksFor: {
+      '@type': 'MedicalBusiness',
+      name: 'RELUXE Med Spa',
+      url: 'https://reluxemedspa.com',
+    },
+    ...(specialties.length && {
+      knowsAbout: specialties.map(s => s.specialty).filter(Boolean),
+    }),
+  };
+
   return (
     <>
       <Head>
-        <title>{person.title} | RELUXE Team</title>
-        <meta name="description" content={`${person.title} — ${f?.stafftitle || ''} at RELUXE Med Spa`} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:image" content={seoImage} />
+        <meta property="og:site_name" content="RELUXE Med Spa" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDesc} />
+        <meta name="twitter:image" content={seoImage} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
       </Head>
 
       <HeaderTwo />

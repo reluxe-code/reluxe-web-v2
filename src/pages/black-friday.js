@@ -14,6 +14,7 @@ export default function BlackFridayArchivePage() {
           name="description"
           content="Our Black Friday & Cyber Monday event has ended. See the latest monthly deals and specials at RELUXE Med Spa."
         />
+        <meta name="robots" content="noindex, follow" />
         <link rel="canonical" href="https://reluxemedspa.com/black-friday" />
 
         {/* Open Graph */}

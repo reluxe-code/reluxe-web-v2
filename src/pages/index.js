@@ -278,6 +278,7 @@ export default function HomePage({
           property="og:image"
           content="https://reluxemedspa.com/images/social-preview.png"
         />
+        <link rel="canonical" href="https://reluxemedspa.com" />
         <meta property="og:url" content="https://reluxemedspa.com" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="RELUXE Med Spa" />
