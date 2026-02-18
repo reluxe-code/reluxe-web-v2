@@ -1,12 +1,12 @@
 // src/pages/team/index.js
-import client from '@/lib/apollo'
 import Head from 'next/head'
 import HeaderTwo from '@/components/header/header-2'
 import Link from 'next/link'
 import Image from 'next/image'
-import { GET_STAFF_LIST } from '@/lib/queries/getStaffList'
 import { CheckCircleIcon } from '@heroicons/react/24/solid'
 import StaffCard from '@/components/team/StaffCard'
+import { getServiceClient } from '@/lib/supabase'
+import { toWPStaffShape } from '@/lib/staff-helpers'
 
 // -------------------------------------------------------------
 // Turn this ON temporarily if you want to see category + subtitle
@@ -133,11 +133,19 @@ function groupStaff(staffList = []) {
 }
 
 export async function getStaticProps() {
-  const { data } = await client.query({ query: GET_STAFF_LIST })
+  const sb = getServiceClient()
+  const { data } = await sb
+    .from('staff')
+    .select('*')
+    .eq('status', 'published')
+    .order('sort_order')
+    .order('name')
+
+  // Transform to WP GraphQL shape so StaffCard + deriveSubtitle work unchanged
+  const staffList = (data || []).map(toWPStaffShape)
+
   return {
-    props: {
-      staffList: data?.staffs?.nodes || [],
-    },
+    props: { staffList },
   }
 }
 
@@ -364,7 +372,7 @@ export default function TeamPage({ staffList }) {
                       </div>
                     )}
 
-                    <StaffCard staff={staff} />
+                    <StaffCard staff={staff} linked />
                   </Link>
                 )
               })}

@@ -37,10 +37,10 @@ export default function NotFoundPage() {
               {/* Quick actions */}
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Link
-                  href="/"
+                  href="/book"
                   className="inline-flex items-center rounded-md bg-black px-4 py-2 text-white font-semibold hover:bg-neutral-900 transition"
                 >
-                  Go to Home
+                  Book Now
                 </Link>
                 <Link
                   href="/services"
@@ -49,10 +49,16 @@ export default function NotFoundPage() {
                   Browse Services
                 </Link>
                 <Link
-                  href="/book"
+                  href="/deals"
                   className="inline-flex items-center rounded-md border px-4 py-2 font-medium hover:bg-gray-100 transition"
                 >
-                  Book Now
+                  Current Deals
+                </Link>
+                <Link
+                  href="/memberships"
+                  className="inline-flex items-center rounded-md border px-4 py-2 font-medium hover:bg-gray-100 transition"
+                >
+                  Memberships
                 </Link>
               </div>
 

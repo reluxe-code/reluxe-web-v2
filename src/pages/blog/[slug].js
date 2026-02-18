@@ -1,7 +1,9 @@
+// src/pages/blog/[slug].js
 import Head from 'next/head';
 import Image from 'next/image';
 import Layout from '@/components/layout/layout';
 import HeaderTwo from '@/components/header/header-2';
+import { getServiceClient } from '@/lib/supabase';
 
 function FancyTitle({ raw = '' }) {
   const words = String(raw).split(/\s+/).filter(Boolean);
@@ -21,14 +23,14 @@ function FancyTitle({ raw = '' }) {
   );
 }
 
-export default function PostPage({ post, featuredUrl, publishedDate }) {
+export default function PostPage({ post, publishedDate }) {
   if (!post) return <Layout><p className="p-8">Post not found.</p></Layout>;
 
-  const plainExcerpt = (post.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
-  const plainTitle = (post.title?.rendered || '').replace(/<[^>]+>/g, '');
+  const plainTitle = post.title || '';
+  const plainExcerpt = (post.excerpt || '').replace(/<[^>]+>/g, '').trim();
   const seoTitle = `${plainTitle} | RELUXE Med Spa Blog`;
   const pageUrl = `https://reluxemedspa.com/blog/${post.slug}`;
-  const seoImage = featuredUrl || 'https://reluxemedspa.com/images/blog/blog-hero.jpg';
+  const seoImage = post.featured_image || 'https://reluxemedspa.com/images/blog/blog-hero.jpg';
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -36,8 +38,8 @@ export default function PostPage({ post, featuredUrl, publishedDate }) {
     headline: plainTitle,
     description: plainExcerpt,
     image: seoImage,
-    datePublished: post.date,
-    dateModified: post.modified || post.date,
+    datePublished: post.published_at,
+    dateModified: post.updated_at || post.published_at,
     author: {
       '@type': 'Organization',
       name: 'RELUXE Med Spa',
@@ -72,17 +74,17 @@ export default function PostPage({ post, featuredUrl, publishedDate }) {
       </Head>
 
       <HeaderTwo
-        title={<FancyTitle raw={post.title?.rendered || ''} />}
+        title={<FancyTitle raw={plainTitle} />}
         subtitle={publishedDate}
-        image={featuredUrl || '/images/blog/blog-hero.jpg'}
+        image={post.featured_image || '/images/blog/blog-hero.jpg'}
       />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {featuredUrl ? (
+        {post.featured_image ? (
           <div className="relative w-full h-64 mb-8 rounded-lg overflow-hidden shadow-lg">
             <Image
-              src={featuredUrl}
-              alt={post.title?.rendered || 'Post image'}
+              src={post.featured_image}
+              alt={plainTitle || 'Post image'}
               fill
               sizes="100vw"
               style={{ objectFit: 'cover' }}
@@ -92,7 +94,7 @@ export default function PostPage({ post, featuredUrl, publishedDate }) {
 
         <article
           className="prose prose-lg mx-auto"
-          dangerouslySetInnerHTML={{ __html: post.content?.rendered || '' }}
+          dangerouslySetInnerHTML={{ __html: post.content || '' }}
         />
       </main>
     </Layout>
@@ -100,55 +102,38 @@ export default function PostPage({ post, featuredUrl, publishedDate }) {
 }
 
 export async function getStaticPaths() {
-  const WP_API = process.env.WP_API;
-  if (!WP_API) {
-    console.warn('WP_API env not set — skipping /blog export');
-    return { paths: [], fallback: false }; // required for static export
-  }
-  try {
-    const paths = [];
-    let page = 1;
-    while (true) {
-      const res = await fetch(`${WP_API}/posts?_fields=slug&per_page=100&page=${page}`);
-      if (!res.ok) break;
-      const chunk = await res.json();
-      if (!Array.isArray(chunk) || chunk.length === 0) break;
-      for (const p of chunk) if (p?.slug) paths.push({ params: { slug: p.slug } });
-      page += 1;
-    }
-    return { paths, fallback: false }; // no fallback allowed with output:'export'
-  } catch (e) {
-    console.warn('Failed to fetch slugs for /blog:', e);
-    return { paths: [], fallback: false };
-  }
+  const sb = getServiceClient();
+  const { data: posts } = await sb
+    .from('blog_posts')
+    .select('slug')
+    .eq('status', 'published');
+
+  const paths = (posts || [])
+    .filter((p) => p?.slug)
+    .map((p) => ({ params: { slug: p.slug } }));
+
+  return { paths, fallback: false };
 }
 
 export async function getStaticProps({ params }) {
-  const WP_API = process.env.WP_API;
-  if (!WP_API) return { notFound: true };
+  const sb = getServiceClient();
+  const { data: posts } = await sb
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .limit(1);
 
-  try {
-    const postRes = await fetch(
-      `${WP_API}/posts?slug=${encodeURIComponent(params.slug)}&_embed`
-    );
-    if (!postRes.ok) return { notFound: true };
-    const data = await postRes.json();
-    const post = Array.isArray(data) ? data[0] : null;
-    if (!post) return { notFound: true };
+  const post = posts?.[0] || null;
+  if (!post) return { notFound: true };
 
-    const featuredUrl =
-      post._embedded?.['wp:featuredmedia']?.[0]?.source_url || null;
+  const publishedDate = post.published_at
+    ? new Date(post.published_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : '';
 
-    const publishedDate = new Date(post.date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-
-    // no ISR when exporting statically
-    return { props: { post, featuredUrl, publishedDate } };
-  } catch (e) {
-    console.warn('Failed to build /blog page:', e);
-    return { notFound: true };
-  }
+  return { props: { post, publishedDate } };
 }

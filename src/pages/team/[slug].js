@@ -1,12 +1,12 @@
 // src/pages/team/[slug].js
 
-import { gql } from '@apollo/client'
-import client from '@/lib/apollo'
 import Head from 'next/head'
 import HeaderTwo from '@/components/header/header-2'
 import dynamic from 'next/dynamic'
 import HeroSplitSection from '@/components/team/HeroSplitSection'
 import MoreAboutMeSliderSection from '@/components/team/MoreAboutMeSliderSection'
+import { getServiceClient } from '@/lib/supabase'
+import { toWPStaffShape } from '@/lib/staff-helpers'
 
 // 🚫 SSR can mismatch on browser-only code inside sliders/galleries.
 // ✅ Load ResultsSection only on the client to avoid hydration errors.
@@ -16,45 +16,19 @@ const ResultsSection = dynamic(() => import('@/components/gallery/ResultsSection
 })
 
 // —————————————————————————————————————————————
-// GraphQL (paginated slugs for getStaticPaths)
-// —————————————————————————————————————————————
-const GET_STAFF_SLUGS = gql`
-  query GetStaffSlugs($first: Int = 100, $after: String) {
-    staffs(
-      first: $first
-      after: $after
-      where: { status: PUBLISH, orderby: { field: TITLE, order: ASC } }
-    ) {
-      pageInfo { hasNextPage endCursor }
-      nodes { slug }
-    }
-  }
-`
-
-// —————————————————————————————————————————————
 // Data fetching
 // —————————————————————————————————————————————
 export async function getStaticPaths() {
-  // Pull ALL staff slugs via cursor pagination
-  let after = null
-  const slugs = []
+  const sb = getServiceClient()
+  const { data } = await sb
+    .from('staff')
+    .select('slug')
+    .eq('status', 'published')
 
-  try {
-    for (;;) {
-      const { data } = await client.query({
-        query: GET_STAFF_SLUGS,
-        variables: { first: 100, after },
-        fetchPolicy: 'no-cache',
-      })
-      const page = data?.staffs
-      if (page?.nodes?.length) slugs.push(...page.nodes.map(n => n.slug).filter(Boolean))
-      if (!page?.pageInfo?.hasNextPage) break
-      after = page.pageInfo.endCursor
-    }
-  } catch {}
+  const paths = (data || [])
+    .filter((s) => s?.slug)
+    .map((s) => ({ params: { slug: s.slug } }))
 
-  const uniq = Array.from(new Set(slugs)).filter(Boolean)
-  const paths = uniq.map((slug) => ({ params: { slug } }))
   return { paths, fallback: 'blocking' }
 }
 
@@ -68,53 +42,25 @@ function buildRotationKey(d = new Date()) {
 }
 
 export async function getStaticProps({ params }) {
-  const { data } = await client.query({
-    query: gql`
-      query GetStaffBySlug($slug: ID!) {
-        staff(id: $slug, idType: SLUG) {
-          title
-          slug
-          featuredImage { node { sourceUrl } }
-          staffFields {
-            stafftitle
-            staffbookingurl
-            stafffunfact
-            videoIntro
-            staffBio
+  const sb = getServiceClient()
+  const { data } = await sb
+    .from('staff')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .limit(1)
 
-            # ACF Relationship field named "location"
-            location {
-              ... on Location {
-                slug
-                title
-              }
-            }
+  const row = data?.[0]
+  if (!row) return { notFound: true }
 
-            transparentbg {
-              id
-              altText
-              mediaItemUrl
-              sourceUrl
-            }
-            specialties { specialty }
-            credentials { credentialItem }
-            availability { day hours }
-            socialProfiles { label url }
-          }
-        }
-      }
-    `,
-    variables: { slug: params.slug },
-    fetchPolicy: 'no-cache',
-  })
-
-  if (!data?.staff) return { notFound: true }
+  // Transform to WP shape so all downstream components work unchanged
+  const person = toWPStaffShape(row)
 
   // ✅ compute on server, serialize to client
   const rotationKey = buildRotationKey()
 
   return {
-    props: { person: data.staff, rotationKey },
+    props: { person, rotationKey },
     revalidate: 300,
   }
 }

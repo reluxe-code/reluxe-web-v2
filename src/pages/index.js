@@ -33,11 +33,11 @@ const SmartPromoModal = dynamic(
 // ✅ Configurable hero promo button
 const HERO_PROMO_CONFIG = {
   enabled: true, // master on/off switch
-  href: '/black-friday/', // link target (for today)
-  label: '🔥 Black Friday Flash Sales — See Today’s Deals',
-  // Set window when the button should be visible
-  startTime: '2025-11-27T00:01:00-05:00',
-  endTime: '2025-12-02T00:01:00-05:00',
+  href: '/deals', // link target
+  label: 'View This Month\'s Deals & Specials',
+  // Set window when the button should be visible (no time gate — always show)
+  startTime: null,
+  endTime: null,
 };
 
 export default function HomePage({
@@ -82,6 +82,7 @@ export default function HomePage({
         sameAs: [
           'https://www.instagram.com/reluxemedspa',
           'https://www.facebook.com/reluxemedspa',
+          'https://www.tiktok.com/@reluxemedspa',
         ],
         contactPoint: [
           {
@@ -264,7 +265,7 @@ export default function HomePage({
         </title>
         <meta
           name="description"
-          content="RELUXE Med Spa now in Westfield & Carmel, IN. Expert Botox, Jeuveau, Facials, Skincare, Laser Hair Removal, and Massage."
+          content="RELUXE Med Spa in Westfield & Carmel, IN. Botox from $10/unit, expert facials from $99, laser hair removal & massage. Book your free consultation today."
         />
         <meta
           property="og:title"
@@ -354,17 +355,16 @@ export default function HomePage({
       <RotatingCTABlock />
 
       <SmartPromoModal
-        id="v3-neon"
-        title="New Year, New You"
-        ctaText="See Our Deals for 2026"
+        id="v3-neon-feb"
+        title="February Specials"
+        ctaText="See This Month's Deals"
         ctaHref="/deals"
         trigger="both"
         delay={900}
         frequencyDays={30}
         include={['/']}
-        // alwaysShow
         flameSide="left"
-        month="January"
+        month="February"
       />
     </>
   );

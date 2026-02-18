@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import HeaderTwo from '../components/header/header-2'
+import { supabase } from '@/lib/supabase'
 
 const LOCAL_INDEX_URL = '/search-index.json' // optional local index (put in /public)
-const WP_SEARCH_URL = '/cms/wp-json/wp/v2/search' // WordPress REST search (pages+posts)
 
 /** Small helper for highlighting matched terms */
 function highlight(text = '', q = '') {
@@ -53,7 +53,7 @@ export default function SearchPage() {
       try {
         const [localIdx, wp] = await Promise.all([
           fetchLocalIndex(q),
-          fetchWordPress(q)
+          searchBlogPosts(q)
         ])
         if (!active) return
         setLocalResults(localIdx)
@@ -152,7 +152,7 @@ export default function SearchPage() {
               />
             )}
 
-            {/* WordPress results (blog/guides) */}
+            {/* Blog/guide results */}
             {wpResults?.length > 0 && (
               <ResultSection
                 title="From the Blog"
@@ -322,19 +322,38 @@ async function fetchLocalIndex(q) {
   }
 }
 
-/** Fetch WordPress posts/pages via the REST API search. */
-async function fetchWordPress(q) {
+/** Search blog posts via Supabase full-text search. */
+async function searchBlogPosts(q) {
   try {
-    const url = `${WP_SEARCH_URL}?search=${encodeURIComponent(q)}&per_page=10&subtype=page,post&_embed`
-    const res = await fetch(url, { cache: 'no-store' })
-    if (!res.ok) throw new Error('wp search failed')
-    const data = await res.json()
-    // WP search returns minimal objects; enhance a little
-    return (data || []).map((item) => ({
-      title: item.title,
-      url: item.url || item.link || '#',
-      snippet: item._embedded?.self?.[0]?.excerpt?.rendered || item._embedded?.self?.[0]?.yoast_head_json?.description || '',
-      type: (item.subtype || 'Post').replace(/^\w/, (c) => c.toUpperCase()),
+    // Use the search_blog_posts RPC function if available, otherwise fall back to ilike
+    const { data, error } = await supabase.rpc('search_blog_posts', {
+      search_query: q,
+      result_limit: 10,
+    })
+
+    if (error) {
+      // Fallback: simple ilike search
+      const { data: fallbackData } = await supabase
+        .from('blog_posts')
+        .select('id, slug, title, excerpt')
+        .eq('status', 'published')
+        .or(`title.ilike.%${q}%,excerpt.ilike.%${q}%,content.ilike.%${q}%`)
+        .limit(10)
+
+      return (fallbackData || []).map((post) => ({
+        title: post.title,
+        url: `/blog/${post.slug}`,
+        snippet: post.excerpt || '',
+        type: 'Blog',
+        domain: 'Blog',
+      }))
+    }
+
+    return (data || []).map((post) => ({
+      title: post.title,
+      url: `/blog/${post.slug}`,
+      snippet: post.excerpt || '',
+      type: 'Blog',
       domain: 'Blog',
     }))
   } catch {

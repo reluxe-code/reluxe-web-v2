@@ -1,6 +1,6 @@
 // pages/men.js
 import Head from 'next/head'
-import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import HeaderTwo from '../components/header/header-2'
 import SeoJsonLd from '../components/SeoJsonLd'
@@ -21,7 +21,7 @@ export default function MenPage() {
     <>
       <Head>
         <title>Men's Med Spa Services in Carmel & Westfield, IN | RELUXE Med Spa</title>
-        <meta name="description" content="Men's injectables, facials, HydraFacial/Glo2Facial, laser hair removal (back, chest, neck), and massage at RELUXE. Discreet, natural results that boost confidence." />
+        <meta name="description" content="Men's Botox, facials, laser hair removal & massage at RELUXE Med Spa in Carmel & Westfield, IN. Discreet, natural results. Book your low-pressure consultation today." />
         <link rel="canonical" href="https://reluxemedspa.com/men" />
         <meta property="og:title" content="Men's Med Spa Services | RELUXE Med Spa" />
         <meta property="og:description" content="The secret to looking sharp and aging gracefully. Injectables, facials, laser hair removal, and massage—tailored for men." />
@@ -34,6 +34,15 @@ export default function MenPage() {
         <meta name="twitter:description" content="Discreet, natural results that boost confidence. Injectables, facials, laser hair removal, and massage—tailored for men." />
         <meta name="twitter:image" content="https://reluxemedspa.com/images/men/facial2.jpg" />
       </Head>
+      <SeoJsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://reluxemedspa.com' },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://reluxemedspa.com/services' },
+          { '@type': 'ListItem', position: 3, name: "Men's Services", item: 'https://reluxemedspa.com/men' },
+        ],
+      }} />
       <SeoJsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
@@ -73,7 +82,7 @@ export default function MenPage() {
             </div>
             <div className="lg:col-span-5">
               <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl">
-                <img src="/images/men/facial2.jpg" alt="Men’s services at RELUXE" className="h-full w-full object-cover" />
+                <Image src="/images/men/facial2.jpg" alt="Men's med spa facial services at RELUXE in Westfield and Carmel, Indiana" fill className="object-cover" priority sizes="(max-width: 1024px) 100vw, 40vw" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
                   <p className="text-xs text-neutral-200">Photos represent service categories available at RELUXE.</p>
                 </div>
@@ -153,10 +162,18 @@ export default function MenPage() {
             </div>
             <div className="lg:col-span-6 order-1 lg:order-2">
               <div className="relative grid grid-cols-2 gap-4">
-                <img src="/images/men/tox.jpg" alt="Men’s injectable results" className="rounded-2xl border border-neutral-200 shadow-sm" />
-                <img src="/images/men/face.jpg" alt="HydraFacial / Glo2Facial for men" className="rounded-2xl border border-neutral-200 shadow-sm" />
-                <img src="/images/men/lhr.jpg" alt="Laser hair removal for men" className="rounded-2xl border border-neutral-200 shadow-sm" />
-                <img src="/images/men/massage.jpg" alt="Massage therapy for men" className="rounded-2xl border border-neutral-200 shadow-sm" />
+                <div className="relative aspect-square rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+                  <Image src="/images/men/tox.jpg" alt="Men's Botox and injectable results at RELUXE Med Spa" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
+                </div>
+                <div className="relative aspect-square rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+                  <Image src="/images/men/face.jpg" alt="HydraFacial and Glo2Facial for men at RELUXE" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
+                </div>
+                <div className="relative aspect-square rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+                  <Image src="/images/men/lhr.jpg" alt="Laser hair removal for men - back, chest, neck at RELUXE" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
+                </div>
+                <div className="relative aspect-square rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+                  <Image src="/images/men/massage.jpg" alt="Massage therapy for men at RELUXE Med Spa" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
+                </div>
               </div>
             </div>
           </div>
@@ -232,8 +249,8 @@ export default function MenPage() {
 function ServiceCard({ title, subtitle, copy, image, href }) {
   return (
     <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]">
-      <div className="aspect-[4/3] w-full overflow-hidden">
-        <img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
+        <Image src={image} alt={`${title} for men at RELUXE Med Spa`} fill className="object-cover transition duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
       </div>
       <div className="p-6">
         <h4 className="text-xl font-bold tracking-tight">{title}</h4>

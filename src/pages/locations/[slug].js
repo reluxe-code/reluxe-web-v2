@@ -1,112 +1,76 @@
 // src/pages/locations/[slug].js
 
-import { gql } from '@apollo/client'
-import client from '@/lib/apollo'
 import Head from 'next/head'
 import Link from 'next/link'
 import HeaderTwo from '@/components/header/header-2'
-import HotDealsSection from '@/components/home-page/HotDealsSection'
 import ServiceCategorySlider from '@/components/services/ServiceCategorySlider'
 import { serviceCategories } from '@/data/ServiceCategories'
-import { GET_STAFF_LIST } from '@/lib/queries/getStaffList'
 import { FiHelpCircle, FiChevronDown } from 'react-icons/fi'
 import Map from '@/components/Map'
-import LocationOverview from '@/components/locations/LocationOverview'         
-import CollaborationSection from '@/components/locations/CollaborationSection' 
+import LocationOverview from '@/components/locations/LocationOverview'
+import CollaborationSection from '@/components/locations/CollaborationSection'
 import DealsCarousel from '@/components/deals/DealsCarousel'
 import { getDealsSSR } from '@/lib/deals';
 import ForceLocation from '@/components/location/ForceLocation';
+import { getServiceClient } from '@/lib/supabase';
+import { toWPStaffShape } from '@/lib/staff-helpers';
 
 
 export async function getStaticPaths() {
-  const { data } = await client.query({
-    query: gql`
-      query {
-        locations(first: 100) {
-          nodes { slug }
-        }
-      }
-    `
-  })
-
-  const paths = data?.locations?.nodes?.map(l => ({ params: { slug: l.slug } })) || []
+  const sb = getServiceClient()
+  const { data } = await sb.from('locations').select('slug')
+  const paths = (data || []).map(l => ({ params: { slug: l.slug } }))
   return { paths, fallback: 'blocking' }
 }
 
 export async function getStaticProps({ params }) {
-  // helper: normalize any deal "locations" field into an array of slugs
-  const getDealLocationSlugs = (d = {}) => {
-    const acf = d.raw?.acf || {};
-    const raw =
-      d.locations ??
-      acf.locations ??
-      acf.location ??
-      acf.location_slugs ??
-      [];
-    const arr = Array.isArray(raw) ? raw : [raw];
-    // each entry can be a string or { slug } or { value: { slug } }
-    return arr
-      .map((x) =>
-        typeof x === 'string'
-          ? x
-          : x?.slug ?? x?.value?.slug ?? x?.value ?? ''
-      )
-      .map((s) => String(s).trim().toLowerCase())
-      .filter(Boolean);
-  };
-
-  const LOCATION_QUERY = gql`
-    query GetLocationDetail($slug: String!) {
-      locationBy(slug: $slug) {
-        title
-        slug
-        featuredImage { node { sourceUrl } }
-        locationFields {
-          fullAddress
-          city
-          state
-          zip
-          phone
-          email
-          directionssouth
-          directionsnorth
-          directions465
-          locationMap { latitude longitude }
-          hours { sunday monday tuesday wednesday thursday friday saturday }
-          faqs { question answer }
-          gallery { url { sourceUrl altText } }
-        }
-      }
-    }
-  `
-
-  const [{ data: locData }, { data: staffListData }] = await Promise.all([
-    client.query({ query: LOCATION_QUERY, variables: { slug: params.slug } }),
-    client.query({ query: GET_STAFF_LIST })
-  ])
-
-  const location  = locData.locationBy || {}
-  const staffList = staffListData.staffs?.nodes || []
-
-  // normalize page slug (from URL) for comparison
+  const sb = getServiceClient()
   const pageSlug = String(params.slug || '').trim().toLowerCase()
 
-  // helper: normalize staffFields.location (array OR single) -> array of slugs
-  const getLocationSlugs = (locField) => {
-    if (!locField) return []
-    const arr = Array.isArray(locField) ? locField : [locField]
-    return arr
-      .map(l => String(l?.slug || '').trim().toLowerCase())
-      .filter(Boolean)
+  // Fetch location + all staff in parallel
+  const [{ data: locRows }, { data: staffRows }] = await Promise.all([
+    sb.from('locations').select('*').eq('slug', pageSlug).limit(1),
+    sb.from('staff').select('*').eq('status', 'published').order('sort_order').order('name'),
+  ])
+
+  const loc = locRows?.[0]
+  if (!loc) return { notFound: true }
+
+  // Transform to WP-compatible shape for the page component
+  const location = {
+    title: loc.name || '',
+    slug: loc.slug,
+    featuredImage: loc.featured_image
+      ? { node: { sourceUrl: loc.featured_image } }
+      : null,
+    locationFields: {
+      fullAddress: loc.full_address || null,
+      city: loc.city || null,
+      state: loc.state || 'IN',
+      zip: loc.zip || null,
+      phone: loc.phone || null,
+      email: loc.email || null,
+      directionssouth: loc.directions_south || null,
+      directionsnorth: loc.directions_north || null,
+      directions465: loc.directions_465 || null,
+      locationMap: (loc.lat && loc.lng) ? { latitude: loc.lat, longitude: loc.lng } : null,
+      hours: loc.hours || {},
+      faqs: Array.isArray(loc.faqs) ? loc.faqs : [],
+      gallery: Array.isArray(loc.gallery)
+        ? loc.gallery.map(g => ({ url: { sourceUrl: g.url, altText: g.alt || '' } }))
+        : [],
+    },
   }
 
-  // filtered staff for this page's location
-  const staff = staffList.filter(s => {
-    const slugs = getLocationSlugs(s?.staffFields?.location)
-    return slugs.includes(pageSlug)
+  // Filter staff by location
+  const allStaffWP = (staffRows || []).map(toWPStaffShape)
+  const staff = allStaffWP.filter(s => {
+    const locs = s?.staffFields?.location || []
+    const arr = Array.isArray(locs) ? locs : [locs]
+    return arr.some(l => String(l?.slug || '').toLowerCase() === pageSlug)
   })
 
-  // ✅ fetch deals (same as Home) and filter to this location (if deal has locations)
+  // Fetch deals filtered to this location
   let allDeals = [];
   try {
     allDeals = await getDealsSSR();
@@ -114,13 +78,11 @@ export async function getStaticProps({ params }) {
     allDeals = [];
   }
   const locationDeals = allDeals.filter((d) => {
-    const slugs = getDealLocationSlugs(d);
-    // if a deal has no location targeting, show it everywhere
+    const slugs = Array.isArray(d.locations) ? d.locations : [];
     return slugs.length === 0 || slugs.includes(pageSlug);
   });
 
-  return { props: { location, staff, deals: locationDeals }, }
-
+  return { props: { location, staff, deals: locationDeals } }
 }
 
 export default function LocationDetail({ location, staff, deals = [] }) {
@@ -128,19 +90,19 @@ export default function LocationDetail({ location, staff, deals = [] }) {
   const title = location.title || 'RELUXE Location'
   const slug  = String(location.slug || '').toLowerCase()
 
-  // ACF hours table normalization
-  const rawHours = f.hours || []
+  // Hours normalization
+  const rawHours = f.hours || {}
   const hours    = Array.isArray(rawHours) ? (rawHours[0] || {}) : rawHours
 
   const faqs = f.faqs?.length
     ? f.faqs
     : [
         { question: 'Do you accept walk-ins?', answer: 'Appointments are preferred; walk-ins are accommodated when the schedule allows.' },
-        { question: 'I’m new—can I do a consult first?', answer: 'Yes! We offer consults to map goals and dosing. If appropriate, treatment can be done the same day.' },
-        { question: 'What services are available?', answer: 'Injectables (Botox®, Jeuveau®, fillers), facials, IPL/photofacials, laser hair removal, body contouring, and massage.' },
+        { question: 'I\u2019m new\u2014can I do a consult first?', answer: 'Yes! We offer consults to map goals and dosing. If appropriate, treatment can be done the same day.' },
+        { question: 'What services are available?', answer: 'Injectables (Botox\u00AE, Jeuveau\u00AE, fillers), facials, IPL/photofacials, laser hair removal, body contouring, and massage.' },
         { question: 'Is parking easy?', answer: 'Both our Westfield & Carmel locations have convenient, free parking on-site.' },
         { question: 'Who performs treatments?', answer: 'NP and RN injectors for injectables; licensed aestheticians for skin and lasers; licensed massage therapists for massage.' },
-        { question: 'Do you take gift cards or financing?', answer: 'Yes—RELUXE accepts SpaFinder gift cards and offers Cherry payment plans for eligible purchases.' },
+        { question: 'Do you take gift cards or financing?', answer: 'Yes\u2014RELUXE accepts SpaFinder gift cards and offers Cherry payment plans for eligible purchases.' },
       ]
 
   const cityName = f.city || title.replace('RELUXE Med Spa ', '');
@@ -177,8 +139,8 @@ export default function LocationDetail({ location, staff, deals = [] }) {
       .map(day => ({
         '@type': 'OpeningHoursSpecification',
         dayOfWeek: day.charAt(0).toUpperCase() + day.slice(1),
-        opens: hours[day]?.split('–')?.[0]?.trim() || '',
-        closes: hours[day]?.split('–')?.[1]?.trim() || '',
+        opens: hours[day]?.split('\u2013')?.[0]?.trim() || '',
+        closes: hours[day]?.split('\u2013')?.[1]?.trim() || '',
       })),
     priceRange: '$$',
     medicalSpecialty: 'Dermatology',
@@ -229,7 +191,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
               )}
               {f.phone && (
                 <p className="text-sm text-gray-600">
-                  📞 <a href={`tel:${f.phone}`} className="underline">{f.phone}</a>
+                  <a href={`tel:${f.phone}`} className="underline">{f.phone}</a>
                 </p>
               )}
               <div className="mt-6 flex flex-wrap gap-4">
@@ -249,7 +211,6 @@ export default function LocationDetail({ location, staff, deals = [] }) {
         </div>
       </section>
 
-      {/* ✅ New: Overview for BOTH locations (copy varies by slug) */}
       <LocationOverview
         id="overview"
         locationSlug={slug}
@@ -257,12 +218,11 @@ export default function LocationDetail({ location, staff, deals = [] }) {
         phone={f.phone}
       />
 
-      {/* ✅ New: Collaboration callout (Carmel only) */}
       <CollaborationSection
         locationSlug={slug}
         partnerName="House of Health"
         partnerLead="Dr. Tracy Warhop & team"
-        partnerUrl="/partners/house-of-health"   // update if you have a dedicated page or external URL
+        partnerUrl="/partners/house-of-health"
       />
 
       {/* Services Slider */}
@@ -320,7 +280,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
 
           {/* Getting Here */}
           <div id="directions" className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">🗺️ Getting Here</h2>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">Getting Here</h2>
             {f.directions465 && <p className="text-sm text-gray-600 mb-2"><strong>From 465:</strong> {f.directions465}</p>}
             {f.directionssouth && <p className="text-sm text-gray-600 mb-2"><strong>From South:</strong> {f.directionssouth}</p>}
             {f.directionsnorth && <p className="text-sm text-gray-600"><strong>From North:</strong> {f.directionsnorth}</p>}
@@ -328,7 +288,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
 
           {/* Map */}
           <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">📍 Map</h2>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">Map</h2>
             <Map lat={f.locationMap?.latitude} lng={f.locationMap?.longitude} />
           </div>
         </div>
@@ -336,7 +296,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
         {/* Gallery */}
         {f.gallery?.length > 0 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-6">📸 See What’s Happening at {title}</h2>
+            <h2 className="text-2xl font-semibold mb-6">See What&apos;s Happening at {title}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {f.gallery.map((item, idx) => (
                 <div key={idx} className="overflow-hidden rounded-xl shadow">
@@ -363,7 +323,7 @@ export default function LocationDetail({ location, staff, deals = [] }) {
             <div>
               <h2 className="text-3xl font-bold text-gray-800">Got Questions?</h2>
               <p className="text-gray-600 mt-2">
-                We’ve gathered the answers to our most common FAQs to help you prepare for your visit.
+                We&apos;ve gathered the answers to our most common FAQs to help you prepare for your visit.
               </p>
             </div>
           </div>

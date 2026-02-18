@@ -5,96 +5,111 @@ export const serviceCategories = [
     title: 'Botox, Dysport, & Jeuveau',
     image: '/images/service/categories/tox.png',
     href: '/services/tox',
-    featured: true
+    featured: true,
+    popular: true,
+    startingAt: '$10/unit',
   },
   {
     title: 'Filler',
     image: '/images/service/categories/filler.png',
     href: '/services/filler',
-    featured: true
+    featured: true,
+    startingAt: '$650',
   },
   {
     title: 'Facial Balancing',
     image: '/images/service/categories/balancing.png',
     href: '/services/facial-balancing',
-    featured: false
+    featured: false,
   },
   {
     title: 'CO₂ Laser',
     image: '/images/service/categories/co2.png',
     href: '/services/co2',
-    featured: false
+    featured: false,
   },
   {
     title: 'Skin IQ Consultation',
     image: '/images/service/categories/skiniq.png',
     href: '/services/skin-iq',
-    featured: false
+    featured: false,
+    startingAt: 'Free',
   },
   {
     title: 'CO₂ Resurfacing',
     image: '/images/service/categories/co2-3.png',
     href: '/services/co2',
-    featured: false
+    featured: false,
   },
   {
     title: 'Lasers',
     image: '/images/service/categories/laser.png',
     href: '/services/lasers',
-    featured: true
+    featured: true,
   },
   {
     title: 'Morpheus8',
     image: '/images/service/categories/m8.png',
     href: '/services/morpheus8',
-    featured: true
+    featured: true,
+    startingAt: '$800',
   },
   {
     title: 'SkinPen',
     image: '/images/service/categories/skinpen.png',
     href: '/services/skinpen',
-    featured: false
+    featured: false,
+    startingAt: '$300',
   },
   {
     title: 'Massage',
     image: '/images/service/categories/massage.png',
     href: '/services/massage',
-    featured: false
+    featured: false,
+    startingAt: '$99',
   },
   {
     title: 'Laser Hair Removal',
     image: '/images/service/categories/lhr.png',
     href: '/services/laser-hair-removal',
-    featured: true
+    featured: true,
+    popular: true,
+    startingAt: '$75/session',
   },
   {
     title: 'Facials',
     image: '/images/service/categories/signature.png',
     href: '/services/facials',
-    featured: false
+    featured: false,
+    popular: true,
+    startingAt: '$99',
   },
   {
     title: '$99 Monthly Facial',
     image: '/images/service/categories/99.png',
     href: '/services/facials',
-    featured: false
+    featured: false,
+    startingAt: '$99/mo',
   },
   {
     title: 'Glo2Facial',
     image: '/images/service/categories/glo2.png',
     href: '/services/glo2facial',
-    featured: false
+    featured: false,
+    startingAt: '$250',
   },
   {
     title: 'Hydrafacial',
     image: '/images/service/categories/hydra.png',
     href: '/services/hydrafacial',
-    featured: false
+    featured: false,
+    startingAt: '$275',
   },
   {
     title: 'Peels',
     image: '/images/service/categories/princess.png',
     href: '/services/peels',
-    featured: false
+    featured: false,
+    startingAt: '$150',
   }
 ]

@@ -1,8 +1,10 @@
 // src/pages/blog/index.js
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import Layout from '@/components/layout/layout';
 import HeaderTwo from '@/components/header/header-2';
+import { getServiceClient } from '@/lib/supabase';
 
 export default function BlogIndex({ posts = [], categories = [] }) {
   const list = Array.isArray(posts) ? posts : [];
@@ -24,7 +26,7 @@ export default function BlogIndex({ posts = [], categories = [] }) {
         <meta name="twitter:description" content="Skincare tips and injectable guides from our providers in Westfield & Carmel, IN." />
       </Head>
 
-      <HeaderTwo title="RELUXE Blog" subtitle={`${list.length} posts`} />
+      <HeaderTwo title="RELUXE Blog" subtitle={list.length > 0 ? `${list.length} posts` : 'Expert skincare tips & guides'} />
 
       <main className="max-w-5xl mx-auto px-4 py-12">
         {list.length === 0 && <p>No posts yet.</p>}
@@ -34,18 +36,30 @@ export default function BlogIndex({ posts = [], categories = [] }) {
             <li key={p.id}>
               <Link
                 href={`/blog/${p.slug}`}
-                className="block p-4 rounded-xl ring-1 ring-black/10 hover:bg-neutral-50"
+                className="block rounded-xl ring-1 ring-black/10 hover:bg-neutral-50 overflow-hidden"
               >
-                <h3
-                  className="font-semibold text-xl"
-                  dangerouslySetInnerHTML={{ __html: p?.title?.rendered || 'Untitled' }}
-                />
-                <p
-                  className="text-sm text-neutral-600"
-                  dangerouslySetInnerHTML={{
-                    __html: (p?.excerpt?.rendered || '').replace(/<[^>]+>/g, ''),
-                  }}
-                />
+                {p.featured_image && (
+                  <div className="relative w-full h-48">
+                    <Image
+                      src={p.featured_image}
+                      alt={p.title || 'Blog post'}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      style={{ objectFit: 'cover' }}
+                    />
+                  </div>
+                )}
+                <div className="p-4">
+                  <h3 className="font-semibold text-xl">{p.title || 'Untitled'}</h3>
+                  {p.excerpt && (
+                    <p className="text-sm text-neutral-600 mt-1 line-clamp-2">{p.excerpt}</p>
+                  )}
+                  {p.published_at && (
+                    <p className="text-xs text-neutral-400 mt-2">
+                      {new Date(p.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  )}
+                </div>
               </Link>
             </li>
           ))}
@@ -69,29 +83,25 @@ export default function BlogIndex({ posts = [], categories = [] }) {
 }
 
 export async function getStaticProps() {
-  const WP_API =
-    process.env.WP_API_ENDPOINT ||
-    process.env.WP_API ||
-    'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-json/wp/v2';
+  const sb = getServiceClient();
 
-  const safeJson = async (url, fallback = []) => {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) return fallback;
-      const data = await res.json();
-      return Array.isArray(data) ? data : fallback;
-    } catch {
-      return fallback;
-    }
+  const [{ data: posts }, { data: categories }] = await Promise.all([
+    sb
+      .from('blog_posts')
+      .select('id, slug, title, excerpt, featured_image, published_at')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(50),
+    sb
+      .from('categories')
+      .select('id, name, slug')
+      .order('name'),
+  ]);
+
+  return {
+    props: {
+      posts: posts || [],
+      categories: categories || [],
+    },
   };
-
-  // keep it simple for export; no ISR, just arrays or []
-  const posts = await safeJson(
-    `${WP_API}/posts?per_page=12&_fields=id,slug,title,excerpt,date`
-  );
-  const categories = await safeJson(
-    `${WP_API}/categories?per_page=100&_fields=id,name,slug,count`
-  );
-
-  return { props: { posts, categories } };
 }

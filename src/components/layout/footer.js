@@ -99,7 +99,7 @@ function Footer() {
                 <div className="footer-logo">
                   <Image
                     src="/images/logo/footer-logo.png"
-                    alt="Logo"
+                    alt="RELUXE Med Spa logo"
                     width={210}
                     height={70}
                   />
@@ -203,10 +203,9 @@ function Footer() {
                 </div>
                 <div className="md:col-span-4">
                   <ul className="footer-social-link md:mb-0 mb-[10px] flex space-x-4 justify-center md:justify-start">
-                    <li><a href="https://twitter.com/" target="_blank" rel="noreferrer">Twitter</a></li>
-                    <li><a href="https://facebook.com/reluxemedspa" target="_blank" rel="noreferrer">Facebook</a></li>
-                    <li><a href="https://instagram.com/reluxemedspa" target="_blank" rel="noreferrer">Instagram</a></li>
-                    <li><a href="https://tiktok.com/reluxemedspa" target="_blank" rel="noreferrer">TikTok</a></li>
+                    <li><a href="https://facebook.com/reluxemedspa" target="_blank" rel="noreferrer" aria-label="RELUXE Med Spa on Facebook">Facebook</a></li>
+                    <li><a href="https://instagram.com/reluxemedspa" target="_blank" rel="noreferrer" aria-label="RELUXE Med Spa on Instagram">Instagram</a></li>
+                    <li><a href="https://tiktok.com/@reluxemedspa" target="_blank" rel="noreferrer" aria-label="RELUXE Med Spa on TikTok">TikTok</a></li>
                   </ul>
                 </div>
                 <div className="md:col-span-2">

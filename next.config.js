@@ -7,9 +7,9 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     unoptimized: true, // needed for static export with next/image
-    domains: ['wordpress-74434-5742908.cloudwaysapps.com'],
+    domains: ['djmixsffpwnvgmsccrhu.supabase.co'],
     remotePatterns: [
-      { protocol: 'https', hostname: 'wordpress-74434-5742908.cloudwaysapps.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'djmixsffpwnvgmsccrhu.supabase.co', pathname: '/**' },
     ],
   },
   eslint: { ignoreDuringBuilds: true },

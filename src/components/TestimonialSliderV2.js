@@ -1,10 +1,10 @@
 // components/TestimonialSlider.js
 import PropTypes from 'prop-types';
 import dynamic from 'next/dynamic';
-import { useQuery } from '@apollo/client';
+import { useEffect, useState } from 'react';
 import * as AiIcons from 'react-icons/ai';
 import { FaQuoteRight } from 'react-icons/fa';
-import { GET_TESTIMONIALS } from '@/lib/queries/getTestimonialsv2';
+import { supabase } from '@/lib/supabase';
 import { Slide } from '@/components/swiper';
 
 // only load Swiper on the client
@@ -16,19 +16,41 @@ export default function TestimonialSlider({
   serviceFilter,
   locationFilter,
 }) {
-  const { data, loading, error } = useQuery(GET_TESTIMONIALS);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchTestimonials() {
+      try {
+        const { data, error: sbError } = await supabase
+          .from('testimonials')
+          .select('*')
+          .eq('status', 'published');
+
+        if (sbError) throw sbError;
+
+        setItems(
+          (data || []).map((t) => ({
+            provider: t.staff_name || t.author_name,
+            month: '',
+            service: '',
+            location: '',
+            review: t.quote,
+            stars: t.rating || 5,
+          }))
+        );
+      } catch (e) {
+        setError(e.message || 'Failed to load testimonials');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTestimonials();
+  }, []);
 
   if (loading) return <p>Loading testimonials…</p>;
-  if (error)   return <p className="text-red-500">Error: {error.message}</p>;
-
-  const items = data.testimonials.nodes.map(({ testimonialFields: f }) => ({
-    provider: f.staff?.[0]?.title || f.authorName,
-    month:    f.month    || '',
-    service:  f.service  || '',
-    location: f.location || '',
-    review:   f.quote,
-    stars:    f.rating   || 5,
-  }));
+  if (error) return <p className="text-red-500">Error: {error}</p>;
 
   const filtered = items.filter((item) => {
     return (
@@ -85,7 +107,7 @@ export default function TestimonialSlider({
                       )}
                     </h2>
                     <p className="testimonial-feedback text-gray-600 italic mt-2 min-h-[60px]">
-                      "{item.review}"
+                      &ldquo;{item.review}&rdquo;
                     </p>
                   </div>
                   <div className="flex mt-4 text-yellow-400 text-md">

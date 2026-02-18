@@ -53,16 +53,24 @@ export default function ServiceCategorySlider({ items = [], showOnlyFeatured = f
             <Slide key={idx}>
               <Link href={item.href} className="block text-center group">
 
-                <div className="aspect-square overflow-hidden rounded-xl shadow-lg bg-white mb-4">
+                <div className="relative aspect-square overflow-hidden rounded-xl shadow-lg bg-white mb-4">
                   <img
                     src={item.image}
-                    alt={item.title}
+                    alt={`${item.title} at RELUXE Med Spa in Westfield & Carmel, IN`}
                     className="object-cover w-full h-full transform group-hover:scale-105 transition duration-300 ease-in-out"
                   />
+                  {item.popular && (
+                    <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+                      Most Popular
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-lg font-medium text-gray-800 group-hover:text-reluxeGold transition">
                   {item.title}
                 </h3>
+                {item.startingAt && (
+                  <p className="text-sm text-gray-500 mt-1">Starting at {item.startingAt}</p>
+                )}
 
               </Link>
             </Slide>

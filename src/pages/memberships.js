@@ -20,7 +20,7 @@ const OG_IMAGE = `${SITE_URL}/images/og/memberships-og.jpg` // update if needed
 // Promo Feature Flag
 // -------------------------------
 // If you prefer manual control, set this true in January.
-const FORCE_JANUARY_PROMO = true
+const FORCE_JANUARY_PROMO = false
 
 // -------------------------------
 // Membership Data (from your images)
@@ -104,6 +104,16 @@ const breadcrumbJsonLd = {
   ],
 }
 
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+}
+
 function buildOfferCatalogJsonLd() {
   return {
     '@context': 'https://schema.org',
@@ -177,6 +187,10 @@ export default function MembershipsPage() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(offerCatalogJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </Head>
 

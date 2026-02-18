@@ -244,7 +244,8 @@ function HeaderTwo({ sticky = true }) {
                 </Link>
                 <Link
                   href="tel:+13177631142"
-                  className="hidden sm:inline-block bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition"
+                  className="inline-block bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition"
+                  aria-label="Call RELUXE Med Spa at (317) 763-1142"
                 >
                   <FiPhone className="h-5 w-5" />
                 </Link>

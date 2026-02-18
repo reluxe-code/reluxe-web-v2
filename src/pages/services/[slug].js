@@ -533,6 +533,19 @@ export default function ServicePage({ service }) {
                       ))}
                     </ul>
                   </div>
+
+                  {/* Internal links for SEO + navigation */}
+                  <div className="rounded-2xl border bg-white shadow-sm p-5">
+                    <div className="text-sm uppercase tracking-wide text-neutral-500 mb-2">Quick links</div>
+                    <ul className="space-y-2 text-sm">
+                      <li><Link href="/memberships" className="text-neutral-700 hover:text-black hover:underline">Save with VIP Membership →</Link></li>
+                      <li><Link href="/results" className="text-neutral-700 hover:text-black hover:underline">See Before & After Results →</Link></li>
+                      <li><Link href="/deals" className="text-neutral-700 hover:text-black hover:underline">Current Monthly Deals →</Link></li>
+                      {Array.isArray(s.relatedConditions) && s.relatedConditions.map((c, i) => (
+                        <li key={i}><Link href={c.href} className="text-neutral-700 hover:text-black hover:underline">{c.label} →</Link></li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
               </div>

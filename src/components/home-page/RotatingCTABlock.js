@@ -30,7 +30,7 @@ const ctas = [
       'Earn exclusive rewards & gifts',
     ],
     buttonLabel: 'Refer Now',
-    buttonLink: '#',
+    buttonLink: '/contact?ref=referral',
   },
 ]
 

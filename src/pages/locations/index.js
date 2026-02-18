@@ -5,43 +5,31 @@ import PropTypes from 'prop-types'
 import Breadcrumb from '@/components/breadcrumb'
 import HeaderTwo from '@/components/header/header-2'
 import SeoJsonLd from '@/components/SeoJsonLd'
-import { gql } from '@apollo/client'
-import client from '@/lib/apollo'
 import Link from 'next/link'
+import { getServiceClient } from '@/lib/supabase'
 
 export async function getStaticProps() {
-  const { data } = await client.query({
-    query: gql`
-      query {
-        locations(first: 100) {
-          nodes {
-            title
-            slug
-            featuredImage {
-              node {
-                sourceUrl
-              }
-            }
-            locationFields {
-              fullAddress
-              city
-              state
-              locationMap {
-                latitude
-                longitude
-              }
-            }
-          }
-        }
-      }
-    `
-  })
+  const sb = getServiceClient()
+  const { data } = await sb
+    .from('locations')
+    .select('slug, name, featured_image, full_address, city, state, lat, lng')
+    .order('name')
+
+  // Transform to WP-compatible shape for the template
+  const locations = (data || []).map((loc) => ({
+    title: loc.name,
+    slug: loc.slug,
+    featuredImage: loc.featured_image ? { node: { sourceUrl: loc.featured_image } } : null,
+    locationFields: {
+      fullAddress: loc.full_address,
+      city: loc.city,
+      state: loc.state,
+      locationMap: (loc.lat && loc.lng) ? { latitude: loc.lat, longitude: loc.lng } : null,
+    },
+  }))
 
   return {
-    props: {
-      locations: data.locations.nodes
-    },
-    
+    props: { locations },
   }
 }
 
