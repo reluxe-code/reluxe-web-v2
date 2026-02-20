@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import ReviewForm from '@/components/capture/ReviewForm';
+import ReviewForm from '../../components/capture/ReviewForm';
 
 type ExtractedData = Record<string, unknown> | null;
 type Step = 'lock' | 'capture' | 'processing' | 'review' | 'menu';

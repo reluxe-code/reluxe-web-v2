@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
-import AdminImagePreview from '@/components/dashboard/AdminImagePreview';
+import { createClient } from '../../lib/supabase/server';
+import AdminImagePreview from '../../components/dashboard/AdminImagePreview';
 
 type SubmissionRow = {
   id: string;
