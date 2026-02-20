@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../../lib/supabase/client';
 
 type TreatmentRow = {
   plan?: string | null;
@@ -41,37 +40,29 @@ export default function ReviewForm({ initialData, filePath, previewUrl, onApprov
 
   const saveToSupabase = async () => {
     setSaving(true);
-    let { error } = await supabase.from('form_submissions').insert([
-      {
-        form_type: data.form_type || 'Aesthetician Plan',
-        raw_image_path: filePath,
-        extracted_data: data,
-        status: 'approved',
-      },
-    ]);
-
-    // Backward compatibility for environments where raw_image_path migration is not applied yet.
-    if (error && /raw_image_path/i.test(error.message || '')) {
-      const fallback = await supabase.from('form_submissions').insert([
-        {
-          form_type: data.form_type || 'Aesthetician Plan',
-          raw_image_url: filePath,
-          extracted_data: data,
-          status: 'approved',
-        },
-      ]);
-      error = fallback.error;
-    }
-
-    setSaving(false);
-
-    if (!error) {
+    try {
+      const resp = await fetch('/capture/api/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          formType: data.form_type || 'Aesthetician Plan',
+          filePath,
+          extractedData: data,
+        }),
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(json?.error || 'Approve failed');
+      }
       alert('Form Saved Successfully!');
       onApprove();
       return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Save failed';
+      alert(`Save failed: ${message}`);
+    } finally {
+      setSaving(false);
     }
-
-    alert(`Save failed: ${error.message}`);
   };
 
   const rows = Array.isArray(data.treatment_plan) ? data.treatment_plan : [];
