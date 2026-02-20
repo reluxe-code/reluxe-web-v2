@@ -139,47 +139,46 @@ function Footer() {
                 </div>
               </div>
 
-              {/* Quick Links */}
+              {/* Services & Booking */}
               <div className="fixed-lg:col-span-3 fixed-md:col-span-3 fixed-lm:col-span-6 max-sm:pt-[30px]">
                 <div className="footer-widget-item">
-                  <h2 className="title">Quick Links</h2>
+                  <h2 className="title">Treatments &amp; Booking</h2>
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/book/">Book Now</Link></li>
-                    <li><Link href="/locations">Our Locations</Link></li>
-                    <li><Link href="/shop">Shop Our Skincare</Link></li>
+                    <li><Link href="/services">All Treatments</Link></li>
                     <li><Link href="/conditions">Conditions We Treat</Link></li>
-                    <li><Link href="/team">Meet Our Team</Link></li>
-                    <li><Link href="/events">Wedding & Event Prep</Link></li>
+                    <li><Link href="/reviews">Results &amp; Reviews</Link></li>
+                    <li><Link href="/pricing">Pricing</Link></li>
                   </ul>
                 </div>
               </div>
 
-              {/* About Us */}
+              {/* About */}
               <div className="fixed-lg:col-span-3 fixed-md:col-span-2 fixed-lm:col-span-6 max-sm:pt-[30px]">
                 <div className="footer-widget-item">
-                  <h2 className="title">About Us</h2>
+                  <h2 className="title">About</h2>
                   <ul className="footer-list mt-[25px]">
-                    <li><Link href="/about">About</Link></li>
+                    <li><Link href="/about">About RELUXE</Link></li>
+                    <li><Link href="/team">Our Providers</Link></li>
+                    <li><Link href="/reluxe-way">The RELUXE Way</Link></li>
+                    <li><Link href="/blog">Blog</Link></li>
                     <li><Link href="/skincare">Skincare Lines</Link></li>
-                    <li><Link href="/affiliations">Affiliations</Link></li>
-                    <li><Link href="https://pay.withcherry.com/reluxe-med-spa?utm_source=practice&utm_medium=website&m=20441">We Accept Cherry</Link></li>
-                    <li>We Accept SpaFinder</li>
-                    <li><Link href="/blog">Beauty Notes</Link></li>
+                    <li><Link href="/events">Events</Link></li>
                   </ul>
                 </div>
               </div>
 
-              {/* Help Center */}
+              {/* Help */}
               <div className="fixed-lg:col-span-3 fixed-md:col-span-3 fixed-lm:col-span-6 max-sm:pt-[30px]">
                 <div className="footer-widget-item">
-                  <h2 className="title">Help Center</h2>
+                  <h2 className="title">Help</h2>
                   <ul className="footer-list mt-[25px]">
                     <li><Link href="/faqs">FAQs</Link></li>
-                    <li><Link href="/legal/terms">Terms &amp; Conditions</Link></li>
-                    <li><Link href="/legal/privacy">Privacy Policy</Link></li>
-                    <li><Link href="/legal">Legal Center</Link></li>
+                    <li><Link href="/contact">Contact</Link></li>
+                    <li><a href="https://blvd.me/reluxemedspa/gift-cards" target="_blank" rel="noreferrer">Gift Cards</a></li>
+                    <li><Link href="/cherry-financing">Cherry Financing</Link></li>
+                    <li><Link href="/legal">Legal &amp; Policies</Link></li>
                     <li><Link href="/profile">Patient Portal</Link></li>
-                    <li><Link href="/services">Our Services</Link></li>
                   </ul>
                 </div>
               </div>

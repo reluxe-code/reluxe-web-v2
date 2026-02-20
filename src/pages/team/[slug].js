@@ -7,6 +7,8 @@ import HeroSplitSection from '@/components/team/HeroSplitSection'
 import MoreAboutMeSliderSection from '@/components/team/MoreAboutMeSliderSection'
 import { getServiceClient } from '@/lib/supabase'
 import { toWPStaffShape } from '@/lib/staff-helpers'
+import { getTestimonialsSSR } from '@/lib/testimonials'
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
 
 // 🚫 SSR can mismatch on browser-only code inside sliders/galleries.
 // ✅ Load ResultsSection only on the client to avoid hydration errors.
@@ -59,8 +61,12 @@ export async function getStaticProps({ params }) {
   // ✅ compute on server, serialize to client
   const rotationKey = buildRotationKey()
 
+  // Fetch testimonials for this provider by first name
+  const firstName = (row.name || '').split(/\s/)[0]
+  const testimonials = firstName ? await getTestimonialsSSR({ provider: firstName, limit: 15 }) : []
+
   return {
-    props: { person, rotationKey },
+    props: { person, rotationKey, testimonials },
     revalidate: 300,
   }
 }
@@ -138,7 +144,7 @@ function getLocationFlagsFromAcfLocation(acfLocation) {
 // —————————————————————————————————————————————
 // Page
 // —————————————————————————————————————————————
-export default function StaffProfile({ person, rotationKey }) {
+export default function StaffProfile({ person, rotationKey, testimonials = [] }) {
   const f = person?.staffFields || {}
 
   const specialties = f?.specialties || []
@@ -287,6 +293,18 @@ export default function StaffProfile({ person, rotationKey }) {
                 )
               })}
             </div>
+          </div>
+        )}
+
+        {/* Testimonials */}
+        {testimonials.length > 0 && (
+          <div className="mt-10">
+            <TestimonialWidget
+              testimonials={testimonials}
+              heading={`What Patients Say About ${person.title?.split(' ')[0] || 'This Provider'}`}
+              subheading={`Reviews from patients treated by ${person.title?.split(' ')[0] || 'this provider'}.`}
+              showViewAll={false}
+            />
           </div>
         )}
 

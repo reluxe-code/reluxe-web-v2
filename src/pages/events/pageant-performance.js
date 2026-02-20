@@ -87,7 +87,7 @@ export default function PageantPerformancePage() {
             when="7–10 Days Out"
             items={[
               'Dermaplane + light peel (camera-friendly)',
-              'Brow tidy / lash lift-tint (optional)',
+              'LED light therapy for calm, even skin',
               'Hydrinity hydration boost for lit-from-within look',
             ]}
           />

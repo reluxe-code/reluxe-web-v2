@@ -79,6 +79,15 @@ CREATE TABLE IF NOT EXISTS testimonials (
   quote TEXT NOT NULL,
   rating INT CHECK (rating BETWEEN 1 AND 5),
   staff_name TEXT,
+  location TEXT DEFAULT 'westfield',
+  provider TEXT,
+  service TEXT,
+  recommendable BOOLEAN DEFAULT true,
+  featured BOOLEAN DEFAULT false,
+  review_date TIMESTAMPTZ,
+  reply TEXT,
+  reply_by TEXT,
+  raw_services TEXT,
   status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published')),
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -119,6 +128,11 @@ CREATE INDEX IF NOT EXISTS idx_deals_dates ON deals (start_date, end_date) WHERE
 CREATE INDEX IF NOT EXISTS idx_staff_slug ON staff (slug);
 CREATE INDEX IF NOT EXISTS idx_staff_status ON staff (status);
 CREATE INDEX IF NOT EXISTS idx_locations_slug ON locations (slug);
+CREATE INDEX IF NOT EXISTS idx_testimonials_location ON testimonials (location);
+CREATE INDEX IF NOT EXISTS idx_testimonials_provider ON testimonials (provider);
+CREATE INDEX IF NOT EXISTS idx_testimonials_service ON testimonials (service);
+CREATE INDEX IF NOT EXISTS idx_testimonials_featured ON testimonials (featured) WHERE featured = true;
+CREATE INDEX IF NOT EXISTS idx_testimonials_recommendable ON testimonials (recommendable) WHERE recommendable = true;
 
 -- Full-text search index for blog posts (used by search page)
 ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS fts tsvector
@@ -156,7 +170,7 @@ CREATE POLICY "Public can read published staff"
 
 CREATE POLICY "Public can read published testimonials"
   ON testimonials FOR SELECT
-  USING (status = 'published');
+  USING (status = 'published' AND recommendable = true);
 
 CREATE POLICY "Public can read locations"
   ON locations FOR SELECT

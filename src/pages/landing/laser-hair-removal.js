@@ -158,7 +158,7 @@ export default function LaserHairRemovalLanding() {
         <meta property="og:description" content={ogDesc} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="/images/landing/laser-hair-removal-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/landing/laser-hair-removal-og.jpg" />
       </Head>
 
       <HeaderTwo />

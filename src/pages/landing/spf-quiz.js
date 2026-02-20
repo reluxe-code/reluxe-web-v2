@@ -731,7 +731,7 @@ export default function SpfQuizLandingPage() {
         <meta property="og:description" content="Find your SPF match in under 45 seconds." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="/images/landing/spf-quiz-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/landing/spf-quiz-og.jpg" />
       </Head>
 
       <HeaderTwo />

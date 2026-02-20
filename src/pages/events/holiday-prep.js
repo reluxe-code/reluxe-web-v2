@@ -25,7 +25,7 @@ export default function HolidayPrepPage() {
         <meta property="og:title" content="Holiday Party & NYE Glow | RELUXE Med Spa" />
         <meta property="og:description" content="Smart timing + no-downtime glow for holiday photos, office parties, and New Year’s Eve." />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="/images/treatments/holiday.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/treatments/holiday.jpg" />
       </Head>
 
       <HeaderTwo />
@@ -113,7 +113,7 @@ export default function HolidayPrepPage() {
             items={[
               'Dermaplane + Signature facial for a smooth, makeup-ready canvas',
               'Hydrinity hydration boost for lit-from-within glow',
-              'Tidy brows / optional lash lift-tint',
+              'LED light therapy for calm, even skin',
             ]}
           />
           <TimingCard

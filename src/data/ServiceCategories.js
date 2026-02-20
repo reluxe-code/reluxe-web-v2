@@ -2,7 +2,7 @@
 
 export const serviceCategories = [
   {
-    title: 'Botox, Dysport, & Jeuveau',
+    title: 'Botox, Daxxify, Dysport, & Jeuveau',
     image: '/images/service/categories/tox.png',
     href: '/services/tox',
     featured: true,
@@ -111,5 +111,53 @@ export const serviceCategories = [
     href: '/services/peels',
     featured: false,
     startingAt: '$150',
-  }
+  },
+  {
+    title: 'Sculptra',
+    image: '/images/service/categories/filler.png',
+    href: '/services/sculptra',
+    featured: false,
+  },
+  {
+    title: 'EvolveX',
+    image: '/images/service/categories/co2.png',
+    href: '/services/evolvex',
+    featured: false,
+  },
+  {
+    title: 'IPL Photofacial',
+    image: '/images/service/categories/laser.png',
+    href: '/services/ipl',
+    featured: false,
+  },
+  {
+    title: 'VascuPen',
+    image: '/images/service/categories/laser.png',
+    href: '/services/vascupen',
+    featured: false,
+  },
+  {
+    title: 'ClearLift',
+    image: '/images/service/categories/laser.png',
+    href: '/services/clearlift',
+    featured: false,
+  },
+  {
+    title: 'ClearSkin',
+    image: '/images/service/categories/laser.png',
+    href: '/services/clearskin',
+    featured: false,
+  },
+  {
+    title: 'Salt & Sauna',
+    image: '/images/service/categories/massage.png',
+    href: '/services/salt-sauna',
+    featured: false,
+  },
+  {
+    title: 'Opus Plasma',
+    image: '/images/service/categories/co2.png',
+    href: '/services/opus',
+    featured: false,
+  },
 ]

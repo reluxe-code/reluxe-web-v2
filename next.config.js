@@ -212,6 +212,20 @@ const nextConfig = {
     ];
   },
 
+  async headers() {
+    const noIndexNoFollow = [
+      { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet, noimageindex' },
+    ];
+
+    return [
+      { source: '/beta/:path*', headers: noIndexNoFollow },
+      { source: '/preview/:path*', headers: noIndexNoFollow },
+      { source: '/capture/:path*', headers: noIndexNoFollow },
+      { source: '/dashboard/:path*', headers: noIndexNoFollow },
+      { source: '/app/:path*', headers: noIndexNoFollow },
+    ];
+  },
+
   // Note: if you use output:'export', Next.js redirects won't run at the edge/CDN.
   // In that case, handle redirects at your hosting layer (e.g., Vercel project redirects, Nginx/Apache).
 };

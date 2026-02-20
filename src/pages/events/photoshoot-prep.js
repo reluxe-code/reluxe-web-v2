@@ -25,7 +25,7 @@ export default function PhotoshootPrepPage() {
         <meta property="og:title" content="Photoshoot & Headshot Prep | RELUXE Med Spa" />
         <meta property="og:description" content="Camera-ready skin for portraits, branding sessions, and engagement photos with smart timing and no-downtime glow." />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="/images/treatments/photoshoot.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/treatments/photoshoot.jpg" />
       </Head>
 
       <HeaderTwo />
@@ -113,7 +113,7 @@ export default function PhotoshootPrepPage() {
             items={[
               'Dermaplane for a smooth, makeup-friendly canvas',
               'Signature facial + Hydrinity hydration boost',
-              'Brow tidy / lash lift-tint (optional)',
+              'LED light therapy for calm, even skin',
             ]}
           />
           <TimingCard

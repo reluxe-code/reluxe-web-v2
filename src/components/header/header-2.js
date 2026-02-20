@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { FaBars } from 'react-icons/fa';
 import { AiOutlineClose } from 'react-icons/ai';
-import { OffcanvasData } from './offcanvas-data';
 import WhiteLogo from './white-logo';
 import { FiPhone, FiMessageSquare } from 'react-icons/fi';
 import LocationSwitcherMini from '@/components/location/LocationSwitcherMini';
@@ -24,7 +23,6 @@ function HeaderTwo({ sticky = true }) {
 
   // Sticky header (respect the `sticky` prop)
   useEffect(() => {
-    // If sticky is disabled, ensure class is removed and skip listeners
     if (!sticky) {
       header.current?.classList.remove('is-sticky');
       return;
@@ -37,11 +35,10 @@ function HeaderTwo({ sticky = true }) {
     };
 
     window.addEventListener('scroll', isSticky);
-    isSticky(); // run once on mount
+    isSticky();
 
     return () => {
       window.removeEventListener('scroll', isSticky);
-      // On unmount (or when sticky toggles off), clean up the class
       header.current?.classList.remove('is-sticky');
     };
   }, [sticky]);
@@ -99,10 +96,8 @@ function HeaderTwo({ sticky = true }) {
     return curr === test || curr.startsWith(`${test}/`);
   };
 
-  // Link wrapper
+  // Link styles
   const linkShell = 'relative inline-flex items-center px-1 py-2 text-white/90 hover:text-white transition';
-
-  // Underline behavior
   const labelClass = (active) =>
     [
       'relative inline-block whitespace-nowrap',
@@ -113,26 +108,60 @@ function HeaderTwo({ sticky = true }) {
         : 'hover:after:opacity-100 hover:after:bg-white',
     ].join(' ');
 
-  // ---- Build mobile drawer menus -----------------------------------------
-  const PRIMARY_KEYS = ['/', '/posts', '/locations', '/faqs'];
-  const dataMap = new Map((OffcanvasData || []).map((item) => [normalize(item.path), item]));
+  // Utility bar link style
+  const utilLink = 'text-white/70 hover:text-white text-xs transition whitespace-nowrap';
 
-  const primaryMenu = PRIMARY_KEYS.map((key) => {
-    const item = dataMap.get(normalize(key));
-    if (item) return item;
-    return {
-      id: key,
-      title: key === '/' ? 'Home' : key === '/posts' ? 'Posts' : key === '/locations' ? 'Locations' : key === '/faqs' ? 'FAQs' : key,
-      path: key,
-      cName: 'offcanvas-text',
-    };
-  });
+  // Desktop nav items
+  const mainNav = [
+    { href: '/services', label: 'Our Treatments' },
+    { href: '/locations/westfield', label: 'Westfield' },
+    { href: '/locations/carmel', label: 'Carmel' },
+    { href: '/team', label: 'Our Providers' },
+    { href: '/reluxe-way', label: 'The RELUXE Way' },
+  ];
 
-  const primarySet = new Set(primaryMenu.map((i) => normalize(i.path)));
-  const extraMenu = (OffcanvasData || []).filter((i) => !primarySet.has(normalize(i.path)));
+  // Utility bar items (right side)
+  const utilItems = [
+    { href: '/deals', label: 'Deals' },
+    { href: 'https://blvd.me/reluxemedspa/gift-cards', label: 'Gift Cards', external: true },
+    { href: '/memberships', label: 'Memberships' },
+    { href: '/reviews', label: 'Reviews' },
+    { href: '/contact', label: 'Contact' },
+    { href: '/profile', label: 'My Profile' },
+  ];
 
   return (
     <>
+      {/* ===== Utility Bar (desktop only) ===== */}
+      <div className="hidden lg:block bg-neutral-900 border-b border-white/10">
+        <div className="custom-container container">
+          <div className="flex items-center justify-between py-1.5">
+            <a
+              href="tel:+13177631142"
+              className={`${utilLink} inline-flex items-center gap-1.5`}
+              aria-label="Call RELUXE Med Spa at (317) 763-1142"
+            >
+              <FiPhone className="h-3 w-3" />
+              (317) 763-1142
+            </a>
+            <nav aria-label="Utility navigation">
+              <ul className="flex items-center gap-4">
+                {utilItems.map(({ href, label, external }) => (
+                  <li key={href}>
+                    {external ? (
+                      <a href={href} target="_blank" rel="noreferrer" className={utilLink}>{label}</a>
+                    ) : (
+                      <Link href={href} className={utilLink}>{label}</Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== Main Header ===== */}
       <header className="header-section bg-black" ref={header} data-sticky={sticky ? 'on' : 'off'}>
         <div className="custom-container container">
           <div className="grid grid-cols-12 items-center py-4">
@@ -145,84 +174,18 @@ function HeaderTwo({ sticky = true }) {
 
             {/* Desktop Nav */}
             <div className="lg:col-span-6 lg:block hidden">
-              <nav className="pl-4">
+              <nav className="pl-4" aria-label="Main navigation">
                 <ul className="main-menu text-white flex">
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/');
-                      return (
-                        <Link href="/" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Home</span>
+                  {mainNav.map(({ href, label }) => {
+                    const active = isActivePath(href);
+                    return (
+                      <li key={href}>
+                        <Link href={href} className={linkShell} aria-current={active ? 'page' : undefined}>
+                          <span className={labelClass(active)}>{label}</span>
                         </Link>
-                      );
-                    })()}
-                  </li>
-
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/team/');
-                      return (
-                        <Link href="/team/" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Our Team</span>
-                        </Link>
-                      );
-                    })()}
-                  </li>
-
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/locations/westfield');
-                      return (
-                        <Link href="/locations/westfield" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Westfield</span>
-                        </Link>
-                      );
-                    })()}
-                  </li>
-
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/locations/carmel');
-                      return (
-                        <Link href="/locations/carmel" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Carmel</span>
-                        </Link>
-                      );
-                    })()}
-                  </li>
-
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/services/');
-                      return (
-                        <Link href="/services/" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Services</span>
-                        </Link>
-                      );
-                    })()}
-                  </li>
-
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/shop');
-                      return (
-                        <Link href="https://blvd.me/reluxemedspa/gift-cards" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Gift Cards</span>
-                        </Link>
-                      );
-                    })()}
-                  </li>
-
-                  <li>
-                    {(() => {
-                      const active = isActivePath('/contact');
-                      return (
-                        <Link href="/contact" className={linkShell} aria-current={active ? 'page' : undefined}>
-                          <span className={labelClass(active)}>Contact</span>
-                        </Link>
-                      );
-                    })()}
-                  </li>
+                      </li>
+                    );
+                  })}
                 </ul>
               </nav>
             </div>
@@ -236,19 +199,13 @@ function HeaderTwo({ sticky = true }) {
                 >
                   Book Now
                 </Link>
-                <Link
-                  href="/profile"
-                  className="hidden sm:inline-block bg-white border border-white text-black px-4 py-2 rounded text-sm font-medium hover:bg-black hover:text-white transition"
-                >
-                  My Profile
-                </Link>
-                <Link
+                <a
                   href="tel:+13177631142"
-                  className="inline-block bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition"
+                  className="inline-block bg-black text-white px-4 py-2 rounded text-sm font-semibold hover:bg-white hover:text-black transition lg:hidden"
                   aria-label="Call RELUXE Med Spa at (317) 763-1142"
                 >
                   <FiPhone className="h-5 w-5" />
-                </Link>
+                </a>
 
                 <LocationSwitcherMini variant="icon" className="flex-none z-20" />
 
@@ -269,7 +226,7 @@ function HeaderTwo({ sticky = true }) {
         </div>
       </header>
 
-      {/* Offcanvas / Drawer */}
+      {/* ===== Offcanvas / Drawer ===== */}
       <div
         className={`fixed inset-0 z-[100] ${offcanvas ? 'pointer-events-auto' : 'pointer-events-none'}`}
         aria-hidden={!offcanvas}
@@ -278,7 +235,7 @@ function HeaderTwo({ sticky = true }) {
         <div
           className={`absolute inset-0 bg-black/50 transition-opacity ${offcanvas ? 'opacity-100' : 'opacity-0'}`}
           onClick={() => toggleOffcanvas(false)}
-          style={{ touchAction: 'none' }} // prevent background scroll on iOS
+          style={{ touchAction: 'none' }}
         />
 
         {/* Panel */}
@@ -365,7 +322,6 @@ function HeaderTwo({ sticky = true }) {
             className="flex-1 overflow-y-auto overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            {/* FULL MOBILE NAV (drawer) */}
             {(() => {
               const linkCls = (href) =>
                 [
@@ -397,21 +353,22 @@ function HeaderTwo({ sticky = true }) {
                     </svg>
                   </summary>
                   <ul className="px-2 pb-2 space-y-1">
-                    {items.map(({ href, label }) => (
+                    {items.map(({ href, label, external }) => (
                       <li key={href}>
-                        <Link href={href} className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>
-                          {label}
-                        </Link>
+                        {external ? (
+                          <a href={href} target="_blank" rel="noreferrer" className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>
+                            {label}
+                          </a>
+                        ) : (
+                          <Link href={href} className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>
+                            {label}
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ul>
                 </details>
               );
-
-              const deals = [
-                { href: '/deals', label: 'Monthly Deals' },
-                { href: 'https://blvd.me/reluxemedspa/gift-cards', label: 'Gift Cards' },
-              ];
 
               const quickBook = [
                 { href: '/book/', label: 'Book Now' },
@@ -420,76 +377,54 @@ function HeaderTwo({ sticky = true }) {
                 { href: '/book/laser-hair-removal/', label: 'Hair Removal' },
               ];
 
+              const dealsGifts = [
+                { href: '/deals', label: 'Current Deals' },
+                { href: 'https://blvd.me/reluxemedspa/gift-cards', label: 'Gift Cards', external: true },
+                { href: '/memberships', label: 'Memberships' },
+                { href: '/cherry-financing', label: 'Cherry Financing' },
+                { href: '/spafinder', label: 'SpaFinder' },
+              ];
+
               const services = [
-                { href: '/services', label: 'All Services' },
+                { href: '/services', label: 'All Treatments' },
                 { href: '/services/injectables', label: 'Injectables' },
                 { href: '/services/laser', label: 'Skin & Laser' },
                 { href: '/services/facials', label: 'Facials' },
                 { href: '/services/laser-hair-removal', label: 'Laser Hair Removal' },
                 { href: '/services/body', label: 'Body Contouring' },
                 { href: '/services/massage', label: 'Massage' },
+                { href: '/conditions', label: 'Conditions We Treat' },
               ];
 
-              const about = [
+              const aboutTeam = [
+                { href: '/team', label: 'Our Providers' },
                 { href: '/about', label: 'About RELUXE' },
-                { href: '/team', label: 'Team' },
+                { href: '/reluxe-way', label: 'The RELUXE Way' },
                 { href: '/locations', label: 'Locations & Hours' },
-                { href: '/affiliations', label: 'Professional Affiliations' },
+                { href: '/affiliations', label: 'Affiliations' },
                 { href: '/partners/house-of-health', label: 'House of Health' },
-              ];
-
-              const conditions = [
-                { href: '/conditions', label: 'All Conditions' },
-                { href: '/conditions/wrinkles-fine-lines', label: 'Wrinkles & Fine Lines' },
-                { href: '/conditions/volume-loss', label: 'Volume Loss / Facial Balancing' },
-                { href: '/conditions/under-eye', label: 'Under-Eye Hollows & Dark Circles' },
-                { href: '/conditions/double-chin', label: 'Double Chin / Submental Fullness' },
-                { href: '/conditions/loose-skin', label: 'Loose or Sagging Skin' },
-                { href: '/conditions/unwanted-hair', label: 'Unwanted Hair' },
-                { href: '/conditions/rosacea', label: 'Rosacea & Redness' },
-                { href: '/conditions/acne-scars', label: 'Acne & Acne Scars' },
-                { href: '/conditions/sun-damage', label: 'Sun Damage & Pigmentation' },
-                { href: '/conditions/skin-texture', label: 'Uneven Skin Tone & Texture' },
               ];
 
               const events = [
                 { href: '/events', label: 'Events Hub' },
-                { href: '/weddings', label: 'Weddings & Bridal Prep' },
-                { href: '/events/proms', label: 'Proms & Formals' },
-                { href: '/events/red-carpet', label: 'Red Carpet & Galas' },
-                { href: '/events/local', label: 'Local Indy • Carmel • Westfield' },
-              ];
-
-              const forYou = [
+                { href: '/wedding', label: 'Weddings & Bridal' },
                 { href: '/men', label: 'For Men' },
-                { href: '/financing/cherry', label: 'Financing (Cherry)' },
-                { href: '/gifts/spafinder', label: 'SpaFinder Gift Cards' },
+                { href: '/events/proms-formals', label: 'Proms & Formals' },
+                { href: '/events/red-carpet-galas', label: 'Red Carpet & Galas' },
+                { href: '/events/local-indy-events', label: 'Local Events' },
               ];
 
-              const results = [
+              const resultsResources = [
                 { href: '/results', label: 'Before & After' },
                 { href: '/reviews', label: 'Reviews' },
+                { href: '/blog', label: 'Blog' },
+                { href: '/faqs', label: 'FAQs' },
+                { href: '/pricing', label: 'Pricing' },
               ];
 
-              const learn = [
-                { href: '/blog', label: 'Blog / Guides' },
-                { href: '/faq', label: 'FAQs' },
-              ];
-
-              const legal = [
-                { href: '/legal', label: 'Policies & Legal Hub' },
-                { href: '/legal/terms', label: 'Terms of Service' },
-                { href: '/privacy-policy', label: 'Privacy Policy' },
-                { href: '/legal/messaging', label: 'Messaging Terms' },
-                { href: '/legal/returns', label: 'Product Return Policy' },
-              ];
-
-              // For tel/sms, use <a>, not <Link>
-              const contact = [
-                { href: '/contact', label: 'Contact', internal: true },
-                { href: 'tel:+13177631142', label: 'Call: (317) 763-1142' },
-                { href: 'sms:+13177631142', label: 'Text: (317) 763-1142' },
-                { href: '/locations', label: 'Directions', internal: true },
+              const legalContact = [
+                { href: '/contact', label: 'Contact' },
+                { href: '/legal', label: 'Policies & Legal' },
               ];
 
               return (
@@ -532,20 +467,16 @@ function HeaderTwo({ sticky = true }) {
 
                   {/* Groups */}
                   <div className="space-y-4 pb-6">
-                    <Group title="Hot Deals" items={deals} defaultOpen />
-                    <Group title="Services" items={services} defaultOpen />
-                    <Group title="About RELUXE" items={about} />
-                    <Group title="What We Treat" items={conditions} />
-                    <Group title="Weddings & Events" items={events} />
-                    <Group title="For You" items={forYou} />
-                    <Group title="Results & Reviews" items={results} />
-                    <Group title="Learn" items={learn} />
-                    <Group title="Patient Info & Legal" items={legal} />
+                    <Group title="Deals & Gifts" items={dealsGifts} defaultOpen />
+                    <Group title="Treatments" items={services} defaultOpen />
+                    <Group title="About & Providers" items={aboutTeam} />
+                    <Group title="Events & Occasions" items={events} />
+                    <Group title="Results & Resources" items={resultsResources} />
 
-                    {/* Contact group with tel/sms as <a> */}
+                    {/* Legal & Contact group with tel/sms as <a> */}
                     <details className="group border rounded-lg mx-4" open={false}>
                       <summary className="flex items-center justify-between cursor-pointer px-3 py-2 text-sm font-semibold">
-                        <span>Contact</span>
+                        <span>Legal & Contact</span>
                         <svg
                           className="h-4 w-4 text-gray-500 transition-transform group-open:rotate-180"
                           viewBox="0 0 20 20"
@@ -559,19 +490,23 @@ function HeaderTwo({ sticky = true }) {
                         </svg>
                       </summary>
                       <ul className="px-2 pb-2 space-y-1">
-                        {contact.map(({ href, label, internal }) => (
+                        {legalContact.map(({ href, label }) => (
                           <li key={href}>
-                            {internal ? (
-                              <Link href={href} className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>
-                                {label}
-                              </Link>
-                            ) : (
-                              <a href={href} className="block w-full px-3 py-2 rounded hover:bg-gray-100">
-                                {label}
-                              </a>
-                            )}
+                            <Link href={href} className={linkCls(href)} onClick={() => toggleOffcanvas(false)}>
+                              {label}
+                            </Link>
                           </li>
                         ))}
+                        <li>
+                          <a href="tel:+13177631142" className="block w-full px-3 py-2 rounded hover:bg-gray-100">
+                            Call: (317) 763-1142
+                          </a>
+                        </li>
+                        <li>
+                          <a href="sms:+13177631142" className="block w-full px-3 py-2 rounded hover:bg-gray-100">
+                            Text: (317) 763-1142
+                          </a>
+                        </li>
                       </ul>
                     </details>
                   </div>

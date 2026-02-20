@@ -661,7 +661,7 @@ export default function SkinbetterStarterQuizPage() {
         <meta property="og:description" content="Find your Skinbetter starting point in under a minute." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="/images/landing/skinbetter-quiz-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/landing/skinbetter-quiz-og.jpg" />
       </Head>
 
       <HeaderTwo />

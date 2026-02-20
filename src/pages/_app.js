@@ -77,6 +77,23 @@ function MyApp({ Component, pageProps }) {
     }
   }, [router.events])
 
+  // Per-page layout: if a page exports getLayout, use it (e.g. preview pages bypass the default Layout)
+  const getLayout = Component.getLayout
+
+  if (getLayout) {
+    return (
+      <>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <link rel="shortcut icon" href="/favicon.png" />
+        </Head>
+        {getLayout(<Component {...pageProps} />)}
+        <Analytics />
+        <SpeedInsights />
+      </>
+    )
+  }
+
   return (
     <>
       <script src="/blvd-widget.js" defer />
@@ -88,6 +105,13 @@ function MyApp({ Component, pageProps }) {
           <Head>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="shortcut icon" href="/favicon.png" />
+            {/* Default OG image — overridden by any page that sets its own og:image */}
+            <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:type" content="image/png" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
           </Head>
 
           <Component {...pageProps} />

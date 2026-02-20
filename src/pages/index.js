@@ -4,13 +4,14 @@ import PropTypes from 'prop-types';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { getAllItems, getFeaturedItems } from '../lib/items-util';
+import { getTestimonialsSSR } from '@/lib/testimonials';
 //import { getDealsSSR } from '@/lib/deals';
 
 import HeaderTwo from '../components/header/header-2';
 import Hero from '../components/home-page/hero';
 import About from '../components/home-page/about';
 import AboutReluxeSection from '../components/home-page/AboutReluxeSection';
-import TestimonialsBlock from '@/components/testimonials/newTestimonials';
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget';
 import ServiceCategorySlider from '@/components/services/ServiceCategorySlider';
 import { serviceCategories } from '@/data/ServiceCategories';
 import LocationsBlock from '@/components/locations/LocationsBlock';
@@ -47,6 +48,7 @@ export default function HomePage({
   pricingItems,
   brandItems,
   posts,
+  testimonials,
 }) {
   const [showHeroPromo, setShowHeroPromo] = useState(false);
 
@@ -334,7 +336,7 @@ export default function HomePage({
         <About />
       </div>
 
-      <TestimonialsBlock bgImage="/images/hero/team.png" />
+      <TestimonialWidget testimonials={testimonials} heading="Loved by Our Patients" />
 
       <div className="mt-8">
         <FinanceEstimator
@@ -381,6 +383,7 @@ export async function getStaticProps() {
   const featuredPosts = getFeaturedItems(allPosts);
   const featuredProjects = getFeaturedItems(allProjects);
 
+  const testimonials = await getTestimonialsSSR({ limit: 20 });
 
   return {
     props: {
@@ -390,7 +393,9 @@ export async function getStaticProps() {
       brandItems,
       posts: featuredPosts,
       projects: featuredProjects,
+      testimonials,
     },
+    revalidate: 3600,
   };
 }
 
@@ -401,4 +406,5 @@ HomePage.propTypes = {
   brandItems: PropTypes.array.isRequired,
   posts: PropTypes.array.isRequired,
   projects: PropTypes.array.isRequired,
+  testimonials: PropTypes.array,
 };

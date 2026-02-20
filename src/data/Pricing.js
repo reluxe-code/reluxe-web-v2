@@ -40,9 +40,7 @@ export const servicesData = [
     items: [
       { name: 'Micro Peel', price: '$150' },
       { name: 'The Perfect Dermapeel', price: '$195 / $250 / $350' },
-      { name: 'BioRepeel (aka Princess Peel)', price: '$125' },
-      { name: 'Lash Lift', price: '$125' },
-      { name: 'Eyebrow Wax & Tint', price: '$99' }
+      { name: 'BioRepeel (aka Princess Peel)', price: '$125' }
     ]
   },
   {

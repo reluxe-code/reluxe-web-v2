@@ -571,7 +571,7 @@ export default function ServiceQuizPage() {
         <meta property="og:description" content="3 quick taps. One confident recommendation." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="/images/quiz/service-quiz-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/quiz/service-quiz-og.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
 

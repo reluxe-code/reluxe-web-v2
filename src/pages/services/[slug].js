@@ -25,6 +25,8 @@ import { getServicesList } from '@/data/servicesList';
 import { getLocation } from '@/data/locations';
 import { isServiceAvailableAtCity } from '@/data/locationAvailability';
 import { getBookLinkForCity, getConsultLinkForCity } from '@/utils/bookingLinks';
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget';
+import { getTestimonialsSSR } from '@/lib/testimonials';
 
 
 const ICON_MAP = { clock: ClockIcon, fire: FireIcon, sparkles: SparklesIcon, user: UserIcon, check: CheckCircleIcon };
@@ -77,7 +79,10 @@ export async function getStaticProps({ params }) {
   }
 
   if (!service) return { notFound: true };
-  return { props: { service } };
+
+  const testimonials = await getTestimonialsSSR({ service: slug, limit: 20 });
+
+  return { props: { service, testimonials }, revalidate: 3600 };
 }
 
 // ---------------- Defaults & helpers ----------------
@@ -266,7 +271,7 @@ function interleaveCTAs(ordered, s) {
 }
 
 // ---------------- Page ----------------
-export default function ServicePage({ service }) {
+export default function ServicePage({ service, testimonials: dbTestimonials = [] }) {
   const [lightbox, setLightbox] = useState(null);
   const chooseSideImage = useSideImageChooser();
 
@@ -1283,150 +1288,20 @@ export default function ServicePage({ service }) {
       });
     }
 
-    // Testimonials (slider: 3 desktop / 1 mobile)
-    if (testimonials.length) {
+    // Testimonials (unified widget from Supabase)
+    if (dbTestimonials.length || testimonials.length) {
       list.push({
         key: 'testimonials',
         enabled: true,
-        render: () => {
-          const bgStyle = s.images?.testimonialBg
-            ? { backgroundImage: `url(${s.images.testimonialBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : {};
-
-          const scrollerId = `testimonials-scroller-${s.slug || 'svc'}`;
-
-          const fmtMonthYear = (iso) => {
-            try {
-              const d = iso?.length === 7 ? new Date(`${iso}-01`) : new Date(iso);
-              return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-            } catch { return ''; }
-          };
-
-          const Star = ({ filled }) => (
-            <svg viewBox="0 0 20 20" className={`w-4 h-4 ${filled ? 'fill-amber-400' : 'fill-neutral-300'}`} aria-hidden="true">
-              <path d="M10 15.27 15.18 18l-1.64-5.03L18 9.24l-5.19-.03L10 4 7.19 9.21 2 9.24l4.46 3.73L4.82 18z"/>
-            </svg>
-          );
-
-          const scrollByCards = (dir = 1) => {
-            const el = typeof document !== 'undefined' ? document.getElementById(scrollerId) : null;
-            if (!el) return;
-            const card = el.querySelector('[data-testimonial-card]');
-            const gap = 16; // tailwind gap-4
-            const step = card ? (card.clientWidth + gap) : 320;
-            el.scrollBy({ left: dir * step, behavior: 'smooth' });
-          };
-
-          return (
-            <section className="py-14 bg-gray-50" style={bgStyle}>
-              <div className="max-w-6xl mx-auto px-4">
-                <div className="flex items-end justify-between gap-3 mb-6">
-                  <div>
-                    <h2 className={`text-2xl font-bold ${s.images?.testimonialBg ? 'text-black drop-shadow' : 'text-neutral-900'}`}>
-                      {s.images?.testimonialBg ? 'Hear from our patients' : 'Loved by patients'}
-                    </h2>
-                    <p className={`text-sm mt-1 ${s.images?.testimonialBg ? 'text-white/90' : 'text-neutral-500'}`}>
-                      Real reviews from recent {s.name?.toLowerCase() || 'treatments'}.
-                    </p>
-                  </div>
-
-                  {testimonials.length > 1 && (
-                    <div className="hidden md:flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => scrollByCards(-1)}
-                        className="h-9 w-9 rounded-full border bg-white hover:bg-neutral-50 shadow-sm grid place-items-center"
-                        aria-label="Previous testimonials"
-                      >
-                        <span className="inline-block -translate-x-[1px]">&larr;</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => scrollByCards(1)}
-                        className="h-9 w-9 rounded-full border bg-white hover:bg-neutral-50 shadow-sm grid place-items-center"
-                        aria-label="Next testimonials"
-                      >
-                        <span className="inline-block translate-x-[1px]">&rarr;</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* slider */}
-                <div
-                  id={scrollerId}
-                  className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none]"
-                  style={{ scrollBehavior: 'smooth' }}
-                >
-                  <style jsx>{`
-                    #${scrollerId}::-webkit-scrollbar { display: none; }
-                  `}</style>
-
-                  {testimonials.map((t, i) => {
-                    const rating = Math.max(0, Math.min(5, Number(t.rating || 0)));
-                    const monthYear = t.monthYear || fmtMonthYear(t.date);
-                    return (
-                      <figure
-                        key={i}
-                        data-testimonial-card
-                        className="snap-start bg-white/95 backdrop-blur rounded-2xl border p-5 shadow-sm
-                                  min-w-[85%] sm:min-w-[75%] md:min-w-[32%] lg:min-w-[32%]"
-                      >
-                        {/* Service + date */}
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full bg-neutral-100 text-neutral-700">
-                            {t.service || s.name || 'Service'}
-                          </span>
-                          {monthYear && <span className="text-xs text-neutral-500">{monthYear}</span>}
-                        </div>
-
-                        {/* Rating */}
-                        <div className="flex items-center gap-1 mb-3" aria-label={`Rating: ${rating} out of 5`}>
-                          {[0,1,2,3,4].map((n) => <Star key={n} filled={n < rating} />)}
-                        </div>
-
-                        {/* Text */}
-                        <blockquote className="text-neutral-800 leading-relaxed">
-                          {t.text || t.quote || 'Great experience and fantastic results.'}
-                        </blockquote>
-
-                        {/* Author */}
-                        {(t.author || t.name) && (
-                          <figcaption className="text-sm text-neutral-600 mt-3">
-                            — {t.author || t.name}
-                            {t.location ? `, ${t.location}` : ''}
-                          </figcaption>
-                        )}
-                      </figure>
-                    );
-                  })}
-                </div>
-
-                {/* Mobile controls */}
-                {testimonials.length > 1 && (
-                  <div className="mt-4 flex md:hidden items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => scrollByCards(-1)}
-                      className="h-9 px-3 rounded-full border bg-white hover:bg-neutral-50 shadow-sm"
-                      aria-label="Previous testimonials"
-                    >
-                      Prev
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollByCards(1)}
-                      className="h-9 px-3 rounded-full border bg-white hover:bg-neutral-50 shadow-sm"
-                      aria-label="Next testimonials"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </div>
-            </section>
-          );
-        },
+        render: () => (
+          <TestimonialWidget
+            testimonials={dbTestimonials.length ? dbTestimonials : undefined}
+            service={dbTestimonials.length ? undefined : s.slug}
+            serviceName={s.name}
+            heading="Loved by Patients"
+            subheading={`Real reviews from recent ${s.name?.toLowerCase() || 'treatments'}.`}
+          />
+        ),
       });
     }
 

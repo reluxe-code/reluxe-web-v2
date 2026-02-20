@@ -2,21 +2,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+import { FiChevronDown } from 'react-icons/fi';
 import HeaderTwo from '@/components/header/header-2';
 import { getServicesList } from '@/data/servicesList';
 import { LOCATION_KEYS, getLocation } from '@/data/locations';
 import { getLocationContent } from '@/data/locationContent';
-
-/** Services that are NOT available in Carmel (Westfield has everything) */
-const NOT_IN_CARMEL = new Set([
-  'hydrafacial',
-  'evolvex',
-  'vascupen',
-  'clearskin',
-  'co2',
-  'salt-sauna',
-  'massage',
-]);
+import { NOT_IN_CARMEL, CARMEL_ALTERNATIVES } from '@/data/locationAvailability';
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget';
+import { getTestimonialsSSR } from '@/lib/testimonials';
 
 /** small helper to add/update a single query param on a (likely relative) href */
 function addQuery(href = '/', key, val) {
@@ -65,13 +58,15 @@ export async function getStaticProps({ params }) {
   const loc = getLocation(cityKey);
   const locationContent = getLocationContent({ service, cityKey });
 
+  const testimonials = await getTestimonialsSSR({ service: slug, location: cityKey, limit: 15 });
+
   return {
-    props: { service, cityKey, loc, locationContent },
+    props: { service, cityKey, loc, locationContent, testimonials },
     revalidate: 60 * 60,
   };
 }
 
-export default function ServiceLocationPage({ service, cityKey, loc, locationContent }) {
+export default function ServiceLocationPage({ service, cityKey, loc, locationContent, testimonials = [] }) {
   const slugKey = String(service?.slug || '').toLowerCase();
   const isCarmel = cityKey === 'carmel';
   const isWestfield = cityKey === 'westfield';
@@ -84,7 +79,6 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
   const consultBase = service?.consultLink || '/book/consult';
   const targetCityForCTA = isAvailableHere ? cityKey : 'westfield';
 
-  // 👇 use the key "loc" so it’s picked up by the interceptor
   const bookingHref = addQuery(bookingBase, 'loc', targetCityForCTA);
   const consultHref = addQuery(consultBase, 'loc', targetCityForCTA);
 
@@ -100,6 +94,22 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
     '/images/page-banner/skincare-header.png';
 
   const canonical = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://reluxemedspa.com'}/services/${service.slug}/${cityKey}`;
+
+  // Alternatives for Carmel-unavailable services
+  const alternatives = isCarmel && !isAvailableHere
+    ? (CARMEL_ALTERNATIVES[slugKey] || [])
+    : [];
+
+  // FAQ schema for location-specific FAQs
+  const faqSchema = locationContent?.faqs?.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: locationContent.faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
+  } : null;
 
   return (
     <>
@@ -117,6 +127,7 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={desc} />
         <meta name="twitter:image" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://reluxemedspa.com'}${hero}`} />
+        {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       </Head>
 
       <HeaderTwo />
@@ -132,7 +143,6 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
             {isAvailableHere ? (
               <Link
                 href={bookingHref}
-                // 👇 ensure click-time override even if URL changes later
                 data-book-loc={targetCityForCTA}
                 className="inline-flex items-center gap-2 bg-white text-neutral-900 font-semibold py-2 px-5 rounded-full shadow hover:bg-gray-100 transition"
               >
@@ -162,29 +172,47 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
         <div className="max-w-6xl mx-auto px-4">
           {!isAvailableHere ? (
             <div className="rounded-2xl border p-6 bg-amber-50 border-amber-200">
-              <h2 className="text-xl font-bold mb-2">Heads up</h2>
+              <h2 className="text-xl font-bold mb-2">Not Available in {loc.city}</h2>
               <p className="text-neutral-800">
-                {service.name} is not currently offered in {loc.city}. We do provide it at our Westfield location.
+                {service.name} is not currently offered at our {loc.city} location. We do provide it at our Westfield flagship.
               </p>
+
+              {/* Alternative service suggestions */}
+              {alternatives.length > 0 && (
+                <div className="mt-4">
+                  <p className="font-semibold text-neutral-700 mb-2">Similar services available in {loc.city}:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {alternatives.map((alt, i) => (
+                      <Link
+                        key={i}
+                        href={`/services/${alt.slug}/carmel`}
+                        className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-4 py-1.5 text-sm font-medium hover:bg-amber-100 transition"
+                      >
+                        {alt.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 flex flex-wrap gap-3">
-                <Link href={`/services/${service.slug}/westfield`} className="underline">Westfield page</Link>
-                <Link href={addQuery(bookingBase, 'loc', 'westfield')} data-book-loc="westfield" className="underline">
-                  Book at Westfield
+                <Link href={`/services/${service.slug}/westfield`} className="inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition">
+                  {service.name} at Westfield
                 </Link>
-                <Link href={addQuery(consultBase, 'loc', 'westfield')} data-book-loc="westfield" className="underline">
-                  Consult (Westfield)
+                <Link href={addQuery(bookingBase, 'loc', 'westfield')} data-book-loc="westfield" className="inline-flex items-center gap-2 border border-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-black hover:text-white transition">
+                  Book at Westfield
                 </Link>
               </div>
             </div>
           ) : (
             <div className="grid md:grid-cols-[2fr,1fr] gap-6 items-start">
-              <div className="rounded-3xl border shadow-sm bg-white p-6">
+              <div className="rounded-2xl border shadow-sm bg-white p-6">
                 <h2 className="text-2xl font-bold mb-3">{service.name} — {loc.label}</h2>
                 <p className="text-neutral-700">{locationContent?.description}</p>
 
                 {!!locationContent?.differences?.length && (
                   <div className="mt-6">
-                    <h3 className="font-semibold mb-2">What’s unique about {loc.city}</h3>
+                    <h3 className="font-semibold mb-2">What&apos;s unique about {loc.city}</h3>
                     <ul className="list-disc ml-5 space-y-1">
                       {locationContent.differences.map((d, i) => <li key={i}>{d}</li>)}
                     </ul>
@@ -202,7 +230,7 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
               </div>
 
               {/* INFO CARD */}
-              <aside className="rounded-3xl border shadow-sm bg-gray-50 p-6">
+              <aside className="rounded-2xl border shadow-sm bg-gray-50 p-6">
                 <div className="text-sm uppercase tracking-wide text-neutral-500">Location</div>
                 <h3 className="text-lg font-bold mb-3">{loc.label}</h3>
                 {loc.address && <p className="mb-2">{loc.address}</p>}
@@ -226,7 +254,6 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
             <h2 className="text-2xl font-bold mb-4">Great together with {service.name}</h2>
             <div className="flex flex-wrap gap-3">
               {locationContent.complementary.map((c, i) => {
-                // 👇 ensure any provided link also carries ?loc=<city>
                 const safeHref = addQuery(c.href || '#', 'loc', targetCityForCTA);
                 const needsOverrideAttr = /^\/book(\/|$)/.test(safeHref);
                 return (
@@ -240,6 +267,40 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
                   </Link>
                 );
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* TESTIMONIALS */}
+      {testimonials.length > 0 && (
+        <TestimonialWidget
+          testimonials={testimonials}
+          serviceName={service.name}
+          heading={`${service.name} Reviews in ${loc.city || cityKey}`}
+          subheading={`Real patient reviews from our ${loc.city || cityKey} location.`}
+        />
+      )}
+
+      {/* LOCATION-SPECIFIC FAQs */}
+      {!!locationContent?.faqs?.length && (
+        <section className="py-12">
+          <div className="max-w-6xl mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-4">
+              FAQs — {service.name} in {loc.city}
+            </h2>
+            <div className="space-y-3">
+              {locationContent.faqs.map((faq, i) => (
+                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden">
+                  <summary className="flex justify-between items-center p-4 bg-gray-50 cursor-pointer hover:bg-violet-50 transition-colors">
+                    <span className="font-medium text-gray-800 group-open:text-violet-600">
+                      {faq.q}
+                    </span>
+                    <FiChevronDown className="h-5 w-5 text-gray-500 transition-transform duration-200 group-open:rotate-180 group-open:text-violet-600 shrink-0 ml-3" />
+                  </summary>
+                  <div className="p-4 text-gray-700 bg-white">{faq.a}</div>
+                </details>
+              ))}
             </div>
           </div>
         </section>

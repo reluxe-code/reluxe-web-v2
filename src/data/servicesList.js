@@ -41,8 +41,6 @@ import reveal from './services/reveal';
 import dissolving from './services/dissolving';
 import saltsauna from './services/saltsauna';
 import opus from './services/opus';
-import lashlift from './services/lashlift';
-import browwax from './services/browwax';
 import men from './services/men';
 import skiniq from './services/skiniq';
 import micropeels from './services/micropeels';
@@ -52,7 +50,7 @@ const REGISTRY = [
   filler, juvederm, rha, versa, restylane,
   sculptra, prp, facials, glo2facial, hydrafacial, peels, massage,
   evolvex, laserhair, ipl, vascupen, clearlift, clearskin, morpheus8, skinpen, co2,
-  consultations, reveal, dissolving, saltsauna, opus, lashlift, browwax, men, skiniq, facialbalancing, micropeels
+  consultations, reveal, dissolving, saltsauna, opus, men, skiniq, facialbalancing, micropeels
 ];
 
 // Safety: if a file is missing, fall back to default for that slug

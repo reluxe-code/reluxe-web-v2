@@ -62,7 +62,7 @@ export default function JeuveauBlackFridayPage() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/bf-jeuveau-b2g1" />
-        <meta property="og:image" content="/images/landing/bf-tox-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/landing/bf-tox-og.jpg" />
       </Head>
 
       <HeaderTwo />

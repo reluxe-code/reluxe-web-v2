@@ -6,11 +6,28 @@ import { supabase } from '@/lib/supabase'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard' },
+  {
+    label: 'Intelligence',
+    href: '/admin/intelligence',
+    children: [
+      { href: '/admin/intelligence', label: 'Overview' },
+      { href: '/admin/intelligence/tox', label: 'Tox Engine' },
+      { href: '/admin/intelligence/providers', label: 'Providers' },
+      { href: '/admin/intelligence/patients', label: 'Patients' },
+      { href: '/admin/intelligence/rebooking', label: 'Rebooking' },
+      { href: '/admin/intelligence/actions', label: 'Actions' },
+      { href: '/admin/intelligence/products', label: 'Products' },
+      { href: '/admin/intelligence/daily-snapshot', label: 'Daily Snapshot' },
+      { href: '/admin/intelligence/form-submissions', label: 'Form Submissions' },
+    ],
+  },
   { href: '/admin/blog', label: 'Blog Posts' },
   { href: '/admin/deals', label: 'Deals' },
   { href: '/admin/staff', label: 'Staff' },
+  { href: '/admin/treatment-bundles', label: 'Treatment Bundles' },
   { href: '/admin/testimonials', label: 'Testimonials' },
   { href: '/admin/locations', label: 'Locations' },
+  { href: '/admin/boulevard-sync', label: 'Boulevard Sync' },
 ]
 
 export default function AdminLayout({ children }) {
@@ -62,6 +79,44 @@ export default function AdminLayout({ children }) {
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {NAV_ITEMS.map((item) => {
+            if (item.children) {
+              const isExpanded = router.pathname.startsWith(item.href)
+              return (
+                <div key={item.label}>
+                  <Link
+                    href={item.href}
+                    className={`block px-3 py-2 rounded-lg text-sm transition ${
+                      isExpanded
+                        ? 'bg-neutral-700 text-white font-medium'
+                        : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                  {isExpanded && (
+                    <div className="ml-3 mt-1 space-y-0.5 border-l border-neutral-700 pl-3">
+                      {item.children.map((child) => {
+                        const childActive = router.pathname === child.href
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={`block px-2 py-1.5 rounded text-xs transition ${
+                              childActive
+                                ? 'text-white font-medium'
+                                : 'text-neutral-500 hover:text-neutral-300'
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
             const active = router.pathname === item.href || (item.href !== '/admin' && router.pathname.startsWith(item.href))
             return (
               <Link

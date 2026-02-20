@@ -52,7 +52,7 @@ export default function BeautyBashPage() {
         <link rel="canonical" href="https://reluxemedspa.com/events/beauty-bash" />
         <meta property="og:title" content="RELUXE Beauty Bash" />
         <meta property="og:description" content="Our signature event with live demos, prizes, and one-night-only savings." />
-        <meta property="og:image" content="/images/events/beauty-bash/og-beauty-bash.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/events/beauty-bash/og-beauty-bash.jpg" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </Head>
 

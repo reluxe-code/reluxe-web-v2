@@ -35,6 +35,10 @@ export function toWPStaffShape(row) {
         ? { sourceUrl: row.transparent_bg, mediaItemUrl: row.transparent_bg }
         : null,
     },
+    // Boulevard booking integration
+    boulevardProviderId: row.boulevard_provider_id || null,
+    boulevardServiceMap: row.boulevard_service_map || {},
+    treatmentBundles: row.treatment_bundles || null,
     // Keep raw row accessible if needed
     _raw: row,
   }

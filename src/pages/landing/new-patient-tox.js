@@ -4,6 +4,7 @@
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
 import HeaderTwo from '../../components/header/header-2'
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -102,7 +103,7 @@ export default function NewPatientToxPage() {
         <meta property="og:description" content="Choose the right tox and dose with experienced RELUXE nurse injectors. Westfield & Carmel." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/new-patient-tox" />
-        <meta property="og:image" content="/images/landing/new-patient-tox-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/landing/new-patient-tox-og.jpg" />
       </Head>
 
       <HeaderTwo />
@@ -326,12 +327,10 @@ export default function NewPatientToxPage() {
         buttonText="Book Tox"
       />
 
-      <ReviewsSection
-        title="Loved by patients"
-        subtitle="Quick visits. Natural results. Friendly injectors."
-        testimonials={TOX_TESTIMONIALS}
-        bookHref={BOOK_TOX_URL}
-        buttonText="Book Tox"
+      <TestimonialWidget
+        service="tox"
+        heading="Loved by Patients"
+        subheading="Quick visits. Natural results. Friendly injectors."
       />
 
       <WhatToExpectSection bookHref={BOOK_TOX_URL} buttonText="Book Tox" />

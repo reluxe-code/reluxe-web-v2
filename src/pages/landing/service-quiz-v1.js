@@ -580,7 +580,7 @@ export default function ServiceQuizPage() {
         <meta property="og:description" content="45 seconds. Fun. Personalized. One confident place to start." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="/images/quiz/service-quiz-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/quiz/service-quiz-og.jpg" />
       </Head>
 
       <HeaderTwo />

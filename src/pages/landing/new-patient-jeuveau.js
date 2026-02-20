@@ -4,6 +4,7 @@
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
 import HeaderTwo from '../../components/header/header-2'
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -104,7 +105,7 @@ export default function NewPatientJeuveauPage() {
         <meta property="og:description" content={`Start with ${OFFER_BASELINE}, customize from there. Add-ons at ${OFFER_ADDON}.`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/new-patient-jeuveau" />
-        <meta property="og:image" content="/images/landing/new-patient-jeuveau-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/landing/new-patient-jeuveau-og.jpg" />
       </Head>
 
       <HeaderTwo />
@@ -236,12 +237,10 @@ export default function NewPatientJeuveauPage() {
       {/* Dedicated “Need help?” section */}
       <ContactHelpSection />
 
-      <ReviewsSection
-        title="Loved by patients"
-        subtitle="Quick visits. Natural results. Friendly injectors."
-        testimonials={JEUVEAU_TESTIMONIALS}
-        bookHref={BOOK_URL}
-        buttonText="Book Jeuveau Intro"
+      <TestimonialWidget
+        service="tox"
+        heading="Loved by Patients"
+        subheading="Quick visits. Natural results. Friendly injectors."
       />
 
       <section className="relative bg-neutral-50 py-12 sm:py-14">

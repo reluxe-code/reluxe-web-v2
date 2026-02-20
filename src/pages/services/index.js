@@ -4,14 +4,20 @@ import HeaderTwo from '@/components/header/header-2'
 import { serviceCategories } from '@/data/ServiceCategories'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CalendarIcon } from '@heroicons/react/24/outline'
-import { servicesData } from '@/data/servicePricing'   // <-- updated path
+import dynamic from 'next/dynamic'
+import { Slide } from '@/components/swiper'
+import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai'
+import { servicesData } from '@/data/servicePricing'
+import AllServicesGrid from '@/components/services/AllServicesGrid'
+import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
+import { getTestimonialsSSR } from '@/lib/testimonials'
+
+const SwiperComps = dynamic(() => import('@/components/swiper'), { ssr: false })
 
 // ---- helpers for price display ----
 const fmtUSD = (n) => {
   const x = Number(n);
   if (Number.isNaN(x)) return '—';
-  // Show cents for small/decimal prices like 4.5 => $4.50, otherwise $1,400
   return x < 10 && x % 1 !== 0 ? `$${x.toFixed(2)}` : `$${x.toLocaleString()}`;
 };
 const displayPrice = (s) => {
@@ -53,7 +59,15 @@ const buildServiceOfferSchema = (items = []) => {
   return { '@context': 'https://schema.org', '@graph': graph }
 }
 
-export default function ServiceCategoriesPage() {
+// Featured items for the carousel (ones with images worth showcasing)
+const featuredForCarousel = serviceCategories.filter(c => c.featured || c.popular)
+
+export async function getStaticProps() {
+  const testimonials = await getTestimonialsSSR({ limit: 20 })
+  return { props: { testimonials }, revalidate: 3600 }
+}
+
+export default function ServiceCategoriesPage({ testimonials = [] }) {
   // -------- JSON-LD SCHEMA (catalog + faq + breadcrumbs) --------
   const offerCatalogSchema = {
     '@context': 'https://schema.org',
@@ -119,10 +133,10 @@ export default function ServiceCategoriesPage() {
       },
       {
         '@type': 'Question',
-        name: 'What’s the downtime for SkinPen microneedling?',
+        name: 'What\u2019s the downtime for SkinPen microneedling?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Most patients are pink for 24–48 hours with light flaking. Makeup is typically fine the next day; always follow your provider’s aftercare.'
+          text: 'Most patients are pink for 24\u201348 hours with light flaking. Makeup is typically fine the next day; always follow your provider\u2019s aftercare.'
         }
       },
       {
@@ -162,12 +176,6 @@ export default function ServiceCategoriesPage() {
   }
 
   const serviceOfferSchema = buildServiceOfferSchema(servicesData)
-
-  const subNav = [
-    { label: 'Categories', href: '#categories' },
-    { label: 'Pricing', href: '#pricing' },
-    { label: 'FAQ', href: '#faq' }
-  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -222,7 +230,7 @@ export default function ServiceCategoriesPage() {
                 {/* body */}
                 <div className="px-6 pb-7 pt-3 md:px-8">
                   <p className="text-base md:text-lg leading-relaxed text-white/80">
-                    Discover RELUXE Med Spa’s full menu of results-driven treatments in
+                    Discover RELUXE Med Spa&apos;s full menu of results-driven treatments in
                     <strong> Westfield</strong> and <strong> Carmel</strong>. From
                     confidence-boosting injectables to glow-building facials, microneedling,
                     and advanced laser &amp; RF, our licensed team designs plans that look
@@ -277,50 +285,84 @@ export default function ServiceCategoriesPage() {
         </div>
       </header>
 
-      <main id="main" className="py-12 px-4 max-w-7xl mx-auto">
-        {/* Category grid */}
-        <section id="categories" aria-labelledby="categories-heading">
-          <h2 id="categories-heading" className="sr-only">Service Categories</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {serviceCategories.map((cat) => (
-              <Link href={cat.href} key={cat.title} className="group block space-y-4" aria-label={`View ${cat.title} services`}>
-                <div
-                  className={`relative w-full pt-[100%] overflow-hidden rounded-lg shadow-lg transition-transform group-hover:scale-[1.02] ${
-                    cat.featured ? 'ring-2 ring-reluxe-primary' : 'ring-1 ring-gray-200'
-                  }`}
-                >
-                  {cat.featured && (
-                    <span className="absolute top-2 left-2 bg-reluxe-primary text-white text-xs px-2 py-1 rounded">
-                      Featured
-                    </span>
-                  )}
-                  <Image
-                    src={cat.image}
-                    alt={`${cat.title} in Westfield & Carmel - RELUXE Med Spa`}
-                    layout="fill"
-                    objectFit="cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-800 group-hover:text-reluxe-primary transition">
-                    {cat.title}
-                  </h3>
-                  <CalendarIcon className="w-6 h-6 text-reluxe-primary" aria-hidden="true" />
-                </div>
-                {cat.teaser && <p className="text-sm text-neutral-600">{cat.teaser}</p>}
-              </Link>
-            ))}
+      {/* ── FEATURED CAROUSEL ── */}
+      <section id="featured" className="py-12 bg-azure">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              Featured{' '}
+              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                Treatments
+              </span>
+            </h2>
+            <div className="flex gap-3 text-gray-500 text-xl">
+              <button className="svc-prev hover:text-black cursor-pointer" aria-label="Previous">
+                <AiOutlineLeft />
+              </button>
+              <button className="svc-next hover:text-black cursor-pointer" aria-label="Next">
+                <AiOutlineRight />
+              </button>
+            </div>
           </div>
-          <div className="mt-6 text-right">
-            <Link href="/pricing" className="text-sm text-neutral-700 hover:text-black underline underline-offset-4">
-              View full pricing →
-            </Link>
-          </div>
-        </section>
 
+          <SwiperComps
+            sliderCName="relative"
+            settings={{
+              pagination: false,
+              spaceBetween: 20,
+              slidesPerView: 3,
+              navigation: { prevEl: '.svc-prev', nextEl: '.svc-next' },
+              breakpoints: {
+                0: { slidesPerView: 2 },
+                640: { slidesPerView: 3 },
+                1024: { slidesPerView: 5 },
+              },
+              loop: true,
+            }}
+          >
+            {featuredForCarousel.map((item, idx) => (
+              <Slide key={idx}>
+                <Link href={item.href} className="block text-center group">
+                  <div className="relative aspect-square overflow-hidden rounded-xl shadow-lg bg-white mb-3">
+                    <Image
+                      src={item.image}
+                      alt={`${item.title} at RELUXE Med Spa`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition duration-300"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    />
+                    {item.popular && (
+                      <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+                        Most Popular
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-800 group-hover:text-violet-600 transition">
+                    {item.title}
+                  </h3>
+                </Link>
+              </Slide>
+            ))}
+          </SwiperComps>
+        </div>
+      </section>
+
+      {/* ── ALL SERVICES GRID (tab-filtered) ── */}
+      <AllServicesGrid />
+
+      {/* ── TESTIMONIALS ── */}
+      {testimonials.length > 0 && (
+        <TestimonialWidget
+          testimonials={testimonials}
+          heading="What Our Patients Say"
+          subheading="Real reviews from real patients across all our services."
+        />
+      )}
+
+      {/* ── PRICING / FAQ / CTA ── */}
+      <main id="main" className="py-12 px-4 max-w-7xl mx-auto">
         {/* Pricing preview */}
-        <section id="pricing" className="mt-16">
+        <section id="pricing">
           <h2 className="text-2xl font-semibold text-neutral-900">Popular Pricing</h2>
           <p className="mt-2 text-neutral-700">
             A few favorites — see full menu for complete pricing and packages.
@@ -386,7 +428,7 @@ export default function ServiceCategoriesPage() {
               <dd className="mt-2 text-neutral-700">Both soften expression lines; your injector will recommend the right option during your consult based on your goals.</dd>
             </div>
             <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <dt className="font-medium text-neutral-900">What’s the downtime for SkinPen microneedling?</dt>
+              <dt className="font-medium text-neutral-900">What&apos;s the downtime for SkinPen microneedling?</dt>
               <dd className="mt-2 text-neutral-700">Most patients are pink for 24–48 hours with light flaking; makeup is typically fine the next day.</dd>
             </div>
             <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
@@ -403,7 +445,7 @@ export default function ServiceCategoriesPage() {
         {/* Final CTA */}
         <section className="mt-16 text-center">
           <h2 className="text-2xl font-semibold text-neutral-900">Ready to start?</h2>
-          <p className="mt-2 text-neutral-700">Schedule a consultation and we’ll build a treatment plan tailored to you.</p>
+          <p className="mt-2 text-neutral-700">Schedule a consultation and we&apos;ll build a treatment plan tailored to you.</p>
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/book" className="inline-flex items-center justify-center rounded-xl bg-black text-white px-5 py-3 font-semibold hover:bg-neutral-800">
               Book Now

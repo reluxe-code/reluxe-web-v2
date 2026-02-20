@@ -5,7 +5,26 @@ module.exports = {
   sitemapSize: 45000,
   changefreq: 'weekly',
   priority: 0.7,
-  exclude: ['/404','/500','/_error','/profile','/profile/**','/api/**'],
+  exclude: [
+    '/404',
+    '/500',
+    '/_error',
+    '/profile',
+    '/profile/**',
+    '/api/**',
+    '/admin',
+    '/admin/**',
+    '/beta',
+    '/beta/**',
+    '/preview',
+    '/preview/**',
+    '/capture',
+    '/capture/**',
+    '/dashboard',
+    '/dashboard/**',
+    '/app',
+    '/app/**',
+  ],
   transform: async (config, path) => {
     let priority = 0.7;
     if (path === '/') priority = 1.0;

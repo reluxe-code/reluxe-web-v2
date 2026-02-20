@@ -5,7 +5,8 @@ import { useJsApiLoader, GoogleMap, Marker } from '@react-google-maps/api'
 
 const containerStyle = {
   width: '100%',
-  height: '300px',
+  height: '100%',
+  minHeight: '300px',
 }
 
 export default function Map({ lat, lng }) {

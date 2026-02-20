@@ -1,5 +1,5 @@
 ---
-title: 'Botox, Dysport, & Jeuveau'
+title: 'Botox, Daxxify, Dysport, & Jeuveau'
 category: 'injectables'
 date: '2025-01-01'
 image: 'images/service/categories/tox.png'

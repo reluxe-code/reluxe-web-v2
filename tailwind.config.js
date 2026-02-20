@@ -3,6 +3,7 @@ module.exports = {
     content: [
         './src/pages/**/*.{js,ts,jsx,tsx}',
         './src/components/**/*.{js,ts,jsx,tsx}',
+        './src/app/**/*.{js,ts,jsx,tsx}',
     ],
     theme: {
         extend: {
@@ -11,6 +12,18 @@ module.exports = {
                 secondary: '#333333',
                 azure: '#eef2f2',
                 sky: '#00ccff',
+                // 2026 Design System — warm neutral + violet
+                'lux-cream': '#FAF8F5',
+                'lux-stone': '#F0ECE6',
+                'lux-taupe': '#E0D9CF',
+                'lux-charcoal': '#2A2A2A',
+                'lux-ink': '#1A1A1A',
+                'lux-violet': '#7C3AED',
+                'lux-fuchsia': '#C026D3',
+                'lux-rose': '#E11D73',
+                'lux-heading': '#1A1A1A',
+                'lux-body': '#4A4A4A',
+                'lux-muted': '#8A8580',
             },
             padding: {
                 155: '155px',

@@ -30,7 +30,7 @@ export default function RefineCarmelPage() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/refine-carmel" />
-        <meta property="og:image" content="/images/refine/og-refine.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/refine/og-refine.jpg" />
       </Head>
 
       <HeaderTwo />

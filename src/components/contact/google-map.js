@@ -129,7 +129,7 @@ export default function ReluxeLocationsMap({
   const tile = TILES[basemapKey]
 
   return (
-    <div className="w-full rounded-xl overflow-hidden border" style={{ height }}>
+    <div className="w-full rounded-xl overflow-hidden border relative z-0 isolate" style={{ height }}>
       <MapContainer
         center={fallbackCenter}
         zoom={11}
