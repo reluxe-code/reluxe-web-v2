@@ -19,7 +19,7 @@ function buildModelCandidates() {
     'gemini-2.0-flash-lite',
     'gemini-1.5-flash',
   ];
-  return [...new Set([envModel, ...defaults].filter(Boolean))] as string[];
+  return Array.from(new Set([envModel, ...defaults].filter(Boolean) as string[]));
 }
 
 function normalizeExtraction(input: any, formType: string) {
