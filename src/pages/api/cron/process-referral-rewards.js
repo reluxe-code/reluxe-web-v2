@@ -224,7 +224,18 @@ export default async function handler(req, res) {
 
     results.expired = expired?.length || 0
 
-    console.log(`[cron/referral-rewards] Credited: ${results.credited}, Cancelled: ${results.cancelled}, Expired: ${results.expired}, Errors: ${results.errors.length}`)
+    // Expire old invited referrals (15+ days, never booked)
+    const inviteExpiryCutoff = new Date(Date.now() - 15 * 86400000).toISOString()
+    const { data: expiredInvites } = await db
+      .from('referrals')
+      .update({ status: 'expired' })
+      .eq('status', 'invited')
+      .lt('invited_at', inviteExpiryCutoff)
+      .select('id')
+
+    results.expiredInvites = expiredInvites?.length || 0
+
+    console.log(`[cron/referral-rewards] Credited: ${results.credited}, Cancelled: ${results.cancelled}, Expired: ${results.expired}, ExpiredInvites: ${results.expiredInvites || 0}, Errors: ${results.errors.length}`)
     return res.json({ ok: true, ...results })
   } catch (err) {
     console.error('[cron/referral-rewards]', err.message)

@@ -42,6 +42,24 @@ export default async function handler(req, res) {
   }
 
   if (!referral && phone) {
+    // Check for an intentional (invited) referral matching this phone from ANY referrer
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10)
+    if (cleanPhone) {
+      const { data } = await db
+        .from('referrals')
+        .select('*')
+        .eq('status', 'invited')
+        .ilike('referee_phone', `%${cleanPhone}`)
+        .order('invited_at', { ascending: false })
+        .limit(1)
+      if (data?.[0]) {
+        referral = data[0]
+        // Override rc to match the inviter's code (may differ from the code in URL)
+      }
+    }
+  }
+
+  if (!referral && phone) {
     // Check if this phone already has a referral from this code
     const { data } = await db
       .from('referrals')

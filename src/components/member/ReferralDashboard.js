@@ -8,6 +8,7 @@ import { TIER_INFO } from '@/lib/referralCodes'
 import { colors } from '@/components/preview/tokens'
 
 const STATUS_LABELS = {
+  invited: { label: 'Invited', color: '#f59e0b' },
   clicked: { label: 'Clicked', color: '#737373' },
   booked: { label: 'Booked', color: '#3b82f6' },
   completed: { label: 'Completed', color: '#22c55e' },
@@ -24,6 +25,16 @@ export default function ReferralDashboard({ fonts }) {
   const [newCode, setNewCode] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState(null)
+
+  // Invite state
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteName, setInviteName] = useState('')
+  const [invitePhone, setInvitePhone] = useState('')
+  const [inviteSendSMS, setInviteSendSMS] = useState(true)
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState(null)
+  const [inviteError, setInviteError] = useState(null)
+  const [invites, setInvites] = useState(null)
 
   const fetchData = () => {
     setLoading(true)
@@ -109,6 +120,50 @@ export default function ReferralDashboard({ fonts }) {
       setCreateError('Something went wrong')
     } finally {
       setCreating(false)
+    }
+  }
+
+  const fetchInvites = async () => {
+    try {
+      const session = await getSession()
+      if (!session?.access_token) return
+      const res = await fetch('/api/member/referral/invite', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const json = await res.json()
+      if (json.invites) setInvites(json)
+    } catch {}
+  }
+
+  useEffect(() => { fetchInvites() }, [])
+
+  const handleInvite = async () => {
+    if (!inviteName.trim() || !invitePhone.trim()) return
+    setInviting(true)
+    setInviteError(null)
+    setInviteResult(null)
+    try {
+      const session = await getSession()
+      if (!session?.access_token) return
+      const res = await fetch('/api/member/referral/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ firstName: inviteName.trim(), phone: invitePhone.trim(), sendSMS: inviteSendSMS }),
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setInviteError(result.error || 'Failed to send invitation')
+      } else {
+        setInviteResult(result)
+        setInviteName('')
+        setInvitePhone('')
+        fetchInvites()
+        fetchData()
+      }
+    } catch {
+      setInviteError('Something went wrong')
+    } finally {
+      setInviting(false)
     }
   }
 
@@ -239,6 +294,143 @@ export default function ReferralDashboard({ fonts }) {
             <span>{btn.icon}</span> {btn.label}
           </button>
         ))}
+      </div>
+
+      {/* Refer a Friend */}
+      <div style={{
+        padding: '14px', borderRadius: 12,
+        background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)',
+        marginBottom: 16,
+      }}>
+        <button
+          onClick={() => { setShowInvite(!showInvite); setInviteResult(null); setInviteError(null) }}
+          style={{
+            fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
+            color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6, width: '100%',
+          }}
+        >
+          <span style={{ fontSize: '1rem' }}>+</span> Refer a Friend
+          <span style={{ marginLeft: 'auto', fontSize: '0.6875rem', color: 'rgba(250,248,245,0.3)', fontWeight: 400 }}>
+            {invites ? `${invites.pendingCount}/${invites.maxInvites} pending` : ''}
+          </span>
+        </button>
+
+        {showInvite && (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', marginBottom: 10 }}>
+              Enter your friend&apos;s name and phone. We&apos;ll track them automatically — if they book within 15 days, you get credit.
+            </p>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <input
+                type="text"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder="Friend's name"
+                style={{
+                  flex: 1, fontFamily: fonts.body, fontSize: '0.75rem',
+                  padding: '8px 12px', borderRadius: 6,
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: colors.white, outline: 'none',
+                }}
+              />
+              <input
+                type="tel"
+                value={invitePhone}
+                onChange={(e) => setInvitePhone(e.target.value)}
+                placeholder="Phone number"
+                style={{
+                  flex: 1, fontFamily: fonts.body, fontSize: '0.75rem',
+                  padding: '8px 12px', borderRadius: 6,
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: colors.white, outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <label style={{
+                fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)',
+                display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={inviteSendSMS}
+                  onChange={(e) => setInviteSendSMS(e.target.checked)}
+                  style={{ accentColor: '#7C3AED' }}
+                />
+                Have RELUXE send them a text
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleInvite}
+                disabled={inviting || !inviteName.trim() || !invitePhone.trim()}
+                style={{
+                  fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600,
+                  padding: '8px 16px', borderRadius: 6,
+                  background: colors.violet, color: '#fff',
+                  border: 'none', cursor: inviting ? 'wait' : 'pointer',
+                  opacity: inviting || !inviteName.trim() || !invitePhone.trim() ? 0.5 : 1,
+                }}
+              >
+                {inviting ? 'Sending...' : inviteSendSMS ? 'Send Invite' : 'Add Referral'}
+              </button>
+            </div>
+
+            {inviteError && (
+              <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: '#ef4444', marginTop: 8 }}>
+                {inviteError}
+              </p>
+            )}
+
+            {inviteResult && (
+              <div style={{
+                marginTop: 10, padding: '10px 12px', borderRadius: 8,
+                background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)',
+              }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: '#22c55e', fontWeight: 600 }}>
+                  {inviteResult.smsSent ? 'Invitation sent!' : 'Referral added!'}
+                </p>
+                {!inviteResult.smsSent && inviteResult.smsLink && (
+                  <a
+                    href={inviteResult.smsLink}
+                    style={{
+                      fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600,
+                      display: 'inline-block', marginTop: 6, padding: '5px 12px', borderRadius: 6,
+                      background: '#3b82f6', color: '#fff', textDecoration: 'none',
+                    }}
+                  >
+                    Send Text Myself
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Pending invitations */}
+        {invites?.invites?.length > 0 && (
+          <div style={{ marginTop: showInvite ? 12 : 10 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(250,248,245,0.3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Pending Invitations
+            </p>
+            {invites.invites.map((inv) => (
+              <div key={inv.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+              }}>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.6)' }}>
+                  {inv.name} {inv.phone ? `(${inv.phone})` : ''}
+                </span>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.25)' }}>
+                  expires {inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Create custom code */}
