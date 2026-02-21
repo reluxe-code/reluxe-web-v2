@@ -122,6 +122,12 @@ export default function IntelligenceOverview() {
           href="/admin/intelligence/form-submissions"
           title="Form Submissions"
           description="Review approved capture submissions with secure image previews and extracted treatment snippets."
+          badge="Live"
+        />
+        <QuickLink
+          href="/admin/intelligence/booking-funnel"
+          title="Booking Funnel"
+          description="Conversion funnel, abandon breakdown, daily trends, and re-engagement opportunities from online booking flows."
           badge="New"
         />
       </div>

@@ -19,6 +19,7 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/products', label: 'Products' },
       { href: '/admin/intelligence/daily-snapshot', label: 'Daily Snapshot' },
       { href: '/admin/intelligence/form-submissions', label: 'Form Submissions' },
+      { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
     ],
   },
   { href: '/admin/blog', label: 'Blog Posts' },

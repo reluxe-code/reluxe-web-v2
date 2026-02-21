@@ -10,6 +10,7 @@ import DateStrip from './DateStrip'
 import TimeGrid from './TimeGrid'
 import ClientInfoForm from './ClientInfoForm'
 import { SLUG_TITLES } from '@/data/treatmentBundles'
+import { useBookingAnalytics } from '@/hooks/useBookingAnalytics'
 
 const LOCATION_INFO = {
   westfield: { name: 'RELUXE Westfield', label: 'Westfield', address: '514 E State Road 32' },
@@ -155,6 +156,13 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
   const { member, profile, isAuthenticated, openDrawer, refreshProfile, openBookingModal } = useMember()
   const [state, dispatch] = useReducer(reducer, initialState)
   const { step, history, selectedProvider, selectedService, selectedCategory, selectedBundle, selectedOptions, selectedDate, selectedTime, cartData, anonTab, error } = state
+
+  // ── Booking analytics ──
+  const { trackServiceSelect, trackProviderSelect, trackDateSelect, trackTimeSelect, trackContactProvided } = useBookingAnalytics({
+    flowType: 'modal', step, isActive: isOpen, locationKey,
+    selectedProvider, selectedService, selectedCategory, selectedBundle,
+    selectedDate, selectedTime, memberId: member?.id || null,
+  })
 
   // ── Data fetching state ──
   const [menuData, setMenuData] = useState(null)
@@ -332,6 +340,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     dispatch({ type: 'SELECT_TIME', time: slot })
     dispatch({ type: 'SET_ERROR', error: null })
     setReserving(true)
+    trackTimeSelect(slot)
     try {
       const body = {
         locationKey,
@@ -356,7 +365,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     } finally {
       setReserving(false)
     }
-  }, [locationKey, selectedService, selectedProvider, selectedDate, selectedOptions])
+  }, [locationKey, selectedService, selectedProvider, selectedDate, selectedOptions, trackTimeSelect])
 
   // ── Navigation helpers ──
   const goBack = useCallback(() => {
@@ -418,14 +427,16 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     } : null })
     dispatch({ type: 'SELECT_SERVICE', service: { id: serviceItemId, name: svc.name, slug: svc.slug } })
     dispatch({ type: 'NAVIGATE', step: 'DATE_TIME' })
-  }, [locationKey, profile?.providers])
+    trackServiceSelect({ name: svc.name, id: serviceItemId })
+  }, [locationKey, profile?.providers, trackServiceSelect])
 
   // ── Handle provider selection ──
   const handleSelectProvider = useCallback((provider) => {
     dispatch({ type: 'SELECT_PROVIDER', provider })
     dispatch({ type: 'NAVIGATE', step: 'PROVIDER_SERVICES' })
     fetchProviderMenu(provider)
-  }, [fetchProviderMenu])
+    trackProviderSelect(provider)
+  }, [fetchProviderMenu, trackProviderSelect])
 
   // ── Handle category selection ──
   const handleSelectCategory = useCallback((cat) => {
@@ -442,7 +453,8 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
   const handleSelectServiceItem = useCallback((item, categoryName) => {
     dispatch({ type: 'SELECT_SERVICE', service: { id: item.id, name: item.name, categoryName } })
     dispatch({ type: 'NAVIGATE', step: 'OPTIONS' })
-  }, [])
+    trackServiceSelect({ name: item.name, id: item.id, categoryName })
+  }, [trackServiceSelect])
 
   // ── Handle bundle selection ──
   const handleSelectBundle = useCallback((bundle) => {
@@ -454,10 +466,12 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     // Try to resolve service item ID from the location menu
     const serviceItemId = item.catalogId || findMenuItemId(menuData, item.label || SLUG_TITLES[item.slug])
     if (serviceItemId) {
-      dispatch({ type: 'SELECT_SERVICE', service: { id: serviceItemId, name: item.label || SLUG_TITLES[item.slug] || item.slug, slug: item.slug } })
+      const serviceName = item.label || SLUG_TITLES[item.slug] || item.slug
+      dispatch({ type: 'SELECT_SERVICE', service: { id: serviceItemId, name: serviceName, slug: item.slug } })
       dispatch({ type: 'NAVIGATE', step: 'OPTIONS' })
+      trackServiceSelect({ name: serviceName, id: serviceItemId })
     }
-  }, [menuData])
+  }, [menuData, trackServiceSelect])
 
   // ── Handle option toggle ──
   const handleToggleOption = useCallback((group, option) => {
@@ -770,7 +784,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                         <DateStrip
                           availableDates={availableDates}
                           selectedDate={selectedDate}
-                          onSelect={(d) => dispatch({ type: 'SELECT_DATE', date: d })}
+                          onSelect={(d) => { dispatch({ type: 'SELECT_DATE', date: d }); trackDateSelect(d) }}
                           fonts={fonts}
                         />
                       )}

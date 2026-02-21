@@ -12,6 +12,7 @@ import AddServiceStep from './AddServiceStep';
 import GravityBookButton from '@/components/beta/GravityBookButton';
 import { getCompatibleAddons, MAX_SERVICES_PER_BOOKING } from '@/data/bookingRules';
 import { SLUG_TITLES } from '@/data/treatmentBundles';
+import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 
 const fetcher = (url) => fetch(url).then((r) => r.json());
 const SHOW_MORE_THRESHOLD = 4;
@@ -336,6 +337,22 @@ function ProviderAvailabilityPickerInner({
   // When 'any' location, use the first location as a proxy for options/duration queries
   const isAnyLocation = selectedLocation === 'any';
   const effectiveLocation = isAnyLocation ? locations[0]?.key : selectedLocation;
+
+  // ─── Booking analytics ───
+  const selectedService = directServiceItem || selectedSpecialty;
+  const { trackServiceSelect, trackDateSelect, trackTimeSelect } = useBookingAnalytics({
+    flowType: 'provider_picker',
+    step,
+    isActive: true,
+    locationKey: selectedLocation,
+    selectedProvider: { name: providerName, boulevardProviderId },
+    selectedService: selectedService ? { name: selectedService.name || selectedService.title, id: selectedService.id || selectedService.slug } : null,
+    selectedCategory: selectedBundle ? { name: selectedBundle.title } : null,
+    selectedBundle: selectedBundle,
+    selectedDate,
+    selectedTime,
+    memberId: null,
+  });
 
   // Resolved service item ID: directServiceItem (from expanded menu) takes priority
   const serviceItemId = directServiceItem?.id
@@ -931,6 +948,7 @@ function ProviderAvailabilityPickerInner({
 
   // ─── Handlers ───
   const handleSelectSpecialty = (spec, { keepBundleContext = false } = {}) => {
+    trackServiceSelect({ name: spec?.title || spec?.slug, id: spec?.slug, categoryName: keepBundleContext ? selectedBundle?.title : null });
     setSelectedSpecialty(spec);
     if (!keepBundleContext) {
       setSelectedBundle(null);
@@ -992,6 +1010,7 @@ function ProviderAvailabilityPickerInner({
   };
 
   const handleSelectBundleItem = (item) => {
+    trackServiceSelect({ name: item.label || item.slug, id: item.catalogId || item.slug, categoryName: selectedBundle?.title });
     setSelectedBundleItem(item);
     // Try slug-based path first (supports add-ons via boulevardServiceMap)
     if (item.slug && boulevardServiceMap[item.slug]) {
@@ -1012,6 +1031,7 @@ function ProviderAvailabilityPickerInner({
   };
 
   const handleSelectFromExpandedMenu = (category) => {
+    trackServiceSelect({ name: category.items?.length === 1 ? category.items[0].name : category.name, id: category.id, categoryName: category.name });
     // Clear existing selections
     setSelectedDate(null);
     setSelectedTime(null);
@@ -1041,6 +1061,7 @@ function ProviderAvailabilityPickerInner({
   };
 
   const handleSelectMenuItem = (item) => {
+    trackServiceSelect({ name: item.name, id: item.id, categoryName: pendingCategory?.name });
     setDirectServiceItem({ id: item.id, name: item.name, categoryName: pendingCategory?.name || '' });
     setHasOptions(null);
     setServiceDuration(null);
@@ -1141,6 +1162,7 @@ function ProviderAvailabilityPickerInner({
   };
 
   const handleSelectDate = (date) => {
+    trackDateSelect(date);
     setSelectedDate(date);
     setSelectedTime(null);
     setCartData(null);
@@ -1149,6 +1171,7 @@ function ProviderAvailabilityPickerInner({
   };
 
   const handleSelectTime = async (slot) => {
+    trackTimeSelect(slot);
     setSelectedTime(slot);
     setReserveError(null);
     setReserving(true);

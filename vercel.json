@@ -3,6 +3,10 @@
     {
       "path": "/api/admin/blvd-sync/incremental",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/finalize-booking-sessions",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
