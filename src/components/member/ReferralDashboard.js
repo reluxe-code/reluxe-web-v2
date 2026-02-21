@@ -1,5 +1,6 @@
 // src/components/member/ReferralDashboard.js
-// Member drawer tab: referral code, share buttons, stats, tier progress, recent referrals.
+// Member drawer tab: referral codes (with phone), share buttons, custom code creation,
+// stats, tier progress, recent referrals.
 import { useState, useEffect } from 'react'
 import { useMember } from '@/context/MemberContext'
 import { supabase } from '@/lib/supabase'
@@ -19,9 +20,12 @@ export default function ReferralDashboard({ fonts }) {
   const { member } = useMember()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(null) // tracks which code was copied
+  const [newCode, setNewCode] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState(null)
 
-  useEffect(() => {
+  const fetchData = () => {
     setLoading(true)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.access_token) { setLoading(false); return }
@@ -33,11 +37,18 @@ export default function ReferralDashboard({ fonts }) {
         .catch(() => {})
         .finally(() => setLoading(false))
     })
-  }, [])
+  }
+
+  useEffect(() => { fetchData() }, [])
+
+  const getSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session
+  }
 
   const logShare = async (channel) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const session = await getSession()
       if (!session?.access_token) return
       fetch('/api/member/referral/share', {
         method: 'POST',
@@ -47,20 +58,19 @@ export default function ReferralDashboard({ fonts }) {
     } catch {}
   }
 
-  const handleCopy = async () => {
-    if (!data?.referralUrl) return
+  const copyToClipboard = async (text, key) => {
     try {
-      await navigator.clipboard.writeText(data.referralUrl)
+      await navigator.clipboard.writeText(text)
     } catch {
       const input = document.createElement('input')
-      input.value = data.referralUrl
+      input.value = text
       document.body.appendChild(input)
       input.select()
       document.execCommand('copy')
       document.body.removeChild(input)
     }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(key)
+    setTimeout(() => setCopied(null), 2000)
     logShare('copy_link')
   }
 
@@ -74,6 +84,32 @@ export default function ReferralDashboard({ fonts }) {
     const text = `I love RELUXE! Book your first treatment and we both get $25. ${data.referralUrl}`
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     logShare('whatsapp')
+  }
+
+  const handleCreateCode = async () => {
+    if (!newCode.trim()) return
+    setCreating(true)
+    setCreateError(null)
+    try {
+      const session = await getSession()
+      if (!session?.access_token) return
+      const res = await fetch('/api/member/referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ customCode: newCode.trim() }),
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setCreateError(result.error || 'Failed to create code')
+      } else {
+        setNewCode('')
+        fetchData() // refresh to show new code
+      }
+    } catch {
+      setCreateError('Something went wrong')
+    } finally {
+      setCreating(false)
+    }
   }
 
   if (loading) {
@@ -105,15 +141,15 @@ export default function ReferralDashboard({ fonts }) {
           Give $25, Get $25
         </h3>
         <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.4)' }}>
-          Share your referral link. When your friend books and completes their first visit, you both earn credit.
+          Share your referral link or phone number. When your friend books and completes their first visit, you both earn credit.
         </p>
       </div>
 
-      {/* Referral link + copy */}
+      {/* Primary referral link + copy */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
         background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(124,58,237,0.2)',
-        borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+        borderRadius: 10, padding: '10px 14px', marginBottom: 8,
       }}>
         <span style={{
           fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)',
@@ -121,23 +157,75 @@ export default function ReferralDashboard({ fonts }) {
         }}>
           {data.referralUrl}
         </span>
-        <button onClick={handleCopy} style={{
+        <button onClick={() => copyToClipboard(data.referralUrl, 'primary')} style={{
           fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600,
           padding: '5px 12px', borderRadius: 6,
-          background: copied ? '#22c55e' : colors.violet,
+          background: copied === 'primary' ? '#22c55e' : colors.violet,
           color: '#fff', border: 'none', cursor: 'pointer',
           whiteSpace: 'nowrap', transition: 'background 0.2s',
         }}>
-          {copied ? 'Copied!' : 'Copy'}
+          {copied === 'primary' ? 'Copied!' : 'Copy'}
         </button>
       </div>
 
+      {/* Phone number as code */}
+      {data.phoneCode && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 10, padding: '8px 14px', marginBottom: 8,
+        }}>
+          <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.35)' }}>
+            Your phone number also works:
+          </span>
+          <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)', flex: 1 }}>
+            {data.phoneCode}
+          </span>
+          <button onClick={() => copyToClipboard(data.phoneCode, 'phone')} style={{
+            fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600,
+            padding: '4px 10px', borderRadius: 6,
+            background: copied === 'phone' ? '#22c55e' : 'rgba(255,255,255,0.1)',
+            color: '#fff', border: 'none', cursor: 'pointer',
+            whiteSpace: 'nowrap', transition: 'background 0.2s',
+          }}>
+            {copied === 'phone' ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+      )}
+
+      {/* All codes list (if more than 1) */}
+      {data.codes?.length > 1 && (
+        <div style={{ marginBottom: 8 }}>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.3)', marginBottom: 6 }}>
+            Your referral codes:
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {data.codes.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => copyToClipboard(`https://reluxemedspa.com/referral/${c.code}`, c.id)}
+                style={{
+                  fontFamily: 'monospace', fontSize: '0.6875rem', fontWeight: 600,
+                  padding: '4px 10px', borderRadius: 6,
+                  background: copied === c.id ? '#22c55e' : 'rgba(124,58,237,0.15)',
+                  color: copied === c.id ? '#fff' : '#a78bfa',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  cursor: 'pointer', transition: 'background 0.2s',
+                }}
+              >
+                {copied === c.id ? 'Copied!' : c.code}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Share buttons */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {[
-          { label: 'Text', icon: '💬', onClick: handleSMS },
-          { label: 'WhatsApp', icon: '📱', onClick: handleWhatsApp },
-          { label: 'Copy Link', icon: '🔗', onClick: handleCopy },
+          { label: 'Text', icon: '\uD83D\uDCAC', onClick: handleSMS },
+          { label: 'WhatsApp', icon: '\uD83D\uDCF1', onClick: handleWhatsApp },
+          { label: 'Copy Link', icon: '\uD83D\uDD17', onClick: () => copyToClipboard(data.referralUrl, 'share') },
         ].map((btn) => (
           <button key={btn.label} onClick={btn.onClick} style={{
             fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 500,
@@ -152,6 +240,54 @@ export default function ReferralDashboard({ fonts }) {
           </button>
         ))}
       </div>
+
+      {/* Create custom code */}
+      {data.canAddCode && (
+        <div style={{
+          padding: '12px 14px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+          marginBottom: 24,
+        }}>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', marginBottom: 8 }}>
+            Create a custom code ({data.codes?.length || 1}/5 used)
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              value={newCode}
+              onChange={(e) => { setNewCode(e.target.value.toUpperCase()); setCreateError(null) }}
+              placeholder="e.g. RELUXE-VIP"
+              maxLength={20}
+              style={{
+                flex: 1, fontFamily: 'monospace', fontSize: '0.75rem',
+                padding: '8px 12px', borderRadius: 6,
+                background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)',
+                color: colors.white, outline: 'none',
+              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateCode() }}
+            />
+            <button
+              onClick={handleCreateCode}
+              disabled={creating || !newCode.trim()}
+              style={{
+                fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600,
+                padding: '8px 16px', borderRadius: 6,
+                background: colors.violet, color: '#fff',
+                border: 'none', cursor: creating ? 'wait' : 'pointer',
+                opacity: creating || !newCode.trim() ? 0.5 : 1,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {creating ? '...' : 'Create'}
+            </button>
+          </div>
+          {createError && (
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: '#ef4444', marginTop: 6 }}>
+              {createError}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Stats grid */}
       <div style={{

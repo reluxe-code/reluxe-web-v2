@@ -4,6 +4,7 @@
 // Runs fraud checks, issues referee credit, updates status to 'booked'.
 import { getServiceClient } from '@/lib/supabase'
 import { adminQuery } from '@/server/blvdAdmin'
+import { resolveReferralCode } from '@/lib/referralCodes'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -13,12 +14,8 @@ export default async function handler(req, res) {
 
   const db = getServiceClient()
 
-  // Look up the referral code
-  const { data: rc } = await db
-    .from('referral_codes')
-    .select('id, member_id, tier')
-    .or(`code.eq.${code},custom_code.eq.${code}`)
-    .single()
+  // Look up the referral code (supports code, custom_code, or phone number)
+  const rc = await resolveReferralCode(db, code)
 
   if (!rc) return res.status(404).json({ error: 'Invalid referral code' })
 

@@ -51,6 +51,72 @@ export function computeTier(totalCompleted) {
 }
 
 /**
+ * Resolve a referral code or phone number to a referral_codes row.
+ * Tries: code/custom_code match → phone number → null.
+ * If a member is found by phone but has no referral code, auto-creates one.
+ * Requires a Supabase service client (db).
+ */
+export async function resolveReferralCode(db, input) {
+  if (!input) return null
+
+  // 1. Try code/custom_code match
+  const { data: byCode } = await db
+    .from('referral_codes')
+    .select('id, member_id, code, custom_code, tier, total_shares, total_clicks, total_signups, total_completed, total_earned')
+    .or(`code.eq.${input},custom_code.eq.${input}`)
+    .limit(1)
+    .maybeSingle()
+
+  if (byCode) return byCode
+
+  // 2. Try phone number lookup — strip to last 10 digits
+  const digits = input.replace(/\D/g, '')
+  if (digits.length < 7) return null // not a phone number
+
+  const last10 = digits.slice(-10)
+  const { data: member } = await db
+    .from('members')
+    .select('id, first_name, phone')
+    .or(`phone.ilike.%${last10}`)
+    .limit(1)
+    .maybeSingle()
+
+  if (!member) return null
+
+  // Found member by phone — check if they already have a referral code
+  const { data: existingCode } = await db
+    .from('referral_codes')
+    .select('id, member_id, code, custom_code, tier, total_shares, total_clicks, total_signups, total_completed, total_earned')
+    .eq('member_id', member.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (existingCode) return existingCode
+
+  // Auto-create referral code for this member
+  let code = generateReferralCode(member.first_name)
+  let attempts = 0
+  while (attempts < 10) {
+    const { data: dup } = await db
+      .from('referral_codes')
+      .select('id')
+      .eq('code', code)
+      .maybeSingle()
+    if (!dup) break
+    attempts++
+    code = attempts >= 5 ? generateFallbackCode() : generateReferralCode(member.first_name)
+  }
+
+  const { data: newCode } = await db
+    .from('referral_codes')
+    .insert({ member_id: member.id, code })
+    .select('id, member_id, code, custom_code, tier, total_shares, total_clicks, total_signups, total_completed, total_earned')
+    .single()
+
+  return newCode || null
+}
+
+/**
  * Tier display metadata.
  */
 export const TIER_INFO = {

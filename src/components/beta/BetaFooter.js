@@ -24,6 +24,7 @@ const footerLinks = {
   Resources: [
     { label: 'Pricing', href: '/beta/pricing' },
     { label: 'Memberships', href: '/beta/memberships' },
+    { label: 'Refer & Earn $25', href: '/referral' },
     { label: 'FAQs', href: '/beta/faqs' },
     { label: 'Results', href: '/beta/results' },
     { label: 'Inspiration', href: '/beta/inspiration' },
