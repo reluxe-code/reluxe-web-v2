@@ -14,6 +14,7 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/tox', label: 'Tox Engine' },
       { href: '/admin/intelligence/providers', label: 'Providers' },
       { href: '/admin/intelligence/patients', label: 'Patients' },
+      { href: '/admin/intelligence/customers', label: 'Customers' },
       { href: '/admin/intelligence/rebooking', label: 'Rebooking' },
       { href: '/admin/intelligence/actions', label: 'Actions' },
       { href: '/admin/intelligence/products', label: 'Products' },
