@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { colors, gradients, typeScale } from '@/components/preview/tokens';
 import { TAB_SLUGS, FEATURED_PICKS, SLUG_TO_TAB, getInfo } from '@/data/serviceGridData';
+import { useMember } from '@/context/MemberContext';
+import { useLocationPref } from '@/context/LocationContext';
 
 const TAB_NAMES = ['Featured', ...Object.keys(TAB_SLUGS)];
 
@@ -21,7 +23,7 @@ const GRADIENT_MAP = {
   Massage: `linear-gradient(135deg, #10b981, #059669)`,
 };
 
-function ServiceCard({ svc, fonts, index }) {
+function ServiceCard({ svc, fonts, index, onBook }) {
   const tab = SLUG_TO_TAB[svc.slug] || 'Other';
   const info = getInfo(svc.slug);
   const badge = BADGE_COLORS[tab] || BADGE_COLORS.Injectables;
@@ -101,8 +103,8 @@ function ServiceCard({ svc, fonts, index }) {
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          <a
-            href={`/book/${svc.slug}`}
+          <button
+            onClick={() => onBook?.()}
             className="rounded-full transition-all duration-200 hover:brightness-110"
             style={{
               fontFamily: fonts.body,
@@ -111,11 +113,12 @@ function ServiceCard({ svc, fonts, index }) {
               padding: '0.5rem 1.25rem',
               background: gradients.primary,
               color: '#fff',
-              textDecoration: 'none',
+              border: 'none',
+              cursor: 'pointer',
             }}
           >
             Book Now
-          </a>
+          </button>
           <a
             href={`/beta/services/${svc.slug}`}
             className="rounded-full transition-all duration-200 hover:bg-gray-50"
@@ -148,6 +151,8 @@ function ServiceCard({ svc, fonts, index }) {
  */
 export default function ServiceCardGrid({ services, fonts, label, heading, bg }) {
   const [activeTab, setActiveTab] = useState('Featured');
+  const { openBookingModal } = useMember();
+  const { locationKey } = useLocationPref();
 
   const filtered = (() => {
     if (activeTab === 'Featured') {
@@ -206,7 +211,7 @@ export default function ServiceCardGrid({ services, fonts, label, heading, bg })
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((svc, i) => (
-              <ServiceCard key={svc.slug} svc={svc} fonts={fonts} index={i} />
+              <ServiceCard key={svc.slug} svc={svc} fonts={fonts} index={i} onBook={() => openBookingModal(locationKey || 'westfield')} />
             ))}
           </div>
         )}

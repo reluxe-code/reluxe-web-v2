@@ -5,6 +5,8 @@ import { colors, gradients, typeScale } from '@/components/preview/tokens';
 import { getServiceClient } from '@/lib/supabase';
 import GravityBookButton from '@/components/beta/GravityBookButton';
 import ScarcityBadge from '@/components/booking/ScarcityBadge';
+import HeroIdentityCard from '@/components/beta/HeroIdentityCard';
+import { useMember } from '@/context/MemberContext';
 
 /* ─── grain texture ─── */
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
@@ -218,6 +220,7 @@ export default function BetaHome({ testimonials, staff }) {
   const [activeStep, setActiveStep] = useState(0);
   const [openFaq, setOpenFaq] = useState(0);
   const teamRef = useRef(null);
+  const { openBookingModal } = useMember();
   const { scrollYProgress } = useScroll({ target: teamRef, offset: ['start end', 'end start'] });
 
   return (
@@ -249,23 +252,7 @@ export default function BetaHome({ testimonials, staff }) {
                 </motion.div>
 
                 <motion.div className="relative" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}>
-                  <div className="relative rounded-3xl overflow-hidden" style={{ aspectRatio: '4/5', background: `linear-gradient(135deg, ${colors.violet}20, ${colors.fuchsia}15, ${colors.rose}10)` }}>
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ color: 'rgba(250,248,245,0.15)' }}>
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21,15 16,10 5,21" /></svg>
-                    </div>
-                    <div className="absolute bottom-6 left-6 right-6 rounded-2xl p-5" style={{ background: 'rgba(26,26,26,0.7)', backdropFilter: 'blur(16px)', border: '1px solid rgba(250,248,245,0.08)' }}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center rounded-full" style={{ width: 40, height: 40, background: 'rgba(124,58,237,0.2)', flexShrink: 0 }}>
-                          <span style={{ fontSize: '1rem' }}>&#11088;</span>
-                        </div>
-                        <div>
-                          <p style={{ fontFamily: fonts.display, fontSize: '0.9375rem', fontWeight: 600, color: colors.white }}>5.0 out of 5.0 Stars on Google</p>
-                          <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)' }}>Based on 300+ verified reviews</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <HeroIdentityCard fonts={fonts} />
                 </motion.div>
               </div>
             </div>
@@ -583,7 +570,7 @@ export default function BetaHome({ testimonials, staff }) {
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                          <a href={`/book/${loc.name.toLowerCase()}`} className="inline-flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', color: '#fff', padding: '0.625rem 1.75rem', fontSize: '0.875rem', fontFamily: fonts.body, fontWeight: 600, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', textDecoration: 'none' }}>Book Here</a>
+                          <button onClick={() => openBookingModal(loc.name.toLowerCase())} className="inline-flex items-center justify-center rounded-full" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', color: '#fff', padding: '0.625rem 1.75rem', fontSize: '0.875rem', fontFamily: fonts.body, fontWeight: 600, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}>Book Here</button>
                           <a href={`https://maps.google.com/?q=${encodeURIComponent(loc.address + ', ' + loc.city)}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-full" style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', padding: '0.625rem 1.75rem', fontSize: '0.875rem', fontFamily: fonts.body, fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', textDecoration: 'none' }}>Get Directions</a>
                         </div>
                       </div>

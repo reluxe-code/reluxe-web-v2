@@ -1,10 +1,12 @@
 // src/components/location/LocationChooserModal.js
 import { useEffect, useState } from 'react';
 import { useLocationPref } from '@/context/LocationContext';
+import { useMember } from '@/context/MemberContext';
 import { LOCATIONS } from '@/lib/location';
 
 export default function LocationChooserModal() {
   const { setLocationKey } = useLocationPref();
+  const { openBookingModal } = useMember();
   const [open, setOpen] = useState(false);
   const [pendingSlug, setPendingSlug] = useState('');
 
@@ -20,8 +22,8 @@ export default function LocationChooserModal() {
   function choose(key) {
     setLocationKey(key);
     setOpen(false);
-    if (pendingSlug && window.__openBlvdForSlug) {
-      window.__openBlvdForSlug(pendingSlug);
+    if (pendingSlug) {
+      openBookingModal(key);
       setPendingSlug('');
     }
   }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors, gradients, fontPairings } from '@/components/preview/tokens';
 import GravityBookButton from '@/components/beta/GravityBookButton';
+import { useMember } from '@/context/MemberContext';
 
 const navLinks = [
   { label: 'Services', href: '/beta/services' },
@@ -16,6 +17,7 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
   const fonts = fontPairings[fontKey];
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { member, isAuthenticated, openDrawer } = useMember();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -98,8 +100,23 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
         </div>
 
         {/* Desktop CTA */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-3">
           <GravityBookButton fontKey={fontKey} size="nav" />
+          {isAuthenticated && member && (
+            <button
+              onClick={() => openDrawer('account')}
+              title={member.first_name || 'My Account'}
+              style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: gradients.primary, color: '#fff',
+                fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {(member.first_name || '?')[0].toUpperCase()}
+            </button>
+          )}
         </div>
 
         {/* Mobile hamburger */}

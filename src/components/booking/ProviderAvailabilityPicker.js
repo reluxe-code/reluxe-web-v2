@@ -94,9 +94,21 @@ function formatPriceRange(price, { name, categoryName } = {}) {
   return `Up to ${formatCurrency(max)}`;
 }
 
+function normalizeServiceId(value) {
+  if (!value) return '';
+  const raw = String(value).trim();
+  const last = raw.includes(':') ? raw.split(':').pop() : raw;
+  return String(last || raw).toLowerCase();
+}
+
 function idsMatch(a, b) {
   if (!a || !b) return false;
-  return a === b || String(a).includes(String(b)) || String(b).includes(String(a));
+  const aRaw = String(a).trim().toLowerCase();
+  const bRaw = String(b).trim().toLowerCase();
+  if (aRaw === bRaw) return true;
+  const aNorm = normalizeServiceId(a);
+  const bNorm = normalizeServiceId(b);
+  return !!aNorm && !!bNorm && aNorm === bNorm;
 }
 
 function formatOptionPriceDelta(priceDelta) {
@@ -111,10 +123,20 @@ function formatOptionPriceDelta(priceDelta) {
 function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue, onSkip, fonts }) {
   if (!optionGroups?.length) return null;
 
+  // Check if all required groups have enough selections
+  const hasRequired = optionGroups.some((g) => (g.minLimit || 0) >= 1);
+  const allRequiredMet = optionGroups.every((g) => {
+    const min = g.minLimit || 0;
+    if (min < 1) return true;
+    const count = (g.options || []).filter((o) => selectedOptions.some((s) => s.id === o.id)).length;
+    return count >= min;
+  });
+
   return (
     <div>
       {optionGroups.map((group) => {
         const isRadio = group.maxLimit === 1;
+        const isRequired = (group.minLimit || 0) >= 1;
         return (
           <div key={group.id} className="mb-4 last:mb-0">
             <div className="flex items-baseline justify-between mb-2">
@@ -122,7 +144,7 @@ function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue
                 {group.name}
               </p>
               {group.maxLimit && (
-                <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: colors.muted }}>
+                <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: isRequired ? colors.violet : colors.muted }}>
                   {isRadio ? 'choose 1' : `up to ${group.maxLimit}`}
                 </span>
               )}
@@ -185,18 +207,20 @@ function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue
         );
       })}
       <div className="flex gap-2 mt-4">
-        <button onClick={onSkip} className="rounded-full" style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, padding: '0.75rem 1.25rem', color: colors.body, backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, cursor: 'pointer' }}>Skip</button>
-        <button onClick={onContinue} className="flex-1 rounded-full" style={{ fontFamily: fonts?.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.75rem 2rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>Continue</button>
+        {!hasRequired && (
+          <button onClick={onSkip} className="rounded-full" style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, padding: '0.75rem 1.25rem', color: colors.body, backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, cursor: 'pointer' }}>Skip</button>
+        )}
+        <button onClick={onContinue} disabled={hasRequired && !allRequiredMet} className="flex-1 rounded-full" style={{ fontFamily: fonts?.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.75rem 2rem', background: (hasRequired && !allRequiredMet) ? colors.stone : gradients.primary, color: '#fff', border: 'none', cursor: (hasRequired && !allRequiredMet) ? 'not-allowed' : 'pointer', opacity: (hasRequired && !allRequiredMet) ? 0.6 : 1 }}>Continue</button>
       </div>
     </div>
   );
 }
 
 // ─── Expanded Service Menu (for "Looking for something else?") ───
-function ExpandedServiceMenu({ categories, loading, onSelectCategory, fonts }) {
+function ExpandedServiceMenu({ categories, loading, onSelectCategory, fonts, primary = false }) {
   if (loading) {
     return (
-      <div className="space-y-2 mt-3">
+      <div className={`space-y-2 ${primary ? '' : 'mt-3'}`}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-xl animate-pulse" style={{ height: 48, backgroundColor: colors.stone }} />
         ))}
@@ -213,9 +237,9 @@ function ExpandedServiceMenu({ categories, loading, onSelectCategory, fonts }) {
   }
 
   return (
-    <div className="mt-3">
-      <p style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.muted, marginBottom: '0.5rem' }}>
-        All Services
+    <div className={primary ? '' : 'mt-3'}>
+      <p style={{ fontFamily: fonts?.body, fontSize: primary ? '0.8125rem' : '0.6875rem', fontWeight: 600, textTransform: primary ? 'none' : 'uppercase', letterSpacing: primary ? 'normal' : '0.08em', color: primary ? colors.heading : colors.muted, marginBottom: '0.5rem' }}>
+        {primary ? 'What do you need?' : 'All Services'}
       </p>
       <div className="space-y-2">
         {categories.map((cat) => (
@@ -273,14 +297,20 @@ function ProviderAvailabilityPickerInner({
   initialService,
   initialCategory,
   initialDate,
+  initialDateEnd,
+  initialLocation,
   treatmentBundles = [],
+  locationLocked = false,
+  onExitPicker,
 }) {
   // ─── State ───
   const [step, setStep] = useState('SPECIALTY');
   const [selectedSpecialty, setSelectedSpecialty] = useState(specialties.length === 1 ? specialties[0] : null);
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [selectedBundleItem, setSelectedBundleItem] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(locations.length === 1 ? locations[0].key : null);
+  const [selectedLocation, setSelectedLocation] = useState(
+    (initialLocation && locations.some((l) => l.key === initialLocation)) ? initialLocation : (locations[0]?.key || null)
+  );
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -301,6 +331,7 @@ function ProviderAvailabilityPickerInner({
   const [expandedMenuLoading, setExpandedMenuLoading] = useState(false);
   const [directServiceItem, setDirectServiceItem] = useState(null); // { id, name, categoryName }
   const [pendingCategory, setPendingCategory] = useState(null); // multi-item category awaiting sub-pick
+  const [addonPendingCategory, setAddonPendingCategory] = useState(null); // add-on category awaiting sub-pick
 
   // When 'any' location, use the first location as a proxy for options/duration queries
   const isAnyLocation = selectedLocation === 'any';
@@ -331,12 +362,9 @@ function ProviderAvailabilityPickerInner({
     const itemAvailableAt = (item, locKey) => {
       if (item.slug && boulevardServiceMap[item.slug]?.[locKey]) return true;
       if (item.catalogId) {
-        // For catalog-picked services, trust provider-filtered Boulevard menu availability.
-        if (menuBookableIds.size > 0) {
-          return [...menuBookableIds].some((id) => idsMatch(id, item.catalogId));
-        }
-        // Before menu is loaded, keep visible to avoid hiding valid consult items.
-        return true;
+        // For catalog-picked services, only show if confirmed in provider-filtered Boulevard menu.
+        if (menuBookableIds.size === 0) return false;
+        return [...menuBookableIds].some((id) => idsMatch(id, item.catalogId));
       }
       return false;
     };
@@ -450,7 +478,30 @@ function ProviderAvailabilityPickerInner({
     });
   }, [selectedSpecialty, directServiceSlug, directServiceItem, allProviderSlugs, additionalServices, specialties, activeBundle, selectedBundleItem]);
 
-  const showAddServiceStep = compatibleAddons.length > 0 || additionalServices.length > 0;
+  const fallbackAddonCategories = useMemo(() => {
+    const categories = expandedMenuData?.categories || [];
+    if (!categories.length) return [];
+    const chosenPrimaryItemId = serviceItemId || primaryServiceItemId;
+    const chosenIds = new Set(
+      [
+        chosenPrimaryItemId,
+        ...additionalServices.map((a) => a.serviceItemId),
+      ].filter(Boolean)
+    );
+    return categories
+      .map((cat) => ({
+        ...cat,
+        items: (cat.items || []).filter((item) => !chosenIds.has(item.id)),
+      }))
+      .filter((cat) => (cat.items || []).length > 0);
+  }, [expandedMenuData, serviceItemId, primaryServiceItemId, additionalServices]);
+
+  const canOfferAdditionalServices = !!selectedLocation && !!boulevardProviderId;
+  const showAddServiceStep =
+    compatibleAddons.length > 0 ||
+    additionalServices.length > 0 ||
+    fallbackAddonCategories.length > 0 ||
+    canOfferAdditionalServices;
 
   // ─── Pre-fetch durations for compatible addons ───
   const [addonDurations, setAddonDurations] = useState({});
@@ -496,7 +547,7 @@ function ProviderAvailabilityPickerInner({
 
   // ─── Fetch main service options + duration ───
   const optionsServiceItemId = serviceItemId || primaryServiceItemId;
-  const { data: serviceInfo, isLoading: optionsLoading } = useSWR(
+  const { data: serviceInfo, isLoading: optionsLoading, error: optionsError } = useSWR(
     optionsServiceItemId
       ? `/api/blvd/services/options?locationKey=${effectiveLocation}&serviceItemId=${encodeURIComponent(optionsServiceItemId)}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`
       : null,
@@ -512,21 +563,38 @@ function ProviderAvailabilityPickerInner({
     setHasOptions(groups.length > 0);
   }, [serviceInfo]);
 
+  // Fail-safe: never let options fetch issues block progression from service selection.
+  useEffect(() => {
+    if (!readyToAdvance || hasOptions !== null) return;
+    if (!optionsServiceItemId) {
+      setHasOptions(false);
+      return;
+    }
+    if (optionsError) {
+      setHasOptions(false);
+    }
+  }, [readyToAdvance, hasOptions, optionsServiceItemId, optionsError]);
+
+  useEffect(() => {
+    if (!readyToAdvance || hasOptions !== null) return;
+    if (optionsLoading) return;
+    if (!serviceInfo) setHasOptions(false);
+  }, [readyToAdvance, hasOptions, optionsLoading, serviceInfo]);
+
   // ─── Compute dynamic steps ───
   const computedSteps = useMemo(() => {
     const steps = [{ key: 'SPECIALTY', label: 'Service' }];
     if (activeBundle) steps.push({ key: 'BUNDLE_ITEMS', label: activeBundle.title });
     if (pendingCategory) steps.push({ key: 'MENU_ITEM', label: 'Choose' });
+    if (addonPendingCategory) steps.push({ key: 'ADDON_MENU_ITEM', label: 'Choose' });
     if (hasOptions) steps.push({ key: 'OPTIONS', label: 'Options' });
-    if (showAddServiceStep) steps.push({ key: 'ADD_SERVICE', label: 'Add More' });
     additionalServices.forEach((addon, i) => {
       if (addon.hasOptions) steps.push({ key: `ADDON_OPTIONS_${i}`, label: `${addon.title}` });
     });
-    steps.push({ key: 'DATE', label: 'Date' });
-    steps.push({ key: 'TIME', label: 'Time' });
+    steps.push({ key: 'DATE_TIME', label: 'Date & Time' });
     steps.push({ key: 'CHECKOUT', label: 'Confirm' });
     return steps;
-  }, [hasOptions, showAddServiceStep, additionalServices, pendingCategory, activeBundle]);
+  }, [hasOptions, showAddServiceStep, additionalServices, pendingCategory, addonPendingCategory, activeBundle]);
 
   const stepIndex = computedSteps.findIndex((s) => s.key === step);
 
@@ -612,11 +680,15 @@ function ProviderAvailabilityPickerInner({
   }, [initialService, initialCategory, initialDate, specialties, locations, selectedLocation, boulevardProviderId]);
 
   // ─── Auto-advance from SPECIALTY ───
+  // Don't auto-advance when the full Boulevard menu is the primary service list (≤1 mapped specialties, no bundles).
+  // In that case the user needs to pick a service from the expanded menu.
+  const menuIsPrimaryServiceList = specialties.length <= 1 && filteredBundles.length === 0;
   useEffect(() => {
+    if (menuIsPrimaryServiceList) return;
     if (step === 'SPECIALTY' && optionsServiceItemId && specialties.length <= 1 && locations.length <= 1 && hasOptions !== null && !directServiceItem) {
       advanceFromSpecialty();
     }
-  }, [step, optionsServiceItemId, specialties.length, locations.length, hasOptions, directServiceItem]);
+  }, [step, optionsServiceItemId, specialties.length, locations.length, hasOptions, directServiceItem, menuIsPrimaryServiceList]);
 
   useEffect(() => {
     if (readyToAdvance && hasOptions !== null) {
@@ -628,19 +700,13 @@ function ProviderAvailabilityPickerInner({
   function advanceFromSpecialty() {
     if (hasOptions) {
       setStep('OPTIONS');
-    } else if (showAddServiceStep) {
-      setStep('ADD_SERVICE');
     } else {
-      setStep('DATE');
+      setStep('DATE_TIME');
     }
   }
 
   function advanceFromOptions() {
-    if (showAddServiceStep) {
-      setStep('ADD_SERVICE');
-    } else {
-      setStep('DATE');
-    }
+    setStep('DATE_TIME');
   }
 
   function advanceFromAddService() {
@@ -650,16 +716,22 @@ function ProviderAvailabilityPickerInner({
       setAddonOptionsIndex(unconfiguredIdx);
       setStep(`ADDON_OPTIONS_${unconfiguredIdx}`);
     } else {
-      setStep('DATE');
+      setStep('DATE_TIME');
     }
+  }
+
+  // Navigate to ADD_SERVICE step (optional detour — not in progress bar)
+  function goToAddService() {
+    setAddServiceReturnStep(step);
+    setStep('ADD_SERVICE');
   }
 
   // ─── Availability SWR ───
   const today = new Date().toISOString().split('T')[0];
-  const twoWeeksLater = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+  const endHorizon = new Date(Date.now() + 183 * 86400000).toISOString().split('T')[0]; // ~6 months
   const addonSlugsKey = additionalServices.map((a) => a.slug).join(',');
 
-  const isAtOrPastDate = step === 'DATE' || step === 'TIME' || step === 'CHECKOUT';
+  const isAtOrPastDate = step === 'DATE_TIME' || step === 'CHECKOUT';
 
   // Build availability URL for a specific location
   const buildDatesUrl = useCallback((locKey) => {
@@ -671,8 +743,8 @@ function ProviderAvailabilityPickerInner({
     }).filter(Boolean);
     const addonParam = addonItems.length > 0
       ? `&additionalItems=${encodeURIComponent(JSON.stringify(addonItems))}` : '';
-    return `/api/blvd/availability/dates?locationKey=${locKey}&serviceItemId=${encodeURIComponent(itemId)}&staffProviderId=${encodeURIComponent(boulevardProviderId)}&startDate=${today}&endDate=${twoWeeksLater}${addonParam}`;
-  }, [directServiceItem, selectedSpecialty, boulevardServiceMap, boulevardProviderId, today, twoWeeksLater, additionalServices]);
+    return `/api/blvd/availability/dates?locationKey=${locKey}&serviceItemId=${encodeURIComponent(itemId)}&staffProviderId=${encodeURIComponent(boulevardProviderId)}&startDate=${today}&endDate=${endHorizon}${addonParam}`;
+  }, [directServiceItem, selectedSpecialty, boulevardServiceMap, boulevardProviderId, today, endHorizon, additionalServices]);
 
   const buildTimesUrl = useCallback((locKey, date) => {
     const itemId = directServiceItem?.id || boulevardServiceMap[selectedSpecialty?.slug]?.[locKey];
@@ -689,7 +761,7 @@ function ProviderAvailabilityPickerInner({
   // Dates: single location or merge both
   const serviceKey = directServiceItem?.id || selectedSpecialty?.slug || '';
   const datesSwrKey = (directServiceItem || selectedSpecialty) && selectedLocation && isAtOrPastDate
-    ? `dates:v3:${selectedLocation}:${serviceKey}:${addonSlugsKey}:${today}:${twoWeeksLater}:${boulevardProviderId}`
+    ? `dates:v3:${selectedLocation}:${serviceKey}:${addonSlugsKey}:${today}:${endHorizon}:${boulevardProviderId}`
     : null;
   const { data: datesResult, isLoading: datesLoading } = useSWR(
     datesSwrKey,
@@ -722,18 +794,37 @@ function ProviderAvailabilityPickerInner({
   const availableDates = Array.isArray(datesResult) ? datesResult : (datesResult?.dates || []);
   const dateLocationMap = Array.isArray(datesResult) ? null : (datesResult?.locationMap || null);
 
-  // ─── Auto-advance date from URL param ───
+  // ─── Auto-advance date from URL param/date range ───
   const dateDeepLinked = useRef(false);
   useEffect(() => {
-    if (dateDeepLinked.current || !initialDate) return;
-    if (step === 'DATE' && availableDates?.length > 0) {
-      if (availableDates.includes(initialDate)) {
+    if (dateDeepLinked.current) return;
+    if (!initialDate && !initialDateEnd) return;
+    if (step === 'DATE_TIME' && availableDates?.length > 0) {
+      const startBound = initialDate || null;
+      const endBound = initialDateEnd || initialDate || null;
+      let chosenDate = null;
+
+      if (initialDate && availableDates.includes(initialDate)) {
+        chosenDate = initialDate;
+      } else if (startBound && endBound) {
+        chosenDate = availableDates.find((d) => d >= startBound && d <= endBound) || null;
+      } else if (endBound) {
+        chosenDate = availableDates.find((d) => d <= endBound) || null;
+      }
+
+      if (chosenDate) {
         dateDeepLinked.current = true;
-        setSelectedDate(initialDate);
-        setStep('TIME');
+        setSelectedDate(chosenDate);
       }
     }
-  }, [step, availableDates, initialDate]);
+  }, [step, availableDates, initialDate, initialDateEnd]);
+
+  // Auto-select first available date so times show immediately
+  useEffect(() => {
+    if (step === 'DATE_TIME' && !selectedDate && !dateDeepLinked.current && availableDates?.length > 0) {
+      setSelectedDate(availableDates[0]);
+    }
+  }, [step, selectedDate, availableDates]);
 
   // Times: single location or merge both (tagged with locationKey/Label)
   const timesSwrKey = (directServiceItem || selectedSpecialty) && selectedLocation && selectedDate
@@ -763,7 +854,8 @@ function ProviderAvailabilityPickerInner({
   );
 
   // ─── Auto-fetch expanded Boulevard menu when location is set + provider qualifies ───
-  const showFullMenu = filteredBundles.length > 0 || specialties.length >= SHOW_MORE_THRESHOLD;
+  // Always show full menu when provider has ≤1 specialty (e.g. massage-only providers need to show all massage types)
+  const showFullMenu = filteredBundles.length > 0 || specialties.length >= SHOW_MORE_THRESHOLD || specialties.length <= 1;
   const menuFetchedRef = useRef(false);
   useEffect(() => {
     if (step === 'BUNDLE_ITEMS' && selectedBundle && !activeBundle) {
@@ -773,7 +865,9 @@ function ProviderAvailabilityPickerInner({
   }, [step, selectedBundle, activeBundle]);
 
   useEffect(() => {
-    if (!showFullMenu || !selectedLocation || !boulevardProviderId) return;
+    const shouldFetchMenu = treatmentBundles.length > 0 || specialties.length >= SHOW_MORE_THRESHOLD || specialties.length <= 1 || step === 'ADD_SERVICE';
+    if (!selectedLocation || !boulevardProviderId) return;
+    if (!shouldFetchMenu) return;
     if (menuFetchedRef.current || expandedMenuData) return;
     menuFetchedRef.current = true;
 
@@ -815,7 +909,25 @@ function ProviderAvailabilityPickerInner({
         setExpandedMenuLoading(false);
       }
     })();
-  }, [showFullMenu, selectedLocation, boulevardProviderId, isAnyLocation, locations, effectiveLocation, expandedMenuData]);
+  }, [step, treatmentBundles.length, specialties.length, selectedLocation, boulevardProviderId, isAnyLocation, locations, effectiveLocation, expandedMenuData]);
+
+  // When menu is primary and has exactly one category, auto-select it to show items directly
+  const autoSelectedMenuCategory = useRef(false);
+  useEffect(() => {
+    if (!menuIsPrimaryServiceList || autoSelectedMenuCategory.current) return;
+    if (!expandedMenuData?.categories || expandedMenuLoading) return;
+    if (expandedMenuData.categories.length === 1 && step === 'SPECIALTY') {
+      autoSelectedMenuCategory.current = true;
+      const cat = expandedMenuData.categories[0];
+      if (cat.items.length === 1) {
+        setDirectServiceItem({ id: cat.items[0].id, name: cat.items[0].name, categoryName: cat.name });
+        if (selectedLocation) setReadyToAdvance(true);
+      } else {
+        setPendingCategory(cat);
+        setStep('MENU_ITEM');
+      }
+    }
+  }, [menuIsPrimaryServiceList, expandedMenuData, expandedMenuLoading, step, selectedLocation]);
 
   // ─── Handlers ───
   const handleSelectSpecialty = (spec, { keepBundleContext = false } = {}) => {
@@ -826,6 +938,7 @@ function ProviderAvailabilityPickerInner({
     }
     setDirectServiceItem(null);
     setPendingCategory(null);
+    setAddonPendingCategory(null);
     setSelectedDate(null);
     setSelectedTime(null);
     setSelectedOptions([]);
@@ -841,6 +954,7 @@ function ProviderAvailabilityPickerInner({
   const handleSelectLocation = (locKey) => {
     setSelectedLocation(locKey);
     setSelectedBundleItem(null);
+    setAddonPendingCategory(null);
     setSelectedDate(null);
     setSelectedTime(null);
     setSelectedOptions([]);
@@ -861,6 +975,7 @@ function ProviderAvailabilityPickerInner({
     setSelectedSpecialty(null);
     setDirectServiceItem(null);
     setPendingCategory(null);
+    setAddonPendingCategory(null);
     setSelectedDate(null);
     setSelectedTime(null);
     setSelectedOptions([]);
@@ -910,6 +1025,7 @@ function ProviderAvailabilityPickerInner({
     setSelectedSpecialty(null);
     setSelectedBundle(null);
     setSelectedBundleItem(null);
+    setAddonPendingCategory(null);
 
     if (category.items.length === 1) {
       // Single item — select directly
@@ -928,7 +1044,26 @@ function ProviderAvailabilityPickerInner({
     setDirectServiceItem({ id: item.id, name: item.name, categoryName: pendingCategory?.name || '' });
     setHasOptions(null);
     setServiceDuration(null);
+    setPendingCategory(null);
     if (selectedLocation) setReadyToAdvance(true);
+  };
+
+  const handleChooseAddonCategory = (category) => {
+    if (!category) return;
+    if ((category.items || []).length === 1) {
+      const item = category.items[0];
+      handleAddService({ catalogId: item.id, title: item.name, slug: null });
+      return;
+    }
+    setAddonPendingCategory(category);
+    setStep('ADDON_MENU_ITEM');
+  };
+
+  const handleSelectAddonMenuItem = (item) => {
+    if (!item?.id) return;
+    handleAddService({ catalogId: item.id, title: item.name, slug: null });
+    setAddonPendingCategory(null);
+    setStep('ADD_SERVICE');
   };
 
   const handleToggleOption = (group, option) => {
@@ -937,7 +1072,7 @@ function ProviderAvailabilityPickerInner({
 
   const handleAddService = async (addon) => {
     const loc = effectiveLocation;
-    const addonServiceItemId = addon.catalogId || boulevardServiceMap[addon.slug]?.[loc];
+    const addonServiceItemId = addon.catalogId || addon.serviceItemId || boulevardServiceMap[addon.slug]?.[loc];
     if (!addonServiceItemId) return;
 
     // Fetch options for the addon service
@@ -1001,7 +1136,7 @@ function ProviderAvailabilityPickerInner({
       setAddonOptionsIndex(nextIdx);
       setStep(`ADDON_OPTIONS_${nextIdx}`);
     } else {
-      setStep('DATE');
+      setStep('DATE_TIME');
     }
   };
 
@@ -1010,7 +1145,7 @@ function ProviderAvailabilityPickerInner({
     setSelectedTime(null);
     setCartData(null);
     setReserveError(null);
-    setStep('TIME');
+    // Stay on DATE_TIME — TimeGrid renders below DateStrip
   };
 
   const handleSelectTime = async (slot) => {
@@ -1060,7 +1195,7 @@ function ProviderAvailabilityPickerInner({
   const handleExpired = useCallback(() => {
     setCartData(null);
     setSelectedTime(null);
-    setStep('TIME');
+    setStep('DATE_TIME');
     setReserveError('Your reservation expired. Please select a new time.');
   }, []);
 
@@ -1077,18 +1212,38 @@ function ProviderAvailabilityPickerInner({
     } catch {}
   }, [providerName, selectedSpecialty, selectedLocation, additionalServices]);
 
+  // Track which step we came from when entering ADD_SERVICE (it's not in the progress bar)
+  const [addServiceReturnStep, setAddServiceReturnStep] = useState(null);
+
   const goBack = () => {
+    // ADD_SERVICE is not in computedSteps — handle it specially
+    if (step === 'ADD_SERVICE') {
+      setAddonPendingCategory(null);
+      setStep(addServiceReturnStep || 'DATE_TIME');
+      return;
+    }
+
     const idx = computedSteps.findIndex((s) => s.key === step);
+
+    // If on first step (or steps that would go to first step) and onExitPicker exists, exit the picker
+    if ((idx <= 0 || (idx === 1 && computedSteps[0].key === 'SPECIALTY')) && step === 'SPECIALTY' && onExitPicker) {
+      onExitPicker();
+      return;
+    }
+    // Also handle going back from OPTIONS/DATE_TIME when specialty was auto-skipped
+    if (idx <= 0 && onExitPicker) {
+      onExitPicker();
+      return;
+    }
+
     if (idx <= 0) return;
     const prevKey = computedSteps[idx - 1].key;
 
     // Clean up state when going back
-    if (step === 'DATE') {
+    if (step === 'DATE_TIME') {
       setSelectedDate(null);
       setSelectedTime(null);
       setCartData(null);
-    } else if (step === 'TIME') {
-      setSelectedTime(null);
       setReserveError(null);
     } else if (step === 'CHECKOUT') {
       setCartData(null);
@@ -1104,8 +1259,8 @@ function ProviderAvailabilityPickerInner({
       setSelectedSpecialty(null);
     } else if (step === 'MENU_ITEM') {
       setPendingCategory(null);
-    } else if (step === 'ADD_SERVICE') {
-      // Going back from add service
+    } else if (step === 'ADDON_MENU_ITEM') {
+      setAddonPendingCategory(null);
     } else if (step.startsWith('ADDON_OPTIONS_')) {
       // Mark addon as not configured so user can redo
       const addonIdx = parseInt(step.split('_').pop(), 10);
@@ -1118,9 +1273,12 @@ function ProviderAvailabilityPickerInner({
   const resetToStart = () => {
     setStep('SPECIALTY');
     setSelectedSpecialty(specialties.length === 1 ? specialties[0] : null);
-    setSelectedLocation(locations.length === 1 ? locations[0].key : null);
+    setSelectedLocation(
+      (initialLocation && locations.some((l) => l.key === initialLocation)) ? initialLocation : (locations[0]?.key || null)
+    );
     setDirectServiceItem(null);
     setPendingCategory(null);
+    setAddonPendingCategory(null);
     setSelectedBundle(null);
     setSelectedBundleItem(null);
     setSelectedDate(null);
@@ -1135,11 +1293,10 @@ function ProviderAvailabilityPickerInner({
 
   const firstName = providerName?.split(/\s/)[0] || 'Provider';
   const locInfo = isAnyLocation ? null : (selectedLocation ? LOCATION_INFO[selectedLocation] : null);
-  const canGoBack = stepIndex > 0 && (
-    step !== 'SPECIALTY' &&
-    !(step === 'OPTIONS' && specialties.length <= 1 && locations.length <= 1) &&
-    !(step === 'ADD_SERVICE' && !hasOptions && specialties.length <= 1 && locations.length <= 1) &&
-    !(step === 'DATE' && !hasOptions && !showAddServiceStep && specialties.length <= 1 && locations.length <= 1)
+  const canGoBack = (stepIndex > 0 || step === 'ADD_SERVICE' || (step === 'SPECIALTY' && onExitPicker)) && (
+    !(step === 'SPECIALTY' && !onExitPicker) &&
+    !(step === 'OPTIONS' && specialties.length <= 1 && locations.length <= 1 && !onExitPicker) &&
+    !(step === 'DATE_TIME' && !hasOptions && specialties.length <= 1 && locations.length <= 1 && !onExitPicker)
   );
 
   // Build summary
@@ -1206,7 +1363,7 @@ function ProviderAvailabilityPickerInner({
                 Total: {formatDuration(totalDuration)}
               </span>
             )}
-            {selectedDate && (step === 'TIME' || step === 'CHECKOUT') && (
+            {selectedDate && step === 'CHECKOUT' && (
               <span className="rounded-full px-2.5 py-0.5" style={pillStyle}>{formatDate(selectedDate)}</span>
             )}
             {selectedTime && step === 'CHECKOUT' && (
@@ -1242,7 +1399,7 @@ function ProviderAvailabilityPickerInner({
                   </div>
                 </div>
               )}
-              {locations.length > 1 && !((serviceItemId || primaryServiceItemId) && hasOptions === null && optionsLoading) && (
+              {locations.length > 1 && !locationLocked && !((serviceItemId || primaryServiceItemId) && hasOptions === null && optionsLoading) && (
                 <div className="mb-4">
                   <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading, marginBottom: '0.5rem' }}>Choose location</p>
                   <div className="flex gap-2 flex-wrap">
@@ -1265,7 +1422,7 @@ function ProviderAvailabilityPickerInner({
                       <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading, marginBottom: '0.5rem' }}>
                         What do you need?
                       </p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {displayedBundles.map((bundle) => (
                           <button
                             key={bundle.id}
@@ -1297,7 +1454,7 @@ function ProviderAvailabilityPickerInner({
                   ) : specialties.length > 1 ? (
                     <>
                       <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading, marginBottom: '0.5rem' }}>What do you need?</p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {specialties.map((spec) => (
                           <button key={spec.slug} onClick={() => handleSelectSpecialty(spec)} className="rounded-xl text-left transition-all duration-200" style={{ fontFamily: fonts?.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.875rem 1rem', cursor: 'pointer', backgroundColor: selectedSpecialty?.slug === spec.slug ? `${colors.violet}10` : colors.cream, color: colors.heading, border: selectedSpecialty?.slug === spec.slug ? `1.5px solid ${colors.violet}` : `1px solid ${colors.stone}` }}>
                             {spec.title}
@@ -1306,13 +1463,14 @@ function ProviderAvailabilityPickerInner({
                       </div>
                     </>
                   ) : null}
-                  {/* Full Boulevard service menu — always visible when bundles or many specialties */}
+                  {/* Full Boulevard service menu */}
                   {showFullMenu && selectedLocation && (
                     <ExpandedServiceMenu
                       categories={expandedMenuData?.categories || []}
                       loading={expandedMenuLoading}
                       onSelectCategory={handleSelectFromExpandedMenu}
                       fonts={fonts}
+                      primary={menuIsPrimaryServiceList}
                     />
                   )}
                 </div>
@@ -1331,7 +1489,7 @@ function ProviderAvailabilityPickerInner({
                   {activeBundle.description}
                 </p>
               )}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {(activeBundle.availableItems || []).map((item, idx) => {
                   const meta = metaForChoice(item);
                   return (
@@ -1362,7 +1520,7 @@ function ProviderAvailabilityPickerInner({
               <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading, marginBottom: '0.75rem' }}>
                 {pendingCategory.name}
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {pendingCategory.items.map((item) => (
                   <button
                     key={item.id}
@@ -1375,6 +1533,34 @@ function ProviderAvailabilityPickerInner({
                       {formatPriceRange(item.price, { name: item.name, categoryName: pendingCategory?.name }) && (
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.violet, whiteSpace: 'nowrap' }}>
                           {formatPriceRange(item.price, { name: item.name, categoryName: pendingCategory?.name })}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ADDON_MENU_ITEM — pick add-on service from chosen category */}
+          {step === 'ADDON_MENU_ITEM' && addonPendingCategory && (
+            <motion.div key="addon-menu-item" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
+              <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading, marginBottom: '0.75rem' }}>
+                Add from {addonPendingCategory.name}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {addonPendingCategory.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelectAddonMenuItem(item)}
+                    className="rounded-xl text-left transition-all duration-200"
+                    style={{ fontFamily: fonts?.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.875rem 1rem', cursor: 'pointer', backgroundColor: colors.cream, color: colors.heading, border: `1px solid ${colors.stone}` }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span>{item.name}</span>
+                      {formatPriceRange(item.price, { name: item.name, categoryName: addonPendingCategory?.name }) && (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.violet, whiteSpace: 'nowrap' }}>
+                          {formatPriceRange(item.price, { name: item.name, categoryName: addonPendingCategory?.name })}
                         </span>
                       )}
                     </div>
@@ -1399,6 +1585,27 @@ function ProviderAvailabilityPickerInner({
                   fonts={fonts}
                 />
               )}
+              {showAddServiceStep && (
+                <button
+                  onClick={goToAddService}
+                  style={{
+                    fontFamily: fonts?.body,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: colors.violet,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0.5rem 0',
+                    marginTop: '0.25rem',
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'center',
+                  }}
+                >
+                  + Add another service with {firstName}
+                </button>
+              )}
             </motion.div>
           )}
 
@@ -1408,9 +1615,12 @@ function ProviderAvailabilityPickerInner({
               <AddServiceStep
                 providerFirstName={firstName}
                 compatibleAddons={enrichedAddons}
+                fallbackCategories={fallbackAddonCategories}
+                menuLoading={expandedMenuLoading}
                 additionalServices={additionalServices}
                 maxServices={MAX_SERVICES_PER_BOOKING}
                 onAddService={handleAddService}
+                onChooseCategory={handleChooseAddonCategory}
                 onRemoveService={handleRemoveService}
                 onContinue={advanceFromAddService}
                 fonts={fonts}
@@ -1443,15 +1653,55 @@ function ProviderAvailabilityPickerInner({
             );
           })()}
 
-          {/* DATE */}
-          {step === 'DATE' && (
-            <motion.div key="date" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
+          {/* DATE & TIME (combined) */}
+          {step === 'DATE_TIME' && (
+            <motion.div key="date-time" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
+              {/* Already-added services + add-more link */}
+              {additionalServices.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {additionalServices.map((svc, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5"
+                      style={{
+                        fontFamily: fonts?.body,
+                        fontSize: '0.6875rem',
+                        fontWeight: 600,
+                        color: colors.violet,
+                        backgroundColor: `${colors.violet}08`,
+                        border: `1px solid ${colors.violet}20`,
+                      }}
+                    >
+                      + {svc.title}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {showAddServiceStep && (
+                <button
+                  onClick={goToAddService}
+                  style={{
+                    fontFamily: fonts?.body,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: colors.violet,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    marginBottom: '0.75rem',
+                    display: 'block',
+                  }}
+                >
+                  + Add another service with {firstName}
+                </button>
+              )}
               <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading, marginBottom: '0.5rem' }}>Pick a date</p>
               {datesLoading ? (
                 <div className="flex gap-2 overflow-hidden">{Array.from({ length: 7 }).map((_, i) => (<div key={i} className="flex-shrink-0 rounded-xl animate-pulse" style={{ width: 64, height: 72, backgroundColor: colors.stone }} />))}</div>
               ) : availableDates?.length === 0 ? (
                 <div className="text-center py-6">
-                  <p style={{ fontFamily: fonts?.body, fontSize: '0.875rem', color: colors.muted }}>No availability in the next 2 weeks.</p>
+                  <p style={{ fontFamily: fonts?.body, fontSize: '0.875rem', color: colors.muted }}>No availability found.</p>
                   {specialties.length > 1 && (
                     <button onClick={resetToStart} className="mt-3 rounded-full" style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, padding: '0.5rem 1.25rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>Try another service</button>
                   )}
@@ -1459,26 +1709,37 @@ function ProviderAvailabilityPickerInner({
               ) : (
                 <DateStrip availableDates={availableDates || []} selectedDate={selectedDate} onSelect={handleSelectDate} fonts={fonts} startDate={today} dateLocationMap={dateLocationMap} locations={locations} />
               )}
-            </motion.div>
-          )}
 
-          {/* TIME */}
-          {step === 'TIME' && (
-            <motion.div key="time" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
-              <div className="flex items-baseline justify-between mb-2">
-                <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading }}>
-                  {formatDate(selectedDate)} &mdash; Pick a time
-                </p>
-                {totalDuration && (
-                  <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: colors.muted }}>{formatDuration(totalDuration)}</span>
+              {/* Time slots slide in below when a date is selected */}
+              <AnimatePresence mode="wait">
+                {selectedDate && (
+                  <motion.div
+                    key={`times-${selectedDate}`}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div style={{ paddingTop: '1rem' }}>
+                      <div className="flex items-baseline justify-between mb-2">
+                        <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading }}>
+                          {formatDate(selectedDate)} &mdash; Pick a time
+                        </p>
+                        {totalDuration && (
+                          <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: colors.muted }}>{formatDuration(totalDuration)}</span>
+                        )}
+                      </div>
+                      {reserveError && (
+                        <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: `${colors.rose}08`, border: `1px solid ${colors.rose}20` }}>
+                          <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', color: colors.rose }}>{reserveError}</p>
+                        </div>
+                      )}
+                      <TimeGrid times={availableTimes || []} selectedTimeId={selectedTime?.id} onSelect={handleSelectTime} loading={timesLoading || reserving} fonts={fonts} duration={totalDuration} />
+                    </div>
+                  </motion.div>
                 )}
-              </div>
-              {reserveError && (
-                <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: `${colors.rose}08`, border: `1px solid ${colors.rose}20` }}>
-                  <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', color: colors.rose }}>{reserveError}</p>
-                </div>
-              )}
-              <TimeGrid times={availableTimes || []} selectedTimeId={selectedTime?.id} onSelect={handleSelectTime} loading={timesLoading || reserving} fonts={fonts} duration={totalDuration} />
+              </AnimatePresence>
             </motion.div>
           )}
 
@@ -1492,7 +1753,7 @@ function ProviderAvailabilityPickerInner({
                 fonts={fonts}
                 onSuccess={handleBookingSuccess}
                 onExpired={handleExpired}
-                onBack={() => { setStep('TIME'); setCartData(null); }}
+                onBack={() => { setStep('DATE_TIME'); setCartData(null); }}
               />
             </motion.div>
           )}

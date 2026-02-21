@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors, gradients, fontPairings } from '@/components/preview/tokens';
 import { useLocationPref } from '@/context/LocationContext';
+import { useMember } from '@/context/MemberContext';
 
 /**
  * Gravity Drawer — single "Book Now" button.
@@ -12,6 +13,7 @@ import { useLocationPref } from '@/context/LocationContext';
 export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
   const fonts = fontPairings[fontKey];
   const { locationKey, setLocationKey } = useLocationPref();
+  const { openBookingModal } = useMember();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -33,10 +35,7 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
 
   const handleMainClick = () => {
     if (hasPreference) {
-      // Go straight to booking
-      if (typeof window !== 'undefined' && window.__openBlvdForSlug) {
-        window.__openBlvdForSlug('', locationKey);
-      }
+      openBookingModal(locationKey);
     } else {
       setDrawerOpen(true);
     }
@@ -45,12 +44,7 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
   const handleLocationPick = (loc) => {
     setLocationKey(loc);
     setDrawerOpen(false);
-    // Open booking after a brief moment so context updates
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.__openBlvdForSlug) {
-        window.__openBlvdForSlug('', loc);
-      }
-    }, 150);
+    setTimeout(() => openBookingModal(loc), 150);
   };
 
   const handleBadgeClick = (e) => {

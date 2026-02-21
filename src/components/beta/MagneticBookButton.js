@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors, gradients, fontPairings } from '@/components/preview/tokens';
 import { useLocationPref } from '@/context/LocationContext';
+import { useMember } from '@/context/MemberContext';
 
 /**
  * Magnetic Split Button — two halves side-by-side.
@@ -12,6 +13,7 @@ import { useLocationPref } from '@/context/LocationContext';
 export default function MagneticBookButton({ fontKey = 'bold', size = 'nav' }) {
   const fonts = fontPairings[fontKey];
   const { locationKey, setLocationKey } = useLocationPref();
+  const { openBookingModal } = useMember();
   const [hovered, setHovered] = useState(null); // 'westfield' | 'carmel' | null
 
   const hasPreference = !!locationKey;
@@ -26,10 +28,7 @@ export default function MagneticBookButton({ fontKey = 'bold', size = 'nav' }) {
 
   const handleClick = (loc) => {
     setLocationKey(loc);
-    // Open BLVD booking for that location
-    if (typeof window !== 'undefined' && window.__openBlvdForSlug) {
-      window.__openBlvdForSlug('', loc);
-    }
+    openBookingModal(loc);
   };
 
   const handleSwitch = (loc, e) => {

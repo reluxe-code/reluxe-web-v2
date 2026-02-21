@@ -18,7 +18,7 @@ function normalizeBundle(b) {
   return { ...b, items: (b.slugs || []).map(s => ({ slug: s, label: SLUG_TITLES[s] || s })) }
 }
 
-const EMPTY_BUNDLE = { id: '', title: '', description: '', items: [], roles: [], sort_order: 0 }
+const EMPTY_BUNDLE = { id: '', title: '', description: '', items: [], roles: [], sort_order: 0, featured: false }
 
 export default function AdminTreatmentBundles() {
   const [bundles, setBundles] = useState([])
@@ -98,7 +98,7 @@ export default function AdminTreatmentBundles() {
 
   function startEdit(idx) {
     setEditing(idx)
-    setForm({ ...bundles[idx], items: [...bundles[idx].items], roles: bundles[idx].roles || [] })
+    setForm({ ...bundles[idx], items: [...bundles[idx].items], roles: bundles[idx].roles || [], featured: !!bundles[idx].featured })
   }
 
   function startNew() {
@@ -165,6 +165,7 @@ export default function AdminTreatmentBundles() {
       items: validItems,
       id: form.id || slugify(form.title),
       roles: form.roles?.length > 0 ? form.roles : [],
+      featured: !!form.featured,
     }
     // Remove legacy slugs field if present
     delete bundle.slugs
@@ -193,6 +194,11 @@ export default function AdminTreatmentBundles() {
     ;[updated[idx], updated[to]] = [updated[to], updated[idx]]
     const reordered = updated.map((b, i) => ({ ...b, sort_order: i }))
     await saveBundles(reordered)
+  }
+
+  async function handleToggleFeatured(idx) {
+    const updated = bundles.map((b, i) => i === idx ? { ...b, featured: !b.featured } : b)
+    await saveBundles(updated)
   }
 
   // Check which providers qualify for a bundle
@@ -258,7 +264,7 @@ export default function AdminTreatmentBundles() {
         </div>
         <p className="text-sm text-neutral-500 mb-6">
           Treatment bundles organize services by patient concern. Patients pick a bundle, then choose a specific Boulevard service within it.
-          Click &ldquo;Sync Catalog&rdquo; to pull the latest services from Boulevard.
+          ★ Featured bundles show in the main booking modal&rsquo;s &ldquo;Where to Start&rdquo;. Non-featured bundles appear in provider-specific booking.
         </p>
 
         {message && (
@@ -296,6 +302,11 @@ export default function AdminTreatmentBundles() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-sm">{bundle.title}</h3>
                       <span className="text-xs text-neutral-400 font-mono">{bundle.id}</span>
+                      {bundle.featured && (
+                        <span className="bg-amber-50 text-amber-700 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+                          Featured
+                        </span>
+                      )}
                       {bundle.roles?.length > 0 && (
                         <span className="bg-blue-50 text-blue-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
                           {bundle.roles.join(', ')}
@@ -318,7 +329,15 @@ export default function AdminTreatmentBundles() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex gap-2 shrink-0 items-center">
+                    <button
+                      onClick={() => handleToggleFeatured(idx)}
+                      disabled={saving}
+                      title={bundle.featured ? 'Remove from featured' : 'Add to featured'}
+                      className={`text-lg transition disabled:opacity-50 ${bundle.featured ? 'text-amber-500 hover:text-amber-600' : 'text-neutral-300 hover:text-amber-400'}`}
+                    >
+                      {bundle.featured ? '★' : '☆'}
+                    </button>
                     <button onClick={() => startEdit(idx)} disabled={editing !== null} className="text-sm text-neutral-500 hover:text-black disabled:opacity-50 transition">Edit</button>
                     <button onClick={() => handleDelete(idx)} disabled={saving} className="text-sm text-red-400 hover:text-red-600 disabled:opacity-50 transition">Delete</button>
                   </div>
@@ -458,6 +477,20 @@ function BundleForm({ form, onUpdate, onAddCatalogItem, onRemoveItem, onUpdateIt
           placeholder="Short patient-facing description"
           className="w-full border rounded-lg px-3 py-1.5 text-sm"
         />
+      </div>
+
+      {/* Featured toggle */}
+      <div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!form.featured}
+            onChange={e => onUpdate('featured', e.target.checked)}
+            className="accent-amber-500"
+          />
+          <span className="text-sm font-medium">Featured in booking modal</span>
+        </label>
+        <p className="text-[10px] text-neutral-400 mt-1">Featured bundles show in the main &ldquo;Where to Start&rdquo; section. Non-featured bundles appear in provider-specific booking.</p>
       </div>
 
       {/* Role filtering */}

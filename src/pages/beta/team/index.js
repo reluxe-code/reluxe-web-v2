@@ -6,6 +6,7 @@ import { getServiceClient } from '@/lib/supabase';
 import { toWPStaffShape } from '@/lib/staff-helpers';
 import { getTestimonialsSSR } from '@/lib/testimonials';
 import GravityBookButton from '@/components/beta/GravityBookButton';
+import MemberPageWidget from '@/components/beta/MemberPageWidget';
 import { categorizeProvider } from '@/lib/provider-roles';
 
 /* ─── grain texture ─── */
@@ -287,16 +288,23 @@ function TeamPage({ fontKey, fonts, staffList, testimonials }) {
       <section className="relative" style={{ backgroundColor: colors.ink, paddingTop: 120 }}>
         <div style={{ position: 'absolute', bottom: 0, right: 0, width: '40%', height: '60%', background: `radial-gradient(ellipse at bottom right, ${colors.fuchsia}08, transparent 70%)`, pointerEvents: 'none' }} />
         <div className="max-w-7xl mx-auto px-6 pb-16 lg:pb-24 relative">
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Our Team</p>
-            <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1rem', maxWidth: '30rem' }}>
-              The People Behind{' '}
-              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>the Glow</span>
-            </h1>
-            <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.7, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem' }}>
-              {staffList.length}+ expert providers across two locations. Every one of them hand-picked, rigorously trained, and genuinely passionate about what they do.
-            </p>
-          </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+              <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Our Team</p>
+              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1rem', maxWidth: '30rem' }}>
+                The People Behind{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>the Glow</span>
+              </h1>
+              <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.7, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem' }}>
+                {staffList.length}+ expert providers across two locations. Every one of them hand-picked, rigorously trained, and genuinely passionate about what they do.
+              </p>
+            </motion.div>
+
+            {/* Member widget (right column — hidden when logged out) */}
+            <motion.div className="relative" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}>
+              <MemberPageWidget variant="team" fonts={fonts} />
+            </motion.div>
+          </div>
         </div>
       </section>
 

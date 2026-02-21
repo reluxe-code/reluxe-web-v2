@@ -25,11 +25,11 @@ export default async function handler(req, res) {
 
   const { locationKey, staffProviderId } = req.query
 
-  if (!locationKey || !staffProviderId) {
-    return res.status(400).json({ error: 'locationKey and staffProviderId are required' })
+  if (!locationKey) {
+    return res.status(400).json({ error: 'locationKey is required' })
   }
 
-  const cacheKey = `menu:v2:${locationKey}:${staffProviderId}`
+  const cacheKey = `menu:v2:${locationKey}:${staffProviderId || 'all'}`
   const cached = getCached(cacheKey, 600_000) // 10 min TTL
   if (cached && !cached.stale) {
     return res.json(cached.data)
@@ -50,35 +50,52 @@ export default async function handler(req, res) {
       const items = category.availableItems || []
       if (!items.length) continue
 
-      // Check staff variants for all items in parallel
-      const itemResults = await Promise.allSettled(
-        items.map(async (item) => {
-          try {
-            const staffVariants = await item.getStaffVariants()
-            const hasProvider = staffVariants.some((v) => matchId(v.staff?.id, staffProviderId))
-            if (!hasProvider) return null
-            return {
-              id: item.id,
-              name: item.name,
-              description: item.description || null,
-              duration: {
-                min: item.listDurationRange?.min ?? null,
-                max: item.listDurationRange?.max ?? null,
-              },
-              price: {
-                min: item.listPriceRange?.min ?? null,
-                max: item.listPriceRange?.max ?? null,
-              },
+      // When staffProviderId provided, filter items by provider availability
+      // When not provided, return all items at the location
+      let filteredItems
+      if (staffProviderId) {
+        const itemResults = await Promise.allSettled(
+          items.map(async (item) => {
+            try {
+              const staffVariants = await item.getStaffVariants()
+              const hasProvider = staffVariants.some((v) => matchId(v.staff?.id, staffProviderId))
+              if (!hasProvider) return null
+              return {
+                id: item.id,
+                name: item.name,
+                description: item.description || null,
+                duration: {
+                  min: item.listDurationRange?.min ?? null,
+                  max: item.listDurationRange?.max ?? null,
+                },
+                price: {
+                  min: item.listPriceRange?.min ?? null,
+                  max: item.listPriceRange?.max ?? null,
+                },
+              }
+            } catch {
+              return null
             }
-          } catch {
-            return null
-          }
-        })
-      )
-
-      const filteredItems = itemResults
-        .filter((r) => r.status === 'fulfilled' && r.value)
-        .map((r) => r.value)
+          })
+        )
+        filteredItems = itemResults
+          .filter((r) => r.status === 'fulfilled' && r.value)
+          .map((r) => r.value)
+      } else {
+        filteredItems = items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description || null,
+          duration: {
+            min: item.listDurationRange?.min ?? null,
+            max: item.listDurationRange?.max ?? null,
+          },
+          price: {
+            min: item.listPriceRange?.min ?? null,
+            max: item.listPriceRange?.max ?? null,
+          },
+        }))
+      }
 
       if (filteredItems.length > 0) {
         result.categories.push({

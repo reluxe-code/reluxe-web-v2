@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { href: '/admin/deals', label: 'Deals' },
   { href: '/admin/staff', label: 'Staff' },
   { href: '/admin/treatment-bundles', label: 'Treatment Bundles' },
+  { href: '/admin/provider-routing', label: 'Provider Routing' },
   { href: '/admin/testimonials', label: 'Testimonials' },
   { href: '/admin/locations', label: 'Locations' },
   { href: '/admin/boulevard-sync', label: 'Boulevard Sync' },

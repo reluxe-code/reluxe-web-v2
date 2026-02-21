@@ -2,11 +2,12 @@
 // Horizontal scrollable strip of date buttons for booking flow.
 // When dateLocationMap is provided (No Preference mode), shows location
 // indicators (C/W) under each available date.
-import { useRef, useEffect } from 'react';
+import { Fragment, useRef, useEffect } from 'react';
 import { colors } from '@/components/preview/tokens';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // Short labels + colors for location dots
 const LOC_STYLE = {
@@ -25,12 +26,12 @@ function generateDateRange(startDate, days = 14) {
   return dates;
 }
 
-export default function DateStrip({ availableDates = [], selectedDate, onSelect, fonts, startDate, dateLocationMap, locations = [] }) {
+export default function DateStrip({ availableDates = [], selectedDate, onSelect, fonts, startDate, dateLocationMap, locations = [], days = 183 }) {
   const scrollRef = useRef(null);
   const selectedRef = useRef(null);
   const today = new Date().toISOString().split('T')[0];
   const start = startDate || today;
-  const allDates = generateDateRange(start, 14);
+  const allDates = generateDateRange(start, days);
   const availableSet = new Set(availableDates);
 
   // Scroll selected date into view
@@ -48,19 +49,39 @@ export default function DateStrip({ availableDates = [], selectedDate, onSelect,
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         <style jsx>{`div::-webkit-scrollbar { display: none; }`}</style>
-        {allDates.map((dateStr) => {
+        {allDates.map((dateStr, i) => {
           const d = new Date(dateStr + 'T12:00:00');
           const dayName = DAY_NAMES[d.getDay()];
           const dateNum = d.getDate();
           const month = MONTH_NAMES[d.getMonth()];
           const isAvailable = availableSet.has(dateStr);
           const isSelected = selectedDate === dateStr;
+
+          // Month divider when month changes
+          const prevD = i > 0 ? new Date(allDates[i - 1] + 'T12:00:00') : null;
+          const isNewMonth = i === 0 || (prevD && d.getMonth() !== prevD.getMonth());
           const isToday = dateStr === today;
           const dateLocs = dateLocationMap?.[dateStr] || null;
 
           return (
+            <Fragment key={dateStr}>
+              {isNewMonth && i > 0 && (
+                <div className="flex-shrink-0 flex items-center justify-center" style={{ minWidth: 2, margin: '0 4px' }}>
+                  <span style={{
+                    fontFamily: fonts?.body || 'system-ui',
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    color: colors.violet,
+                    writingMode: 'vertical-rl',
+                    textOrientation: 'mixed',
+                    letterSpacing: '0.05em',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {MONTH_FULL[d.getMonth()]}
+                  </span>
+                </div>
+              )}
             <button
-              key={dateStr}
               ref={isSelected ? selectedRef : null}
               onClick={() => isAvailable && onSelect(dateStr)}
               disabled={!isAvailable}
@@ -70,11 +91,11 @@ export default function DateStrip({ availableDates = [], selectedDate, onSelect,
                 padding: '10px 0 6px',
                 cursor: isAvailable ? 'pointer' : 'default',
                 opacity: isAvailable ? 1 : 0.3,
-                backgroundColor: isSelected ? colors.violet : isAvailable ? 'rgba(124,58,237,0.06)' : 'transparent',
+                backgroundColor: isSelected ? colors.violet : isAvailable ? 'rgba(124,58,237,0.08)' : 'transparent',
                 border: isSelected
                   ? `2px solid ${colors.violet}`
-                  : isToday && isAvailable
-                    ? `2px solid ${colors.violet}40`
+                  : isAvailable
+                    ? `2px solid ${colors.violet}35`
                     : '2px solid transparent',
               }}
             >
@@ -149,6 +170,7 @@ export default function DateStrip({ availableDates = [], selectedDate, onSelect,
                 />
               ) : null}
             </button>
+            </Fragment>
           );
         })}
       </div>

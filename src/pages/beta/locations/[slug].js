@@ -11,6 +11,7 @@ import { isAvailableAtLocation } from '@/data/locationAvailability';
 import { getServicesList } from '@/data/servicesList';
 import GravityBookButton from '@/components/beta/GravityBookButton';
 import ScarcityBadge from '@/components/booking/ScarcityBadge';
+import MemberPageWidget from '@/components/beta/MemberPageWidget';
 import ProviderAvailabilityPicker from '@/components/booking/ProviderAvailabilityPicker';
 import BookingChoiceCard from '@/components/booking/BookingChoiceCard';
 import { categorizeProvider } from '@/lib/provider-roles';
@@ -251,48 +252,55 @@ function LocationDetailPage({ fontKey, fonts, location, staff, services, testimo
   return (
     <>
       {/* Hero */}
-      <section className="relative flex items-end" style={{ backgroundColor: colors.ink, minHeight: '44vh', paddingTop: 100 }}>
+      <section className="relative" style={{ backgroundColor: colors.ink }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, width: '60%', height: '52%', background: `radial-gradient(ellipse at bottom left, ${colors.violet}10, transparent 70%)`, pointerEvents: 'none' }} />
-        <div className="max-w-7xl mx-auto px-6 pb-8 lg:pb-10 w-full relative">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className="flex items-center gap-2 mb-3">
-              <a href="/beta/locations" className="inline-flex items-center gap-1.5 transition-colors duration-200" style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: 'rgba(250,248,245,0.5)', textDecoration: 'none' }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                All Locations
-              </a>
-              <span className="rounded-full px-3 py-1" style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.08em', border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)' }}>
-                {tagline}
-              </span>
-            </div>
-            <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.1rem, 5.3vw, 4rem)', fontWeight: 700, lineHeight: 1.04, color: colors.white, marginBottom: '0.7rem', maxWidth: '38rem' }}>
-              RELUXE{' '}
-              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{cityName}</span>
-            </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mb-4">
-              {f.fullAddress && (
-                <span className="flex items-center gap-2" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(250,248,245,0.58)' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                  {f.fullAddress}
+        <div className="max-w-7xl mx-auto px-6 w-full relative" style={{ paddingTop: 'clamp(7rem, 12vw, 10rem)', paddingBottom: 'clamp(4rem, 8vw, 6rem)' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-end">
+            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <div className="flex items-center gap-2 mb-3">
+                <a href="/beta/locations" className="inline-flex items-center gap-1.5 transition-colors duration-200" style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: 'rgba(250,248,245,0.5)', textDecoration: 'none' }}>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  All Locations
+                </a>
+                <span className="rounded-full px-3 py-1" style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.08em', border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)' }}>
+                  {tagline}
                 </span>
-              )}
-              {(f.phone || staticLoc.phone) && (
-                <a href={`tel:${f.phone || staticLoc.phone}`} className="flex items-center gap-2 transition-colors duration-200 hover:text-white" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(250,248,245,0.58)', textDecoration: 'none' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                  {f.phone || staticLoc.phone}
-                </a>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <GravityBookButton fontKey={fontKey} size="hero" />
-              {staticLoc.mapUrl && (
-                <a href={staticLoc.mapUrl} target="_blank" rel="noopener noreferrer" className="rounded-full transition-all duration-200 hover:bg-white/10" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.8rem 1.9rem', color: 'rgba(250,248,245,0.66)', border: '1.5px solid rgba(250,248,245,0.15)', textDecoration: 'none', display: 'inline-block' }}>
-                  Get Directions
-                </a>
-              )}
-              <ScarcityBadge locationKey={slug} variant="inline" fonts={fonts} />
-            </div>
-          </motion.div>
+              </div>
+              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.1rem, 5.3vw, 4rem)', fontWeight: 700, lineHeight: 1.04, color: colors.white, marginBottom: '0.7rem', maxWidth: '38rem' }}>
+                RELUXE{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{cityName}</span>
+              </h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mb-4">
+                {f.fullAddress && (
+                  <span className="flex items-center gap-2" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(250,248,245,0.58)' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                    {f.fullAddress}
+                  </span>
+                )}
+                {(f.phone || staticLoc.phone) && (
+                  <a href={`tel:${f.phone || staticLoc.phone}`} className="flex items-center gap-2 transition-colors duration-200 hover:text-white" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(250,248,245,0.58)', textDecoration: 'none' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                    {f.phone || staticLoc.phone}
+                  </a>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+                {staticLoc.mapUrl && (
+                  <a href={staticLoc.mapUrl} target="_blank" rel="noopener noreferrer" className="rounded-full transition-all duration-200 hover:bg-white/10" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.8rem 1.9rem', color: 'rgba(250,248,245,0.66)', border: '1.5px solid rgba(250,248,245,0.15)', textDecoration: 'none', display: 'inline-block' }}>
+                    Get Directions
+                  </a>
+                )}
+                <ScarcityBadge locationKey={slug} variant="inline" fonts={fonts} />
+              </div>
+            </motion.div>
+
+            {/* Member widget (right column — hidden when logged out) */}
+            <motion.div className="relative" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}>
+              <MemberPageWidget variant="location" fonts={fonts} locationKey={slug} />
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -319,7 +327,7 @@ function LocationDetailPage({ fontKey, fonts, location, staff, services, testimo
               Start with one simple path and we will guide the rest.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-4">
               {[
                 { id: 'concern', label: 'I have a concern that I need help with', sub: "We'll guide you" },
                 { id: 'provider', label: 'I have a provider I want to see', sub: "Let's get you booked" },

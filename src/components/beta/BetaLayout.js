@@ -4,7 +4,9 @@ import BetaNavBar from '@/components/beta/BetaNavBar';
 import BetaFooter from '@/components/beta/BetaFooter';
 import BoulevardScripts from '@/components/booking/BoulevardScripts';
 import { LocationProvider } from '@/context/LocationContext';
+import { MemberProvider } from '@/context/MemberContext';
 import LocationChooserModal from '@/components/location/LocationChooserModal';
+import MemberDrawerPortal from '@/components/beta/MemberDrawerPortal';
 
 // Beta uses the "bold" font pairing (Playfair Display + Outfit)
 // This can be changed site-wide by updating this single value
@@ -28,14 +30,17 @@ export default function BetaLayout({ children, title, description, noindex = tru
       <BoulevardScripts />
 
       <LocationProvider>
-        <div style={{ backgroundColor: '#fff' }}>
-          <BetaNavBar fontKey={FONT_KEY} />
-          {typeof children === 'function'
-            ? children({ fontKey: FONT_KEY, fonts })
-            : children}
-          <BetaFooter fontKey={FONT_KEY} />
-        </div>
-        <LocationChooserModal />
+        <MemberProvider>
+          <div style={{ backgroundColor: '#fff' }}>
+            <BetaNavBar fontKey={FONT_KEY} />
+            {typeof children === 'function'
+              ? children({ fontKey: FONT_KEY, fonts })
+              : children}
+            <BetaFooter fontKey={FONT_KEY} />
+          </div>
+          <LocationChooserModal />
+          <MemberDrawerPortal fonts={fonts} />
+        </MemberProvider>
       </LocationProvider>
     </>
   );

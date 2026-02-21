@@ -6,6 +6,7 @@ import { colors, gradients, typeScale } from '@/components/preview/tokens';
 import { getServicesList } from '@/data/servicesList';
 import { getTestimonialsSSR } from '@/lib/testimonials';
 import GravityBookButton from '@/components/beta/GravityBookButton';
+import MemberPageWidget from '@/components/beta/MemberPageWidget';
 
 /* ─── grain texture ─── */
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
@@ -249,51 +250,53 @@ function ServicesPage({ fontKey, fonts, services, testimonials }) {
         <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '50%', height: '60%', background: `radial-gradient(ellipse at center, ${colors.fuchsia}08, transparent 65%)`, pointerEvents: 'none' }} />
 
         <div className="max-w-7xl mx-auto px-6 relative" style={{ paddingTop: 'clamp(7rem, 12vw, 10rem)', paddingBottom: 'clamp(4rem, 8vw, 6rem)' }}>
-          <motion.div className="max-w-3xl" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1.25rem' }}>
-              Our Treatments
-            </p>
-            <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.25rem' }}>
-              Expert Treatments.<br />
-              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Real Results.
-              </span>
-            </h1>
-            <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginBottom: '2rem' }}>
-              40+ FDA-approved treatments delivered by NPs, PAs, and licensed aestheticians. No assembly lines, no upselling &mdash; just honest expert care.
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1.25rem' }}>
+                Our Treatments
+              </p>
+              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.25rem' }}>
+                Expert Treatments.<br />
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Real Results.
+                </span>
+              </h1>
+              <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginBottom: '2rem' }}>
+                40+ FDA-approved treatments delivered by NPs, PAs, and licensed aestheticians. No assembly lines, no upselling &mdash; just honest expert care.
+              </p>
 
-            <div className="flex flex-wrap items-center gap-4 mb-10">
-              <GravityBookButton fontKey={fontKey} size="hero" />
-              <a
-                href="#treatments"
-                className="rounded-full transition-all duration-200 hover:bg-white/5"
-                style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2rem', color: 'rgba(250,248,245,0.6)', border: '1.5px solid rgba(250,248,245,0.12)', textDecoration: 'none', display: 'inline-block' }}
-              >
-                Browse Treatments
-              </a>
-            </div>
-          </motion.div>
-
-          {/* Trust stat strip */}
-          <motion.div
-            className="flex flex-wrap gap-x-8 gap-y-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            {[
-              { value: '40+', label: 'Treatments' },
-              { value: '5.0', label: 'Google Rating' },
-              { value: '2', label: 'Locations' },
-              { value: '6+', label: 'Years Experience' },
-            ].map((stat) => (
-              <div key={stat.label} className="flex items-center gap-2">
-                <span style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.white }}>{stat.value}</span>
-                <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,248,245,0.35)' }}>{stat.label}</span>
+              <div className="flex flex-wrap items-center gap-4 mb-10">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+                <a
+                  href="#treatments"
+                  className="rounded-full transition-all duration-200 hover:bg-white/5"
+                  style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2rem', color: 'rgba(250,248,245,0.6)', border: '1.5px solid rgba(250,248,245,0.12)', textDecoration: 'none', display: 'inline-block' }}
+                >
+                  Browse Treatments
+                </a>
               </div>
-            ))}
-          </motion.div>
+
+              {/* Trust stat strip */}
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                {[
+                  { value: '40+', label: 'Treatments' },
+                  { value: '5.0', label: 'Google Rating' },
+                  { value: '2', label: 'Locations' },
+                  { value: '6+', label: 'Years Experience' },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-2">
+                    <span style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.white }}>{stat.value}</span>
+                    <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,248,245,0.35)' }}>{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Member widget (right column — hidden when logged out) */}
+            <motion.div className="relative" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}>
+              <MemberPageWidget variant="services" fonts={fonts} />
+            </motion.div>
+          </div>
         </div>
 
         {/* Treatment ticker */}
