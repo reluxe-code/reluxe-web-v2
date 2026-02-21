@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { colors, gradients } from '@/components/preview/tokens';
 import CodeInput from './CodeInput';
 import { formatPhone, stripPhone, toE164, isValidPhone } from '@/lib/phoneUtils';
+import { getReferralCode, clearReferralCode } from '@/lib/referral';
+import ReferralShareCTA from './ReferralShareCTA';
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -103,6 +105,9 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
         body.email = email;
         body.phone = toE164(phone);
       }
+      // Pass referral code for attribution
+      const refCode = getReferralCode();
+      if (refCode) body.referralCode = refCode;
 
       const res = await fetch(`/api/blvd/cart/${cartId}/checkout`, {
         method: 'POST',
@@ -119,6 +124,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
 
       setConfirmEmail(email || data.confirmation?.email || '');
       setConfirmation(data);
+      clearReferralCode();
       if (onSuccess) onSuccess(data);
       return { success: true };
     } catch (err) {
@@ -320,6 +326,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
             {summary.startTime && ` at ${new Date(summary.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
           </p>
         )}
+        <ReferralShareCTA fonts={fonts} variant="light" />
       </div>
     );
   }

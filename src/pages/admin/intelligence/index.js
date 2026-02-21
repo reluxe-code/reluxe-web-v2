@@ -130,6 +130,12 @@ export default function IntelligenceOverview() {
           description="Conversion funnel, abandon breakdown, daily trends, and re-engagement opportunities from online booking flows."
           badge="New"
         />
+        <QuickLink
+          href="/admin/intelligence/referrals"
+          title="Referrals"
+          description="Give $25, Get $25 referral program. Funnel, top referrers, channel breakdown, pending credits, and fraud alerts."
+          badge="New"
+        />
       </div>
     </AdminLayout>
   )

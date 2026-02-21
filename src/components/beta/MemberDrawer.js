@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { colors, gradients } from '@/components/preview/tokens'
 import { useMember } from '@/context/MemberContext'
+import ReferralDashboard from '@/components/member/ReferralDashboard'
 
 // ─── Section: Visit History ───
 function VisitsSection({ visits, fonts, onRebook }) {
@@ -330,6 +331,7 @@ const ALL_TABS = [
   { key: 'products', label: 'Products' },
   { key: 'locations', label: 'Locations' },
   { key: 'recommendations', label: 'For You' },
+  { key: 'referrals', label: 'Referrals' },
   { key: 'account', label: 'Account' },
 ]
 
@@ -422,6 +424,7 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
               {activeTab === 'products' && <ProductsSection products={profile?.products} fonts={fonts} />}
               {activeTab === 'locations' && <LocationsSection locationSplit={profile?.locationSplit} member={member} fonts={fonts} />}
               {activeTab === 'recommendations' && <RecommendationsSection recommendations={profile?.recommendations} fonts={fonts} onRebook={handleRebook} member={member} />}
+              {activeTab === 'referrals' && <ReferralDashboard fonts={fonts} />}
               {activeTab === 'account' && <AccountSection member={member} stats={profile?.stats} fonts={fonts} />}
 
               {!['account', 'locations', 'products'].includes(activeTab) && profile?.serviceCategories?.length > 0 && (

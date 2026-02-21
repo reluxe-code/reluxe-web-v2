@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { cartId } = req.query
-  const { firstName, lastName, email, phone, ownershipVerified } = req.body
+  const { firstName, lastName, email, phone, ownershipVerified, referralCode, locationKey, bookingSessionId } = req.body
   const hasClientInfo = firstName && lastName && email
 
   if (!cartId) {
@@ -59,6 +59,25 @@ export default async function handler(req, res) {
     const result = await cart.checkout()
     const appointment = result.appointments?.[0]
     const ci = cart.clientInformation || {}
+
+    // Attribute referral if code present (fire-and-forget)
+    const refCode = referralCode || req.cookies?.reluxe_ref
+    if (refCode && appointment?.clientId) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${req.headers.host}`
+      fetch(`${siteUrl}/api/referral/attribute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: refCode,
+          phone: phone || ci.phoneNumber || null,
+          email: email || ci.email || null,
+          appointmentId: appointment.appointmentId,
+          clientId: appointment.clientId,
+          locationKey: locationKey || null,
+          bookingSessionId: bookingSessionId || null,
+        }),
+      }).catch((e) => console.warn('[checkout] referral attribution failed:', e.message))
+    }
 
     res.json({
       success: true,
