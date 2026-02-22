@@ -22,6 +22,7 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/form-submissions', label: 'Form Submissions' },
       { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
       { href: '/admin/intelligence/referrals', label: 'Referrals' },
+      { href: '/admin/intelligence/leads', label: 'Leads' },
     ],
   },
   { href: '/admin/blog', label: 'Blog Posts' },
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { href: '/admin/provider-routing', label: 'Provider Routing' },
   { href: '/admin/testimonials', label: 'Testimonials' },
   { href: '/admin/locations', label: 'Locations' },
+  { href: '/admin/memberships', label: 'Memberships & Credits' },
   { href: '/admin/boulevard-sync', label: 'Boulevard Sync' },
 ]
 
