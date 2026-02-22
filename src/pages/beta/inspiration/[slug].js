@@ -1,76 +1,13 @@
 import { motion } from 'framer-motion';
 import BetaLayout from '@/components/beta/BetaLayout';
 import { colors, gradients, typeScale } from '@/components/preview/tokens';
-import { articles } from '@/data/articles';
+import { getServiceClient } from '@/lib/supabase';
 import GravityBookButton from '@/components/beta/GravityBookButton';
+import ArticleBody from '@/components/inspiration/ArticleBody';
 
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
-function ArticleBody({ blocks, fonts, fontKey }) {
-  return blocks.map((block, i) => {
-    if (block.type === 'h2') {
-      return (
-        <h2
-          key={i}
-          style={{
-            fontFamily: fonts.display,
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            color: colors.heading,
-            lineHeight: 1.3,
-            marginTop: '2.5rem',
-            marginBottom: '0.75rem',
-          }}
-        >
-          {block.text}
-        </h2>
-      );
-    }
-    if (block.type === 'cta') {
-      return (
-        <div key={i} className="my-10 text-center">
-          <div
-            className="rounded-2xl p-8 inline-block"
-            style={{
-              background: gradients.subtle,
-              border: `1px solid ${colors.stone}`,
-            }}
-          >
-            <p
-              style={{
-                fontFamily: fonts.display,
-                fontSize: '1.125rem',
-                fontWeight: 600,
-                color: colors.heading,
-                marginBottom: '1rem',
-              }}
-            >
-              {block.text}
-            </p>
-            <GravityBookButton fontKey={fontKey} size="hero" />
-          </div>
-        </div>
-      );
-    }
-    // Default: paragraph
-    return (
-      <p
-        key={i}
-        style={{
-          fontFamily: fonts.body,
-          fontSize: '1.0625rem',
-          lineHeight: 1.75,
-          color: colors.body,
-          marginBottom: '1.25rem',
-        }}
-      >
-        {block.text}
-      </p>
-    );
-  });
-}
-
-export default function ArticlePage({ article, relatedArticles }) {
+export default function ArticlePage({ article, relatedArticles, widgets }) {
   if (!article) return null;
 
   return (
@@ -104,7 +41,7 @@ export default function ArticlePage({ article, relatedArticles }) {
                     {article.category}
                   </span>
                   <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-                    {article.readTime}
+                    {article.read_time}
                   </span>
                 </div>
                 <h1
@@ -129,7 +66,11 @@ export default function ArticlePage({ article, relatedArticles }) {
                   </div>
                   <div>
                     <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: '#fff' }}>{article.author}</p>
-                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.5)' }}>{article.date}</p>
+                    {article.published_at && (
+                      <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.5)' }}>
+                        {new Date(article.published_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                      </p>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -140,13 +81,19 @@ export default function ArticlePage({ article, relatedArticles }) {
           <section style={{ backgroundColor: '#fff' }}>
             <div className="max-w-3xl mx-auto px-6 py-16 lg:py-24">
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <ArticleBody blocks={article.body} fonts={fonts} fontKey={fontKey} />
+                <ArticleBody
+                  blocks={article.body}
+                  fonts={fonts}
+                  fontKey={fontKey}
+                  widgets={widgets}
+                  articleSlug={article.slug}
+                />
               </motion.div>
             </div>
           </section>
 
           {/* Related Articles */}
-          {relatedArticles.length > 0 && (
+          {relatedArticles?.length > 0 && (
             <section style={{ backgroundColor: colors.cream }}>
               <div className="max-w-7xl mx-auto px-6 py-16 lg:py-20">
                 <motion.div className="mb-8" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -201,20 +148,62 @@ export default function ArticlePage({ article, relatedArticles }) {
 }
 
 export async function getStaticPaths() {
-  const paths = articles.map((a) => ({ params: { slug: a.slug } }));
-  return { paths, fallback: false };
+  const db = getServiceClient();
+  const { data } = await db
+    .from('inspiration_articles')
+    .select('slug')
+    .eq('status', 'published');
+
+  const paths = (data || []).map((a) => ({ params: { slug: a.slug } }));
+  return { paths, fallback: 'blocking' };
 }
 
 export async function getStaticProps({ params }) {
-  const article = articles.find((a) => a.slug === params.slug);
+  const db = getServiceClient();
+
+  // Fetch article
+  const { data: article } = await db
+    .from('inspiration_articles')
+    .select('*')
+    .eq('slug', params.slug)
+    .eq('status', 'published')
+    .single();
+
   if (!article) return { notFound: true };
 
-  const relatedArticles = articles
-    .filter((a) => a.slug !== article.slug)
-    .slice(0, 3)
-    .map(({ slug, title, gradient }) => ({ slug, title, gradient }));
+  // Fetch widget assignments with widget details
+  const { data: assignments } = await db
+    .from('inspiration_article_widgets')
+    .select('placement_key, config, inspiration_widgets(component_name, default_config)')
+    .eq('article_id', article.id)
+    .order('sort_order');
 
-  return { props: { article, relatedArticles } };
+  // Build widgets lookup: { placement_key: { component_name, default_config, config } }
+  const widgets = {};
+  for (const a of (assignments || [])) {
+    widgets[a.placement_key] = {
+      component_name: a.inspiration_widgets?.component_name,
+      default_config: a.inspiration_widgets?.default_config || {},
+      config: a.config || {},
+    };
+  }
+
+  // Fetch related articles (same category, excluding current)
+  const { data: related } = await db
+    .from('inspiration_articles')
+    .select('slug, title, gradient')
+    .eq('status', 'published')
+    .neq('slug', params.slug)
+    .limit(3);
+
+  return {
+    props: {
+      article,
+      widgets,
+      relatedArticles: related || [],
+    },
+    revalidate: 60,
+  };
 }
 
 ArticlePage.getLayout = (page) => page;

@@ -227,7 +227,7 @@ export default function StaffProfile({ person, rotationKey, testimonials = [] })
       <section className="w-full bg-white">
         <MoreAboutMeSliderSection
           title={`About ${person.title}`}
-          bio={f?.staffBio || ''}
+          bio={(f?.staffBio || '').replace(/<[^>]*>/g, '')}
           backgroundImage={heroImageUrl || '/images/staff/default-blur.png'}
           items={[]}
         />

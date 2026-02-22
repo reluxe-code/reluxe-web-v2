@@ -136,6 +136,12 @@ export default function IntelligenceOverview() {
           description="Give $25, Get $25 referral program. Funnel, top referrers, channel breakdown, pending credits, and fraud alerts."
           badge="New"
         />
+        <QuickLink
+          href="/admin/intelligence/content-engagement"
+          title="Content Engagement"
+          description="Widget interactions across inspiration articles — quizzes, calculators, sliders, booking CTAs, and more."
+          badge="New"
+        />
       </div>
     </AdminLayout>
   )

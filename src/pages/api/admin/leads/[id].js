@@ -2,7 +2,7 @@
 // Update lead status, notes, or manual blvd_client link.
 import { getServiceClient } from '@/lib/supabase'
 
-const VALID_STATUSES = ['new', 'contacted', 'booked', 'converted', 'lost']
+const VALID_STATUSES = ['new', 'contacted', 'booked', 'cancelled', 'converted', 'lost']
 
 export default async function handler(req, res) {
   const { id } = req.query

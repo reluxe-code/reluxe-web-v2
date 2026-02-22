@@ -1,16 +1,10 @@
 import { motion } from 'framer-motion';
 import BetaLayout from '@/components/beta/BetaLayout';
 import { colors, gradients, typeScale } from '@/components/preview/tokens';
-import { articles } from '@/data/articles';
+import { getServiceClient } from '@/lib/supabase';
 import GravityBookButton from '@/components/beta/GravityBookButton';
 
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
-
-const categories = [
-  { name: 'Skin Tips', color: colors.violet },
-  { name: 'Treatment Guides', color: colors.fuchsia },
-  { name: 'Glow-Up Ideas', color: colors.rose },
-];
 
 const skincareTips = [
   { tip: 'Apply SPF every single morning \u2014 even on cloudy days.', source: 'Dr. Protocols' },
@@ -19,9 +13,13 @@ const skincareTips = [
   { tip: 'Don\u2019t pick. Seriously. Let your aesthetician handle extractions.', source: 'Golden Rule' },
 ];
 
-export default function BetaInspiration() {
-  const featured = articles[0];
-  const grid = articles.slice(1);
+export default function BetaInspiration({ articles }) {
+  const categorySet = [...new Set(articles.map(a => a.category).filter(Boolean))];
+  const categoryColors = { 'Treatment Guides': colors.violet, 'Skin Tips': colors.fuchsia, 'Glow-Up Ideas': colors.rose, 'Membership': colors.violet };
+  const categories = categorySet.map(name => ({ name, color: categoryColors[name] || colors.violet }));
+
+  const featured = articles.find(a => a.featured) || articles[0];
+  const grid = articles.filter(a => a.slug !== featured?.slug);
 
   return (
     <BetaLayout title="Inspiration" description="Skincare tips, treatment guides, and glow-up ideas from the RELUXE Med Spa team.">
@@ -50,33 +48,35 @@ export default function BetaInspiration() {
           </section>
 
           {/* Featured Post */}
-          <section style={{ backgroundColor: '#fff' }}>
-            <div className="max-w-7xl mx-auto px-6 py-24 lg:py-32">
-              <motion.a
-                href={`/beta/inspiration/${featured.slug}`}
-                className="block rounded-3xl overflow-hidden relative group"
-                style={{ background: featured.gradient, minHeight: 400, textDecoration: 'none' }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
-                <div className="relative z-10 p-10 lg:p-16 flex flex-col justify-end" style={{ minHeight: 400 }}>
-                  <span className="inline-block self-start rounded-full px-3 py-1 mb-4" style={{ background: 'rgba(255,255,255,0.15)', fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{featured.category}</span>
-                  <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 700, color: '#fff', marginBottom: '1rem', maxWidth: '36rem' }}>{featured.title}</h2>
-                  <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, maxWidth: '32rem', marginBottom: '1.5rem' }}>{featured.excerpt}</p>
-                  <div className="flex items-center gap-4">
-                    <span className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 transition-all duration-200 group-hover:gap-3" style={{ background: 'rgba(255,255,255,0.15)', fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: '#fff', backdropFilter: 'blur(8px)' }}>
-                      Read Article
-                      <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9H14M14 9L10 5M14 9L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </span>
-                    <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{featured.readTime}</span>
+          {featured && (
+            <section style={{ backgroundColor: '#fff' }}>
+              <div className="max-w-7xl mx-auto px-6 py-24 lg:py-32">
+                <motion.a
+                  href={`/beta/inspiration/${featured.slug}`}
+                  className="block rounded-3xl overflow-hidden relative group"
+                  style={{ background: featured.gradient, minHeight: 400, textDecoration: 'none' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+                  <div className="relative z-10 p-10 lg:p-16 flex flex-col justify-end" style={{ minHeight: 400 }}>
+                    <span className="inline-block self-start rounded-full px-3 py-1 mb-4" style={{ background: 'rgba(255,255,255,0.15)', fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{featured.category}</span>
+                    <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 700, color: '#fff', marginBottom: '1rem', maxWidth: '36rem' }}>{featured.title}</h2>
+                    <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, maxWidth: '32rem', marginBottom: '1.5rem' }}>{featured.excerpt}</p>
+                    <div className="flex items-center gap-4">
+                      <span className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 transition-all duration-200 group-hover:gap-3" style={{ background: 'rgba(255,255,255,0.15)', fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: '#fff', backdropFilter: 'blur(8px)' }}>
+                        Read Article
+                        <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9H14M14 9L10 5M14 9L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </span>
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{featured.read_time}</span>
+                    </div>
                   </div>
-                </div>
-              </motion.a>
-            </div>
-          </section>
+                </motion.a>
+              </div>
+            </section>
+          )}
 
           {/* Articles Grid */}
           <section style={{ backgroundColor: colors.cream }}>
@@ -112,7 +112,7 @@ export default function BetaInspiration() {
                           Read more
                           <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M4 9H14M14 9L10 5M14 9L10 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         </span>
-                        <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>{post.readTime}</span>
+                        <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>{post.read_time}</span>
                       </div>
                     </div>
                   </motion.a>
@@ -176,6 +176,20 @@ export default function BetaInspiration() {
       )}
     </BetaLayout>
   );
+}
+
+export async function getStaticProps() {
+  const db = getServiceClient();
+  const { data: articles } = await db
+    .from('inspiration_articles')
+    .select('slug, title, excerpt, category, read_time, gradient, author, featured, published_at')
+    .eq('status', 'published')
+    .order('sort_order');
+
+  return {
+    props: { articles: articles || [] },
+    revalidate: 60,
+  };
 }
 
 BetaInspiration.getLayout = (page) => page;

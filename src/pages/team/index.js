@@ -144,12 +144,22 @@ export async function getStaticProps() {
   // Transform to WP GraphQL shape so StaffCard + deriveSubtitle work unchanged
   const staffList = (data || []).map(toWPStaffShape)
 
+  // Rotate featured provider weekly from injectors
+  const injectors = staffList.filter(s => pickCategory(s) === 'Injectors')
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+  const weekNum = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7)
+  const featuredProvider = injectors.length > 0 ? injectors[weekNum % injectors.length] : null
+
   return {
-    props: { staffList },
+    props: { staffList, featuredProvider },
+    revalidate: 86400,
   }
 }
 
-export default function TeamPage({ staffList }) {
+const stripHTML = (html) => (html || '').replace(/<[^>]*>/g, '').trim()
+
+export default function TeamPage({ staffList, featuredProvider }) {
   const groups = groupStaff(staffList)
   const order = ['Injectors', 'Aestheticians', 'Massage Therapists', 'Support Staff']
   const nonEmpty = order.filter((k) => (groups[k] || []).length > 0)
@@ -312,6 +322,45 @@ export default function TeamPage({ staffList }) {
           </div>
         </div>
       </section>
+
+      {/* Featured Provider Spotlight */}
+      {featuredProvider && (
+        <section className="px-4 py-12 bg-neutral-50">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="text-xs font-semibold uppercase tracking-wider text-violet-600">Featured Provider</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 mt-1">
+                Meet {(featuredProvider.title || '').split(' ')[0]}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
+              <div className="relative aspect-square rounded-2xl overflow-hidden shadow-lg ring-1 ring-black/5">
+                <Image
+                  src={featuredProvider.featuredImage?.node?.sourceUrl || '/images/default-avatar.jpg'}
+                  alt={featuredProvider.title || 'Featured provider'}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-neutral-900">{featuredProvider.title}</h3>
+                <p className="text-sm text-neutral-500 mb-3">{featuredProvider.staffFields?.stafftitle}</p>
+                <p className="text-neutral-700 leading-relaxed">
+                  {stripHTML(featuredProvider.staffFields?.staffBio).slice(0, 300).trimEnd()}
+                  {stripHTML(featuredProvider.staffFields?.staffBio).length > 300 ? '...' : ''}
+                </p>
+                <Link
+                  href={`/team/${featuredProvider.slug}`}
+                  className="mt-4 inline-flex items-center gap-1 text-violet-600 font-semibold hover:text-violet-700 transition"
+                >
+                  View Full Profile →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Heading + chips */}
       <section className="py-8 px-4 max-w-7xl mx-auto">

@@ -34,6 +34,7 @@ function StatCard({ label, value, sub, color }) {
 const STATUS_OPTIONS = [
   { value: 'new', label: 'New' },
   { value: 'booked', label: 'Booked' },
+  { value: 'cancelled', label: 'Cancelled' },
   { value: 'converted', label: 'New Patient' },
 ]
 
@@ -41,6 +42,7 @@ const STATUS_COLORS = {
   new: 'bg-blue-100 text-blue-700',
   contacted: 'bg-amber-100 text-amber-700',
   booked: 'bg-violet-100 text-violet-700',
+  cancelled: 'bg-red-100 text-red-600',
   converted: 'bg-emerald-100 text-emerald-700',
   lost: 'bg-neutral-100 text-neutral-500',
 }
@@ -49,6 +51,7 @@ const STATUS_LABELS = {
   new: 'New',
   contacted: 'Contacted',
   booked: 'Booked',
+  cancelled: 'Cancelled',
   converted: 'New Patient',
   lost: 'Lost',
 }
@@ -279,7 +282,7 @@ export default function LeadsDashboard() {
           <div className={`rounded-lg p-4 mb-6 text-sm ${matchResult.error ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-emerald-50 border border-emerald-200 text-emerald-700'}`}>
             {matchResult.error
               ? `Matching error: ${matchResult.error}`
-              : `Checked ${matchResult.total_checked} leads — ${matchResult.matched} matched (${matchResult.converted} new patients, ${matchResult.booked} booked)`
+              : `Checked ${matchResult.total_checked} leads — ${matchResult.matched} matched (${matchResult.converted} new patients, ${matchResult.booked} booked, ${matchResult.cancelled || 0} cancelled)`
             }
             <button onClick={() => setMatchResult(null)} className="ml-3 underline text-xs">Dismiss</button>
           </div>
@@ -338,7 +341,7 @@ export default function LeadsDashboard() {
             {/* Pipeline: New → Booked → New Patient */}
             <div className="bg-white border border-neutral-200 rounded-lg p-5 mb-6">
               <h2 className="text-sm font-semibold text-neutral-700 mb-3">Pipeline</h2>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {STATUS_OPTIONS.map(s => {
                   const count = data.summary.by_status[s.value] || 0
                   const pct = data.summary.total > 0 ? ((count / data.summary.total) * 100).toFixed(1) : '0.0'
@@ -455,7 +458,7 @@ export default function LeadsDashboard() {
                   {sortedLeads.map(lead => (
                     <tr
                       key={lead.id}
-                      className={`border-b border-neutral-50 cursor-pointer ${lead.status === 'converted' ? 'bg-emerald-50/60 hover:bg-emerald-50' : lead.status === 'booked' ? 'bg-violet-50/40 hover:bg-violet-50/60' : 'hover:bg-neutral-50'}`}
+                      className={`border-b border-neutral-50 cursor-pointer ${lead.status === 'converted' ? 'bg-emerald-50/60 hover:bg-emerald-50' : lead.status === 'cancelled' ? 'bg-red-50/40 hover:bg-red-50/60' : lead.status === 'booked' ? 'bg-violet-50/40 hover:bg-violet-50/60' : 'hover:bg-neutral-50'}`}
                       onClick={() => setDrawerLeadId(lead.id)}
                     >
                       <td className="py-2 font-medium text-neutral-800">{lead.name}</td>
@@ -541,6 +544,7 @@ export default function LeadsDashboard() {
                       <SortHeader label="Service" sortKey="service_interest" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} />
                       <SortHeader label="Leads" sortKey="leads" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} align="right" />
                       <SortHeader label="Booked" sortKey="booked" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="Cancelled" sortKey="cancelled" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} align="right" />
                       <SortHeader label="New Patients" sortKey="converted" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} align="right" />
                       <SortHeader label="Book %" sortKey="booking_rate" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} align="right" />
                       <SortHeader label="NP %" sortKey="new_patient_rate" currentSort={campSort} onSort={(k, d) => setCampSort({ key: k, dir: d })} align="right" />
@@ -557,6 +561,7 @@ export default function LeadsDashboard() {
                         </td>
                         <td className="py-2 text-right font-semibold text-neutral-800">{c.leads}</td>
                         <td className="py-2 text-right font-semibold text-violet-600">{c.booked || 0}</td>
+                        <td className="py-2 text-right font-semibold text-red-500">{c.cancelled || 0}</td>
                         <td className="py-2 text-right font-semibold text-emerald-600">{c.converted || 0}</td>
                         <td className="py-2 text-right text-neutral-600">{c.booking_rate || '0.0'}%</td>
                         <td className="py-2 text-right text-neutral-600">{c.new_patient_rate || '0.0'}%</td>

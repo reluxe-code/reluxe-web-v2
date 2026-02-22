@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     }
 
     const total = allLeads.length
-    const byStatus = { new: 0, contacted: 0, booked: 0, converted: 0, lost: 0 }
+    const byStatus = { new: 0, contacted: 0, booked: 0, converted: 0, cancelled: 0, lost: 0 }
     const bySource = {}
     const byCampaign = {}
     const byService = {}
@@ -59,11 +59,12 @@ export default async function handler(req, res) {
 
       if (lead.campaign) {
         if (!byCampaign[lead.campaign]) {
-          byCampaign[lead.campaign] = { total: 0, booked: 0, converted: 0, service_interest: lead.service_interest }
+          byCampaign[lead.campaign] = { total: 0, booked: 0, converted: 0, cancelled: 0, service_interest: lead.service_interest }
         }
         byCampaign[lead.campaign].total++
         if (lead.status === 'booked' || lead.status === 'converted') byCampaign[lead.campaign].booked++
         if (lead.status === 'converted') byCampaign[lead.campaign].converted++
+        if (lead.status === 'cancelled') byCampaign[lead.campaign].cancelled++
       }
 
       if (lead.status === 'converted') {
@@ -91,6 +92,7 @@ export default async function handler(req, res) {
       this_month: thisMonthCount,
       converted: convertedCount,
       booked: (byStatus.booked || 0) + convertedCount,
+      cancelled: byStatus.cancelled || 0,
       new_patients: convertedCount,
       booking_rate: total > 0 ? (((byStatus.booked || 0) + convertedCount) / total * 100).toFixed(1) : '0.0',
       new_patient_rate: total > 0 ? (convertedCount / total * 100).toFixed(1) : '0.0',
@@ -103,8 +105,10 @@ export default async function handler(req, res) {
         leads: data.total,
         booked: data.booked,
         converted: data.converted,
+        cancelled: data.cancelled,
         booking_rate: data.total > 0 ? ((data.booked / data.total) * 100).toFixed(1) : '0.0',
         new_patient_rate: data.total > 0 ? ((data.converted / data.total) * 100).toFixed(1) : '0.0',
+        cancel_rate: data.total > 0 ? ((data.cancelled / data.total) * 100).toFixed(1) : '0.0',
         service_interest: data.service_interest,
       }))
       .sort((a, b) => b.leads - a.leads)
@@ -132,15 +136,19 @@ export default async function handler(req, res) {
     const clientIds = [...new Set((leadList || []).filter(l => l.blvd_client_id).map(l => l.blvd_client_id))]
     const appointmentMap = {}
     if (clientIds.length > 0) {
+      // Fetch all appointments (including cancelled) so we can show data for cancelled leads
       const { data: appts } = await db
         .from('blvd_appointments')
         .select('client_id, start_at, created_at, status')
         .in('client_id', clientIds)
-        .in('status', ['booked', 'confirmed', 'arrived', 'started', 'completed', 'final'])
         .order('start_at', { ascending: true })
       for (const a of (appts || [])) {
         if (!appointmentMap[a.client_id]) {
-          appointmentMap[a.client_id] = { booked_at: a.created_at, appointment_date: a.start_at }
+          appointmentMap[a.client_id] = {
+            booked_at: a.created_at,
+            appointment_date: a.start_at,
+            appointment_status: a.status,
+          }
         }
       }
     }

@@ -56,10 +56,9 @@ export default function MoreAboutMeSliderSection({
         {/* Bio Section */}
         {bio && (
           <div className="bg-white text-gray-800 rounded-xl shadow-md mb-12 p-8 max-w-4xl mx-auto text-lg leading-relaxed">
-            <div
-              dangerouslySetInnerHTML={{ __html: getBioContent() }}
-              className="transition-all duration-300"
-            />
+            <p className="transition-all duration-300 whitespace-pre-line">
+              {getBioContent()}
+            </p>
             {bio.length > 250 && (
               <button
                 onClick={toggleExpanded}

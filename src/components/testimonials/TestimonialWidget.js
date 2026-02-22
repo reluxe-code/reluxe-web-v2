@@ -56,7 +56,7 @@ const QUOTE_LIMIT = 140
 
 function TestimonialCard({ t, serviceLabel }) {
   const [expanded, setExpanded] = useState(false)
-  const quote = t.quote || ''
+  const quote = (t.quote || '').replace(/<[^>]*>/g, '').trim()
   const needsTruncate = quote.length > QUOTE_LIMIT
   const displayQuote = needsTruncate && !expanded ? quote.slice(0, QUOTE_LIMIT).trimEnd() + '...' : quote
   const providerName = t.provider || ''
@@ -158,7 +158,10 @@ export default function TestimonialWidget({
     return () => { cancelled = true }
   }, [prefetched, location, provider, service, limit])
 
-  const list = useMemo(() => items.filter(t => t.quote && t.quote.length > 0 && !t.quote.match(/^\d-star rating$/)), [items])
+  const list = useMemo(() => items.filter(t => {
+    const text = (t.quote || '').replace(/<[^>]*>/g, '').trim()
+    return text.length > 0 && !text.match(/^\d-star rating$/)
+  }), [items])
 
   const scrollByCards = useCallback((dir) => {
     const el = scrollerRef.current
