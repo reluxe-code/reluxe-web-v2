@@ -235,7 +235,7 @@ INSERT INTO products (brand_id, slug, name, subtitle, short_description, descrip
 
 Face Shield Flex replaces light foundation for many patients, delivering a natural, skin-like finish with legitimate broad-spectrum protection. The lightweight, water-resistant formula layers seamlessly under makeup or wears beautifully on its own. Iron oxides provide the added benefit of visible-light protection—something non-tinted mineral sunscreens cannot offer—making this especially valuable for patients managing melasma or post-inflammatory hyperpigmentation. Whether you''re commuting through downtown Indianapolis, spending a weekend at Grand Park in Westfield, or walking the Monon Trail in Carmel, Face Shield Flex provides dependable all-day mineral protection.',
   'sun-protection',
-  '/images/products/colorescience/flex.svg',
+  '/images/products/colorescience/flex.png',
   ARRAY['Zinc Oxide 12%', 'Titanium Dioxide 7.5%', 'Iron Oxides', 'Hyaluronic Acid', 'Vitamin E', 'Artemia Extract'],
   ARRAY['normal', 'dry', 'combination', 'oily', 'sensitive'],
   ARRAY['sun-protection', 'blue-light', 'dark-spots', 'melasma'],
@@ -261,7 +261,7 @@ Face Shield Flex replaces light foundation for many patients, delivering a natur
 
 Face Shield Glow is ideal for patients with dry or mature skin who want their SPF to add radiance rather than mattify. The hydrating base with hyaluronic acid and vitamin E nourishes while zinc oxide and titanium dioxide provide broad-spectrum UVA/UVB defense. Worn alone, it gives skin a fresh, healthy sheen—our Carmel patients love it for date nights on Main Street. Under makeup, it creates a glowing base that photographs beautifully. Indiana''s harsh winters are especially drying, and Face Shield Glow counteracts the flat, chalky look that many mineral SPFs create in cold weather. Many patients mix it 50/50 with Face Shield Flex for a custom coverage-plus-glow finish.',
   'sun-protection',
-  '/images/products/colorescience/glow.svg',
+  '/images/products/colorescience/glow.png',
   ARRAY['Zinc Oxide 12%', 'Titanium Dioxide 4.5%', 'Hyaluronic Acid', 'Vitamin E', 'Light-Reflecting Minerals'],
   ARRAY['normal', 'dry', 'combination'],
   ARRAY['sun-protection', 'dullness', 'dryness', 'blue-light'],
@@ -287,7 +287,7 @@ Face Shield Glow is ideal for patients with dry or mature skin who want their SP
 
 Dermatologists agree that SPF reapplication every 2 hours is essential, but most liquid sunscreens are impractical to reapply over a full face of makeup. The Brush-On Shield eliminates that barrier entirely. The portable brush fits in a purse, glove box, or desk drawer and applies in seconds—whether you''re running errands through Westfield, at your desk in Carmel, or watching kids at Grand Park. The powder also absorbs excess oil, making it especially useful for combination and oily skin types in Indiana''s humid summers. EnviroScreen® technology provides protection beyond UV—defending against blue light from screens, infrared radiation, and pollution. Available in four tint-matched shades plus a translucent option.',
   'sun-protection',
-  '/images/products/colorescience/brush-on.svg',
+  '/images/products/colorescience/brush-on.png',
   ARRAY['Zinc Oxide 22.5%', 'Titanium Dioxide 22.5%', 'Iron Oxides', 'Artemia Extract', 'Buddleja Stem Extract'],
   ARRAY['normal', 'dry', 'combination', 'oily', 'sensitive'],
   ARRAY['sun-protection', 'blue-light', 'oiliness'],
@@ -313,7 +313,7 @@ Dermatologists agree that SPF reapplication every 2 hours is essential, but most
 
 Even Up is a med spa favorite for melasma management. Melasma is notoriously difficult to treat because even minor UV exposure can reverse weeks of progress from peels, lasers, and topicals. Even Up addresses both sides of the equation: the tinted mineral formula prevents UV-triggered melanin production while the corrective ingredients reduce existing pigment. The medium-coverage tint also provides instant cosmetic improvement, camouflaging spots while the actives work over time. For our melasma patients across Westfield, Carmel, Fishers, Noblesville, and greater Indianapolis, this is non-negotiable daily maintenance between in-clinic treatments like IPL, chemical peels, and laser resurfacing at RELUXE.',
   'sun-protection',
-  '/images/products/colorescience/even-up.svg',
+  '/images/products/colorescience/even-up.png',
   ARRAY['Zinc Oxide 10.8%', 'Titanium Dioxide 3%', 'Vitamin C (Ascorbyl Palmitate)', 'Niacinamide', 'Oleosome Delivery', 'Plankton Extract'],
   ARRAY['normal', 'dry', 'combination'],
   ARRAY['dark-spots', 'melasma', 'sun-protection', 'dullness'],
@@ -339,7 +339,7 @@ Even Up is a med spa favorite for melasma management. Melasma is notoriously dif
 
 Redness-prone skin is inherently more reactive to UV exposure, heat, and environmental stress—and Indiana''s seasonal swings between humid summers and dry winters can aggravate rosacea and sensitivity. All Calm was designed specifically for this population. The 100% mineral formula avoids the chemical UV filters that can trigger flushing in sensitive skin. The calming botanicals reduce baseline reactivity with consistent use, and the color-correcting tint provides instant cosmetic improvement that gives patients confidence while their skin heals. Our providers at RELUXE in Westfield and Carmel recommend All Calm extensively after BBL, IPL, and vascular laser treatments once patients are cleared to resume sun protection—typically within 24-72 hours.',
   'sun-protection',
-  '/images/products/colorescience/all-calm.svg',
+  '/images/products/colorescience/all-calm.png',
   ARRAY['Zinc Oxide 6.6%', 'Titanium Dioxide 4%', 'Algae Extract', 'Caffeine', 'Green Mineral Pigments', 'Bisabolol'],
   ARRAY['sensitive', 'normal', 'dry'],
   ARRAY['redness', 'rosacea', 'sun-protection', 'sensitivity', 'post-procedure'],
@@ -365,7 +365,7 @@ Redness-prone skin is inherently more reactive to UV exposure, heat, and environ
 
 The skin around the eyes is the thinnest on the face and shows signs of aging first—fine lines, dark circles, hollowness, and crepiness. Most patients use separate products for treatment, concealment, and sun protection in this area. Total Eye consolidates all three into one application, which reduces friction and increases compliance. The peptide complex stimulates collagen for visible firming over time, caffeine reduces puffiness and dark circles, and the mineral tint provides an instant optical lift. It''s equally effective for patients using injectable neuromodulators and fillers around the eyes—the formula is designed to complement, not compete with, Botox and filler treatments at RELUXE in Westfield and Carmel.',
   'sun-protection',
-  '/images/products/colorescience/total-eye.svg',
+  '/images/products/colorescience/total-eye.png',
   ARRAY['Zinc Oxide 7%', 'Titanium Dioxide 4.3%', 'Palmitoyl Tripeptide-5', 'Niacinamide', 'Caffeine', 'Vitamin K'],
   ARRAY['normal', 'dry', 'combination', 'sensitive'],
   ARRAY['dark-circles', 'fine-lines', 'puffiness', 'sun-protection'],
