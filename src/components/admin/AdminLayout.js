@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   },
   { href: '/admin/blog', label: 'Blog Posts' },
   { href: '/admin/deals', label: 'Deals' },
+  { href: '/admin/products', label: 'Products' },
   { href: '/admin/staff', label: 'Staff' },
   { href: '/admin/treatment-bundles', label: 'Treatment Bundles' },
   { href: '/admin/provider-routing', label: 'Provider Routing' },

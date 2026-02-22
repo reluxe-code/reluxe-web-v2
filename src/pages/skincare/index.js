@@ -1,37 +1,68 @@
 // pages/skincare/index.js
+// Skincare hub — DB-driven with ISR
 import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../../components/header/header-2'
+import HeaderTwo from '@/components/header/header-2'
+import { getServiceClient } from '@/lib/supabase'
 
 const BOOK_URL = '/book/'
-const BUY_URLS = {
-  skinbetter: 'https://skinbetter.pro/reluxemedspa',
-  colorescience: 'https://www.colorescience.com/reluxe-med-spa',
+
+export async function getStaticProps() {
+  const db = getServiceClient()
+
+  const { data: brands } = await db
+    .from('brands')
+    .select('slug, name, tagline, logo_url, affiliate_url, purchase_type')
+    .eq('active', true)
+    .order('sort_order')
+
+  // Top products by sales_rank
+  const { data: topProducts } = await db
+    .from('products')
+    .select('slug, name, short_description, purchase_url, purchase_type, is_bestseller, brand_id, brands!inner(slug, name, purchase_type, affiliate_url)')
+    .eq('active', true)
+    .eq('is_bestseller', true)
+    .order('sales_rank')
+    .limit(6)
+
+  // Staff picks — products that have staff_picks data
+  const { data: pickProducts } = await db
+    .from('products')
+    .select('name, staff_picks, brands!inner(name)')
+    .eq('active', true)
+    .not('staff_picks', 'is', null)
+
+  // Build staff picks by location
+  const staffPicks = { westfield: [], carmel: [] }
+  for (const p of (pickProducts || [])) {
+    if (p.staff_picks?.westfield && staffPicks.westfield.length < 3) {
+      staffPicks.westfield.push({ name: p.name, brand: p.brands.name, reason: p.staff_picks.westfield })
+    }
+    if (p.staff_picks?.carmel && staffPicks.carmel.length < 3) {
+      staffPicks.carmel.push({ name: p.name, brand: p.brands.name, reason: p.staff_picks.carmel })
+    }
+  }
+
+  return {
+    props: {
+      brands: brands || [],
+      topProducts: (topProducts || []).map(p => {
+        const { brands, ...rest } = p
+        return {
+          ...rest,
+          brandSlug: brands.slug,
+          brandName: brands.name,
+          brandPurchaseType: brands.purchase_type,
+          brandAffiliateUrl: brands.affiliate_url,
+        }
+      }),
+      staffPicks,
+    },
+    revalidate: 60,
+  }
 }
 
-const TOP6 = [
-  { name: 'AlphaRet® Overnight Cream', brand: 'skinbetter science', href: BUY_URLS.skinbetter, note: 'Retinoid + AHA technology for smoother texture.' },
-  { name: 'CE Ferulic®', brand: 'SkinCeuticals', href: null, note: 'Gold-standard antioxidant protection and glow.' },
-  { name: 'Total Protection™ Face Shield Flex', brand: 'Colorescience', href: BUY_URLS.colorescience, note: 'Mineral SPF with flexible tint shades.' },
-  { name: 'InterFuse® Treatment Cream EYE', brand: 'skinbetter science', href: BUY_URLS.skinbetter, note: 'Peptide eye treatment for crepiness & lines.' },
-  { name: 'Triple Lipid Restore 2:4:2', brand: 'SkinCeuticals', href: null, note: 'Barrier-loving ceramides, cholesterol, fatty acids.' },
-  { name: 'Sunforgettable® Brush-On Shield SPF 50', brand: 'Colorescience', href: BUY_URLS.colorescience, note: 'Reapply-friendly powder SPF for on-the-go.' },
-]
-
-const STAFF_PICKS = {
-  westfield: [
-    { name: 'AlphaRet® Overnight Cream', brand: 'skinbetter science', reason: 'Fast texture improvement with great tolerability.' },
-    { name: 'Total Eye® 3-in-1 Renewal Therapy', brand: 'Colorescience', reason: 'Brighten + protect the peri-orbital area.' },
-    { name: 'Discoloration Defense', brand: 'SkinCeuticals', reason: 'Targets stubborn spots and melasma maintenance.' },
-  ],
-  carmel: [
-    { name: 'Trio Rebalancing Moisture Treatment', brand: 'skinbetter science', reason: 'Lightweight hydration that layers with actives.' },
-    { name: 'Face Shield Glow SPF', brand: 'Colorescience', reason: 'Daily SPF with a luminous finish.' },
-    { name: 'Glycolic 10 Renew Overnight', brand: 'SkinCeuticals', reason: 'Refines texture and dullness overnight.' },
-  ],
-}
-
-export default function SkincareHub() {
+export default function SkincareHub({ brands, topProducts, staffPicks }) {
   return (
     <>
       <Head>
@@ -101,20 +132,22 @@ export default function SkincareHub() {
         </div>
       </section>
 
-      {/* Top 6 (sitewide) */}
-      <section className="relative bg-neutral-50 py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight">Top 6 Skincare Bestsellers</h3>
-            <p className="mt-3 text-neutral-700">Updated by our Carmel & Westfield teams based on outcomes and re-purchases.</p>
+      {/* Top Bestsellers */}
+      {topProducts.length > 0 && (
+        <section className="relative bg-neutral-50 py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight">Top Skincare Bestsellers</h3>
+              <p className="mt-3 text-neutral-700">Updated by our Carmel & Westfield teams based on outcomes and re-purchases.</p>
+            </div>
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {topProducts.map(p => (
+                <ProductCard key={p.slug} product={p} />
+              ))}
+            </div>
           </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {TOP6.map((p) => (
-              <ProductCard key={p.name} {...p} />
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Our lines */}
       <section id="brands" className="relative py-14">
@@ -125,65 +158,37 @@ export default function SkincareHub() {
           </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <BrandCard
-              logo="/images/brands/skinbetter-logo.jpg"
-              title="skinbetter science®"
-              copy="AlphaRet®, InterFuse®, Alto Advanced."
-              href="/skincare/skinbetter-science"
-              ctas={[
-                { label: 'Buy Online', href: BUY_URLS.skinbetter, primary: true },
-                { label: 'Learn More', href: '/skincare/skinbetter-science' },
-              ]}
-            />
-            <BrandCard
-              logo="/images/brands/colorescience-logo.jpg"
-              title="Colorescience®"
-              copy="Total Protection™ mineral suncare & color-correctors."
-              href="/skincare/colorescience"
-              ctas={[
-                { label: 'Buy Online', href: BUY_URLS.colorescience, primary: true },
-                { label: 'Learn More', href: '/skincare/colorescience' },
-              ]}
-            />
-            <BrandCard
-              logo="/images/brands/skinceuticals-logo.jpg"
-              title="SkinCeuticals®"
-              copy="Antioxidant pioneers (CE Ferulic®, Silymarin CF)."
-              href="/skincare/skinceuticals"
-              ctas={[{ label: 'Learn More', href: '/skincare/skinceuticals', primary: true }]}
-            />
-            <BrandCard
-              logo="/images/brands/hydrinity.svg"
-              title="Hydrinity®"
-              copy="Accelerated recovery & deep hydration."
-              href="/skincare/hydrinity"
-              ctas={[{ label: 'Learn More', href: '/skincare/hydrinity', primary: true }]}
-            />
-            <BrandCard
-              logo="/images/brands/universkin.svg"
-              title="Universkin®"
-              copy="Truly personalized formulas."
-              href="/skincare/universkin"
-              ctas={[{ label: 'Learn More', href: '/skincare/universkin', primary: true }]}
-            />
+            {brands.map(b => {
+              const canBuy = b.purchase_type === 'affiliate' || b.purchase_type === 'direct'
+              const ctas = []
+              if (canBuy && b.affiliate_url) {
+                ctas.push({ label: 'Buy Online', href: b.affiliate_url, primary: true })
+              }
+              ctas.push({ label: canBuy ? 'Learn More' : 'Learn More', href: `/skincare/${b.slug}`, primary: !canBuy })
+              return (
+                <BrandCard key={b.slug} logo={b.logo_url} title={b.name} copy={b.tagline} ctas={ctas} />
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* Staff Picks */}
-      <section className="relative bg-neutral-50 py-14">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-2">
-            <StaffColumn title="Staff Picks — Westfield" items={STAFF_PICKS.westfield} />
-            <StaffColumn title="Staff Picks — Carmel" items={STAFF_PICKS.carmel} />
+      {(staffPicks.westfield.length > 0 || staffPicks.carmel.length > 0) && (
+        <section className="relative bg-neutral-50 py-14">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-8 md:grid-cols-2">
+              {staffPicks.westfield.length > 0 && <StaffColumn title="Staff Picks — Westfield" items={staffPicks.westfield} />}
+              {staffPicks.carmel.length > 0 && <StaffColumn title="Staff Picks — Carmel" items={staffPicks.carmel} />}
+            </div>
+            <div className="mt-10 text-center">
+              <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition">
+                Build My Routine
+              </a>
+            </div>
           </div>
-          <div className="mt-10 text-center">
-            <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition">
-              Build My Routine
-            </a>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   )
 }
@@ -198,15 +203,21 @@ function TreatCard({ title, copy }) {
   )
 }
 
-function ProductCard({ name, brand, href, note }) {
+function ProductCard({ product: p }) {
+  const pType = p.purchase_type || p.brandPurchaseType || 'in_clinic'
+  const canBuy = pType === 'affiliate' || pType === 'direct'
+  const buyUrl = p.purchase_url || p.brandAffiliateUrl
+
   return (
     <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h4 className="font-bold">{name}</h4>
-      <p className="text-sm text-neutral-500">{brand}</p>
-      {note && <p className="mt-2 text-neutral-700">{note}</p>}
-      <div className="mt-4">
-        {href ? (
-          <a href={href} className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-black hover:from-violet-500 hover:to-neutral-900 transition">
+      <Link href={`/skincare/${p.brandSlug}/${p.slug}`} className="hover:text-violet-600 transition-colors">
+        <h4 className="font-bold">{p.name}</h4>
+      </Link>
+      <p className="text-sm text-neutral-500">{p.brandName}</p>
+      {p.short_description && <p className="mt-2 text-neutral-700">{p.short_description}</p>}
+      <div className="mt-4 flex items-center gap-2">
+        {canBuy && buyUrl ? (
+          <a href={buyUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-black hover:from-violet-500 hover:to-neutral-900 transition">
             Buy Online
           </a>
         ) : (
@@ -214,6 +225,9 @@ function ProductCard({ name, brand, href, note }) {
             In-Clinic Only
           </span>
         )}
+        <Link href={`/skincare/${p.brandSlug}/${p.slug}`} className="text-xs font-semibold text-violet-600 hover:text-violet-700">
+          Details →
+        </Link>
       </div>
     </div>
   )
@@ -223,7 +237,7 @@ function BrandCard({ logo, title, copy, ctas = [] }) {
   return (
     <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]">
       <div className="aspect-[4/2] w-full overflow-hidden bg-neutral-50 flex items-center justify-center">
-        <img src={logo} alt={title} className="h-10 object-contain" />
+        {logo && <img src={logo} alt={title} className="h-10 object-contain" />}
       </div>
       <div className="p-6">
         <h4 className="text-xl font-bold tracking-tight">{title}</h4>
