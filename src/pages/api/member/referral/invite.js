@@ -86,7 +86,7 @@ async function handlePost(req, res) {
   if (auth.error) return res.status(401).json({ error: auth.error })
   const { member, db } = auth
 
-  const { firstName, phone, sendSMS: shouldSendSMS } = req.body
+  const { firstName, phone, sendSMS: shouldSendSMS, message: customMessage } = req.body
   if (!firstName || !phone) {
     return res.status(400).json({ error: 'firstName and phone are required' })
   }
@@ -181,8 +181,9 @@ async function handlePost(req, res) {
   let smsSent = false
   if (shouldSendSMS) {
     const memberName = member.first_name || 'Your friend'
-    const message = `${memberName} thinks you'd love RELUXE Med Spa! Get $25 off your first treatment: ${referralUrl}`
-    const result = await sendSMS(normalized, message)
+    const defaultMsg = `${memberName} thinks you'd love RELUXE Med Spa! Get $25 off your first treatment`
+    const msgBody = customMessage ? `${customMessage}\n${referralUrl}` : `${defaultMsg}: ${referralUrl}`
+    const result = await sendSMS(normalized, msgBody)
     smsSent = result.ok
   }
 

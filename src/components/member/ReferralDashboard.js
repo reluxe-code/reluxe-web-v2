@@ -10,6 +10,7 @@ import { colors } from '@/components/preview/tokens'
 const STATUS_LABELS = {
   invited: { label: 'Invited', color: '#f59e0b' },
   clicked: { label: 'Clicked', color: '#737373' },
+  claimed: { label: 'Claimed', color: '#06b6d4' },
   booked: { label: 'Booked', color: '#3b82f6' },
   completed: { label: 'Completed', color: '#22c55e' },
   credited: { label: 'Credited', color: '#8b5cf6' },

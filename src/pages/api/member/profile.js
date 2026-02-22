@@ -4,6 +4,7 @@
 // service categories, and recommendations.
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
+import { adminQuery } from '@/server/blvdAdmin'
 
 export const config = { maxDuration: 15 }
 
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
 
   const { data: member } = await db
     .from('members')
-    .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at')
+    .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
@@ -37,6 +38,9 @@ export default async function handler(req, res) {
     lastService: null,
     upcomingAppointment: null,
     primaryProvider: null,
+    // Account & membership
+    accountCredit: null,
+    membership: null,
     // Rich data for drawer
     visits: [],
     toxStatus: null,
@@ -51,7 +55,7 @@ export default async function handler(req, res) {
   const clientId = member.blvd_client_id
 
   // Run all queries in parallel
-  const [visitSummary, toxSummary, appointments, upcomingAppts, allStaff, productSales] = await Promise.all([
+  const [visitSummary, toxSummary, appointments, upcomingAppts, allStaff, productSales, membershipRow, creditRow] = await Promise.all([
     // 1. Visit summary
     db.from('client_visit_summary')
       .select('total_visits, total_spend, ltv_bucket, days_since_last_visit, first_visit, last_visit, avg_days_between_visits')
@@ -88,6 +92,22 @@ export default async function handler(req, res) {
       .eq('client_id', clientId)
       .order('sold_at', { ascending: false })
       .then(r => r.data || []).catch(() => []),
+
+    // 7. Active membership with vouchers
+    db.from('blvd_memberships')
+      .select('name, status, start_on, end_on, next_charge_date, cancel_on, unpause_on, interval, unit_price, term_number, location_key, vouchers')
+      .eq('client_id', clientId)
+      .in('status', ['ACTIVE', 'PAUSED', 'PAST_DUE'])
+      .order('start_on', { ascending: false })
+      .limit(1).maybeSingle()
+      .then(r => r.data).catch(() => null),
+
+    // 8. Account credit (cached from sync)
+    db.from('blvd_clients')
+      .select('account_credit, account_credit_updated_at, boulevard_id')
+      .eq('id', clientId)
+      .maybeSingle()
+      .then(r => r.data).catch(() => null),
   ])
 
   // Staff lookup map
@@ -238,6 +258,8 @@ export default async function handler(req, res) {
       last_type: toxSummary.last_tox_type,
       switching: toxSummary.tox_switching,
       last_provider: staff ? { name: staff.name, slug: staff.slug, image: staff.transparent_bg || staff.featured_image, staffId: staff.id } : null,
+      preferred_brand: member.preferences?.tox_brand || null,
+      external_tox: member.preferences?.external_tox || [],
     }
   }
 
@@ -335,6 +357,60 @@ export default async function handler(req, res) {
       items: Object.values(productMap)
         .sort((a, b) => b.purchases - a.purchases)
         .map(p => ({ ...p, qty: Math.round(p.qty), spend: Math.round(p.spend) })),
+    }
+  }
+
+  // ── Account credit ──
+  if (creditRow) {
+    let balance = creditRow.account_credit || 0
+    let updatedAt = creditRow.account_credit_updated_at
+
+    // If cached credit is stale (>1h) or never synced, try real-time Boulevard query
+    const staleMs = updatedAt ? Date.now() - new Date(updatedAt).getTime() : Infinity
+    if (staleMs > 3600000 && creditRow.boulevard_id) {
+      try {
+        const live = await adminQuery(`query { node(id: "${creditRow.boulevard_id}") { ... on Client { currentAccountBalance } } }`)
+        if (live.node?.currentAccountBalance != null) {
+          balance = live.node.currentAccountBalance
+          updatedAt = new Date().toISOString()
+          // Update cache in background (don't await)
+          db.from('blvd_clients').update({ account_credit: balance, account_credit_updated_at: updatedAt }).eq('id', clientId).then(() => {})
+        }
+      } catch { /* use cached value */ }
+    }
+
+    if (balance > 0) {
+      result.accountCredit = {
+        balance,
+        formatted: `$${(balance / 100).toFixed(2)}`,
+        updatedAt,
+      }
+    }
+  }
+
+  // ── Membership ──
+  if (membershipRow) {
+    const vouchers = (typeof membershipRow.vouchers === 'string'
+      ? JSON.parse(membershipRow.vouchers)
+      : membershipRow.vouchers) || []
+
+    result.membership = {
+      name: membershipRow.name,
+      status: membershipRow.status,
+      startOn: membershipRow.start_on,
+      endOn: membershipRow.end_on,
+      nextChargeDate: membershipRow.next_charge_date,
+      cancelOn: membershipRow.cancel_on,
+      unpauseOn: membershipRow.unpause_on,
+      interval: membershipRow.interval,
+      price: membershipRow.unit_price,
+      priceFormatted: `$${(membershipRow.unit_price / 100).toFixed(0)}`,
+      termNumber: membershipRow.term_number,
+      locationKey: membershipRow.location_key,
+      vouchers: vouchers.map(v => ({
+        quantity: v.quantity,
+        services: (v.services || []).map(s => s.name),
+      })),
     }
   }
 

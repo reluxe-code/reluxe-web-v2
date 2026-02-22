@@ -1,16 +1,21 @@
 // src/pages/referral/[code].js
 // Public referral landing page — dark RELUXE aesthetic.
 // Validates code SSR, fires click tracking on mount, sets attribution cookie.
-import { useEffect, useRef } from 'react'
+// Includes "Claim $25" flow with inline phone auth.
+import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 import { LOCATIONS } from '@/data/locations'
 import { setReferralCode } from '@/lib/referral'
+import { formatPhone, isValidPhone } from '@/lib/phoneUtils'
+import { supabase } from '@/lib/supabase'
 import BetaNavBar from '@/components/beta/BetaNavBar'
 import BetaFooter from '@/components/beta/BetaFooter'
+import MemberDrawerPortal from '@/components/beta/MemberDrawerPortal'
+import CodeInput from '@/components/booking/CodeInput'
 import { LocationProvider } from '@/context/LocationContext'
-import { MemberProvider } from '@/context/MemberContext'
+import { MemberProvider, useMember } from '@/context/MemberContext'
 
 const FONT_KEY = 'bold'
 const fonts = fontPairings[FONT_KEY]
@@ -45,13 +50,321 @@ export async function getServerSideProps({ params, req }) {
   }
 }
 
-const STEPS = [
-  { num: '1', title: 'Book', desc: 'Choose a treatment at either RELUXE location and book online.', icon: '📅' },
-  { num: '2', title: 'Visit', desc: 'Enjoy your first appointment with world-class providers.', icon: '✨' },
-  { num: '3', title: 'Earn', desc: 'You both receive $25 in RELUXE credit after your visit.', icon: '🎁' },
-]
+// ─── Claim Section: inline phone auth → claim $25 ───
+function ClaimSection({ code, referrerName }) {
+  const { isAuthenticated, member } = useMember()
+  const [phase, setPhase] = useState('idle') // idle, phone, otp, claiming, claimed
+  const [phone, setPhone] = useState('')
+  const [otpValue, setOtpValue] = useState('')
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false)
+  const otpAutoSubmitted = useRef(false)
 
-export default function ReferralLandingPage({ code, referrerName, tier }) {
+  // Auto-submit OTP when 6 digits entered
+  useEffect(() => {
+    if (otpValue.length === 6 && phase === 'otp' && !otpAutoSubmitted.current) {
+      otpAutoSubmitted.current = true
+      handleVerifyAndClaim(otpValue)
+    }
+    if (otpValue.length < 6) {
+      otpAutoSubmitted.current = false
+    }
+  }, [otpValue, phase])
+
+  const handleSendOtp = async (e) => {
+    e?.preventDefault()
+    if (!isValidPhone(phone)) { setError('Enter a valid 10-digit phone number'); return }
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/member/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send code')
+      setPhase('otp')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyAndClaim = async (otpCode) => {
+    setLoading(true)
+    setError(null)
+    try {
+      // Verify OTP
+      const verifyRes = await fetch('/api/member/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code: otpCode }),
+      })
+      const verifyData = await verifyRes.json()
+      if (!verifyRes.ok) throw new Error(verifyData.error || 'Invalid code')
+
+      // Set session
+      await supabase.auth.setSession({
+        access_token: verifyData.session.access_token,
+        refresh_token: verifyData.session.refresh_token,
+      })
+
+      // Claim
+      setPhase('claiming')
+      const deviceId = getDeviceId()
+      const claimRes = await fetch('/api/referral/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${verifyData.session.access_token}`,
+        },
+        body: JSON.stringify({ code, deviceId }),
+      })
+      const claimData = await claimRes.json()
+      if (!claimRes.ok) {
+        if (claimRes.status === 409) {
+          setAlreadyClaimed(true)
+          setPhase('claimed')
+          return
+        }
+        throw new Error(claimData.error || 'Failed to claim')
+      }
+      setPhase('claimed')
+    } catch (err) {
+      setError(err.message)
+      setPhase('otp')
+      setOtpValue('')
+      otpAutoSubmitted.current = false
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClaimAuthenticated = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Session expired. Please refresh the page.')
+      const deviceId = getDeviceId()
+      const res = await fetch('/api/referral/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ code, deviceId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (res.status === 409) {
+          setAlreadyClaimed(true)
+          setPhase('claimed')
+          return
+        }
+        throw new Error(data.error || 'Failed to claim')
+      }
+      setPhase('claimed')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Claimed state ──
+  if (phase === 'claimed') {
+    return (
+      <div style={{ textAlign: 'center', padding: '32px 24px' }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%',
+          background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 20px',
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
+        <h3 style={{
+          fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700,
+          color: colors.white, marginBottom: 8,
+        }}>
+          {alreadyClaimed ? 'Credit Already Claimed!' : '$25 Credit Claimed!'}
+        </h3>
+        <div style={{
+          display: 'inline-block', padding: '8px 24px', borderRadius: 99,
+          background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)',
+          marginBottom: 16,
+        }}>
+          <span style={{
+            fontFamily: fonts.display, fontSize: '1.75rem', fontWeight: 700,
+            color: '#22c55e',
+          }}>
+            $25
+          </span>
+          <span style={{
+            fontFamily: fonts.body, fontSize: '0.875rem',
+            color: 'rgba(250,248,245,0.5)', marginLeft: 8,
+          }}>
+            RELUXE credit
+          </span>
+        </div>
+        <p style={{
+          fontFamily: fonts.body, fontSize: '0.9375rem',
+          color: 'rgba(250,248,245,0.5)', lineHeight: 1.6,
+        }}>
+          Your $25 is waiting for you. Book your first treatment below to use it.
+        </p>
+      </div>
+    )
+  }
+
+  // ── Authenticated: simple claim button ──
+  if (isAuthenticated && phase !== 'otp') {
+    return (
+      <div style={{ textAlign: 'center', padding: '32px 24px' }}>
+        <p style={{
+          fontFamily: fonts.body, fontSize: '1rem',
+          color: 'rgba(250,248,245,0.5)', marginBottom: 20, lineHeight: 1.6,
+        }}>
+          Welcome{member?.first_name ? `, ${member.first_name}` : ''}! Claim your $25 credit from {referrerName}.
+        </p>
+        <button
+          onClick={handleClaimAuthenticated}
+          disabled={loading}
+          style={{
+            fontFamily: fonts.body, fontSize: '1rem', fontWeight: 600,
+            padding: '14px 48px', borderRadius: 99,
+            background: loading ? 'rgba(124,58,237,0.5)' : gradients.primary,
+            color: '#fff', border: 'none',
+            cursor: loading ? 'wait' : 'pointer',
+          }}
+        >
+          {loading ? 'Claiming...' : 'Claim $25 Now'}
+        </button>
+        {error && (
+          <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: '#ef4444', marginTop: 12 }}>{error}</p>
+        )}
+      </div>
+    )
+  }
+
+  // ── OTP phase ──
+  if (phase === 'otp') {
+    return (
+      <div style={{ textAlign: 'center', padding: '28px 24px' }}>
+        <p style={{
+          fontFamily: fonts.body, fontSize: '1rem', fontWeight: 500,
+          color: colors.white, marginBottom: 4,
+        }}>
+          We texted a code to {formatPhone(phone)}
+        </p>
+        <p style={{
+          fontFamily: fonts.body, fontSize: '0.8125rem',
+          color: 'rgba(250,248,245,0.4)', marginBottom: 24,
+        }}>
+          Enter it below to create your account and claim $25.
+        </p>
+        <div style={{ maxWidth: 280, margin: '0 auto' }}>
+          <CodeInput value={otpValue} onChange={setOtpValue} disabled={loading} fonts={fonts} />
+        </div>
+        {loading && phase === 'otp' && (
+          <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: '#a78bfa', marginTop: 16 }}>
+            Verifying & claiming your credit...
+          </p>
+        )}
+        {error && (
+          <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: '#ef4444', marginTop: 12 }}>{error}</p>
+        )}
+        <button
+          onClick={() => { setPhase('idle'); setOtpValue(''); setError(null); otpAutoSubmitted.current = false }}
+          style={{
+            fontFamily: fonts.body, fontSize: '0.75rem',
+            color: 'rgba(250,248,245,0.3)', background: 'none', border: 'none',
+            cursor: 'pointer', marginTop: 20,
+          }}
+        >
+          Use a different number
+        </button>
+      </div>
+    )
+  }
+
+  // ── Claiming spinner ──
+  if (phase === 'claiming') {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 24px' }}>
+        <p style={{ fontFamily: fonts.body, fontSize: '1rem', color: '#a78bfa' }}>
+          Claiming your $25 credit...
+        </p>
+      </div>
+    )
+  }
+
+  // ── Default: phone input ──
+  return (
+    <div style={{ textAlign: 'center', padding: '28px 24px' }}>
+      <h3 style={{
+        fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700,
+        color: colors.white, marginBottom: 8,
+      }}>
+        Claim Your $25 Now
+      </h3>
+      <p style={{
+        fontFamily: fonts.body, fontSize: '0.875rem',
+        color: 'rgba(250,248,245,0.5)', lineHeight: 1.6, marginBottom: 20,
+      }}>
+        Enter your phone number to create your account and lock in $25 RELUXE credit instantly. No expiration.
+      </p>
+      <form onSubmit={handleSendOtp} style={{ maxWidth: 320, margin: '0 auto' }}>
+        <input
+          type="tel"
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => { setPhone(formatPhone(e.target.value)); setError(null) }}
+          placeholder="(317) 555-1234"
+          style={{
+            fontFamily: fonts.body, fontSize: '1.0625rem', fontWeight: 500,
+            width: '100%', padding: '14px 16px', borderRadius: 12,
+            border: `1.5px solid ${error ? '#ef4444' : 'rgba(124,58,237,0.3)'}`,
+            backgroundColor: 'rgba(0,0,0,0.25)', color: colors.white,
+            outline: 'none', textAlign: 'center',
+            marginBottom: 12,
+          }}
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            fontFamily: fonts.body, fontSize: '1rem', fontWeight: 600,
+            width: '100%', padding: '14px', borderRadius: 99,
+            background: loading ? 'rgba(124,58,237,0.5)' : gradients.primary,
+            color: '#fff', border: 'none',
+            cursor: loading ? 'wait' : 'pointer',
+          }}
+        >
+          {loading ? 'Sending Code...' : 'Claim $25 Now'}
+        </button>
+      </form>
+      {error && (
+        <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: '#ef4444', marginTop: 12 }}>{error}</p>
+      )}
+      <p style={{
+        fontFamily: fonts.body, fontSize: '0.6875rem',
+        color: 'rgba(250,248,245,0.25)', marginTop: 16,
+      }}>
+        We&apos;ll text you a verification code. Standard messaging rates apply.
+      </p>
+    </div>
+  )
+}
+
+// ─── Inner page (uses MemberContext hooks) ───
+function ReferralPageContent({ code, referrerName, tier }) {
   const router = useRouter()
   const clickFired = useRef(false)
 
@@ -75,6 +388,319 @@ export default function ReferralLandingPage({ code, referrerName, tier }) {
     router.push(`/beta/locations/${locationKey}`)
   }
 
+  return (
+    <div style={{ backgroundColor: colors.ink }}>
+      <BetaNavBar fontKey={FONT_KEY} />
+
+      {/* ─── HERO ─── */}
+      <section style={{
+        position: 'relative', overflow: 'hidden',
+        padding: 'clamp(5rem, 12vw, 8rem) clamp(1.25rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem)',
+        background: colors.ink, textAlign: 'center',
+      }}>
+        {/* Gradient orb */}
+        <div style={{
+          position: 'absolute', bottom: '-20%', left: '50%', transform: 'translateX(-50%)',
+          width: '120%', height: '60%',
+          background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        {/* Grain */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: grain, backgroundRepeat: 'repeat',
+          pointerEvents: 'none', opacity: 0.5,
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto' }}>
+          {/* Badge */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '6px 16px', borderRadius: 99,
+            background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)',
+            marginBottom: 24,
+          }}>
+            <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: '#a78bfa', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Invited by {referrerName}
+            </span>
+          </div>
+
+          <h1 style={{
+            fontFamily: fonts.display,
+            fontSize: typeScale.hero.size,
+            fontWeight: typeScale.hero.weight,
+            lineHeight: typeScale.hero.lineHeight,
+            background: gradients.primary,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: 16,
+          }}>
+            Get $25 Off
+          </h1>
+
+          <p style={{
+            fontFamily: fonts.display,
+            fontSize: typeScale.subhead.size,
+            fontWeight: 400,
+            lineHeight: 1.4,
+            color: colors.white,
+            marginBottom: 8,
+          }}>
+            Your first treatment at RELUXE Med Spa
+          </p>
+
+          <p style={{
+            fontFamily: fonts.body,
+            fontSize: '1rem',
+            color: 'rgba(250,248,245,0.5)',
+            lineHeight: 1.6,
+            maxWidth: 480,
+            margin: '0 auto',
+          }}>
+            {referrerName} loves their experience at RELUXE and wants you to try it too. Claim your <strong style={{ color: '#a78bfa' }}>$25 credit</strong> now — no expiration.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── CLAIM SECTION ─── */}
+      <section style={{
+        padding: '0 clamp(1.25rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem)',
+        background: colors.ink,
+      }}>
+        <div style={{
+          maxWidth: 520, margin: '0 auto',
+          borderRadius: 20,
+          background: 'rgba(124,58,237,0.06)',
+          border: '1px solid rgba(124,58,237,0.2)',
+          overflow: 'hidden',
+        }}>
+          <ClaimSection code={code} referrerName={referrerName} />
+        </div>
+      </section>
+
+      {/* ─── HOW IT WORKS ─── */}
+      <section style={{
+        padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 3rem)',
+        background: colors.charcoal,
+        position: 'relative',
+      }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{
+            fontFamily: fonts.display,
+            fontSize: typeScale.sectionHeading.size,
+            fontWeight: typeScale.sectionHeading.weight,
+            lineHeight: typeScale.sectionHeading.lineHeight,
+            color: colors.white,
+            textAlign: 'center',
+            marginBottom: 48,
+          }}>
+            How It Works
+          </h2>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 24,
+          }}>
+            {[
+              { num: '1', title: 'Claim', desc: 'Enter your phone to create an account and lock in your $25 credit instantly.', icon: '\uD83C\uDF81' },
+              { num: '2', title: 'Book', desc: 'Choose a treatment at either RELUXE location and book online.', icon: '\uD83D\uDCC5' },
+              { num: '3', title: 'Enjoy', desc: 'Your $25 credit is applied automatically. You and your friend both earn credit!', icon: '\u2728' },
+            ].map((step) => (
+              <div key={step.num} style={{
+                padding: '32px 24px',
+                borderRadius: 16,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  fontSize: '2rem', marginBottom: 16, lineHeight: 1,
+                }}>
+                  {step.icon}
+                </div>
+                <div style={{
+                  fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 700,
+                  color: '#a78bfa', letterSpacing: '0.12em', textTransform: 'uppercase',
+                  marginBottom: 8,
+                }}>
+                  Step {step.num}
+                </div>
+                <h3 style={{
+                  fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 600,
+                  color: colors.white, marginBottom: 8,
+                }}>
+                  {step.title}
+                </h3>
+                <p style={{
+                  fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.5)',
+                  lineHeight: 1.5,
+                }}>
+                  {step.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CHOOSE YOUR LOCATION ─── */}
+      <section style={{
+        padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 3rem)',
+        background: colors.ink,
+        position: 'relative',
+      }}>
+        {/* Gradient accent */}
+        <div style={{
+          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+          width: '100%', height: '1px',
+          background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.3), transparent)',
+        }} />
+
+        <div style={{ maxWidth: 700, margin: '0 auto' }}>
+          <h2 style={{
+            fontFamily: fonts.display,
+            fontSize: typeScale.sectionHeading.size,
+            fontWeight: typeScale.sectionHeading.weight,
+            lineHeight: typeScale.sectionHeading.lineHeight,
+            color: colors.white,
+            textAlign: 'center',
+            marginBottom: 12,
+          }}>
+            Choose Your Location
+          </h2>
+          <p style={{
+            fontFamily: fonts.body, fontSize: '1rem',
+            color: 'rgba(250,248,245,0.5)', textAlign: 'center',
+            marginBottom: 40,
+          }}>
+            Two locations, same elevated experience.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 20,
+          }}>
+            {LOCATIONS.map((loc) => (
+              <button
+                key={loc.key}
+                onClick={() => handleBookNow(loc.key)}
+                style={{
+                  padding: '32px 28px',
+                  borderRadius: 16,
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(124,58,237,0.08)'
+                  e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+                }}
+              >
+                <div style={{
+                  fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 700,
+                  color: '#a78bfa', letterSpacing: '0.12em', textTransform: 'uppercase',
+                  marginBottom: 8,
+                }}>
+                  RELUXE
+                </div>
+                <h3 style={{
+                  fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 600,
+                  color: colors.white, marginBottom: 8,
+                }}>
+                  {loc.city}, {loc.state}
+                </h3>
+                <p style={{
+                  fontFamily: fonts.body, fontSize: '0.8125rem',
+                  color: 'rgba(250,248,245,0.4)', lineHeight: 1.5,
+                  marginBottom: 16,
+                }}>
+                  {loc.address}
+                </p>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 20px', borderRadius: 99,
+                  background: gradients.primary,
+                  fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
+                  color: '#fff',
+                }}>
+                  Book Now
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── VALUE PROPS ─── */}
+      <section style={{
+        padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 3rem)',
+        background: colors.charcoal,
+      }}>
+        <div style={{
+          maxWidth: 700, margin: '0 auto',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 24,
+        }}>
+          {[
+            { title: 'Expert Providers', desc: 'Board-certified professionals with advanced aesthetic training.' },
+            { title: 'Premium Products', desc: 'Only top-tier medical-grade products and technologies.' },
+            { title: 'Real Results', desc: 'Transparent before & afters from real RELUXE patients.' },
+          ].map((v) => (
+            <div key={v.title} style={{ textAlign: 'center', padding: '20px 16px' }}>
+              <h3 style={{
+                fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 600,
+                color: colors.white, marginBottom: 8,
+              }}>
+                {v.title}
+              </h3>
+              <p style={{
+                fontFamily: fonts.body, fontSize: '0.8125rem',
+                color: 'rgba(250,248,245,0.45)', lineHeight: 1.5,
+              }}>
+                {v.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── FINE PRINT ─── */}
+      <section style={{
+        padding: '24px clamp(1.25rem, 4vw, 3rem)',
+        background: colors.ink,
+        borderTop: '1px solid rgba(255,255,255,0.04)',
+      }}>
+        <p style={{
+          fontFamily: fonts.body, fontSize: '0.6875rem',
+          color: 'rgba(250,248,245,0.25)', textAlign: 'center',
+          maxWidth: 600, margin: '0 auto', lineHeight: 1.5,
+        }}>
+          $25 referral credit is applied as RELUXE store credit with no expiration.
+          Credit has no cash value and cannot be combined with other promotions.
+          One referral reward per new client.
+        </p>
+      </section>
+
+      <BetaFooter fontKey={FONT_KEY} />
+      <MemberDrawerPortal fonts={fonts} />
+    </div>
+  )
+}
+
+export default function ReferralLandingPage({ code, referrerName, tier }) {
   const pageTitle = `${referrerName} thinks you'll love RELUXE — Get $25`
   const pageDesc = `${referrerName} invited you to RELUXE Med Spa. Book your first treatment and you both get $25 in credit.`
 
@@ -93,293 +719,7 @@ export default function ReferralLandingPage({ code, referrerName, tier }) {
 
       <LocationProvider>
         <MemberProvider>
-          <div style={{ backgroundColor: colors.ink }}>
-            <BetaNavBar fontKey={FONT_KEY} />
-
-            {/* ─── HERO ─── */}
-            <section style={{
-              position: 'relative', overflow: 'hidden',
-              padding: 'clamp(5rem, 12vw, 8rem) clamp(1.25rem, 4vw, 3rem) clamp(3rem, 8vw, 5rem)',
-              background: colors.ink, textAlign: 'center',
-            }}>
-              {/* Gradient orb */}
-              <div style={{
-                position: 'absolute', bottom: '-20%', left: '50%', transform: 'translateX(-50%)',
-                width: '120%', height: '60%',
-                background: 'radial-gradient(ellipse at center, rgba(124,58,237,0.15) 0%, transparent 70%)',
-                pointerEvents: 'none',
-              }} />
-              {/* Grain */}
-              <div style={{
-                position: 'absolute', inset: 0,
-                backgroundImage: grain, backgroundRepeat: 'repeat',
-                pointerEvents: 'none', opacity: 0.5,
-              }} />
-
-              <div style={{ position: 'relative', zIndex: 1, maxWidth: 680, margin: '0 auto' }}>
-                {/* Badge */}
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '6px 16px', borderRadius: 99,
-                  background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)',
-                  marginBottom: 24,
-                }}>
-                  <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: '#a78bfa', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    Invited by {referrerName}
-                  </span>
-                </div>
-
-                <h1 style={{
-                  fontFamily: fonts.display,
-                  fontSize: typeScale.hero.size,
-                  fontWeight: typeScale.hero.weight,
-                  lineHeight: typeScale.hero.lineHeight,
-                  background: gradients.primary,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  marginBottom: 16,
-                }}>
-                  Get $25 Off
-                </h1>
-
-                <p style={{
-                  fontFamily: fonts.display,
-                  fontSize: typeScale.subhead.size,
-                  fontWeight: 400,
-                  lineHeight: 1.4,
-                  color: colors.white,
-                  marginBottom: 8,
-                }}>
-                  Your first treatment at RELUXE Med Spa
-                </p>
-
-                <p style={{
-                  fontFamily: fonts.body,
-                  fontSize: '1rem',
-                  color: 'rgba(250,248,245,0.5)',
-                  lineHeight: 1.6,
-                  maxWidth: 480,
-                  margin: '0 auto',
-                }}>
-                  {referrerName} loves their experience at RELUXE and wants you to try it too. Book your first visit and you'll both receive <strong style={{ color: '#a78bfa' }}>$25 in credit</strong>.
-                </p>
-              </div>
-            </section>
-
-            {/* ─── HOW IT WORKS ─── */}
-            <section style={{
-              padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 3rem)',
-              background: colors.charcoal,
-              position: 'relative',
-            }}>
-              <div style={{ maxWidth: 900, margin: '0 auto' }}>
-                <h2 style={{
-                  fontFamily: fonts.display,
-                  fontSize: typeScale.sectionHeading.size,
-                  fontWeight: typeScale.sectionHeading.weight,
-                  lineHeight: typeScale.sectionHeading.lineHeight,
-                  color: colors.white,
-                  textAlign: 'center',
-                  marginBottom: 48,
-                }}>
-                  How It Works
-                </h2>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: 24,
-                }}>
-                  {STEPS.map((step) => (
-                    <div key={step.num} style={{
-                      padding: '32px 24px',
-                      borderRadius: 16,
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      textAlign: 'center',
-                    }}>
-                      <div style={{
-                        fontSize: '2rem', marginBottom: 16, lineHeight: 1,
-                      }}>
-                        {step.icon}
-                      </div>
-                      <div style={{
-                        fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 700,
-                        color: '#a78bfa', letterSpacing: '0.12em', textTransform: 'uppercase',
-                        marginBottom: 8,
-                      }}>
-                        Step {step.num}
-                      </div>
-                      <h3 style={{
-                        fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 600,
-                        color: colors.white, marginBottom: 8,
-                      }}>
-                        {step.title}
-                      </h3>
-                      <p style={{
-                        fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.5)',
-                        lineHeight: 1.5,
-                      }}>
-                        {step.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* ─── CHOOSE YOUR LOCATION ─── */}
-            <section style={{
-              padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 3rem)',
-              background: colors.ink,
-              position: 'relative',
-            }}>
-              {/* Gradient accent */}
-              <div style={{
-                position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-                width: '100%', height: '1px',
-                background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.3), transparent)',
-              }} />
-
-              <div style={{ maxWidth: 700, margin: '0 auto' }}>
-                <h2 style={{
-                  fontFamily: fonts.display,
-                  fontSize: typeScale.sectionHeading.size,
-                  fontWeight: typeScale.sectionHeading.weight,
-                  lineHeight: typeScale.sectionHeading.lineHeight,
-                  color: colors.white,
-                  textAlign: 'center',
-                  marginBottom: 12,
-                }}>
-                  Choose Your Location
-                </h2>
-                <p style={{
-                  fontFamily: fonts.body, fontSize: '1rem',
-                  color: 'rgba(250,248,245,0.5)', textAlign: 'center',
-                  marginBottom: 40,
-                }}>
-                  Two locations, same elevated experience.
-                </p>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                  gap: 20,
-                }}>
-                  {LOCATIONS.map((loc) => (
-                    <button
-                      key={loc.key}
-                      onClick={() => handleBookNow(loc.key)}
-                      style={{
-                        padding: '32px 28px',
-                        borderRadius: 16,
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s',
-                        position: 'relative',
-                        overflow: 'hidden',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(124,58,237,0.08)'
-                        e.currentTarget.style.borderColor = 'rgba(124,58,237,0.3)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
-                      }}
-                    >
-                      <div style={{
-                        fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 700,
-                        color: '#a78bfa', letterSpacing: '0.12em', textTransform: 'uppercase',
-                        marginBottom: 8,
-                      }}>
-                        RELUXE
-                      </div>
-                      <h3 style={{
-                        fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 600,
-                        color: colors.white, marginBottom: 8,
-                      }}>
-                        {loc.city}, {loc.state}
-                      </h3>
-                      <p style={{
-                        fontFamily: fonts.body, fontSize: '0.8125rem',
-                        color: 'rgba(250,248,245,0.4)', lineHeight: 1.5,
-                        marginBottom: 16,
-                      }}>
-                        {loc.address}
-                      </p>
-                      <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        padding: '8px 20px', borderRadius: 99,
-                        background: gradients.primary,
-                        fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
-                        color: '#fff',
-                      }}>
-                        Book Now
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* ─── VALUE PROPS ─── */}
-            <section style={{
-              padding: 'clamp(3rem, 8vw, 5rem) clamp(1.25rem, 4vw, 3rem)',
-              background: colors.charcoal,
-            }}>
-              <div style={{
-                maxWidth: 700, margin: '0 auto',
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 24,
-              }}>
-                {[
-                  { title: 'Expert Providers', desc: 'Board-certified professionals with advanced aesthetic training.' },
-                  { title: 'Premium Products', desc: 'Only top-tier medical-grade products and technologies.' },
-                  { title: 'Real Results', desc: 'Transparent before & afters from real RELUXE patients.' },
-                ].map((v) => (
-                  <div key={v.title} style={{ textAlign: 'center', padding: '20px 16px' }}>
-                    <h3 style={{
-                      fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 600,
-                      color: colors.white, marginBottom: 8,
-                    }}>
-                      {v.title}
-                    </h3>
-                    <p style={{
-                      fontFamily: fonts.body, fontSize: '0.8125rem',
-                      color: 'rgba(250,248,245,0.45)', lineHeight: 1.5,
-                    }}>
-                      {v.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* ─── FINE PRINT ─── */}
-            <section style={{
-              padding: '24px clamp(1.25rem, 4vw, 3rem)',
-              background: colors.ink,
-              borderTop: '1px solid rgba(255,255,255,0.04)',
-            }}>
-              <p style={{
-                fontFamily: fonts.body, fontSize: '0.6875rem',
-                color: 'rgba(250,248,245,0.25)', textAlign: 'center',
-                maxWidth: 600, margin: '0 auto', lineHeight: 1.5,
-              }}>
-                $25 referral credit is applied as RELUXE store credit after your first completed appointment.
-                Credit has no cash value and cannot be combined with other promotions.
-                One referral reward per new client.
-              </p>
-            </section>
-
-            <BetaFooter fontKey={FONT_KEY} />
-          </div>
+          <ReferralPageContent code={code} referrerName={referrerName} tier={tier} />
         </MemberProvider>
       </LocationProvider>
     </>

@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { colors, gradients } from '@/components/preview/tokens'
+import { supabase } from '@/lib/supabase'
 import { useMember } from '@/context/MemberContext'
 import ReferralDashboard from '@/components/member/ReferralDashboard'
 
@@ -55,8 +56,18 @@ function VisitsSection({ visits, fonts, onRebook }) {
 }
 
 // ─── Section: Tox Status ───
+const TOX_BRANDS = ['Botox', 'Dysport', 'Daxxify', 'Jeuveau', 'Xeomin']
+
 function ToxSection({ toxStatus, fonts, onRebook, member }) {
   if (!toxStatus) return <EmptyState text="No tox history" fonts={fonts} />
+
+  const [showExternal, setShowExternal] = useState(false)
+  const [externalDate, setExternalDate] = useState('')
+  const [externalBrand, setExternalBrand] = useState('')
+  const [externalSaving, setExternalSaving] = useState(false)
+  const [externalDone, setExternalDone] = useState(false)
+  const [showBrandPicker, setShowBrandPicker] = useState(false)
+  const [brandSaving, setBrandSaving] = useState(false)
 
   const segCfg = {
     on_schedule: { label: 'On Schedule', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', icon: '✓' },
@@ -68,8 +79,38 @@ function ToxSection({ toxStatus, fonts, onRebook, member }) {
   const seg = segCfg[toxStatus.segment] || segCfg.on_schedule
   const nextWindow = toxStatus.avg_interval ? Math.max(0, toxStatus.avg_interval - (toxStatus.days_since_last || 0)) : null
 
+  const apiCall = async (body) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return null
+    const res = await fetch('/api/member/tox-update', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(body),
+    })
+    return res.ok ? res.json() : null
+  }
+
+  const handleExternalSubmit = async () => {
+    if (!externalDate) return
+    setExternalSaving(true)
+    const result = await apiCall({ action: 'log_external', external_date: externalDate, external_brand: externalBrand || null })
+    setExternalSaving(false)
+    if (result) { setExternalDone(true); setShowExternal(false) }
+  }
+
+  const handleBrandChange = async (brand) => {
+    setBrandSaving(true)
+    await apiCall({ action: 'set_brand', tox_brand: brand })
+    setBrandSaving(false)
+    setShowBrandPicker(false)
+    toxStatus.preferred_brand = brand
+  }
+
+  const displayBrand = toxStatus.preferred_brand || toxStatus.primary_type || '—'
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Status banner */}
       <div style={{ padding: '1.25rem', borderRadius: '0.75rem', background: seg.bg, border: `1px solid ${seg.color}25` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span style={{ fontSize: '1.25rem' }}>{seg.icon}</span>
@@ -81,15 +122,105 @@ function ToxSection({ toxStatus, fonts, onRebook, member }) {
         {nextWindow > 0 && toxStatus.segment === 'on_schedule' && (
           <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.4)', marginTop: 4 }}>Next window opens in ~{nextWindow} days</p>
         )}
+
+        {/* "I got it elsewhere" for overdue/due */}
+        {['overdue', 'probably_lost'].includes(toxStatus.segment) && !externalDone && (
+          <div style={{ marginTop: 12 }}>
+            {!showExternal ? (
+              <button
+                onClick={() => setShowExternal(true)}
+                style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+              >
+                I got tox somewhere else
+              </button>
+            ) : (
+              <div style={{ marginTop: 8, padding: 12, borderRadius: 10, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(250,248,245,0.08)' }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)', marginBottom: 8 }}>
+                  Help us update your records
+                </p>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <input
+                    type="date"
+                    value={externalDate}
+                    onChange={e => setExternalDate(e.target.value)}
+                    style={{ flex: 1, fontFamily: fonts.body, fontSize: '0.8125rem', padding: '8px 10px', borderRadius: 8, background: 'rgba(250,248,245,0.06)', border: '1px solid rgba(250,248,245,0.1)', color: colors.white, outline: 'none' }}
+                  />
+                  <select
+                    value={externalBrand}
+                    onChange={e => setExternalBrand(e.target.value)}
+                    style={{ flex: 1, fontFamily: fonts.body, fontSize: '0.8125rem', padding: '8px 10px', borderRadius: 8, background: 'rgba(250,248,245,0.06)', border: '1px solid rgba(250,248,245,0.1)', color: colors.white, outline: 'none' }}
+                  >
+                    <option value="">Brand (optional)</option>
+                    {TOX_BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleExternalSubmit}
+                    disabled={!externalDate || externalSaving}
+                    style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, padding: '8px 16px', borderRadius: 8, background: colors.violet, color: '#fff', border: 'none', cursor: 'pointer', opacity: !externalDate || externalSaving ? 0.5 : 1 }}
+                  >
+                    {externalSaving ? 'Saving...' : 'Update Records'}
+                  </button>
+                  <button
+                    onClick={() => setShowExternal(false)}
+                    style={{ fontFamily: fonts.body, fontSize: '0.75rem', padding: '8px 12px', borderRadius: 8, background: 'none', border: '1px solid rgba(250,248,245,0.1)', color: 'rgba(250,248,245,0.4)', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {externalDone && (
+          <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: '#22c55e', marginTop: 8 }}>Thanks! We've updated your records.</p>
+        )}
       </div>
 
+      {/* Stats grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         <StatBox label="Tox Visits" value={toxStatus.visits || 0} fonts={fonts} />
-        <StatBox label="Your Brand" value={toxStatus.primary_type || '—'} fonts={fonts} />
+        {/* Brand with edit pencil */}
+        <div style={{ position: 'relative' }}>
+          <StatBox label="Your Brand" value={displayBrand} fonts={fonts} />
+          <button
+            onClick={() => setShowBrandPicker(!showBrandPicker)}
+            style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 4, opacity: 0.4, transition: 'opacity 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = '0.8' }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = '0.4' }}
+            title="Change preferred brand"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.white} strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+          </button>
+          {showBrandPicker && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, zIndex: 10, background: '#1a1a1a', border: '1px solid rgba(250,248,245,0.12)', borderRadius: 10, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+              {TOX_BRANDS.map(b => (
+                <button
+                  key={b}
+                  onClick={() => handleBrandChange(b)}
+                  disabled={brandSaving}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: displayBrand === b ? 600 : 400,
+                    padding: '10px 14px', background: displayBrand === b ? `${colors.violet}15` : 'transparent',
+                    color: displayBrand === b ? colors.violet : colors.white,
+                    border: 'none', borderBottom: '1px solid rgba(250,248,245,0.06)', cursor: 'pointer',
+                  }}
+                  onMouseEnter={e => { if (displayBrand !== b) e.currentTarget.style.background = 'rgba(250,248,245,0.04)' }}
+                  onMouseLeave={e => { if (displayBrand !== b) e.currentTarget.style.background = 'transparent' }}
+                >
+                  {b}{displayBrand === b ? ' ✓' : ''}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <StatBox label="Avg Interval" value={toxStatus.avg_interval ? `${toxStatus.avg_interval}d` : '—'} fonts={fonts} />
         <StatBox label="Tried Multiple" value={toxStatus.switching ? 'Yes' : 'No'} fonts={fonts} />
       </div>
 
+      {/* Provider */}
       {toxStatus.last_provider && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)' }}>
           {toxStatus.last_provider.image && <img src={toxStatus.last_provider.image} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />}
@@ -100,6 +231,7 @@ function ToxSection({ toxStatus, fonts, onRebook, member }) {
         </div>
       )}
 
+      {/* Book CTA */}
       {['due', 'overdue', 'probably_lost'].includes(toxStatus.segment) && (
         <button onClick={() => onRebook({
           serviceSlug: 'tox',
@@ -164,8 +296,85 @@ function RecommendationsSection({ recommendations, fonts, onRebook, member }) {
   )
 }
 
+// ─── Section: Membership ───
+function MembershipSection({ membership, accountCredit, fonts }) {
+  const STATUS_CFG = {
+    ACTIVE: { label: 'Active', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', icon: '✓' },
+    PAST_DUE: { label: 'Past Due', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '!' },
+    PAUSED: { label: 'Paused', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '⏸' },
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Account credit card */}
+      {accountCredit && (
+        <div style={{ padding: '1.25rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04))', border: '1px solid rgba(34,197,94,0.2)' }}>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.4)', marginBottom: 6 }}>RELUXE Credit</p>
+          <p style={{ fontFamily: fonts.display, fontSize: '2rem', fontWeight: 700, color: '#22c55e' }}>{accountCredit.formatted}</p>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)', marginTop: 4 }}>Applied automatically at checkout</p>
+        </div>
+      )}
+
+      {/* Membership card */}
+      {membership ? (() => {
+        const cfg = STATUS_CFG[membership.status] || STATUS_CFG.ACTIVE
+        const vouchers = membership.vouchers || []
+        const allServices = vouchers.flatMap(v => v.services || [])
+
+        return (
+          <>
+            <div style={{ padding: '1.25rem', borderRadius: '0.75rem', background: cfg.bg, border: `1px solid ${cfg.color}25` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: cfg.color, background: `${cfg.color}20`, padding: '0.2rem 0.6rem', borderRadius: 999 }}>
+                  {cfg.icon} {cfg.label}
+                </span>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(250,248,245,0.5)' }}>
+                  {membership.priceFormatted}/mo
+                </span>
+              </div>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, color: colors.white, marginBottom: 4 }}>{membership.name}</p>
+              {membership.nextChargeDate && membership.status === 'ACTIVE' && (
+                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)' }}>
+                  Renews {new Date(membership.nextChargeDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              )}
+              {membership.status === 'PAUSED' && membership.unpauseOn && (
+                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: '#f59e0b' }}>
+                  Resumes {new Date(membership.unpauseOn + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              )}
+            </div>
+
+            {/* Membership stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <StatBox label="Term" value={`#${membership.termNumber}`} fonts={fonts} />
+              <StatBox label="Member Since" value={new Date(membership.startOn + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} fonts={fonts} />
+            </div>
+
+            {/* Included services */}
+            {allServices.length > 0 && (
+              <div>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.35)', marginBottom: 10 }}>Included Services</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {allServices.map((svc, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', background: `${colors.violet}08`, border: `1px solid ${colors.violet}12` }}>
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.white }}>{svc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })() : !accountCredit && (
+        <EmptyState text="No active membership" fonts={fonts} />
+      )}
+    </div>
+  )
+}
+
 // ─── Section: Account ───
-function AccountSection({ member, stats, fonts }) {
+function AccountSection({ member, stats, accountCredit, membership, fonts, onNavigate, onSignOut }) {
   const memberSince = stats?.first_visit
     ? new Date(stats.first_visit).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : member?.onboarded_at ? new Date(member.onboarded_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null
@@ -179,16 +388,33 @@ function AccountSection({ member, stats, fonts }) {
         {memberSince && <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)' }}>Member since {memberSince}</p>}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {stats?.total_visits > 0 && <StatBox label="Total Visits" value={stats.total_visits} fonts={fonts} />}
+        {stats?.total_visits > 0 && <StatBox label="Total Visits" value={stats.total_visits} fonts={fonts} onClick={() => onNavigate?.('visits')} />}
         {stats?.months_with_us > 0 && <StatBox label="Months With Us" value={stats.months_with_us} fonts={fonts} />}
         {stats?.avg_days_between_visits && <StatBox label="Visit Cadence" value={`${stats.avg_days_between_visits}d`} fonts={fonts} />}
-        {stats?.total_treatments > 0 && <StatBox label="Treatments" value={stats.total_treatments} fonts={fonts} />}
+        {stats?.total_treatments > 0 && <StatBox label="Treatments" value={stats.total_treatments} fonts={fonts} onClick={() => onNavigate?.('visits')} />}
+        {accountCredit && <StatBox label="RELUXE Credit" value={accountCredit.formatted} fonts={fonts} onClick={() => onNavigate?.('membership')} />}
+        {membership && <StatBox label="Membership" value={membership.status === 'ACTIVE' ? 'Active' : membership.status} fonts={fonts} onClick={() => onNavigate?.('membership')} />}
       </div>
       <div style={{ padding: '0.875rem 1rem', borderRadius: '0.75rem', background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)' }}>
         <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.35)', marginBottom: 8 }}>Your Info</p>
         {member?.first_name && <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.white }}>{member.first_name} {member.last_name || ''}</p>}
         {member?.email && <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)' }}>{member.email}</p>}
       </div>
+      {onSignOut && (
+        <button
+          onClick={onSignOut}
+          style={{
+            fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500,
+            color: 'rgba(250,248,245,0.4)', background: 'none', border: '1px solid rgba(250,248,245,0.08)',
+            borderRadius: 10, padding: '10px 16px', cursor: 'pointer', width: '100%',
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(250,248,245,0.4)'; e.currentTarget.style.borderColor = 'rgba(250,248,245,0.08)' }}
+        >
+          Sign Out
+        </button>
+      )}
     </div>
   )
 }
@@ -300,9 +526,16 @@ function ServiceCategoriesSection({ categories, fonts }) {
   return (
     <div>
       <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.35)', marginBottom: 10 }}>Services You've Tried</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {categories.map((cat) => (
-          <span key={cat.slug} style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, padding: '0.375rem 0.75rem', borderRadius: 999, background: `${colors.violet}12`, color: colors.violet }}>{cat.label}</span>
+          <div key={cat.slug} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '0.625rem 0.875rem', borderRadius: '0.625rem',
+            background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)',
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors.violet, flexShrink: 0 }} />
+            <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: colors.white }}>{cat.label}</span>
+          </div>
         ))}
       </div>
     </div>
@@ -310,11 +543,35 @@ function ServiceCategoriesSection({ categories, fonts }) {
 }
 
 // ─── Shared ───
-function StatBox({ label, value, fonts }) {
+function StatBox({ label, value, fonts, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  const clickable = !!onClick
   return (
-    <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)' }}>
-      <p style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white }}>{value}</p>
-      <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', fontWeight: 500 }}>{label}</p>
+    <div
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter') onClick() } : undefined}
+      onMouseEnter={clickable ? () => setHovered(true) : undefined}
+      onMouseLeave={clickable ? () => setHovered(false) : undefined}
+      style={{
+        padding: '0.75rem 1rem', borderRadius: '0.75rem',
+        background: clickable && hovered ? 'rgba(250,248,245,0.06)' : 'rgba(250,248,245,0.03)',
+        border: `1px solid ${clickable && hovered ? 'rgba(250,248,245,0.12)' : 'rgba(250,248,245,0.06)'}`,
+        cursor: clickable ? 'pointer' : 'default',
+        transition: 'background 0.15s, border-color 0.15s',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}
+    >
+      <div>
+        <p style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white }}>{value}</p>
+        <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', fontWeight: 500 }}>{label}</p>
+      </div>
+      {clickable && (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ opacity: hovered ? 0.5 : 0.25, transition: 'opacity 0.15s', flexShrink: 0 }}>
+          <path d="M6 4L10 8L6 12" stroke={colors.white} strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      )}
     </div>
   )
 }
@@ -327,6 +584,7 @@ function EmptyState({ text, fonts }) {
 const ALL_TABS = [
   { key: 'visits', label: 'Visits' },
   { key: 'tox', label: 'Tox' },
+  { key: 'membership', label: 'Membership' },
   { key: 'providers', label: 'Providers' },
   { key: 'products', label: 'Products' },
   { key: 'locations', label: 'Locations' },
@@ -356,7 +614,7 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  const { openRebookModal } = useMember()
+  const { openRebookModal, signOut } = useMember()
 
   const handleRebook = useCallback((data) => {
     openRebookModal(data)
@@ -365,6 +623,7 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
   // Filter tabs to those with data
   const tabs = ALL_TABS.filter((t) => {
     if (t.key === 'tox' && !profile?.toxStatus) return false
+    if (t.key === 'membership' && !profile?.membership && !profile?.accountCredit) return false
     if (t.key === 'products' && !profile?.products?.items?.length) return false
     if (t.key === 'recommendations' && !profile?.recommendations?.length) return false
     return true
@@ -420,14 +679,15 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
               {activeTab === 'visits' && <VisitsSection visits={profile?.visits} fonts={fonts} onRebook={handleRebook} />}
               {activeTab === 'tox' && <ToxSection toxStatus={profile?.toxStatus} fonts={fonts} onRebook={handleRebook} member={member} />}
+              {activeTab === 'membership' && <MembershipSection membership={profile?.membership} accountCredit={profile?.accountCredit} fonts={fonts} />}
               {activeTab === 'providers' && <ProvidersSection providers={profile?.providers} fonts={fonts} />}
               {activeTab === 'products' && <ProductsSection products={profile?.products} fonts={fonts} />}
               {activeTab === 'locations' && <LocationsSection locationSplit={profile?.locationSplit} member={member} fonts={fonts} />}
               {activeTab === 'recommendations' && <RecommendationsSection recommendations={profile?.recommendations} fonts={fonts} onRebook={handleRebook} member={member} />}
               {activeTab === 'referrals' && <ReferralDashboard fonts={fonts} />}
-              {activeTab === 'account' && <AccountSection member={member} stats={profile?.stats} fonts={fonts} />}
+              {activeTab === 'account' && <AccountSection member={member} stats={profile?.stats} accountCredit={profile?.accountCredit} membership={profile?.membership} fonts={fonts} onNavigate={setActiveTab} onSignOut={signOut} />}
 
-              {!['account', 'locations', 'products'].includes(activeTab) && profile?.serviceCategories?.length > 0 && (
+              {!['account', 'locations', 'products', 'membership'].includes(activeTab) && profile?.serviceCategories?.length > 0 && (
                 <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(250,248,245,0.06)' }}>
                   <ServiceCategoriesSection categories={profile.serviceCategories} fonts={fonts} />
                 </div>

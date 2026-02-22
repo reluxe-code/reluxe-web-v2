@@ -26,16 +26,31 @@ export default async function handler(req, res) {
     .eq('id', rc.member_id)
     .single()
 
-  // Find matching referral: prefer deviceId match, fall back to any clicked referral for this code
+  // Find matching referral: prefer claimed, then deviceId, then phone, then recent click
   let referral = null
 
-  if (deviceId) {
+  // Check for a claimed referral by phone first (highest priority — user already has an account)
+  if (phone) {
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10)
+    if (cleanPhone) {
+      const { data } = await db
+        .from('referrals')
+        .select('*')
+        .ilike('referee_phone', `%${cleanPhone}`)
+        .eq('status', 'claimed')
+        .order('claimed_at', { ascending: false })
+        .limit(1)
+      referral = data?.[0]
+    }
+  }
+
+  if (!referral && deviceId) {
     const { data } = await db
       .from('referrals')
       .select('*')
       .eq('referral_code_id', rc.id)
       .eq('referee_device_id', deviceId)
-      .eq('status', 'clicked')
+      .in('status', ['clicked', 'claimed'])
       .order('clicked_at', { ascending: false })
       .limit(1)
     referral = data?.[0]
@@ -48,13 +63,12 @@ export default async function handler(req, res) {
       const { data } = await db
         .from('referrals')
         .select('*')
-        .eq('status', 'invited')
+        .in('status', ['invited', 'claimed'])
         .ilike('referee_phone', `%${cleanPhone}`)
         .order('invited_at', { ascending: false })
         .limit(1)
       if (data?.[0]) {
         referral = data[0]
-        // Override rc to match the inviter's code (may differ from the code in URL)
       }
     }
   }
@@ -66,19 +80,19 @@ export default async function handler(req, res) {
       .select('*')
       .eq('referral_code_id', rc.id)
       .eq('referee_phone', phone)
-      .in('status', ['clicked', 'booked'])
+      .in('status', ['clicked', 'claimed', 'booked'])
       .limit(1)
     referral = data?.[0]
   }
 
   if (!referral) {
-    // Grab the most recent clicked referral for this code (within 30 days)
+    // Grab the most recent clicked/claimed referral for this code (within 30 days)
     const cutoff = new Date(Date.now() - 30 * 86400000).toISOString()
     const { data } = await db
       .from('referrals')
       .select('*')
       .eq('referral_code_id', rc.id)
-      .eq('status', 'clicked')
+      .in('status', ['clicked', 'claimed'])
       .gte('clicked_at', cutoff)
       .order('clicked_at', { ascending: false })
       .limit(1)

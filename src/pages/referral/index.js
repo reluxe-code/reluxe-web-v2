@@ -10,7 +10,9 @@ import BetaNavBar from '@/components/beta/BetaNavBar'
 import BetaFooter from '@/components/beta/BetaFooter'
 import { LocationProvider } from '@/context/LocationContext'
 import { MemberProvider, useMember } from '@/context/MemberContext'
+import MemberDrawerPortal from '@/components/beta/MemberDrawerPortal'
 import { supabase } from '@/lib/supabase'
+import { formatPhone, isValidPhone } from '@/lib/phoneUtils'
 
 const FONT_KEY = 'bold'
 const fonts = fontPairings[FONT_KEY]
@@ -31,9 +33,18 @@ const TIERS = [
 ]
 
 function MemberReferralSection() {
-  const { isAuthenticated, openDrawer } = useMember()
+  const { isAuthenticated, openDrawer, member } = useMember()
   const [data, setData] = useState(null)
   const [copied, setCopied] = useState(false)
+
+  // Invite state
+  const [showInvite, setShowInvite] = useState(true)
+  const [inviteName, setInviteName] = useState('')
+  const [invitePhone, setInvitePhone] = useState('')
+  const [messageText, setMessageText] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState(null)
+  const [inviteError, setInviteError] = useState(null)
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -48,11 +59,74 @@ function MemberReferralSection() {
     })
   }, [isAuthenticated])
 
+  // Set default message when data loads
+  useEffect(() => {
+    if (data) {
+      const name = member?.first_name || 'I'
+      setMessageText(`${name === 'I' ? 'I' : name} think${name === 'I' ? '' : 's'} you'd love RELUXE Med Spa! Get $25 off your first treatment.`)
+    }
+  }, [data, member])
+
   const handleCopy = async () => {
     if (!data?.referralUrl) return
     try { await navigator.clipboard.writeText(data.referralUrl) } catch {}
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleInvite = async (sendViaReluxe) => {
+    if (!inviteName.trim() || !invitePhone.trim()) return
+    if (!isValidPhone(invitePhone)) {
+      setInviteError('Enter a valid 10-digit phone number')
+      return
+    }
+    setInviting(true)
+    setInviteError(null)
+    setInviteResult(null)
+
+    if (!sendViaReluxe) {
+      // Open native SMS with custom message
+      const fullMessage = `${messageText}\n${data.referralUrl}`
+      const digits = invitePhone.replace(/\D/g, '')
+      const smsPhone = digits.length === 10 ? `+1${digits}` : digits.length === 11 ? `+${digits}` : digits
+      window.open(`sms:${smsPhone}?body=${encodeURIComponent(fullMessage)}`, '_self')
+      setInviting(false)
+      // Still register the invite server-side
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.access_token) {
+          fetch('/api/member/referral/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ firstName: inviteName.trim(), phone: invitePhone.trim(), sendSMS: false }),
+          }).catch(() => {})
+        }
+      } catch {}
+      setInviteResult({ manual: true })
+      return
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+      const res = await fetch('/api/member/referral/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ firstName: inviteName.trim(), phone: invitePhone.trim(), sendSMS: true, message: messageText }),
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setInviteError(result.error || 'Failed to send')
+      } else {
+        setInviteResult(result)
+        setInviteName('')
+        setInvitePhone('')
+      }
+    } catch {
+      setInviteError('Something went wrong')
+    } finally {
+      setInviting(false)
+    }
   }
 
   if (!isAuthenticated) {
@@ -85,57 +159,193 @@ function MemberReferralSection() {
   }
 
   return (
-    <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-      <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.4)', marginBottom: 12 }}>
-        Your referral link
-      </p>
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 10,
-        background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(124,58,237,0.25)',
-        borderRadius: 12, padding: '12px 20px', maxWidth: '100%',
-      }}>
-        <span style={{
-          fontFamily: 'monospace', fontSize: '0.875rem', color: 'rgba(250,248,245,0.6)',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    <div style={{ padding: '32px 20px' }}>
+      {/* Referral link */}
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.4)', marginBottom: 12 }}>
+          Your referral link
+        </p>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 10,
+          background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(124,58,237,0.25)',
+          borderRadius: 12, padding: '12px 20px', maxWidth: '100%',
         }}>
-          {data.referralUrl}
-        </span>
-        <button onClick={handleCopy} style={{
-          fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600,
-          padding: '6px 16px', borderRadius: 8,
-          background: copied ? '#22c55e' : colors.violet,
-          color: '#fff', border: 'none', cursor: 'pointer',
-          whiteSpace: 'nowrap', transition: 'background 0.2s',
-        }}>
-          {copied ? 'Copied!' : 'Copy'}
+          <span style={{
+            fontFamily: 'monospace', fontSize: '0.875rem', color: 'rgba(250,248,245,0.6)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {data.referralUrl}
+          </span>
+          <button onClick={handleCopy} style={{
+            fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600,
+            padding: '6px 16px', borderRadius: 8,
+            background: copied ? '#22c55e' : colors.violet,
+            color: '#fff', border: 'none', cursor: 'pointer',
+            whiteSpace: 'nowrap', transition: 'background 0.2s',
+          }}>
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+
+        {data.phoneCode && (
+          <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.3)', marginTop: 12 }}>
+            Friends can also use your phone number <strong style={{ color: 'rgba(250,248,245,0.5)' }}>{data.phoneCode}</strong> as a referral code.
+          </p>
+        )}
+
+        {data.codes?.length > 1 && (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.3)', marginBottom: 6 }}>
+              All your codes: {data.codes.map(c => c.code).join(' · ')}
+            </p>
+          </div>
+        )}
+
+        <button
+          onClick={() => openDrawer('referrals')}
+          style={{
+            fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
+            padding: '10px 24px', borderRadius: 99, marginTop: 20,
+            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+            color: colors.white, cursor: 'pointer',
+          }}
+        >
+          Manage Referrals & Create Custom Codes
         </button>
       </div>
 
-      {data.phoneCode && (
-        <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.3)', marginTop: 12 }}>
-          Friends can also use your phone number <strong style={{ color: 'rgba(250,248,245,0.5)' }}>{data.phoneCode}</strong> as a referral code.
+      {/* ─── Refer a Friend Directly ─── */}
+      <div style={{
+        marginTop: 24, padding: '20px', borderRadius: 14,
+        background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)',
+      }}>
+        <p style={{
+          fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600,
+          color: '#a78bfa', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0,
+        }}>
+          Refer a Friend Directly
         </p>
-      )}
 
-      {data.codes?.length > 1 && (
         <div style={{ marginTop: 12 }}>
-          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.3)', marginBottom: 6 }}>
-            All your codes: {data.codes.map(c => c.code).join(' · ')}
-          </p>
-        </div>
-      )}
+            <p style={{
+              fontFamily: fonts.body, fontSize: '0.8125rem',
+              color: 'rgba(250,248,245,0.45)', lineHeight: 1.5, marginBottom: 14,
+            }}>
+              Add your friend&apos;s name and phone. If they book within 15 days, you both get credit.
+            </p>
 
-      <button
-        onClick={() => openDrawer('referrals')}
-        style={{
-          fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
-          padding: '10px 24px', borderRadius: 99, marginTop: 20,
-          background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-          color: colors.white, cursor: 'pointer',
-        }}
-      >
-        Manage Referrals & Create Custom Codes
-      </button>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+              <input
+                type="text"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder="Friend's name"
+                style={{
+                  flex: 1, fontFamily: fonts.body, fontSize: '0.875rem',
+                  padding: '10px 14px', borderRadius: 8,
+                  background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: colors.white, outline: 'none',
+                }}
+              />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={invitePhone}
+                onChange={(e) => setInvitePhone(formatPhone(e.target.value))}
+                placeholder="(317) 555-1234"
+                style={{
+                  flex: 1, fontFamily: fonts.body, fontSize: '0.875rem',
+                  padding: '10px 14px', borderRadius: 8,
+                  background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: colors.white, outline: 'none',
+                }}
+              />
+            </div>
+
+            {/* Message preview */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{
+                fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600,
+                color: 'rgba(250,248,245,0.35)', textTransform: 'uppercase',
+                letterSpacing: '0.06em', marginBottom: 6,
+              }}>
+                Preview message
+              </p>
+              <textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                rows={2}
+                style={{
+                  width: '100%', fontFamily: fonts.body, fontSize: '0.8125rem',
+                  padding: '10px 14px', borderRadius: 8, resize: 'vertical',
+                  background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: colors.white, outline: 'none', lineHeight: 1.5,
+                }}
+              />
+              <p style={{
+                fontFamily: 'monospace', fontSize: '0.6875rem',
+                color: 'rgba(124,58,237,0.5)', marginTop: 4,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {data.referralUrl} — added automatically
+              </p>
+            </div>
+
+            {/* Send buttons */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => handleInvite(false)}
+                disabled={inviting || !inviteName.trim() || !invitePhone.trim()}
+                style={{
+                  fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
+                  padding: '10px 20px', borderRadius: 99, flex: 1, minWidth: 140,
+                  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                  color: colors.white, cursor: 'pointer',
+                  opacity: !inviteName.trim() || !invitePhone.trim() ? 0.4 : 1,
+                }}
+              >
+                Send It Myself
+              </button>
+              <button
+                onClick={() => handleInvite(true)}
+                disabled={inviting || !inviteName.trim() || !invitePhone.trim()}
+                style={{
+                  fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600,
+                  padding: '10px 20px', borderRadius: 99, flex: 1, minWidth: 140,
+                  background: inviting ? 'rgba(124,58,237,0.5)' : gradients.primary,
+                  color: '#fff', border: 'none', cursor: inviting ? 'wait' : 'pointer',
+                  opacity: !inviteName.trim() || !invitePhone.trim() ? 0.4 : 1,
+                }}
+              >
+                {inviting ? 'Sending...' : 'Have RELUXE Send It'}
+              </button>
+            </div>
+
+            {inviteError && (
+              <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: '#ef4444', marginTop: 10 }}>
+                {inviteError}
+              </p>
+            )}
+
+            {inviteResult && (
+              <div style={{
+                marginTop: 12, padding: '12px 16px', borderRadius: 10,
+                background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)',
+              }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: '#22c55e', fontWeight: 600 }}>
+                  {inviteResult.manual ? 'Referral tracked!' : inviteResult.smsSent ? 'Invitation sent!' : 'Referral added!'}
+                </p>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)', marginTop: 4 }}>
+                  {inviteResult.manual
+                    ? 'Your native messaging app should have opened with the message.'
+                    : inviteResult.smsSent
+                      ? 'We sent your friend a text with your referral link.'
+                      : 'Your friend has been added. Share the link with them directly.'}
+                </p>
+              </div>
+            )}
+          </div>
+      </div>
     </div>
   )
 }
@@ -445,6 +655,7 @@ export default function ReferralMarketingPage() {
             </section>
 
             <BetaFooter fontKey={FONT_KEY} />
+            <MemberDrawerPortal fonts={fonts} />
           </div>
         </MemberProvider>
       </LocationProvider>
