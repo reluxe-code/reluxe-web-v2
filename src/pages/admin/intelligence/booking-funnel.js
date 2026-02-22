@@ -1,7 +1,20 @@
 // src/pages/admin/intelligence/booking-funnel.js
 // Booking funnel analytics dashboard — conversion, abandons, trends.
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+
+function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
+  const active = currentSort.key === sortKey
+  const arrow = active ? (currentSort.dir === 'asc' ? ' ↑' : ' ↓') : ''
+  return (
+    <th
+      className={`text-${align} py-2 font-medium cursor-pointer select-none hover:text-neutral-800 transition-colors ${active ? 'text-neutral-900' : 'text-neutral-500'}`}
+      onClick={() => onSort(sortKey, active && currentSort.dir === 'asc' ? 'desc' : 'asc')}
+    >
+      {label}{arrow}
+    </th>
+  )
+}
 
 function StatCard({ label, value, sub, color }) {
   const borderColors = {
@@ -63,15 +76,31 @@ export default function BookingFunnelDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [days, setDays] = useState(30)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [flowType, setFlowType] = useState('')
   const [location, setLocation] = useState('')
   const [page, setPage] = useState(1)
+  const [abSort, setAbSort] = useState({ key: null, dir: 'desc' })
+  const [sesSort, setSesSort] = useState({ key: null, dir: 'desc' })
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  const selectPreset = (d) => { setDays(d); setStartDate(''); setEndDate('') }
+  const selectToday = () => { setStartDate(today); setEndDate(today); setDays(null) }
+  const selectDateRange = (start, end) => { setStartDate(start); setEndDate(end); setDays(null) }
 
   const loadData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ days: String(days), page: String(page) })
+      const params = new URLSearchParams({ page: String(page) })
+      if (startDate) {
+        params.set('start_date', startDate)
+        if (endDate) params.set('end_date', endDate)
+      } else {
+        params.set('days', String(days || 30))
+      }
       if (flowType) params.set('flow_type', flowType)
       if (location) params.set('location', location)
       const res = await fetch(`/api/admin/intelligence/booking-funnel?${params}`)
@@ -82,10 +111,10 @@ export default function BookingFunnelDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [days, flowType, location, page])
+  }, [days, startDate, endDate, flowType, location, page])
 
   useEffect(() => { loadData() }, [loadData])
-  useEffect(() => { setPage(1) }, [days, flowType, location])
+  useEffect(() => { setPage(1) }, [days, startDate, endDate, flowType, location])
 
   const summary = data?.summary
   const funnel = data?.funnel || []
@@ -93,6 +122,34 @@ export default function BookingFunnelDashboard() {
   const trends = data?.trends || []
   const sessions = data?.sessions
   const maxFunnelCount = funnel.length > 0 ? funnel[0].count : 0
+
+  const sortedAbandons = useMemo(() => {
+    const rows = [...abandons]
+    if (!abSort.key) return rows
+    return rows.sort((a, b) => {
+      let av = a[abSort.key], bv = b[abSort.key]
+      if (av == null) av = ''
+      if (bv == null) bv = ''
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase() }
+      if (av < bv) return abSort.dir === 'asc' ? -1 : 1
+      if (av > bv) return abSort.dir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [abandons, abSort])
+
+  const sortedSessions = useMemo(() => {
+    const rows = [...(sessions?.data || [])]
+    if (!sesSort.key) return rows
+    return rows.sort((a, b) => {
+      let av = a[sesSort.key], bv = b[sesSort.key]
+      if (av == null) av = ''
+      if (bv == null) bv = ''
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase() }
+      if (av < bv) return sesSort.dir === 'asc' ? -1 : 1
+      if (av > bv) return sesSort.dir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [sessions?.data, sesSort])
 
   return (
     <AdminLayout>
@@ -104,16 +161,37 @@ export default function BookingFunnelDashboard() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <button
+          onClick={selectToday}
+          className={`px-3 py-1.5 text-xs rounded-full border transition ${startDate === today && endDate === today ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-neutral-600 border-neutral-200 hover:border-violet-300'}`}
+        >
+          Today
+        </button>
         {[7, 30, 90].map((d) => (
           <button
             key={d}
-            onClick={() => setDays(d)}
-            className={`px-3 py-1.5 text-xs rounded-full border transition ${days === d ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-neutral-600 border-neutral-200 hover:border-violet-300'}`}
+            onClick={() => selectPreset(d)}
+            className={`px-3 py-1.5 text-xs rounded-full border transition ${days === d && !startDate ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-neutral-600 border-neutral-200 hover:border-violet-300'}`}
           >
             {d}d
           </button>
         ))}
+        <span className="text-xs text-neutral-400 mx-1">|</span>
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => selectDateRange(e.target.value, endDate || e.target.value)}
+          className="px-2 py-1.5 text-xs rounded-full border border-neutral-200 bg-white text-neutral-600"
+        />
+        <span className="text-xs text-neutral-400">to</span>
+        <input
+          type="date"
+          value={endDate}
+          min={startDate}
+          onChange={(e) => selectDateRange(startDate, e.target.value)}
+          className="px-2 py-1.5 text-xs rounded-full border border-neutral-200 bg-white text-neutral-600"
+        />
         <select
           value={flowType}
           onChange={(e) => setFlowType(e.target.value)}
@@ -199,15 +277,15 @@ export default function BookingFunnelDashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-xs text-neutral-500">
-                      <th className="text-left py-2 font-medium">Step</th>
-                      <th className="text-right py-2 font-medium">Count</th>
-                      <th className="text-right py-2 font-medium">% of Abandons</th>
-                      <th className="text-left py-2 pl-4 font-medium">Top Service</th>
-                      <th className="text-right py-2 font-medium">Avg Time</th>
+                      <SortHeader label="Step" sortKey="step" currentSort={abSort} onSort={(k, d) => setAbSort({ key: k, dir: d })} />
+                      <SortHeader label="Count" sortKey="count" currentSort={abSort} onSort={(k, d) => setAbSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="% of Abandons" sortKey="pct" currentSort={abSort} onSort={(k, d) => setAbSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="Top Service" sortKey="top_service" currentSort={abSort} onSort={(k, d) => setAbSort({ key: k, dir: d })} />
+                      <SortHeader label="Avg Time" sortKey="avg_time_ms" currentSort={abSort} onSort={(k, d) => setAbSort({ key: k, dir: d })} align="right" />
                     </tr>
                   </thead>
                   <tbody>
-                    {abandons.map((a) => (
+                    {sortedAbandons.map((a) => (
                       <tr key={a.step} className="border-b border-neutral-50 hover:bg-neutral-50">
                         <td className="py-2 font-medium text-neutral-700">{a.step}</td>
                         <td className="py-2 text-right">{a.count}</td>
@@ -264,18 +342,18 @@ export default function BookingFunnelDashboard() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b text-neutral-500">
-                      <th className="text-left py-2 font-medium">Time</th>
-                      <th className="text-left py-2 font-medium">Flow</th>
-                      <th className="text-left py-2 font-medium">Abandon Step</th>
-                      <th className="text-left py-2 font-medium">Service</th>
-                      <th className="text-left py-2 font-medium">Provider</th>
-                      <th className="text-left py-2 font-medium">Location</th>
-                      <th className="text-right py-2 font-medium">Duration</th>
-                      <th className="text-left py-2 font-medium">Contact</th>
+                      <SortHeader label="Time" sortKey="started_at" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} />
+                      <SortHeader label="Flow" sortKey="flow_type" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} />
+                      <SortHeader label="Abandon Step" sortKey="abandon_step" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} />
+                      <SortHeader label="Service" sortKey="service_name" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} />
+                      <SortHeader label="Provider" sortKey="provider_name" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} />
+                      <SortHeader label="Location" sortKey="location_key" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} />
+                      <SortHeader label="Duration" sortKey="duration_ms" currentSort={sesSort} onSort={(k, d) => setSesSort({ key: k, dir: d })} align="right" />
+                      <th className="text-left py-2 font-medium text-neutral-500">Contact</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {sessions.data.map((s) => (
+                    {sortedSessions.map((s) => (
                       <tr key={s.session_id} className="border-b border-neutral-50 hover:bg-neutral-50">
                         <td className="py-2 text-neutral-600 whitespace-nowrap">{formatTime(s.started_at)}</td>
                         <td className="py-2">

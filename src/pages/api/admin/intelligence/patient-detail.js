@@ -2,6 +2,7 @@
 // Detailed patient profile for intelligence drawer.
 // GET ?client_id=<uuid>
 import { getServiceClient } from '@/lib/supabase'
+import { adminQuery } from '@/server/blvdAdmin'
 
 function collapseServicesForDisplay(services = []) {
   const toxRows = services.filter((s) => s.slug === 'tox')
@@ -73,6 +74,9 @@ export default async function handler(req, res) {
       upcomingAppointmentsRes,
       productSalesRes,
       staffRowsRes,
+      membershipsRes,
+      clientCreditRes,
+      memberRes,
     ] = await Promise.all([
       db
         .from('client_visit_summary')
@@ -93,6 +97,24 @@ export default async function handler(req, res) {
         .from('staff')
         .select('id, name, title')
         .limit(1000),
+      // Memberships
+      db
+        .from('blvd_memberships')
+        .select('id, name, status, start_on, end_on, next_charge_date, cancel_on, unpause_on, interval, unit_price, term_number, location_key, vouchers')
+        .eq('client_id', client_id)
+        .order('start_on', { ascending: false }),
+      // Account credit from blvd_clients
+      db
+        .from('blvd_clients')
+        .select('boulevard_id, account_credit, account_credit_updated_at')
+        .eq('id', client_id)
+        .maybeSingle(),
+      // Linked RELUXE member + referral
+      db
+        .from('members')
+        .select('id, first_name, last_name, phone, email, created_at')
+        .eq('blvd_client_id', client_id)
+        .maybeSingle(),
     ])
 
     if (clientSummaryRes.error) throw clientSummaryRes.error
@@ -233,6 +255,53 @@ export default async function handler(req, res) {
 
     const appointmentRevenue = appointmentHistory.reduce((sum, row) => sum + Number(row.total || 0), 0)
 
+    // ── Account credit (real-time fallback if stale) ──
+    const creditRow = clientCreditRes.data
+    let accountCredit = creditRow?.account_credit || 0
+    if (creditRow?.boulevard_id) {
+      const staleMs = creditRow.account_credit_updated_at
+        ? Date.now() - new Date(creditRow.account_credit_updated_at).getTime()
+        : Infinity
+      if (staleMs > 3600000) {
+        try {
+          const live = await adminQuery(`query { node(id: "${creditRow.boulevard_id}") { ... on Client { currentAccountBalance } } }`)
+          if (live.node?.currentAccountBalance != null) {
+            accountCredit = live.node.currentAccountBalance
+            db.from('blvd_clients').update({
+              account_credit: accountCredit,
+              account_credit_updated_at: new Date().toISOString(),
+            }).eq('id', client_id).then(() => {})
+          }
+        } catch { /* use cached */ }
+      }
+    }
+
+    // ── Memberships + vouchers ──
+    const memberships = (membershipsRes.data || []).map(m => ({
+      ...m,
+      vouchers: m.status === 'CANCELLED' ? [] : (typeof m.vouchers === 'string' ? JSON.parse(m.vouchers) : m.vouchers),
+    }))
+    const activeMembership = memberships.find(m => m.status === 'ACTIVE') || null
+
+    // ── Referral stats (if member exists) ──
+    const member = memberRes.data
+    let referralStats = null
+    if (member) {
+      const { data: codes } = await db
+        .from('referral_codes')
+        .select('code, custom_code, tier, total_completed, total_earned')
+        .eq('member_id', member.id)
+        .order('created_at', { ascending: true })
+      if (codes?.length) {
+        referralStats = {
+          tier: codes[0].tier,
+          codes: codes.map(c => c.custom_code || c.code),
+          totalCompleted: codes.reduce((s, c) => s + (c.total_completed || 0), 0),
+          totalEarned: codes.reduce((s, c) => s + Number(c.total_earned || 0), 0),
+        }
+      }
+    }
+
     const client = {
       client_id: summary.client_id,
       name: summary.name || [summary.first_name, summary.last_name].filter(Boolean).join(' ') || 'Unknown',
@@ -246,6 +315,8 @@ export default async function handler(req, res) {
       days_since_last_visit: summary.days_since_last_visit,
       avg_days_between_visits: summary.avg_days_between_visits,
       locations_visited: summary.locations_visited,
+      account_credit: accountCredit,
+      creditFormatted: `$${(accountCredit / 100).toFixed(2)}`,
     }
 
     const insightSummary = {
@@ -269,6 +340,16 @@ export default async function handler(req, res) {
       appointment_history: appointmentHistory,
       providers_seen: providersSeen,
       products_purchased: productsPurchased,
+      memberships,
+      activeMembership,
+      referralStats,
+      member: member ? {
+        id: member.id,
+        name: `${member.first_name || ''} ${member.last_name || ''}`.trim(),
+        phone: member.phone,
+        email: member.email,
+        createdAt: member.created_at,
+      } : null,
     })
   } catch (err) {
     console.error('[intelligence/patient-detail]', err)

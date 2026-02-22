@@ -1,14 +1,42 @@
 // src/pages/admin/staff/index.js
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { supabase } from '@/lib/supabase'
 
+function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
+  const active = currentSort.key === sortKey
+  const arrow = active ? (currentSort.dir === 'asc' ? ' ↑' : ' ↓') : ''
+  return (
+    <th
+      className={`text-${align} px-4 py-3 font-medium cursor-pointer select-none hover:text-neutral-800 transition-colors ${active ? 'text-neutral-900' : ''}`}
+      onClick={() => onSort(sortKey, active && currentSort.dir === 'asc' ? 'desc' : 'asc')}
+    >
+      {label}{arrow}
+    </th>
+  )
+}
+
 export default function AdminStaffList() {
   const router = useRouter()
   const [staff, setStaff] = useState([])
   const [loading, setLoading] = useState(true)
+  const [colSort, setColSort] = useState({ key: null, dir: 'asc' })
+
+  const sortedStaff = useMemo(() => {
+    const rows = [...staff]
+    if (!colSort.key) return rows
+    return rows.sort((a, b) => {
+      let av = a[colSort.key], bv = b[colSort.key]
+      if (av == null) av = ''
+      if (bv == null) bv = ''
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase() }
+      if (av < bv) return colSort.dir === 'asc' ? -1 : 1
+      if (av > bv) return colSort.dir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [staff, colSort])
 
   useEffect(() => { loadStaff() }, [])
   useEffect(() => { if (router.query.new === '1') router.replace('/admin/staff/new') }, [router])
@@ -36,13 +64,13 @@ export default function AdminStaffList() {
         <div className="bg-white rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-neutral-50 border-b"><tr>
-              <th className="text-left px-4 py-3 font-medium">Name</th>
-              <th className="text-left px-4 py-3 font-medium">Title</th>
-              <th className="text-left px-4 py-3 font-medium">Status</th>
+              <SortHeader label="Name" sortKey="name" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} />
+              <SortHeader label="Title" sortKey="title" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} />
+              <SortHeader label="Status" sortKey="status" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} />
               <th className="text-right px-4 py-3 font-medium">Actions</th>
             </tr></thead>
             <tbody>
-              {staff.map((s) => (
+              {sortedStaff.map((s) => (
                 <tr key={s.id} className="border-b last:border-b-0 hover:bg-neutral-50">
                   <td className="px-4 py-3 flex items-center gap-3">
                     {s.featured_image && <img src={s.featured_image} alt="" className="w-8 h-8 rounded-full object-cover" />}

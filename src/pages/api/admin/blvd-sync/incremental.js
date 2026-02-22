@@ -4,6 +4,7 @@
 import { adminQuery } from '@/server/blvdAdmin'
 import { getServiceClient } from '@/lib/supabase'
 import { LOCATION_IDS } from '@/server/blvd'
+import { ensureReferralCode } from '@/lib/referralCodes'
 
 export const config = { maxDuration: 60 }
 
@@ -43,6 +44,41 @@ function guessServiceSlug(name, category) {
   if (/salt.*booth|sauna/.test(text)) return 'salt-sauna'
   return null
 }
+
+// Location URN → our key mapping
+const LOCATION_URN_MAP = {}
+for (const [key, uuid] of Object.entries(LOCATION_IDS)) {
+  LOCATION_URN_MAP[`urn:blvd:Location:${uuid}`] = key
+}
+
+const MEMBERSHIPS_QUERY = `
+  query GetMemberships($first: Int!, $after: String) {
+    memberships(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          name
+          status
+          startOn
+          endOn
+          cancelOn
+          nextChargeDate
+          unpauseOn
+          interval
+          unitPrice
+          termNumber
+          clientId
+          locationId
+          vouchers {
+            quantity
+            services { id name }
+          }
+        }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }
+`
 
 const APPOINTMENTS_QUERY = `
   query GetRecentAppointments($locationId: ID!, $first: Int!, $after: String) {
@@ -223,6 +259,118 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Sync memberships (paginate all, upsert) ──
+    let membershipsSynced = 0
+    try {
+      let mCursor = null
+      for (let mPage = 0; mPage < 20; mPage++) {
+        const mData = await adminQuery(MEMBERSHIPS_QUERY, {
+          first: 100,
+          after: mCursor,
+        })
+        const mEdges = mData.memberships?.edges || []
+        const mPageInfo = mData.memberships?.pageInfo || {}
+
+        for (const edge of mEdges) {
+          const m = edge.node
+          if (!m?.id) continue
+
+          // Resolve client internal ID
+          let mClientId = null
+          if (m.clientId) {
+            const { data: clientRow } = await db
+              .from('blvd_clients')
+              .select('id')
+              .eq('boulevard_id', m.clientId)
+              .maybeSingle()
+            mClientId = clientRow?.id || null
+          }
+
+          await db.from('blvd_memberships').upsert({
+            boulevard_id: m.id,
+            client_id: mClientId,
+            client_boulevard_id: m.clientId,
+            name: m.name,
+            status: m.status,
+            start_on: m.startOn,
+            end_on: m.endOn || null,
+            cancel_on: m.cancelOn || null,
+            next_charge_date: m.nextChargeDate || null,
+            unpause_on: m.unpauseOn || null,
+            interval: m.interval || null,
+            unit_price: m.unitPrice || 0,
+            term_number: m.termNumber || 1,
+            location_boulevard_id: m.locationId || null,
+            location_key: LOCATION_URN_MAP[m.locationId] || null,
+            vouchers: JSON.stringify(m.vouchers || []),
+            synced_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'boulevard_id' })
+
+          membershipsSynced++
+        }
+
+        if (!mPageInfo.hasNextPage) break
+        mCursor = mPageInfo.endCursor
+      }
+    } catch (mErr) {
+      console.error('Membership sync error (non-fatal):', mErr.message)
+    }
+
+    // ── Sync account credit for clients with memberships or recent activity ──
+    let creditsUpdated = 0
+    try {
+      // Get all unique client boulevard IDs that have memberships or were touched
+      const clientBlvdIds = new Set()
+      // Add membership clients
+      const { data: membershipClients } = await db
+        .from('blvd_memberships')
+        .select('client_boulevard_id')
+        .eq('status', 'ACTIVE')
+      for (const mc of (membershipClients || [])) {
+        if (mc.client_boulevard_id) clientBlvdIds.add(mc.client_boulevard_id)
+      }
+      // Add touched clients from appointments
+      if (touchedClientIds.size > 0) {
+        const { data: touchedBlvd } = await db
+          .from('blvd_clients')
+          .select('boulevard_id')
+          .in('id', Array.from(touchedClientIds))
+        for (const t of (touchedBlvd || [])) {
+          if (t.boulevard_id) clientBlvdIds.add(t.boulevard_id)
+        }
+      }
+
+      // Batch query Boulevard for account balances (10 at a time)
+      const clientArray = Array.from(clientBlvdIds)
+      for (let i = 0; i < clientArray.length; i += 10) {
+        const batch = clientArray.slice(i, i + 10)
+        const balanceQuery = `query { ${batch.map((id, idx) =>
+          `c${idx}: node(id: "${id}") { ... on Client { id currentAccountBalance } }`
+        ).join('\n')} }`
+
+        try {
+          const balanceData = await adminQuery(balanceQuery)
+          for (let j = 0; j < batch.length; j++) {
+            const result = balanceData[`c${j}`]
+            if (result?.id) {
+              await db.from('blvd_clients')
+                .update({
+                  account_credit: result.currentAccountBalance || 0,
+                  account_credit_updated_at: new Date().toISOString(),
+                })
+                .eq('boulevard_id', result.id)
+              creditsUpdated++
+            }
+          }
+        } catch (bErr) {
+          console.error(`Credit batch error (non-fatal):`, bErr.message)
+        }
+      }
+    } catch (cErr) {
+      console.error('Credit sync error (non-fatal):', cErr.message)
+    }
+
     // Recompute client lifecycle fields for all touched clients
     let lifecycleUpdated = 0
     if (touchedClientIds.size > 0) {
@@ -237,6 +385,54 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Auto-enroll touched clients into referral program ──
+    let referralEnrolled = 0
+    if (touchedClientIds.size > 0) {
+      try {
+        const clientIdArray = Array.from(touchedClientIds)
+        // Find clients that don't have a linked member yet
+        const { data: clientsForEnroll } = await db
+          .from('blvd_clients')
+          .select('id, first_name, last_name, email, phone')
+          .in('id', clientIdArray)
+          .not('phone', 'is', null)
+
+        if (clientsForEnroll?.length) {
+          // Get existing members by blvd_client_id to skip them
+          const { data: existingMembers } = await db
+            .from('members')
+            .select('blvd_client_id')
+            .in('blvd_client_id', clientsForEnroll.map(c => c.id))
+          const existingSet = new Set((existingMembers || []).map(m => m.blvd_client_id))
+
+          for (const client of clientsForEnroll) {
+            if (existingSet.has(client.id)) continue
+            if (!client.phone) continue
+            try {
+              // Create member row
+              const { data: member } = await db
+                .from('members')
+                .upsert({
+                  phone: client.phone,
+                  blvd_client_id: client.id,
+                  first_name: client.first_name || null,
+                  last_name: client.last_name || null,
+                  email: client.email || null,
+                }, { onConflict: 'phone' })
+                .select('id, first_name')
+                .single()
+              if (member) {
+                await ensureReferralCode(db, member.id, member.first_name)
+                referralEnrolled++
+              }
+            } catch { /* skip individual failures */ }
+          }
+        }
+      } catch (enrollErr) {
+        console.error('Referral auto-enroll error (non-fatal):', enrollErr.message)
+      }
+    }
+
     // Update sync log
     if (logId) {
       await db
@@ -246,12 +442,12 @@ export default async function handler(req, res) {
           completed_at: new Date().toISOString(),
           records_processed: processed,
           records_created: created,
-          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated },
+          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled },
         })
         .eq('id', logId)
     }
 
-    return res.json({ ok: true, processed, created, lifecycleUpdated })
+    return res.json({ ok: true, processed, created, lifecycleUpdated, membershipsSynced, creditsUpdated, referralEnrolled })
   } catch (err) {
     console.error('Incremental sync error:', err)
 

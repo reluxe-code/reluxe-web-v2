@@ -26,13 +26,12 @@ export default async function handler(req, res) {
   const sinceIso = windowDays ? new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString() : null
 
   try {
-    // 1. Summary stats — LTV bucket counts
+    // 1. Summary stats — LTV bucket counts (all clients, not just those with visits)
     const allClients = await fetchAllRows(() => {
       let query = db
         .from('client_visit_summary')
         .select('client_id, ltv_bucket, total_spend, total_visits, days_since_last_visit, last_visit')
-        .gt('total_visits', 0)
-      if (sinceIso) query = query.gte('last_visit', sinceIso)
+      if (sinceIso) query = query.or(`last_visit.gte.${sinceIso},last_visit.is.null`)
       return query
     })
 
@@ -42,8 +41,12 @@ export default async function handler(req, res) {
     let totalSpend = 0
     let newLast30 = 0
     let atRisk = 0
+    let noVisits = 0
+    let withVisits = 0
 
     for (const c of clients) {
+      if (c.total_visits === 0) { noVisits++; continue }
+      withVisits++
       if (buckets[c.ltv_bucket] !== undefined) buckets[c.ltv_bucket]++
       totalSpend += Number(c.total_spend || 0)
       if (c.total_visits === 1 && c.days_since_last_visit <= 30) newLast30++
@@ -52,6 +55,8 @@ export default async function handler(req, res) {
 
     const summary = {
       total_clients: total,
+      with_visits: withVisits,
+      no_visits: noVisits,
       vip: buckets.vip,
       high: buckets.high,
       medium: buckets.medium,
@@ -59,17 +64,16 @@ export default async function handler(req, res) {
       total_revenue: Math.round(totalSpend),
       new_last_30d: newLast30,
       at_risk: atRisk,
-      avg_spend: total > 0 ? Math.round(totalSpend / total) : 0,
+      avg_spend: withVisits > 0 ? Math.round(totalSpend / withVisits) : 0,
     }
 
-    // 2. Patient list (paginated, filterable)
+    // 2. Patient list (paginated, filterable — includes all clients)
     let query = db
       .from('client_visit_summary')
       .select('*', { count: 'exact' })
-      .gt('total_visits', 0)
 
     if (sinceIso) {
-      query = query.gte('last_visit', sinceIso)
+      query = query.or(`last_visit.gte.${sinceIso},last_visit.is.null`)
     }
 
     if (ltv) {
@@ -97,20 +101,59 @@ export default async function handler(req, res) {
 
     if (patientErr) throw patientErr
 
-    const patient_list = (patients || []).map((p) => ({
-      client_id: p.client_id,
-      name: p.name || [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown',
-      email: p.email,
-      phone: p.phone,
-      total_visits: p.total_visits,
-      total_spend: Math.round(Number(p.total_spend || 0)),
-      first_visit: p.first_visit,
-      last_visit: p.last_visit,
-      days_since_last_visit: p.days_since_last_visit,
-      avg_days_between: p.avg_days_between_visits,
-      locations_visited: p.locations_visited,
-      ltv_bucket: p.ltv_bucket,
-    }))
+    // Enrich with membership + credit data for the patient list
+    const patientClientIds = (patients || []).map(p => p.client_id).filter(Boolean)
+    let creditMap = new Map()
+    let membershipMap = new Map()
+    let memberMap = new Map()
+
+    if (patientClientIds.length > 0) {
+      const [creditRes, membershipRes, memberRes] = await Promise.all([
+        db.from('blvd_clients')
+          .select('id, account_credit')
+          .in('id', patientClientIds)
+          .gt('account_credit', 0),
+        db.from('blvd_memberships')
+          .select('client_id, name, status, unit_price, vouchers')
+          .in('client_id', patientClientIds)
+          .eq('status', 'ACTIVE'),
+        db.from('members')
+          .select('blvd_client_id, id')
+          .in('blvd_client_id', patientClientIds),
+      ])
+      for (const c of (creditRes.data || [])) creditMap.set(c.id, c.account_credit)
+      for (const m of (membershipRes.data || [])) {
+        if (!membershipMap.has(m.client_id)) membershipMap.set(m.client_id, m)
+      }
+      for (const m of (memberRes.data || [])) memberMap.set(m.blvd_client_id, m.id)
+    }
+
+    const patient_list = (patients || []).map((p) => {
+      const membership = membershipMap.get(p.client_id)
+      const vouchers = membership?.vouchers
+        ? (typeof membership.vouchers === 'string' ? JSON.parse(membership.vouchers) : membership.vouchers)
+        : []
+      const voucherCount = vouchers.flatMap(v => v.services || []).length
+      return {
+        client_id: p.client_id,
+        name: p.name || [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown',
+        email: p.email,
+        phone: p.phone,
+        total_visits: p.total_visits,
+        total_spend: Math.round(Number(p.total_spend || 0)),
+        first_visit: p.first_visit,
+        last_visit: p.last_visit,
+        days_since_last_visit: p.days_since_last_visit,
+        avg_days_between: p.avg_days_between_visits,
+        locations_visited: p.locations_visited,
+        ltv_bucket: p.ltv_bucket,
+        account_credit: creditMap.get(p.client_id) || 0,
+        membership_name: membership?.name || null,
+        membership_price: membership?.unit_price || null,
+        voucher_count: voucherCount,
+        is_member: memberMap.has(p.client_id),
+      }
+    })
 
     return res.json({
       filters: {

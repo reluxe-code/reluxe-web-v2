@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { isValidPhone, toE164, stripPhone } from '@/lib/phoneUtils'
 import { getServiceClient } from '@/lib/supabase'
+import { ensureReferralCode } from '@/lib/referralCodes'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -78,6 +79,15 @@ export default async function handler(req, res) {
 
   if (upsertError) {
     console.error('[member/verify-otp] upsert error:', upsertError.message)
+  }
+
+  // Auto-enroll in referral program
+  if (member?.id) {
+    try {
+      await ensureReferralCode(db, member.id, member.first_name)
+    } catch (e) {
+      console.warn('[member/verify-otp] referral auto-enroll failed:', e.message)
+    }
   }
 
   const isReturning = !!blvdClient

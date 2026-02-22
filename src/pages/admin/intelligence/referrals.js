@@ -1,7 +1,20 @@
 // src/pages/admin/intelligence/referrals.js
 // Admin referral program intelligence dashboard.
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+
+function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
+  const active = currentSort.key === sortKey
+  const arrow = active ? (currentSort.dir === 'asc' ? ' ↑' : ' ↓') : ''
+  return (
+    <th
+      className={`text-${align} py-2 font-medium cursor-pointer select-none hover:text-neutral-800 transition-colors ${active ? 'text-neutral-900' : 'text-neutral-500'}`}
+      onClick={() => onSort(sortKey, active && currentSort.dir === 'asc' ? 'desc' : 'asc')}
+    >
+      {label}{arrow}
+    </th>
+  )
+}
 
 function StatCard({ label, value, sub, color }) {
   const borderColors = {
@@ -60,6 +73,8 @@ export default function ReferralsDashboard() {
   const [error, setError] = useState(null)
   const [days, setDays] = useState(30)
   const [page, setPage] = useState(1)
+  const [trSort, setTrSort] = useState({ key: null, dir: 'desc' })
+  const [arSort, setArSort] = useState({ key: null, dir: 'desc' })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -77,6 +92,34 @@ export default function ReferralsDashboard() {
   }, [days, page])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const sortedTopReferrers = useMemo(() => {
+    const rows = [...(data?.topReferrers || [])]
+    if (!trSort.key) return rows
+    return rows.sort((a, b) => {
+      let av = a[trSort.key], bv = b[trSort.key]
+      if (av == null) av = ''
+      if (bv == null) bv = ''
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase() }
+      if (av < bv) return trSort.dir === 'asc' ? -1 : 1
+      if (av > bv) return trSort.dir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [data?.topReferrers, trSort])
+
+  const sortedReferrals = useMemo(() => {
+    const rows = [...(data?.referrals || [])]
+    if (!arSort.key) return rows
+    return rows.sort((a, b) => {
+      let av = a[arSort.key], bv = b[arSort.key]
+      if (av == null) av = ''
+      if (bv == null) bv = ''
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase() }
+      if (av < bv) return arSort.dir === 'asc' ? -1 : 1
+      if (av > bv) return arSort.dir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [data?.referrals, arSort])
 
   const exportCSV = () => {
     if (!data?.referrals?.length) return
@@ -223,18 +266,18 @@ export default function ReferralsDashboard() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-neutral-100 text-neutral-500">
-                      <th className="text-left py-2 font-medium">Name</th>
-                      <th className="text-left py-2 font-medium">Code</th>
-                      <th className="text-center py-2 font-medium">Tier</th>
-                      <th className="text-right py-2 font-medium">Shares</th>
-                      <th className="text-right py-2 font-medium">Clicks</th>
-                      <th className="text-right py-2 font-medium">Booked</th>
-                      <th className="text-right py-2 font-medium">Completed</th>
-                      <th className="text-right py-2 font-medium">Earned</th>
+                      <SortHeader label="Name" sortKey="name" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} />
+                      <SortHeader label="Code" sortKey="code" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} />
+                      <SortHeader label="Tier" sortKey="tier" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} align="center" />
+                      <SortHeader label="Shares" sortKey="shares" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="Clicks" sortKey="clicks" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="Booked" sortKey="booked" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="Completed" sortKey="completed" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} align="right" />
+                      <SortHeader label="Earned" sortKey="earned" currentSort={trSort} onSort={(k, d) => setTrSort({ key: k, dir: d })} align="right" />
                     </tr>
                   </thead>
                   <tbody>
-                    {data.topReferrers.map((r, i) => (
+                    {sortedTopReferrers.map((r, i) => (
                       <tr key={i} className="border-b border-neutral-50 hover:bg-neutral-50">
                         <td className="py-2 font-medium text-neutral-800">{r.name}</td>
                         <td className="py-2 font-mono text-neutral-500">{r.code}</td>
@@ -300,20 +343,20 @@ export default function ReferralsDashboard() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-neutral-100 text-neutral-500">
-                    <th className="text-left py-2 font-medium">Code</th>
-                    <th className="text-center py-2 font-medium">Status</th>
-                    <th className="text-left py-2 font-medium">Referee</th>
-                    <th className="text-left py-2 font-medium">Channel</th>
-                    <th className="text-right py-2 font-medium">Reward</th>
-                    <th className="text-left py-2 font-medium">Location</th>
-                    <th className="text-left py-2 font-medium">Clicked</th>
-                    <th className="text-left py-2 font-medium">Booked</th>
-                    <th className="text-left py-2 font-medium">Credited</th>
-                    <th className="text-center py-2 font-medium">Flags</th>
+                    <SortHeader label="Code" sortKey="code" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <SortHeader label="Status" sortKey="status" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} align="center" />
+                    <SortHeader label="Referee" sortKey="referee" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <SortHeader label="Channel" sortKey="channel" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <SortHeader label="Reward" sortKey="reward" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} align="right" />
+                    <SortHeader label="Location" sortKey="location" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <SortHeader label="Clicked" sortKey="clickedAt" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <SortHeader label="Booked" sortKey="bookedAt" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <SortHeader label="Credited" sortKey="creditedAt" currentSort={arSort} onSort={(k, d) => setArSort({ key: k, dir: d })} />
+                    <th className="text-center py-2 font-medium text-neutral-500">Flags</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.referrals.map((r) => (
+                  {sortedReferrals.map((r) => (
                     <tr key={r.id} className="border-b border-neutral-50 hover:bg-neutral-50">
                       <td className="py-2 font-mono text-neutral-500">{r.code}</td>
                       <td className="py-2 text-center">

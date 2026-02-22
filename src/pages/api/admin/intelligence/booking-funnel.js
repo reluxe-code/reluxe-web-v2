@@ -10,16 +10,27 @@ export default async function handler(req, res) {
 
   const {
     days = '30',
+    start_date,
+    end_date,
     flow_type,
     location,
     page = '1',
     per_page = '20',
   } = req.query
 
-  const daysNum = Math.min(Math.max(parseInt(days) || 30, 1), 365)
   const pageNum = Math.max(parseInt(page) || 1, 1)
   const perPage = Math.min(Math.max(parseInt(per_page) || 20, 1), 100)
-  const since = new Date(Date.now() - daysNum * 86400000).toISOString()
+
+  // Date range: explicit start/end takes precedence over days
+  let since, until
+  if (start_date) {
+    since = new Date(start_date + 'T00:00:00').toISOString()
+    until = end_date ? new Date(end_date + 'T23:59:59.999').toISOString() : null
+  } else {
+    const daysNum = Math.min(Math.max(parseInt(days) || 30, 1), 365)
+    since = new Date(Date.now() - daysNum * 86400000).toISOString()
+    until = null
+  }
 
   const db = getServiceClient()
 
@@ -29,7 +40,8 @@ export default async function handler(req, res) {
       .from('booking_sessions')
       .select('*')
       .gte('started_at', since)
-      .order('started_at', { ascending: false })
+    if (until) query = query.lte('started_at', until)
+    query = query.order('started_at', { ascending: false })
 
     if (flow_type && ['modal', 'provider_picker'].includes(flow_type)) {
       query = query.eq('flow_type', flow_type)
@@ -179,7 +191,7 @@ export default async function handler(req, res) {
 
     return res.json({
       generated_at: new Date().toISOString(),
-      filters: { days: daysNum, flow_type: flow_type || 'all', location: location || 'all' },
+      filters: { start_date: start_date || null, end_date: end_date || null, days: start_date ? null : parseInt(days) || 30, flow_type: flow_type || 'all', location: location || 'all' },
       summary: {
         total,
         completed,

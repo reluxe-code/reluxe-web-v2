@@ -117,6 +117,45 @@ export async function resolveReferralCode(db, input) {
 }
 
 /**
+ * Ensure a member has a referral code. Creates one if missing.
+ * Returns the referral_codes row (existing or newly created).
+ * Requires a Supabase service client (db) and a member_id + first_name.
+ */
+export async function ensureReferralCode(db, memberId, firstName) {
+  // Check if member already has a code
+  const { data: existing } = await db
+    .from('referral_codes')
+    .select('id, code')
+    .eq('member_id', memberId)
+    .limit(1)
+    .maybeSingle()
+
+  if (existing) return existing
+
+  // Generate and insert a unique code
+  let code = generateReferralCode(firstName)
+  let attempts = 0
+  while (attempts < 10) {
+    const { data: dup } = await db
+      .from('referral_codes')
+      .select('id')
+      .eq('code', code)
+      .maybeSingle()
+    if (!dup) break
+    attempts++
+    code = attempts >= 5 ? generateFallbackCode() : generateReferralCode(firstName)
+  }
+
+  const { data: newCode } = await db
+    .from('referral_codes')
+    .insert({ member_id: memberId, code, is_primary: true })
+    .select('id, code')
+    .single()
+
+  return newCode || null
+}
+
+/**
  * Tier display metadata.
  */
 export const TIER_INFO = {

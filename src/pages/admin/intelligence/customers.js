@@ -1,7 +1,20 @@
 // src/pages/admin/intelligence/customers.js
 // Admin Customer Lookup — search, profile drawer, paper referral enrollment.
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+
+function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
+  const active = currentSort.key === sortKey
+  const arrow = active ? (currentSort.dir === 'asc' ? ' ↑' : ' ↓') : ''
+  return (
+    <th
+      className={`text-${align} px-4 py-2 text-xs font-medium cursor-pointer select-none hover:text-neutral-800 transition-colors ${active ? 'text-neutral-900' : 'text-neutral-600'}`}
+      onClick={() => onSort(sortKey, active && currentSort.dir === 'asc' ? 'desc' : 'asc')}
+    >
+      {label}{arrow}
+    </th>
+  )
+}
 
 const TIER_COLORS = {
   member: 'bg-neutral-100 text-neutral-600',
@@ -50,6 +63,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [page, setPage] = useState(1)
+  const [colSort, setColSort] = useState({ key: null, dir: 'desc' })
 
   // Drawer state
   const [drawerClientId, setDrawerClientId] = useState(null)
@@ -140,6 +154,20 @@ export default function CustomersPage() {
   }, [enrollForm])
 
   const customers = data?.customers || []
+
+  const sortedCustomers = useMemo(() => {
+    const rows = [...customers]
+    if (!colSort.key) return rows
+    return rows.sort((a, b) => {
+      let av = a[colSort.key], bv = b[colSort.key]
+      if (av == null) av = ''
+      if (bv == null) bv = ''
+      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv || '').toLowerCase() }
+      if (av < bv) return colSort.dir === 'asc' ? -1 : 1
+      if (av > bv) return colSort.dir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [customers, colSort])
 
   return (
     <AdminLayout>
@@ -272,17 +300,17 @@ export default function CustomersPage() {
             <table className="w-full text-sm">
               <thead className="bg-neutral-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Customer</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Visits</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Spend</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">LTV</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Referral</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Completed</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Earned</th>
+                  <SortHeader label="Customer" sortKey="name" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} />
+                  <SortHeader label="Visits" sortKey="total_visits" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} align="right" />
+                  <SortHeader label="Spend" sortKey="total_spend" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} align="right" />
+                  <SortHeader label="LTV" sortKey="ltv_bucket" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} />
+                  <SortHeader label="Referral" sortKey="referral_tier" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} />
+                  <SortHeader label="Completed" sortKey="total_referrals_completed" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} align="right" />
+                  <SortHeader label="Earned" sortKey="total_earned" currentSort={colSort} onSort={(k, d) => setColSort({ key: k, dir: d })} align="right" />
                 </tr>
               </thead>
               <tbody>
-                {customers.map((c) => (
+                {sortedCustomers.map((c) => (
                   <tr
                     key={c.client_id}
                     className="border-b last:border-b-0 hover:bg-neutral-50 cursor-pointer"

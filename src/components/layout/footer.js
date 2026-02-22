@@ -85,6 +85,11 @@ function Footer() {
     return curr === test || curr.startsWith(`${test}/`);
   };
 
+  // Admin pages get a minimal black bar instead of the full footer
+  if (router.pathname.startsWith('/admin')) {
+    return <div className="h-2 bg-black" />
+  }
+
   return (
     <>
       {/* ——— Newsletter / Text-List Signup CTA ——— */}
