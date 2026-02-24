@@ -481,19 +481,19 @@ function BookingSheet({ tile, onClose, onSuccess, onSlotTaken, trackEvent }) {
                 }}>
                 Lock It In
               </button>
-              <p style={{
-                fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted,
-                textAlign: 'center', marginTop: '0.75rem',
-              }}>
-                Once confirmed, this spot is yours.
-              </p>
-              <p style={{
-                fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(255,255,255,0.25)',
-                textAlign: 'center', marginTop: '0.375rem',
-              }}>
-                Standard service pricing applies.
-              </p>
             </div>
+            <p style={{
+              fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted,
+              textAlign: 'center', marginTop: '0.75rem',
+            }}>
+              Once confirmed, this spot is yours.
+            </p>
+            <p style={{
+              fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(255,255,255,0.25)',
+              textAlign: 'center', marginTop: '0.375rem',
+            }}>
+              Standard service pricing applies.
+            </p>
           </>
         )}
 
