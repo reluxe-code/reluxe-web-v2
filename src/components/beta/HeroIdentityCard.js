@@ -327,7 +327,8 @@ function DashboardCard({ fonts, member, profile }) {
   const { signOut, openDrawer, openBookingModal } = useMember()
   const stats = profile?.stats
   const lastService = profile?.lastService
-  const upcoming = profile?.upcomingAppointment
+  const upcomingAll = profile?.upcomingAppointments || []
+  const upcoming = upcomingAll[0] || null
   const hasHistory = !!stats && stats.total_visits > 0
 
   const firstName = member?.first_name || 'there'
@@ -378,6 +379,51 @@ function DashboardCard({ fonts, member, profile }) {
         </div>
       )}
 
+      {/* Upcoming appointment / "we miss you" */}
+      {hasHistory && (
+        upcoming ? (
+          <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: `${colors.violet}10`, border: `1px solid ${colors.violet}20`, marginBottom: 12 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.violet, marginBottom: 6 }}>Next Appointment</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {upcoming.providerImage && (
+                <img src={upcoming.providerImage} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+              )}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>
+                  {upcoming.service} — {formatDate(upcoming.date)}
+                </p>
+                {upcoming.provider && (
+                  <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)' }}>w/ {upcoming.provider}</p>
+                )}
+              </div>
+            </div>
+            {upcomingAll.length > 1 && (
+              <button
+                onClick={() => openDrawer('upcoming')}
+                style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: colors.violet, background: 'none', border: 'none', cursor: 'pointer', marginTop: 8, padding: 0 }}
+              >
+                See all {upcomingAll.length} upcoming →
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, rgba(225,29,115,0.08), rgba(139,92,246,0.08))', border: '1px solid rgba(225,29,115,0.15)', marginBottom: 12 }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.white, marginBottom: 2 }}>You're not on the books yet</p>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)', marginBottom: 8 }}>We miss you! Let's get something scheduled.</p>
+            <button
+              onClick={() => openBookingModal(member?.preferred_location || lastService?.location_key || 'westfield')}
+              style={{
+                fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600,
+                padding: '0.5rem 1rem', borderRadius: 999,
+                background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer',
+              }}
+            >
+              Book Now →
+            </button>
+          </div>
+        )
+      )}
+
       {/* Last treatment + rebook */}
       {lastService && (
         <div style={{ padding: '1rem', borderRadius: '0.75rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.06)', marginBottom: 12 }}>
@@ -408,16 +454,29 @@ function DashboardCard({ fonts, member, profile }) {
         </div>
       )}
 
-      {/* Upcoming appointment */}
-      {upcoming && (
-        <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: `${colors.violet}10`, border: `1px solid ${colors.violet}20`, marginBottom: 12 }}>
-          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.violet, marginBottom: 4 }}>Next Appointment</p>
-          <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>
-            {upcoming.service} — {formatDate(upcoming.date)}
-          </p>
-          {upcoming.provider && (
-            <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)' }}>w/ {upcoming.provider}</p>
+      {/* Account perks callouts */}
+      {hasHistory && (profile?.velocity || profile?.accountCredit || profile?.membership?.vouchers?.length > 0) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+          {profile.velocity && (
+            <button onClick={() => openDrawer('rewards')} style={{ flex: 1, minWidth: 0, padding: '0.625rem 0.75rem', borderRadius: '0.75rem', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', cursor: 'pointer', textAlign: 'left' }}>
+              <p style={{ fontFamily: fonts.body, fontSize: '1rem', fontWeight: 700, color: colors.violet }}>{profile.velocity.formatted}</p>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: 'rgba(250,248,245,0.4)' }}>Rewards</p>
+            </button>
           )}
+          {profile.accountCredit && (
+            <button onClick={() => openDrawer('membership')} style={{ flex: 1, minWidth: 0, padding: '0.625rem 0.75rem', borderRadius: '0.75rem', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)', cursor: 'pointer', textAlign: 'left' }}>
+              <p style={{ fontFamily: fonts.body, fontSize: '1rem', fontWeight: 700, color: '#22c55e' }}>{profile.accountCredit.formatted}</p>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: 'rgba(250,248,245,0.4)' }}>Account Credit</p>
+            </button>
+          )}
+          {profile.membership?.vouchers?.map((v, i) => (
+            v.quantity > 0 && (
+              <button key={i} onClick={() => openDrawer('membership')} style={{ flex: 1, minWidth: 0, padding: '0.625rem 0.75rem', borderRadius: '0.75rem', background: `${colors.violet}08`, border: `1px solid ${colors.violet}15`, cursor: 'pointer', textAlign: 'left' }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '1rem', fontWeight: 700, color: colors.violet }}>{v.quantity}</p>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: 'rgba(250,248,245,0.4)' }}>Voucher{v.quantity !== 1 ? 's' : ''}</p>
+              </button>
+            )
+          ))}
         </div>
       )}
 
@@ -498,6 +557,16 @@ export default function HeroIdentityCard({ fonts }) {
     }
     // Ensure context is refreshed
     refreshProfile()
+
+    // Track conversion + identify contact in Bird
+    if (typeof window !== 'undefined') {
+      if (window.reluxeTrack) {
+        window.reluxeTrack('member_signup', { method: 'otp', is_returning: !!data.isReturning })
+      }
+      if (typeof window.Bird !== 'undefined' && window.Bird.contact) {
+        try { window.Bird.contact.identify({ strategy: 'Visitor', identifier: { key: 'phonenumber', value: phone } }) } catch (e) {}
+      }
+    }
   }
 
   const handleInterestsSaved = (interests) => {

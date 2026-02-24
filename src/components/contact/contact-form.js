@@ -46,6 +46,9 @@ function ContactForm({ contactItems = [] }) {
 
       setStatus({ state: 'success', message: 'Thanks! We received your message and will reply shortly.' });
       setForm({ name: '', email: '', phone: '', message: '' });
+      if (typeof window !== 'undefined' && window.reluxeTrack) {
+        window.reluxeTrack('contact_form_submit', { form: 'contact', location: active.slug || active.title || '' });
+      }
     } catch (err) {
       setStatus({ state: 'error', message: err.message || 'Something went wrong. Please try again.' });
     }

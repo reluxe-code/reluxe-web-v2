@@ -142,6 +142,12 @@ export default function IntelligenceOverview() {
           description="Widget interactions across inspiration articles — quizzes, calculators, sliders, booking CTAs, and more."
           badge="New"
         />
+        <QuickLink
+          href="/admin/intelligence/experiments"
+          title="Experiments"
+          description="This or That campaign — real-time funnel, persona distribution, goal tracker, booking conversions, and session details."
+          badge="New"
+        />
       </div>
     </AdminLayout>
   )

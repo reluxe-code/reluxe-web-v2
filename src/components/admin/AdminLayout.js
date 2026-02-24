@@ -34,6 +34,8 @@ const NAV_ITEMS = [
   { href: '/admin/testimonials', label: 'Testimonials' },
   { href: '/admin/locations', label: 'Locations' },
   { href: '/admin/memberships', label: 'Memberships & Credits' },
+  { href: '/admin/velocity', label: 'Velocity Rewards' },
+  { href: '/admin/gift-cards', label: 'Gift Cards' },
   { href: '/admin/boulevard-sync', label: 'Boulevard Sync' },
 ]
 

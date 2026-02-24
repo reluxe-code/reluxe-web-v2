@@ -37,10 +37,12 @@ export default async function handler(req, res) {
     stats: null,
     lastService: null,
     upcomingAppointment: null,
+    upcomingAppointments: [],
     primaryProvider: null,
     // Account & membership
     accountCredit: null,
     membership: null,
+    velocity: null,
     // Rich data for drawer
     visits: [],
     toxStatus: null,
@@ -54,8 +56,26 @@ export default async function handler(req, res) {
 
   const clientId = member.blvd_client_id
 
+  // Resolve all Boulevard client IDs linked to this phone (handles duplicate BLVD profiles)
+  const allClientIds = [clientId]
+  const allBlvdUrns = []
+  // Get primary client URN first
+  const { data: primaryClient } = await db.from('blvd_clients').select('boulevard_id').eq('id', clientId).maybeSingle()
+  if (primaryClient?.boulevard_id) allBlvdUrns.push(primaryClient.boulevard_id)
+  // Add all phone-matched clients
+  if (member.phone) {
+    const { data: phoneClients } = await db
+      .from('blvd_clients')
+      .select('id, boulevard_id')
+      .eq('phone', member.phone)
+    for (const c of (phoneClients || [])) {
+      if (!allClientIds.includes(c.id)) allClientIds.push(c.id)
+      if (c.boulevard_id && !allBlvdUrns.includes(c.boulevard_id)) allBlvdUrns.push(c.boulevard_id)
+    }
+  }
+
   // Run all queries in parallel
-  const [visitSummary, toxSummary, appointments, upcomingAppts, allStaff, productSales, membershipRow, creditRow] = await Promise.all([
+  const [visitSummary, toxSummary, appointments, upcomingAppts, allStaff, productSales, membershipRow, creditRow, velocityBalance] = await Promise.all([
     // 1. Visit summary
     db.from('client_visit_summary')
       .select('total_visits, total_spend, ltv_bucket, days_since_last_visit, first_visit, last_visit, avg_days_between_visits')
@@ -66,19 +86,19 @@ export default async function handler(req, res) {
       .select('tox_visits, total_tox_spend, days_since_last_tox, avg_tox_interval_days, primary_tox_type, last_tox_type, tox_segment, last_provider_staff_id, consultation_count, treatment_count, tox_switching')
       .eq('client_id', clientId).maybeSingle().then(r => r.data).catch(() => null),
 
-    // 3. Last 20 completed appointments with services
+    // 3. Last 20 completed appointments with services (across all linked clients)
     db.from('blvd_appointments')
       .select('id, start_at, location_key, blvd_appointment_services(service_name, service_slug, service_category, provider_staff_id, price, duration_minutes)')
-      .eq('client_id', clientId).in('status', ['completed', 'final'])
+      .in('client_id', allClientIds).in('status', ['completed', 'final'])
       .order('start_at', { ascending: false }).limit(20)
       .then(r => r.data || []).catch(() => []),
 
-    // 4. Upcoming appointments
+    // 4. Upcoming appointments (across all linked clients)
     db.from('blvd_appointments')
       .select('id, start_at, location_key, blvd_appointment_services(service_name, service_slug, provider_staff_id)')
-      .eq('client_id', clientId).in('status', ['booked', 'confirmed', 'arrived'])
+      .in('client_id', allClientIds).in('status', ['booked', 'confirmed', 'arrived'])
       .gt('start_at', new Date().toISOString())
-      .order('start_at', { ascending: true }).limit(5)
+      .order('start_at', { ascending: true }).limit(10)
       .then(r => r.data || []).catch(() => []),
 
     // 5. All staff (for resolving names + Boulevard booking IDs)
@@ -106,6 +126,13 @@ export default async function handler(req, res) {
     db.from('blvd_clients')
       .select('account_credit, account_credit_updated_at, boulevard_id')
       .eq('id', clientId)
+      .maybeSingle()
+      .then(r => r.data).catch(() => null),
+
+    // 9. Velocity rewards balance
+    db.from('velocity_balances')
+      .select('active_balance_cents, total_earned_cents, total_expired_cents, next_expiry_at, next_expiry_amount_cents, has_active_booking, last_earn_at')
+      .eq('member_id', member.id)
       .maybeSingle()
       .then(r => r.data).catch(() => null),
   ])
@@ -194,18 +221,102 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── Upcoming appointment ──
-  if (upcomingAppts.length > 0) {
-    const next = upcomingAppts[0]
-    const svc = next.blvd_appointment_services?.[0]
+  // ── Live-fetch upcoming from Boulevard (fills gaps between cron syncs) ──
+  let liveUpcoming = []
+  const liveUrns = allBlvdUrns.slice(0, 3) // Cap at 3 client URNs
+  if (liveUrns.length > 0) {
+    try {
+      const { LOCATION_IDS } = require('@/server/blvd')
+      const locationUrnMap = {}
+      const locations = []
+      for (const [key, uuid] of Object.entries(LOCATION_IDS)) {
+        const urn = `urn:blvd:Location:${uuid}`
+        locationUrnMap[urn] = key
+        locations.push({ key, urn })
+      }
+
+      // Query both locations × each client (e.g. 3 clients × 2 locations = 6 aliased queries)
+      const fragments = []
+      for (let i = 0; i < liveUrns.length; i++) {
+        for (const loc of locations) {
+          fragments.push(
+            `c${i}_${loc.key}: appointments(locationId: "${loc.urn}", clientId: "${liveUrns[i]}", first: 200) { edges { node { id state startAt appointmentServices { service { name } staff { id } } } } }`
+          )
+        }
+      }
+      const liveData = await adminQuery(`query { ${fragments.join('\n')} }`)
+
+      const now = new Date()
+      for (let i = 0; i < liveUrns.length; i++) {
+        for (const loc of locations) {
+          const edges = liveData[`c${i}_${loc.key}`]?.edges
+          if (!edges) continue
+          for (const edge of edges) {
+            const node = edge.node
+            if (!node?.id) continue
+            const state = (node.state || '').toLowerCase()
+            if (!['booked', 'confirmed', 'arrived'].includes(state)) continue
+            if (new Date(node.startAt) <= now) continue
+
+            const svc = node.appointmentServices?.[0]
+            const providerBlvdId = svc?.staff?.id || null
+            const staffRow = providerBlvdId ? allStaff.find(s => s.boulevard_provider_id === providerBlvdId) : null
+
+            liveUpcoming.push({
+              id: node.id,
+              date: node.startAt,
+              service: svc?.service?.name || 'Appointment',
+              slug: null,
+              location_key: loc.key,
+              provider: staffRow?.name || null,
+              providerImage: staffRow ? (staffRow.transparent_bg || staffRow.featured_image) : null,
+            })
+          }
+        }
+      }
+    } catch (e) {
+      // Non-fatal — fall back to DB data
+      console.error('Boulevard live fetch error:', e.message)
+    }
+  }
+
+  // ── Upcoming appointments — merge DB + live, deduplicate ──
+  const mergedUpcoming = []
+  const seenIds = new Set()
+
+  // DB results first
+  for (const appt of upcomingAppts) {
+    const svc = appt.blvd_appointment_services?.[0]
     const staff = svc?.provider_staff_id ? staffMap[svc.provider_staff_id] : null
-    result.upcomingAppointment = {
-      date: next.start_at,
+    mergedUpcoming.push({
+      id: appt.id,
+      date: appt.start_at,
       service: svc?.service_name || 'Appointment',
       slug: svc?.service_slug || null,
-      location_key: next.location_key,
+      location_key: appt.location_key,
       provider: staff?.name || null,
+      providerImage: staff ? (staff.transparent_bg || staff.featured_image) : null,
+    })
+    seenIds.add(appt.id)
+  }
+
+  // Add live results not already in DB
+  for (const live of liveUpcoming) {
+    // Match by Boulevard URN ID or start time + service name
+    const isDuplicate = mergedUpcoming.some(m =>
+      m.date === live.date && m.service === live.service
+    )
+    if (!isDuplicate) {
+      mergedUpcoming.push(live)
     }
+  }
+
+  // Sort by date ascending
+  mergedUpcoming.sort((a, b) => new Date(a.date) - new Date(b.date))
+
+  if (mergedUpcoming.length > 0) {
+    result.upcomingAppointments = mergedUpcoming
+    result.upcomingAppointment = mergedUpcoming[0]
   }
 
   // ── Provider relationships ──
@@ -385,6 +496,21 @@ export default async function handler(req, res) {
         formatted: `$${(balance / 100).toFixed(2)}`,
         updatedAt,
       }
+    }
+  }
+
+  // ── Velocity Rewards ──
+  if (velocityBalance && velocityBalance.active_balance_cents > 0) {
+    result.velocity = {
+      balance: velocityBalance.active_balance_cents,
+      formatted: `$${(velocityBalance.active_balance_cents / 100).toFixed(2)}`,
+      totalEarned: velocityBalance.total_earned_cents,
+      totalExpired: velocityBalance.total_expired_cents,
+      nextExpiryAt: velocityBalance.next_expiry_at,
+      nextExpiryAmount: velocityBalance.next_expiry_amount_cents,
+      nextExpiryFormatted: velocityBalance.next_expiry_amount_cents ? `$${(velocityBalance.next_expiry_amount_cents / 100).toFixed(2)}` : null,
+      isFrozen: velocityBalance.has_active_booking,
+      lastEarnAt: velocityBalance.last_earn_at,
     }
   }
 

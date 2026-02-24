@@ -9,11 +9,19 @@ import { useMember } from '@/context/MemberContext'
 import ReferralDashboard from '@/components/member/ReferralDashboard'
 
 // ─── Section: Visit History ───
-function VisitsSection({ visits, fonts, onRebook }) {
+function VisitsSection({ visits, fonts, onRebook, hasUpcoming, onNavigate }) {
   if (!visits?.length) return <EmptyState text="No visits yet" fonts={fonts} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {hasUpcoming && (
+        <button
+          onClick={() => onNavigate('upcoming')}
+          style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: colors.violet, background: `${colors.violet}08`, border: `1px solid ${colors.violet}15`, borderRadius: '0.75rem', padding: '0.625rem 1rem', cursor: 'pointer', textAlign: 'center', marginBottom: 4 }}
+        >
+          Looking for upcoming visits? →
+        </button>
+      )}
       {visits.map((visit, i) => {
         const svc = visit.services?.[0]
         const otherCount = (visit.services?.length || 1) - 1
@@ -51,6 +59,69 @@ function VisitsSection({ visits, fonts, onRebook }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ─── Section: Upcoming Visits ───
+function UpcomingSection({ appointments, fonts, onNavigate, member }) {
+  const { openBookingModal } = useMember()
+
+  if (!appointments?.length) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem', textAlign: 'center' }}>
+        <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.5)' }}>Nothing scheduled yet.</p>
+        <button
+          onClick={() => openBookingModal(member?.preferred_location || 'westfield')}
+          style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, marginTop: 12, padding: '0.625rem 1.25rem', borderRadius: 999, background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}
+        >
+          Book a Visit →
+        </button>
+      </div>
+    )
+  }
+
+  const formatDateTime = (d) => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
+      ' at ' + dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {appointments.map((appt, i) => (
+        <div key={appt.id || i} style={{ padding: '1rem', borderRadius: '0.75rem', background: `${colors.violet}08`, border: `1px solid ${colors.violet}15` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>{appt.service}</p>
+            </div>
+            <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 500, color: colors.violet, flexShrink: 0, marginLeft: 8 }}>{formatDateTime(appt.date)}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {appt.providerImage && <img src={appt.providerImage} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />}
+            <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)' }}>
+              {appt.provider || 'Provider'} · {appt.location_key === 'westfield' ? 'Westfield' : 'Carmel'}
+            </span>
+          </div>
+        </div>
+      ))}
+
+      {/* Book another */}
+      <button
+        onClick={() => openBookingModal(member?.preferred_location || 'westfield')}
+        style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, width: '100%', padding: '0.75rem', borderRadius: 999, background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer', marginTop: 4 }}
+      >
+        Book Another Visit →
+      </button>
+
+      {/* Cross-link */}
+      <button
+        onClick={() => onNavigate('visits')}
+        style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,248,245,0.35)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', marginTop: 4 }}
+      >
+        Looking for past visits? →
+      </button>
     </div>
   )
 }
@@ -373,6 +444,75 @@ function MembershipSection({ membership, accountCredit, fonts }) {
   )
 }
 
+// ─── Section: Velocity Rewards ───
+function VelocitySection({ velocity, fonts, member }) {
+  const { openBookingModal } = useMember()
+
+  if (!velocity) return <EmptyState text="No rewards yet" fonts={fonts} />
+
+  const nextExpiry = velocity.nextExpiryAt ? new Date(velocity.nextExpiryAt) : null
+  const daysUntilExpiry = nextExpiry ? Math.max(0, Math.ceil((nextExpiry - Date.now()) / 86400000)) : null
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Balance hero */}
+      <div style={{ padding: '1.5rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05))', border: '1px solid rgba(139,92,246,0.25)' }}>
+        <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.4)', marginBottom: 6 }}>RELUXE Rewards</p>
+        <p style={{ fontFamily: fonts.display, fontSize: '2.25rem', fontWeight: 700, color: colors.violet }}>{velocity.formatted}</p>
+        <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)', marginTop: 4 }}>Applied automatically at checkout</p>
+      </div>
+
+      {/* Frozen badge */}
+      {velocity.isFrozen && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)' }}>
+          <span style={{ fontSize: '0.875rem' }}>&#10003;</span>
+          <div>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: '#22c55e' }}>Protected</p>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)' }}>Your rewards won't expire while you have an upcoming visit</p>
+          </div>
+        </div>
+      )}
+
+      {/* Expiry warning */}
+      {!velocity.isFrozen && nextExpiry && velocity.nextExpiryFormatted && daysUntilExpiry <= 30 && (
+        <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: '#f59e0b' }}>
+            {velocity.nextExpiryFormatted} expires {daysUntilExpiry === 0 ? 'today' : `in ${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''}`}
+          </p>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)', marginTop: 4 }}>Book a visit to freeze your rewards</p>
+          <button
+            onClick={() => openBookingModal(member?.preferred_location || 'westfield')}
+            style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, padding: '0.5rem 1rem', borderRadius: 999, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: 'none', cursor: 'pointer', marginTop: 8 }}
+          >
+            Book Now to Protect
+          </button>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <StatBox label="Lifetime Earned" value={`$${(velocity.totalEarned / 100).toFixed(2)}`} fonts={fonts} />
+        <StatBox label="Expired" value={`$${(velocity.totalExpired / 100).toFixed(2)}`} fonts={fonts} />
+      </div>
+
+      {/* How it works */}
+      <details style={{ borderRadius: '0.75rem', background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)', overflow: 'hidden' }}>
+        <summary style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(250,248,245,0.5)', padding: '0.875rem 1rem', cursor: 'pointer', listStyle: 'none' }}>
+          How RELUXE Rewards work
+        </summary>
+        <div style={{ padding: '0 1rem 1rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.45)', lineHeight: 1.6 }}>
+            Earn $1 for every $100 you spend on treatments. Your rewards are added as account credit and applied automatically at your next checkout.
+          </p>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.45)', lineHeight: 1.6 }}>
+            Rewards expire 90 days after they're earned — but as long as you have a visit on the books, the clock is paused.
+          </p>
+        </div>
+      </details>
+    </div>
+  )
+}
+
 // ─── Section: Account ───
 function AccountSection({ member, stats, accountCredit, membership, fonts, onNavigate, onSignOut }) {
   const memberSince = stats?.first_visit
@@ -583,7 +723,9 @@ function EmptyState({ text, fonts }) {
 // ─── Tab list ───
 const ALL_TABS = [
   { key: 'visits', label: 'Visits' },
+  { key: 'upcoming', label: 'Upcoming' },
   { key: 'tox', label: 'Tox' },
+  { key: 'rewards', label: 'Rewards' },
   { key: 'membership', label: 'Membership' },
   { key: 'providers', label: 'Providers' },
   { key: 'products', label: 'Products' },
@@ -622,7 +764,9 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
 
   // Filter tabs to those with data
   const tabs = ALL_TABS.filter((t) => {
+    if (t.key === 'upcoming' && !profile?.upcomingAppointments?.length) return false
     if (t.key === 'tox' && !profile?.toxStatus) return false
+    if (t.key === 'rewards' && !profile?.velocity) return false
     if (t.key === 'membership' && !profile?.membership && !profile?.accountCredit) return false
     if (t.key === 'products' && !profile?.products?.items?.length) return false
     if (t.key === 'recommendations' && !profile?.recommendations?.length) return false
@@ -677,8 +821,10 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
 
             {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
-              {activeTab === 'visits' && <VisitsSection visits={profile?.visits} fonts={fonts} onRebook={handleRebook} />}
+              {activeTab === 'visits' && <VisitsSection visits={profile?.visits} fonts={fonts} onRebook={handleRebook} hasUpcoming={!!profile?.upcomingAppointments?.length} onNavigate={setActiveTab} />}
+              {activeTab === 'upcoming' && <UpcomingSection appointments={profile?.upcomingAppointments} fonts={fonts} onNavigate={setActiveTab} member={member} />}
               {activeTab === 'tox' && <ToxSection toxStatus={profile?.toxStatus} fonts={fonts} onRebook={handleRebook} member={member} />}
+              {activeTab === 'rewards' && <VelocitySection velocity={profile?.velocity} fonts={fonts} member={member} />}
               {activeTab === 'membership' && <MembershipSection membership={profile?.membership} accountCredit={profile?.accountCredit} fonts={fonts} />}
               {activeTab === 'providers' && <ProvidersSection providers={profile?.providers} fonts={fonts} />}
               {activeTab === 'products' && <ProductsSection products={profile?.products} fonts={fonts} />}

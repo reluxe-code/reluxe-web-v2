@@ -1,9 +1,10 @@
 // src/components/analytics/AnalyticsScripts.js
-// GA4 + Meta Pixel <Script> tags, extracted from _app.js
+// GA4 + Meta Pixel + Bird <Script> tags, extracted from _app.js
 import Script from 'next/script'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || ''
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || ''
+const BIRD_CONFIG_URL = process.env.NEXT_PUBLIC_BIRD_CONFIG_URL || ''
 
 export default function AnalyticsScripts() {
   return (
@@ -22,6 +23,9 @@ export default function AnalyticsScripts() {
                 }
                 if (typeof window.fbq === 'function') {
                   window.fbq('trackCustom', eventName, params);
+                }
+                if (typeof window.Bird !== 'undefined' && window.Bird.tracker) {
+                  try { window.Bird.tracker.custom.trackEvent(eventName, params); } catch(e){}
                 }
               } catch(e){}
             };
@@ -75,6 +79,16 @@ export default function AnalyticsScripts() {
             />
           </noscript>
         </>
+      )}
+
+      {/* Bird Web SDK */}
+      {BIRD_CONFIG_URL && (
+        <Script
+          id="bird-sdk"
+          src="https://embeddables.p.mbirdcdn.net/sdk/v0/bird-sdk.js"
+          data-config-url={BIRD_CONFIG_URL}
+          strategy="afterInteractive"
+        />
       )}
     </>
   )

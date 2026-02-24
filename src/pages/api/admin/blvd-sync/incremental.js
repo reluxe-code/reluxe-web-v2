@@ -119,8 +119,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'GET or POST only' })
   }
 
-  // Smart scheduling: cron fires every 15 min, but off-hours we only run ~every 2h.
-  // Business hours: 8am–8pm ET (UTC-5). Off-hours: skip 7 of 8 invocations.
+  // Smart scheduling: cron fires every 5 min during business hours.
+  // Business hours: 8am–8pm ET (UTC-5). Off-hours: only run every 30 min.
   const isCron = req.method === 'GET'
   if (isCron) {
     const nowET = new Date(Date.now() - 5 * 60 * 60 * 1000) // rough ET offset
@@ -128,8 +128,8 @@ export default async function handler(req, res) {
     const minute = nowET.getUTCMinutes()
     const isBusinessHours = hour >= 8 && hour < 20
     if (!isBusinessHours) {
-      // Off-hours: only run at the top of even hours (0, 2, 4, ...)
-      if (hour % 2 !== 0 || minute >= 15) {
+      // Off-hours: only run at :00 and :30
+      if (minute >= 5 && minute < 30 || minute >= 35) {
         return res.json({ skipped: true, reason: 'off-hours', hour, minute })
       }
     }
