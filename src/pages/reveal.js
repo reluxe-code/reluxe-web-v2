@@ -1210,24 +1210,44 @@ export default function RevealBoard() {
             <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: 700, color: colors.white, marginBottom: '0.75rem' }}>
               You're Booked!
             </h2>
-            {bookingResult.confirmation?.email && (
-              <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.25rem' }}>
-                Confirmation sent to <strong style={{ color: colors.white }}>{bookingResult.confirmation.email}</strong>
-              </p>
-            )}
             {bookingResult.tile && (
               <div className="mt-6 rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'left' }}>
                 <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>
                   {bookingResult.tile.serviceLabel}
                 </p>
-                <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.25rem' }}>
-                  with {bookingResult.tile.providerName} &middot; {bookingResult.tile.dayLabel} at {bookingResult.tile.timeLabel}
+                <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.5rem' }}>
+                  with {bookingResult.tile.providerName}
                 </p>
-                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.25rem', textTransform: 'capitalize' }}>
-                  {bookingResult.tile.locationKey}
-                </p>
+                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center gap-2" style={{ marginBottom: '0.375rem' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                      <rect x="3" y="4" width="18" height="18" rx="2" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                      <path d="M16 2v4M8 2v4M3 10h18" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)' }}>
+                      {bookingResult.tile.dayLabel} at {bookingResult.tile.timeLabel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                      <circle cx="12" cy="10" r="3" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                    </svg>
+                    <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', textTransform: 'capitalize' }}>
+                      RELUXE {bookingResult.tile.locationKey}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
+
+            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.45)', marginTop: '1.25rem', lineHeight: 1.6 }}>
+              {bookingResult.confirmation?.email
+                ? <>A confirmation email is on its way to <strong style={{ color: 'rgba(255,255,255,0.7)' }}>{bookingResult.confirmation.email}</strong> with everything you need, including any forms to fill out before your visit.</>
+                : <>A confirmation email is on its way with everything you need, including any forms to fill out before your visit.</>
+              }
+            </p>
+
             <div className="mt-8">
               <a href="/" className="inline-block rounded-full transition-opacity hover:opacity-90"
                 style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.75rem 2rem', background: gradients.primary, color: '#fff', textDecoration: 'none' }}>
