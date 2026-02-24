@@ -654,12 +654,16 @@ export default function RevealBoard() {
   const [alternatives, setAlternatives] = useState(null)
   const [bookingResult, setBookingResult] = useState(null)
 
+  // Safe sessionStorage wrapper (iOS private mode throws SecurityError)
+  const ssGet = (k) => { try { return sessionStorage.getItem(k) } catch { return null } }
+  const ssSet = (k, v) => { try { sessionStorage.setItem(k, v) } catch {} }
+
   // Parse URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const b = params.get('bsid')
-    if (b) { setBsid(b); sessionStorage.setItem('reveal_bsid', b) }
-    if (params.get('ph')) sessionStorage.setItem('reveal_ph', params.get('ph'))
+    if (b) { setBsid(b); ssSet('reveal_bsid', b) }
+    if (params.get('ph')) ssSet('reveal_ph', params.get('ph'))
 
     trackEvent('reveal_page_view', {
       bsid: b || null,
@@ -712,7 +716,7 @@ export default function RevealBoard() {
         filter_time_of_day: time,
         filter_provider: provider?.slug || null,
       },
-      bird_subscriber_id: bsid || sessionStorage.getItem('reveal_bsid') || null,
+      bird_subscriber_id: bsid || ssGet('reveal_bsid') || null,
     })
 
     try {
@@ -878,7 +882,7 @@ export default function RevealBoard() {
       })
     }
 
-    const storedBsid = bsid || sessionStorage.getItem('reveal_bsid')
+    const storedBsid = bsid || ssGet('reveal_bsid')
     if (data.tile) {
       fetch('/api/reveal/track-booking', {
         method: 'POST',
