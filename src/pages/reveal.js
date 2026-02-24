@@ -487,6 +487,12 @@ function BookingSheet({ tile, onClose, onSuccess, onSlotTaken, trackEvent }) {
               }}>
                 Once confirmed, this spot is yours.
               </p>
+              <p style={{
+                fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(255,255,255,0.25)',
+                textAlign: 'center', marginTop: '0.375rem',
+              }}>
+                Standard service pricing applies.
+              </p>
             </div>
           </>
         )}
@@ -546,7 +552,7 @@ function RefinementBar({ location, onLocationChange, provider, onProviderTap, ti
         {['westfield', 'carmel', 'either'].map(loc => (
           <MiniChip
             key={loc}
-            label={loc === 'either' ? 'Either' : loc.charAt(0).toUpperCase() + loc.slice(1)}
+            label={loc === 'either' ? 'No Preference' : loc.charAt(0).toUpperCase() + loc.slice(1)}
             selected={location === loc}
             onClick={() => onLocationChange(loc)}
           />
@@ -932,6 +938,9 @@ export default function RevealBoard() {
               <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(255,255,255,0.5)', maxWidth: 360, margin: '0 auto' }}>
                 Answer two quick picks. We'll unlock the best openings before someone else grabs them.
               </p>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', maxWidth: 360, margin: '0.75rem auto 0' }}>
+                A new way to book. These are real appointment openings — just curated and limited.
+              </p>
             </div>
 
             {boardError && (
@@ -949,7 +958,7 @@ export default function RevealBoard() {
                 {['westfield', 'carmel', 'either'].map(loc => (
                   <LocationChip
                     key={loc}
-                    label={loc === 'either' ? 'Either' : loc.charAt(0).toUpperCase() + loc.slice(1)}
+                    label={loc === 'either' ? 'No Preference' : loc.charAt(0).toUpperCase() + loc.slice(1)}
                     selected={location === loc}
                     onClick={() => setLocation(loc)}
                   />
@@ -1027,7 +1036,11 @@ export default function RevealBoard() {
                   These are the only openings we're releasing today.
                 </p>
                 <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.25)', marginTop: '0.25rem' }}>
-                  Not all availability is shown here.
+                  Not all availability is shown here.{' '}
+                  <a href="/start" style={{ color: colors.violet, textDecoration: 'underline' }}>Book Westfield</a>
+                  {' / '}
+                  <a href="/start" style={{ color: colors.violet, textDecoration: 'underline' }}>Book Carmel</a>
+                  {' '}the usual way.
                 </p>
               </div>
               <button
@@ -1101,6 +1114,20 @@ export default function RevealBoard() {
               </>
             )
             })()}
+
+            {/* Micro-FAQ */}
+            <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {[
+                { q: 'What is this?', a: 'A curated list of real appointment openings this week.' },
+                { q: 'Is there a catch?', a: 'No. These are normal appointments — just limited and easier to claim.' },
+                { q: 'Why only a few?', a: 'We highlight a small number at a time to make booking faster.' },
+              ].map(({ q, a }) => (
+                <div key={q} style={{ marginBottom: '0.75rem' }}>
+                  <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>{q}</p>
+                  <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.2)', marginTop: '0.125rem' }}>{a}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

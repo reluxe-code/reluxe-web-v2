@@ -2,7 +2,12 @@
 // Updates client info on a reserved cart and completes checkout.
 // After phone verification (takeOwnershipByCode), Boulevard links the client
 // but clientInformation still needs to be explicitly set for checkout.
+//
+// If the client-facing SDK checkout fails (e.g. payment method required),
+// we fall back to the Admin API's checkoutCart mutation which bypasses
+// client payment requirements.
 import { blvd } from '@/server/blvd'
+import { adminQuery } from '@/server/blvdAdmin'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -27,6 +32,7 @@ export default async function handler(req, res) {
       cartId,
       ownershipVerified,
       hasClientInfo,
+      paymentMethodRequired: cart.summary?.paymentMethodRequired,
       existingClientInfo: existingClient ? {
         firstName: existingClient.firstName,
         lastName: existingClient.lastName,
@@ -56,7 +62,35 @@ export default async function handler(req, res) {
       })
     }
 
-    const result = await cart.checkout()
+    // Try normal SDK checkout first
+    let result
+    try {
+      result = await cart.checkout()
+    } catch (sdkErr) {
+      const msg = (sdkErr.message || '').toLowerCase()
+      const isPaymentError = msg.includes('payment') || msg.includes('card') || msg.includes('missing')
+      console.log('[blvd/checkout] SDK checkout failed:', sdkErr.message, '| isPaymentError:', isPaymentError)
+
+      if (isPaymentError) {
+        // Fall back to Admin API checkout — bypasses payment requirement
+        console.log('[blvd/checkout] Attempting Admin API checkout for cart:', cartId)
+        const adminResult = await adminQuery(
+          `mutation CheckoutCart($input: CheckoutCartInput!) {
+            checkoutCart(input: $input) {
+              cart { id completedAt }
+              appointments { appointmentId clientId forCartOwner }
+            }
+          }`,
+          { input: { id: cartId } }
+        )
+        result = adminResult.checkoutCart
+        console.log('[blvd/checkout] Admin API checkout succeeded')
+      } else {
+        // Not a payment error — rethrow
+        throw sdkErr
+      }
+    }
+
     const appointment = result.appointments?.[0]
     const ci = cart.clientInformation || {}
 
