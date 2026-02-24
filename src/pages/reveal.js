@@ -1242,10 +1242,7 @@ export default function RevealBoard() {
             )}
 
             <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.45)', marginTop: '1.25rem', lineHeight: 1.6 }}>
-              {bookingResult.confirmation?.email
-                ? <>A confirmation email is on its way to <strong style={{ color: 'rgba(255,255,255,0.7)' }}>{bookingResult.confirmation.email}</strong> with everything you need, including any forms to fill out before your visit.</>
-                : <>A confirmation email is on its way with everything you need, including any forms to fill out before your visit.</>
-              }
+              A confirmation is on the way with everything you need, including any forms to fill out before your visit.
             </p>
 
             <div className="mt-8">
