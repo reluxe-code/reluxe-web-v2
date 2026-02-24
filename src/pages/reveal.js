@@ -660,17 +660,22 @@ export default function RevealBoard() {
 
   // Parse URL params on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const b = params.get('bsid')
-    if (b) { setBsid(b); ssSet('reveal_bsid', b) }
-    if (params.get('ph')) ssSet('reveal_ph', params.get('ph'))
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const b = params.get('bsid')
+      if (b) { setBsid(b); ssSet('reveal_bsid', b) }
+      if (params.get('ph')) ssSet('reveal_ph', params.get('ph'))
 
-    trackEvent('reveal_page_view', {
-      bsid: b || null,
-      ph: params.get('ph') || null,
-      utm_source: params.get('utm_source'),
-      utm_campaign: params.get('utm_campaign'),
-    })
+      trackEvent('reveal_page_view', {
+        bsid: b || null,
+        ph: params.get('ph') || null,
+        utm_source: params.get('utm_source'),
+        utm_campaign: params.get('utm_campaign'),
+      })
+    } catch (e) {
+      // Fallback: still track page view even if URL parsing fails
+      trackEvent('reveal_page_view', {})
+    }
   }, [])
 
   const canSubmitFilters = location && selectedTiers.length > 0
@@ -936,7 +941,7 @@ export default function RevealBoard() {
               <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: colors.violet, marginBottom: '0.5rem' }}>
                 RELUXE
               </p>
-              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: 700, color: colors.white, lineHeight: 1.1, marginBottom: '0.75rem' }}>
+              <h1 style={{ fontFamily: fonts.display, fontSize: '2rem', fontWeight: 700, color: colors.white, lineHeight: 1.1, marginBottom: '0.75rem' }}>
                 This Week's Best Spots Just Dropped.
               </h1>
               <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(255,255,255,0.5)', maxWidth: 360, margin: '0 auto' }}>
@@ -991,7 +996,8 @@ export default function RevealBoard() {
           {/* Sticky CTA */}
           <div style={{
             position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-            padding: '1rem 1.25rem calc(1rem + env(safe-area-inset-bottom))',
+            padding: '1rem 1.25rem 1.5rem',
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0.5rem))',
             background: 'linear-gradient(to top, rgba(26,26,26,0.98) 60%, rgba(26,26,26,0))',
             backdropFilter: 'blur(12px)',
           }}>
@@ -1211,7 +1217,7 @@ export default function RevealBoard() {
                 <path d="M20 6L9 17L4 12" stroke={colors.violet} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 5vw, 2.5rem)', fontWeight: 700, color: colors.white, marginBottom: '0.75rem' }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: '2rem', fontWeight: 700, color: colors.white, marginBottom: '0.75rem' }}>
               You're Booked!
             </h2>
             {bookingResult.tile && (
