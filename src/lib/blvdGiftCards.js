@@ -86,8 +86,8 @@ export async function syncOneGiftCard(opts) {
     // 1. Create the gift card in Boulevard
     const result = await createBlvdGiftCard(opts.code, opts.amountCents, {
       note: opts.isBonus
-        ? `Bonus gift card (online purchase by ${opts.senderName})`
-        : `Online gift card from ${opts.senderName} to ${opts.recipientName}`,
+        ? 'Other (Bonus Gift Card)'
+        : 'Other (Gift Card Sale)',
     })
 
     // 2. Create email fulfillment (Boulevard sends the email)

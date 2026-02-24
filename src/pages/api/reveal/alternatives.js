@@ -3,14 +3,18 @@
 import { createCartWithItem } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
 
+const BUSINESS_TZ = 'America/Indiana/Indianapolis'
+
 function formatDayLabel(dateStr) {
   const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', timeZone: BUSINESS_TZ,
+  })
 }
 
 function formatTimeLabel(startTime) {
   return new Date(startTime).toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit', hour12: true,
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: BUSINESS_TZ,
   })
 }
 

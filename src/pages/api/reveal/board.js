@@ -10,6 +10,11 @@ const SLUG_MAP = Object.fromEntries(REVEAL_CATEGORIES.map(c => [c.id, c.slug]))
 const LABEL_MAP = Object.fromEntries(REVEAL_CATEGORIES.map(c => [c.slug, c.label]))
 const PRICE_MAP = Object.fromEntries(REVEAL_CATEGORIES.map(c => [c.slug, c.priceTier]))
 
+// RELUXE is in Indianapolis — all times must render in Eastern
+const BUSINESS_TZ = 'America/Indiana/Indianapolis'
+const BUSINESS_OPEN_HOUR = 8   // 8 AM — reject anything earlier
+const BUSINESS_CLOSE_HOUR = 19 // 7 PM — reject anything at or after
+
 function getDateRange(when) {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -43,9 +48,22 @@ function isWeekend(dateStr) {
   return d.getDay() === 0 || d.getDay() === 6
 }
 
+// Extract the hour in the business's local timezone (not server UTC)
+function getLocalHour(startTime) {
+  const h = new Date(startTime).toLocaleString('en-US', {
+    hour: 'numeric', hour12: false, timeZone: BUSINESS_TZ,
+  })
+  return parseInt(h, 10)
+}
+
+function isWithinBusinessHours(startTime) {
+  const hour = getLocalHour(startTime)
+  return hour >= BUSINESS_OPEN_HOUR && hour < BUSINESS_CLOSE_HOUR
+}
+
 function filterTimeOfDay(startTime, timeOfDay) {
   if (!timeOfDay || timeOfDay === 'any') return true
-  const hour = new Date(startTime).getHours()
+  const hour = getLocalHour(startTime)
   switch (timeOfDay) {
     case 'morning': return hour < 12
     case 'midday': return hour >= 11 && hour < 15
@@ -57,12 +75,14 @@ function filterTimeOfDay(startTime, timeOfDay) {
 
 function formatDayLabel(dateStr) {
   const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', timeZone: BUSINESS_TZ,
+  })
 }
 
 function formatTimeLabel(startTime) {
   return new Date(startTime).toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit', hour12: true,
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: BUSINESS_TZ,
   })
 }
 
@@ -257,6 +277,7 @@ export default async function handler(req, res) {
       const { combo, date, times } = result.value
 
       for (const t of times) {
+        if (!isWithinBusinessHours(t.startTime)) continue
         if (!filterTimeOfDay(t.startTime, timeOfDay)) continue
         allCandidates.push({
           id: `${combo.providerSlug}-${combo.serviceSlug}-${combo.locationKey}-${date}-${t.startTime}`,
