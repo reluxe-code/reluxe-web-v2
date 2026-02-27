@@ -35,3 +35,13 @@ yarn-error.log*
 
 # eslintcache
 .eslintcache/out
+
+# sensitive data — never commit PII, seed data, or CSV exports
+sql/*seed*.sql
+sql/*.csv
+*.csv
+files-to-view/
+scripts/export-leads*
+scripts/spot-check*
+scripts/test-bird*
+scripts/token-status*
