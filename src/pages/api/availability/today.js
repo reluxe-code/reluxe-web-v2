@@ -207,11 +207,12 @@ export default async function handler(req, res) {
   ].join(':')
 
   const topCacheKey = `today-availability:${comboCachePrefix}:${limitNum}`
-  const topCached = getCached(topCacheKey, 60_000)
-  // Serve from cache only if fresh AND non-empty (empty results are never cached, but guard anyway)
-  if (topCached && !topCached.stale && topCached.data?.totalOpenings > 0) {
+  const topCachedFresh = getCached(topCacheKey, 120_000)    // 2 min fresh
+  const topCachedStale = getCached(topCacheKey, 600_000)    // 10 min stale fallback
+  // Serve from cache if fresh AND non-empty
+  if (topCachedFresh && !topCachedFresh.stale && topCachedFresh.data?.totalOpenings > 0) {
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
-    return res.json(topCached.data)
+    return res.json(topCachedFresh.data)
   }
 
   try {
@@ -301,7 +302,7 @@ export default async function handler(req, res) {
 
     const dateResults = await batchSettled(selectedCombos, async (combo) => {
       const dateCacheKey = `today-dates:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${window.windowStart}:${window.windowEnd}`
-      const dateCached = getCached(dateCacheKey, 60_000)
+      const dateCached = getCached(dateCacheKey, 120_000)
 
       if (dateCached && !dateCached.stale) {
         return { combo, dates: dateCached.data }
@@ -335,7 +336,7 @@ export default async function handler(req, res) {
 
     const timeResults = await batchSettled(timeFetches, async ({ combo, date }) => {
       const timeCacheKey = `today-times:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${date}`
-      const timeCached = getCached(timeCacheKey, 60_000)
+      const timeCached = getCached(timeCacheKey, 120_000)
 
       if (timeCached && !timeCached.stale) {
         return { combo, date, times: timeCached.data }
@@ -453,13 +454,21 @@ export default async function handler(req, res) {
     if (totalOpenings > 0) {
       setCache(topCacheKey, payload)
     }
+
+    // If Boulevard returned 0 but we have stale cache with results, serve stale instead of empty
+    if (totalOpenings === 0 && topCachedStale?.data?.totalOpenings > 0) {
+      console.log(`[availability/today] Boulevard returned 0, serving stale cache with ${topCachedStale.data.totalOpenings} openings`)
+      res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
+      return res.json(topCachedStale.data)
+    }
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
     return res.json(payload)
   } catch (err) {
     console.error('[availability/today]', err.message)
 
-    if (topCached) {
-      return res.json(topCached.data)
+    if (topCachedStale?.data) {
+      return res.json(topCachedStale.data)
     }
 
     return res.status(200).json({
