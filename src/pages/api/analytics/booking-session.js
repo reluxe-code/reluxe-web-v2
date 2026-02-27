@@ -8,6 +8,7 @@ export default async function handler(req, res) {
     const {
       session_id, flow_type, location_key, member_id, device_id,
       page_path, user_agent, utm_source, utm_medium, utm_campaign,
+      tracking_token,
     } = req.body
 
     if (!session_id || !flow_type) {
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
       utm_source: utm_source || null,
       utm_medium: utm_medium || null,
       utm_campaign: utm_campaign || null,
+      tracking_token: tracking_token || null,
     })
 
     if (error) {
@@ -46,7 +48,7 @@ export default async function handler(req, res) {
       'outcome', 'abandon_step', 'max_step', 'steps_visited', 'step_count',
       'provider_name', 'provider_id', 'service_name', 'service_id',
       'category_name', 'bundle_title', 'contact_phone', 'contact_email',
-      'duration_ms', 'completed_at', 'last_activity', 'location_key',
+      'duration_ms', 'completed_at', 'last_activity', 'location_key', 'tracking_token',
     ]
     const updates = {}
     for (const key of allowed) {

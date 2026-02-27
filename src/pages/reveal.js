@@ -1,14 +1,62 @@
 // src/pages/reveal.js
 // RELUXE Reveal Board — curated appointment booking experience.
 // SMS/email campaigns link here. 2 quick questions → Board → Tap → Book.
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Component } from 'react'
 import Head from 'next/head'
 import { colors, gradients, fontPairings } from '@/components/preview/tokens'
 import { REVEAL_TIERS, TIME_OPTIONS, PRICE_TIERS } from '@/data/revealCategories'
 import ClientInfoForm from '@/components/booking/ClientInfoForm'
 import useExperimentSession from '@/hooks/useExperimentSession'
+import { getTrackingToken } from '@/lib/trackingToken'
 
 const fonts = fontPairings.bold
+
+// Error boundary to catch render crashes and show diagnostic info instead of black screen
+class RevealErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+  componentDidCatch(error, info) {
+    console.error('[RevealErrorBoundary]', error, info?.componentStack)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ minHeight: '100vh', background: '#0f0a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ maxWidth: 480, textAlign: 'center' }}>
+            <h2 style={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', color: '#faf8f5', marginBottom: 12 }}>
+              Something went wrong
+            </h2>
+            <p style={{ fontFamily: 'system-ui', fontSize: '0.875rem', color: 'rgba(250,248,245,0.6)', marginBottom: 20 }}>
+              We hit an unexpected error. Please try again or book directly.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
+              <a href="/reveal" style={{ fontFamily: 'system-ui', fontSize: '0.875rem', fontWeight: 600, padding: '10px 24px', borderRadius: 99, background: '#8b5cf6', color: '#fff', textDecoration: 'none' }}>
+                Try Again
+              </a>
+              <a href="https://blvd.app/@reluxemedspa" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'system-ui', fontSize: '0.875rem', fontWeight: 600, padding: '10px 24px', borderRadius: 99, border: '1.5px solid #8b5cf6', color: '#8b5cf6', textDecoration: 'none', background: 'transparent' }}>
+                Book Direct
+              </a>
+            </div>
+            <details style={{ textAlign: 'left', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 12 }}>
+              <summary style={{ fontFamily: 'system-ui', fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)', cursor: 'pointer' }}>Error details</summary>
+              <pre style={{ fontFamily: 'monospace', fontSize: '0.625rem', color: 'rgba(250,248,245,0.5)', whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginTop: 8 }}>
+                {this.state.error?.message || 'Unknown error'}
+                {'\n\n'}
+                {this.state.error?.stack || ''}
+              </pre>
+            </details>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 const PHASE = {
   FILTERS: 'FILTERS',
@@ -622,7 +670,6 @@ function RefinementBar({ location, onLocationChange, provider, onProviderTap, ti
 export default function RevealBoard() {
   const { getSessionId, updateSession, trackEvent, getDuration } = useExperimentSession('reveal_v1')
 
-  const [bsid, setBsid] = useState(null)
   const [phase, setPhase] = useState(PHASE.FILTERS)
 
   // Filter state (entry screen)
@@ -662,18 +709,15 @@ export default function RevealBoard() {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
-      const b = params.get('bsid')
-      if (b) { setBsid(b); ssSet('reveal_bsid', b) }
       if (params.get('ph')) ssSet('reveal_ph', params.get('ph'))
 
       trackEvent('reveal_page_view', {
-        bsid: b || null,
+        tracking_token: getTrackingToken() || null,
         ph: params.get('ph') || null,
         utm_source: params.get('utm_source'),
         utm_campaign: params.get('utm_campaign'),
       })
     } catch (e) {
-      // Fallback: still track page view even if URL parsing fails
       trackEvent('reveal_page_view', {})
     }
   }, [])
@@ -721,7 +765,7 @@ export default function RevealBoard() {
         filter_time_of_day: time,
         filter_provider: provider?.slug || null,
       },
-      bird_subscriber_id: bsid || ssGet('reveal_bsid') || null,
+      tracking_token: getTrackingToken() || null,
     })
 
     try {
@@ -757,7 +801,7 @@ export default function RevealBoard() {
     } finally {
       setRefetching(false)
     }
-  }, [phase, boardLocation, boardProvider, boardTimeOfDay, activeSlugs, location, bsid])
+  }, [phase, boardLocation, boardProvider, boardTimeOfDay, activeSlugs, location])
 
   // ─── Urgency: first flip at 8-10s, second at a random later time ───
   useEffect(() => {
@@ -862,6 +906,7 @@ export default function RevealBoard() {
     setBookingResult(data)
     setPhase(PHASE.SUCCESS)
 
+    const conf = data.confirmation || {}
     updateSession({
       outcome: 'booked',
       booking_completed: true,
@@ -871,6 +916,10 @@ export default function RevealBoard() {
       booking_provider: data.tile?.providerSlug,
       duration_ms: getDuration(),
       completed_at: new Date().toISOString(),
+      contact_phone: data.phone || null,
+      client_name: [conf.firstName, conf.lastName].filter(Boolean).join(' ') || null,
+      client_email: conf.email || null,
+      blvd_client_id: data.clientId || null,
     })
 
     trackEvent('reveal_booking_complete', {
@@ -887,7 +936,6 @@ export default function RevealBoard() {
       })
     }
 
-    const storedBsid = bsid || ssGet('reveal_bsid')
     if (data.tile) {
       fetch('/api/reveal/track-booking', {
         method: 'POST',
@@ -897,7 +945,7 @@ export default function RevealBoard() {
           appointmentId: data.appointmentId,
           serviceSlug: data.tile.serviceSlug,
           locationKey: data.tile.locationKey,
-          bsid: storedBsid || null,
+          tracking_token: getTrackingToken(),
           sessionId: getSessionId(),
         }),
       }).catch(() => {})
@@ -1121,6 +1169,51 @@ export default function RevealBoard() {
                     </button>
                   </div>
                 )}
+
+                {/* Full booking fallback — shown after More Options expanded */}
+                {showMore && (
+                  <div style={{
+                    marginTop: '2rem', padding: '1.25rem', borderRadius: '1rem',
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: '0.25rem' }}>
+                      Not finding the time you want?
+                    </p>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.3)', marginBottom: '1rem' }}>
+                      Browse all availability in our full booking experience
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                      <a
+                        href="https://blvd.app/@reluxemedspa?location=westfield"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600,
+                          padding: '0.5rem 1.25rem', borderRadius: '9999px',
+                          color: colors.white, background: colors.violet,
+                          textDecoration: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        Book Westfield
+                      </a>
+                      <a
+                        href="https://blvd.app/@reluxemedspa?location=carmel"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600,
+                          padding: '0.5rem 1.25rem', borderRadius: '9999px',
+                          color: colors.violet, background: 'transparent',
+                          border: `1.5px solid ${colors.violet}`,
+                          textDecoration: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        Book Carmel
+                      </a>
+                    </div>
+                  </div>
+                )}
               </>
             )
             })()}
@@ -1277,4 +1370,4 @@ export default function RevealBoard() {
   )
 }
 
-RevealBoard.getLayout = (page) => page
+RevealBoard.getLayout = (page) => <RevealErrorBoundary>{page}</RevealErrorBoundary>

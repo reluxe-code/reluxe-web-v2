@@ -3,6 +3,7 @@
 // Observes step changes, fires GA4/Meta events via reluxeTrack,
 // and persists sessions + events to Supabase.
 import { useRef, useEffect, useCallback } from 'react'
+import { getTrackingToken } from '@/lib/trackingToken'
 
 // Step ordinal maps for funnel position
 const MODAL_STEPS = ['HOME', 'CATEGORIES', 'CATEGORY_ITEMS', 'BUNDLE_ITEMS', 'PROVIDER_SERVICES', 'OPTIONS', 'DATE_TIME', 'CHECKOUT', 'BOOKED']
@@ -14,8 +15,12 @@ function getStepIndex(step, flowType) {
   return idx >= 0 ? idx : -1
 }
 
+function safeUUID() {
+  try { return crypto.randomUUID() } catch { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
+}
+
 function generateSessionId() {
-  return 'bs_' + crypto.randomUUID()
+  return 'bs_' + safeUUID()
 }
 
 function getOrCreateDeviceId() {
@@ -23,7 +28,7 @@ function getOrCreateDeviceId() {
   try {
     let id = localStorage.getItem(KEY)
     if (!id) {
-      id = 'dev_' + crypto.randomUUID()
+      id = 'dev_' + safeUUID()
       localStorage.setItem(KEY, id)
     }
     return id
@@ -186,6 +191,7 @@ export function useBookingAnalytics({
         device_id: getOrCreateDeviceId(),
         page_path: typeof window !== 'undefined' ? window.location.pathname : null,
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        tracking_token: getTrackingToken(),
         ...getUTMParams(),
       })
 

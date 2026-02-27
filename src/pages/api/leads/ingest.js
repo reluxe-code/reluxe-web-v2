@@ -12,6 +12,7 @@
 //   platform    → FB Platform      ("fb" or "ig")
 //   created     → FB Created Time  (ISO timestamp)
 import { getServiceClient } from '@/lib/supabase'
+import { upsertBirdContact } from '@/lib/birdContacts'
 
 function normalizePhone(raw) {
   const digits = (raw || '').replace(/\D/g, '')
@@ -126,6 +127,23 @@ export default async function handler(req, res) {
     }
 
     created.push(newLead.id)
+
+    // Fire-and-forget: sync new lead to Bird as a contact
+    if (phone) {
+      upsertBirdContact({
+        phone,
+        email: email || undefined,
+        firstName: (lead.first_name || '').trim() || undefined,
+        lastName: (lead.last_name || '').trim() || undefined,
+      }).then((result) => {
+        if (result.ok && result.contactId) {
+          db.from('leads')
+            .update({ bird_contact_id: result.contactId, synced_to_bird: true, updated_at: new Date().toISOString() })
+            .eq('id', newLead.id)
+            .then(() => {})
+        }
+      }).catch((err) => console.warn('[leads/ingest] Bird sync failed:', err.message))
+    }
   }
 
   return res.status(created.length > 0 ? 201 : 200).json({

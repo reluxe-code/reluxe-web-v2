@@ -65,18 +65,31 @@ export default async function handler(req, res) {
     const membershipShown = sessions.filter(s => s.membership_shown).length
     const membershipClicked = sessions.filter(s => s.membership_clicked).length
 
-    // 6. Funnel — get event counts
-    const { data: events, error: eErr } = await db
-      .from('experiment_events')
-      .select('event_name')
-      .in('session_id', sessions.map(s => s.session_id))
-
-    if (eErr) throw eErr
-
-    const eventCounts = {}
-    ;(events || []).forEach(e => {
-      eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1
-    })
+    // 6. Funnel — get event counts + per-session stats
+    const sessionIds = sessions.map(s => s.session_id)
+    let eventCounts = {}
+    const perSessionEvents = {} // { session_id: { count, lastEvent, lastAt } }
+    // Supabase .in() has a limit, batch if needed
+    for (let i = 0; i < sessionIds.length; i += 200) {
+      const batch = sessionIds.slice(i, i + 200)
+      const { data: events, error: eErr } = await db
+        .from('experiment_events')
+        .select('session_id,event_name,created_at')
+        .in('session_id', batch)
+      if (eErr) throw eErr
+      ;(events || []).forEach(e => {
+        eventCounts[e.event_name] = (eventCounts[e.event_name] || 0) + 1
+        // Track per-session
+        if (!perSessionEvents[e.session_id]) {
+          perSessionEvents[e.session_id] = { count: 0, lastEvent: e.event_name, lastAt: e.created_at }
+        }
+        perSessionEvents[e.session_id].count++
+        if (e.created_at > perSessionEvents[e.session_id].lastAt) {
+          perSessionEvents[e.session_id].lastEvent = e.event_name
+          perSessionEvents[e.session_id].lastAt = e.created_at
+        }
+      })
+    }
 
     // 7. Abandon phase breakdown
     const abandonPhases = {}
@@ -93,18 +106,29 @@ export default async function handler(req, res) {
     const heavyCount = sessions.filter(s => s.is_heavy_responder).length
 
     // 10. Recent sessions (last 50)
-    const recent = sessions.slice(0, 50).map(s => ({
-      session_id: s.session_id,
-      started_at: s.started_at,
-      outcome: s.outcome,
-      persona_name: s.persona_name,
-      booking_service: s.booking_service,
-      booking_location: s.booking_location,
-      duration_ms: s.duration_ms,
-      is_heavy_responder: s.is_heavy_responder,
-      utm_source: s.utm_source,
-      utm_campaign: s.utm_campaign,
-    }))
+    const recent = sessions.slice(0, 50).map(s => {
+      const pse = perSessionEvents[s.session_id]
+      return {
+        session_id: s.session_id,
+        started_at: s.started_at,
+        outcome: s.outcome,
+        persona_name: s.persona_name,
+        booking_service: s.booking_service,
+        booking_location: s.booking_location,
+        booking_provider: s.booking_provider,
+        duration_ms: s.duration_ms,
+        is_heavy_responder: s.is_heavy_responder,
+        utm_source: s.utm_source,
+        utm_campaign: s.utm_campaign,
+        contact_phone: s.contact_phone || null,
+        client_name: s.client_name || null,
+        client_email: s.client_email || null,
+        blvd_client_id: s.blvd_client_id || null,
+        appointment_id: s.appointment_id || null,
+        event_count: pse?.count || 0,
+        last_event: pse?.lastEvent || null,
+      }
+    })
 
     // 11. UTM source breakdown
     const utmSources = {}
@@ -113,10 +137,55 @@ export default async function handler(req, res) {
       utmSources[src] = (utmSources[src] || 0) + 1
     })
 
+    // Build funnel based on experiment type
+    const isReveal = expId === 'reveal_v1'
+    const funnel = isReveal
+      ? {
+          pageView: eventCounts.reveal_page_view || 0,
+          filterSubmit: eventCounts.reveal_filter_submit || 0,
+          boardLoaded: eventCounts.reveal_board_loaded || 0,
+          tileTap: eventCounts.reveal_tile_tap || 0,
+          bookingStart: eventCounts.reveal_booking_start || 0,
+          bookingComplete: eventCounts.reveal_booking_complete || 0,
+        }
+      : {
+          view: eventCounts.experiment_view || 0,
+          start: eventCounts.experiment_start || 0,
+          swipes: eventCounts.experiment_swipe || 0,
+          results: eventCounts.experiment_results_view || 0,
+          bookingStart: eventCounts.experiment_booking_start || 0,
+          bookingComplete: eventCounts.experiment_booking_complete || 0,
+        }
+
+    const goals = isReveal
+      ? {
+          bookings: { current: booked.length, target: 30 },
+          tileTaps: { current: eventCounts.reveal_tile_tap || 0, target: 100 },
+          boardViews: { current: eventCounts.reveal_board_loaded || 0, target: 200 },
+        }
+      : {
+          bookings: { current: booked.length, target: 60 },
+          memberships: { current: membershipClicked, target: 15 },
+          laserStarts: {
+            current: booked.filter(s => s.booking_service === 'laserhair').length,
+            target: 20,
+          },
+        }
+
+    // Reveal-specific: slots taken, alternatives shown
+    const revealExtras = isReveal
+      ? {
+          slotsTaken: eventCounts.reveal_slot_taken || 0,
+          alternativeTaps: eventCounts.reveal_alternative_tap || 0,
+          showMoreClicks: eventCounts.reveal_show_more || 0,
+        }
+      : null
+
     res.json({
       dateFrom,
       dateTo,
       experiment_id: expId,
+      isReveal,
       summary: {
         total,
         completed: completed.length,
@@ -129,22 +198,8 @@ export default async function handler(req, res) {
         heavyResponders: heavyCount,
         avgDurationMs: avgDuration,
       },
-      funnel: {
-        view: eventCounts.experiment_view || 0,
-        start: eventCounts.experiment_start || 0,
-        swipes: eventCounts.experiment_swipe || 0,
-        results: eventCounts.experiment_results_view || 0,
-        bookingStart: eventCounts.experiment_booking_start || 0,
-        bookingComplete: eventCounts.experiment_booking_complete || 0,
-      },
-      goals: {
-        bookings: { current: booked.length, target: 60 },
-        memberships: { current: membershipClicked, target: 15 },
-        laserStarts: {
-          current: booked.filter(s => s.booking_service === 'laserhair').length,
-          target: 20,
-        },
-      },
+      funnel,
+      goals,
       personas: personaCounts,
       services: {
         recommended: serviceRecommended,
@@ -154,9 +209,10 @@ export default async function handler(req, res) {
       abandonPhases,
       utmSources,
       recent,
+      revealExtras,
     })
   } catch (err) {
-    console.error('[admin/intelligence/experiments]', err.message)
-    res.status(500).json({ error: err.message })
+    console.error('[admin/intelligence/experiments]', err.message, err.stack)
+    res.status(500).json({ error: err.message || 'Unknown error' })
   }
 }

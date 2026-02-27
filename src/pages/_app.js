@@ -10,6 +10,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { useGAUX } from '@/hooks/useGAUX'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { captureTrackingToken } from '@/lib/trackingToken'
 
 // Extracted script components
 import AnalyticsScripts, { GA_ID } from '@/components/analytics/AnalyticsScripts'
@@ -18,6 +19,28 @@ import BoulevardScripts from '@/components/booking/BoulevardScripts'
 // Location preference provider & chooser
 import { LocationProvider } from '@/context/LocationContext'
 import LocationChooserModal from '@/components/location/LocationChooserModal'
+
+// Guard against React DOM crash when browser extensions or mobile autofill
+// modify the DOM outside of React's control. The "removeChild" error
+// ("The object can not be found here" on WebKit) happens when React tries
+// to unmount a node that was already moved/removed by SMS autofill or
+// password managers. This patch is a standard React community fix.
+if (typeof window !== 'undefined') {
+  const origRemoveChild = Node.prototype.removeChild
+  Node.prototype.removeChild = function (child) {
+    if (child.parentNode !== this) {
+      return child
+    }
+    return origRemoveChild.apply(this, arguments)
+  }
+  const origInsertBefore = Node.prototype.insertBefore
+  Node.prototype.insertBefore = function (newNode, refNode) {
+    if (refNode && refNode.parentNode !== this) {
+      return newNode
+    }
+    return origInsertBefore.apply(this, arguments)
+  }
+}
 
 // Pageview helpers
 function sendGAPageview(url) {
@@ -76,6 +99,9 @@ function MyApp({ Component, pageProps }) {
       router.events.off('hashChangeComplete', handleRoute)
     }
   }, [router.events])
+
+  // Capture Bird tracking token from ?t= on any page
+  useEffect(() => { captureTrackingToken() }, [])
 
   // Per-page layout: if a page exports getLayout, use it (e.g. preview pages bypass the default Layout)
   const getLayout = Component.getLayout

@@ -125,7 +125,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
       setConfirmEmail(email || data.confirmation?.email || '');
       setConfirmation(data);
       clearReferralCode();
-      if (onSuccess) onSuccess(data);
+      if (onSuccess) onSuccess({ ...data, phone: toE164(phone) });
       return { success: true };
     } catch (err) {
       return { error: err.message };

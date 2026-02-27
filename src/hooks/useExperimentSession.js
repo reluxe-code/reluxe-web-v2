@@ -2,6 +2,7 @@
 // Manages experiment session lifecycle: create on mount, update on transitions, finalize on unmount.
 import { useEffect, useRef, useCallback } from 'react'
 import trackExperimentEvent, { getDeviceId, flushExperimentEvents } from '@/lib/trackExperimentEvent'
+import { getTrackingToken } from '@/lib/trackingToken'
 
 function generateSessionId() {
   return 'exp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8)
@@ -18,6 +19,7 @@ function getAttribution() {
     utm_content: params.get('utm_content') || null,
     fbclid: params.get('fbclid') || null,
     gclid: params.get('gclid') || null,
+    tracking_token: getTrackingToken(),
   }
 }
 

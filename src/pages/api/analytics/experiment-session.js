@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const {
       session_id, experiment_id, device_id,
       referrer, utm_source, utm_medium, utm_campaign, utm_content,
-      fbclid, gclid,
+      fbclid, gclid, tracking_token,
     } = req.body
 
     if (!session_id) return res.status(400).json({ error: 'session_id required' })
@@ -23,6 +23,7 @@ export default async function handler(req, res) {
       utm_content: utm_content || null,
       fbclid: fbclid || null,
       gclid: gclid || null,
+      tracking_token: tracking_token || null,
     })
 
     if (error) {
@@ -43,10 +44,11 @@ export default async function handler(req, res) {
       'booking_started', 'booking_service', 'booking_location', 'booking_provider',
       'booking_completed', 'appointment_id',
       'membership_shown', 'membership_clicked',
-      'contact_phone', 'completed_at', 'duration_ms', 'last_activity',
+      'contact_phone', 'client_name', 'client_email', 'blvd_client_id',
+      'completed_at', 'duration_ms', 'last_activity',
       // Reveal Board fields (stored in existing JSONB columns)
       'filter_locations', 'filter_services', 'filter_when', 'filter_time_of_day',
-      'filter_provider', 'board_tile_count', 'bird_subscriber_id',
+      'filter_provider', 'board_tile_count', 'bird_subscriber_id', 'tracking_token',
     ]
     const updates = {}
     for (const key of allowed) {

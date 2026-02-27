@@ -5,7 +5,7 @@ import { trackBirdEvent } from '@/lib/birdTracking'
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
-  const { phone, appointmentId, serviceSlug, locationKey, bsid, sessionId } = req.body
+  const { phone, appointmentId, serviceSlug, locationKey, tracking_token, sessionId } = req.body
 
   if (!phone) return res.status(400).json({ error: 'phone is required' })
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         appointment_id: appointmentId || null,
         service: serviceSlug || null,
         location: locationKey || null,
-        bird_subscriber_id: bsid || null,
+        tracking_token: tracking_token || null,
         session_id: sessionId || null,
         source: 'reveal_board',
       }

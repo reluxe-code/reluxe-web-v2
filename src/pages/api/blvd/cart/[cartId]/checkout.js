@@ -8,6 +8,7 @@
 // client payment requirements.
 import { blvd } from '@/server/blvd'
 import { adminQuery } from '@/server/blvdAdmin'
+import { upsertBirdContact } from '@/lib/birdContacts'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -54,41 +55,28 @@ export default async function handler(req, res) {
       // Ownership set clientInformation — we're good
       console.log('[blvd/checkout] Using existing client info from ownership')
     } else if (ownershipVerified) {
-      // Ownership was taken but no client info on cart — need it from user
-      console.log('[blvd/checkout] Ownership verified but no client info on cart')
-      return res.status(422).json({
-        error: 'Please provide your details to complete the booking.',
-        needsClientInfo: true,
-      })
+      // Ownership was taken but no client info on cart — skip to Admin API checkout
+      console.log('[blvd/checkout] Ownership verified but no client info on cart — using Admin API')
     }
 
-    // Try normal SDK checkout first
+    // Try normal SDK checkout first, fall back to Admin API
     let result
     try {
       result = await cart.checkout()
     } catch (sdkErr) {
-      const msg = (sdkErr.message || '').toLowerCase()
-      const isPaymentError = msg.includes('payment') || msg.includes('card') || msg.includes('missing')
-      console.log('[blvd/checkout] SDK checkout failed:', sdkErr.message, '| isPaymentError:', isPaymentError)
-
-      if (isPaymentError) {
-        // Fall back to Admin API checkout — bypasses payment requirement
-        console.log('[blvd/checkout] Attempting Admin API checkout for cart:', cartId)
-        const adminResult = await adminQuery(
-          `mutation CheckoutCart($input: CheckoutCartInput!) {
-            checkoutCart(input: $input) {
-              cart { id completedAt }
-              appointments { appointmentId clientId forCartOwner }
-            }
-          }`,
-          { input: { id: cartId } }
-        )
-        result = adminResult.checkoutCart
-        console.log('[blvd/checkout] Admin API checkout succeeded')
-      } else {
-        // Not a payment error — rethrow
-        throw sdkErr
-      }
+      console.log('[blvd/checkout] SDK checkout failed:', sdkErr.message, '— falling back to Admin API')
+      // Fall back to Admin API checkout — bypasses payment/client info requirements
+      const adminResult = await adminQuery(
+        `mutation CheckoutCart($input: CheckoutCartInput!) {
+          checkoutCart(input: $input) {
+            cart { id completedAt }
+            appointments { appointmentId clientId forCartOwner }
+          }
+        }`,
+        { input: { id: cartId } }
+      )
+      result = adminResult.checkoutCart
+      console.log('[blvd/checkout] Admin API checkout succeeded')
     }
 
     const appointment = result.appointments?.[0]
@@ -111,6 +99,17 @@ export default async function handler(req, res) {
           bookingSessionId: bookingSessionId || null,
         }),
       }).catch((e) => console.warn('[checkout] referral attribution failed:', e.message))
+    }
+
+    // Fire-and-forget: upsert booking contact to Bird
+    const contactPhone = phone || ci.phoneNumber
+    if (contactPhone) {
+      upsertBirdContact({
+        phone: contactPhone,
+        email: (email || ci.email || '').toLowerCase() || undefined,
+        firstName: firstName || ci.firstName || undefined,
+        lastName: lastName || ci.lastName || undefined,
+      }).catch((err) => console.warn('[checkout] Bird sync failed:', err.message))
     }
 
     res.json({
