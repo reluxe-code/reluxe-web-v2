@@ -386,8 +386,29 @@ export default async function handler(req, res) {
       deduped.push(opening)
     }
 
-    const totalOpenings = deduped.length
-    const totalTodayOpenings = deduped.filter((o) => o.dayLabel === 'Today').length
+    // Diversity pass: spread services per provider so one service doesn't dominate.
+    // For each provider, allow max 2 slots per service before requiring a different service.
+    // This ensures aestheticians (who have 4-6 services) show variety on the board.
+    const MAX_PER_PROVIDER_SERVICE = 2
+    const diverse = []
+    const providerServiceCount = {} // "providerId:serviceSlug" -> count
+    const deferred = []
+
+    for (const opening of deduped) {
+      const psKey = `${opening.provider.id}:${opening.service.id}`
+      const count = providerServiceCount[psKey] || 0
+      if (count < MAX_PER_PROVIDER_SERVICE) {
+        providerServiceCount[psKey] = count + 1
+        diverse.push(opening)
+      } else {
+        deferred.push(opening)
+      }
+    }
+    // Append deferred slots at the end (still available, just lower priority)
+    diverse.push(...deferred)
+
+    const totalOpenings = diverse.length
+    const totalTodayOpenings = diverse.filter((o) => o.dayLabel === 'Today').length
 
     const payload = {
       windowStart: window.windowStart,
@@ -397,7 +418,7 @@ export default async function handler(req, res) {
       totalTodayOpenings,
       isAfterTwoPm: window.isAfterTwoPm,
       whyThisShowing: buildWhyShowingLine({ provider: selectedProvider, locationKey }),
-      openings: deduped.slice(0, limitNum).map((o) => ({
+      openings: diverse.slice(0, limitNum).map((o) => ({
         startAt: o.startAt,
         dayLabel: o.dayLabel,
         timeLabel: o.timeLabel,
