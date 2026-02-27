@@ -309,6 +309,11 @@ export default async function handler(req, res) {
       })
     )
 
+    const datesFulfilled = dateResults.filter((r) => r.status === 'fulfilled').length
+    const datesFailed = dateResults.filter((r) => r.status === 'rejected').length
+    const datesWithSlots = dateResults.filter((r) => r.status === 'fulfilled' && r.value.dates.length > 0).length
+    console.log(`[availability/today] combos=${selectedCombos.length} datesFulfilled=${datesFulfilled} datesFailed=${datesFailed} datesWithSlots=${datesWithSlots}`)
+
     const timeFetches = []
     for (const result of dateResults) {
       if (result.status !== 'fulfilled') continue
@@ -339,6 +344,11 @@ export default async function handler(req, res) {
         return { combo, date, times: normalized }
       })
     )
+
+    const timesFulfilled = timeResults.filter((r) => r.status === 'fulfilled').length
+    const timesFailed = timeResults.filter((r) => r.status === 'rejected').length
+    const timesWithSlots = timeResults.filter((r) => r.status === 'fulfilled' && r.value.times.length > 0).length
+    console.log(`[availability/today] timeFetches=${timeFetches.length} timesFulfilled=${timesFulfilled} timesFailed=${timesFailed} timesWithSlots=${timesWithSlots}`)
 
     const now = new Date()
     const openings = []
