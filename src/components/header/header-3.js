@@ -60,6 +60,14 @@ function HeaderTwo() {
 
                   <li className="relative group">
                     <Link
+                      href="/today"
+                      className={router.pathname === '/today' ? 'active' : ''}>
+                      <span>Now</span>
+                    </Link>
+                  </li>
+
+                  <li className="relative group">
+                    <Link
                       href="/services/"
                       className={router.pathname === '/services/' ? 'active' : ''}>
                       <span>Services</span>

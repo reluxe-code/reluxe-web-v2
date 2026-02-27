@@ -7,6 +7,12 @@ export const OffcanvasData = [
     },
     {
         id: 'menu-02',
+        title: 'Now',
+        path: '/today',
+        cName: 'offcanvas-text',
+    },
+    {
+        id: 'menu-02b',
         title: 'Team',
         path: '/team',
         cName: 'offcanvas-text',
