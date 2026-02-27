@@ -288,26 +288,35 @@ export default async function handler(req, res) {
     }
     const wantedDates = new Set(window.windowDates)
 
-    const dateResults = await Promise.allSettled(
-      selectedCombos.map(async (combo) => {
-        const dateCacheKey = `today-dates:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${window.windowStart}:${window.windowEnd}`
-        const dateCached = getCached(dateCacheKey, 60_000)
+    // Batch helper: run async tasks with limited concurrency to avoid Boulevard rate limits
+    async function batchSettled(items, fn, concurrency = 6) {
+      const results = []
+      for (let i = 0; i < items.length; i += concurrency) {
+        const batch = items.slice(i, i + concurrency)
+        const batchResults = await Promise.allSettled(batch.map(fn))
+        results.push(...batchResults)
+      }
+      return results
+    }
 
-        if (dateCached && !dateCached.stale) {
-          return { combo, dates: dateCached.data }
-        }
+    const dateResults = await batchSettled(selectedCombos, async (combo) => {
+      const dateCacheKey = `today-dates:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${window.windowStart}:${window.windowEnd}`
+      const dateCached = getCached(dateCacheKey, 60_000)
 
-        const { cart } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
-        const rawDates = await cart.getBookableDates({
-          searchRangeLower: window.windowStart,
-          searchRangeUpper: window.windowEnd,
-        })
-        const normalized = (rawDates || []).map((d) => (typeof d === 'string' ? d : d.date || d))
-        setCache(dateCacheKey, normalized)
+      if (dateCached && !dateCached.stale) {
+        return { combo, dates: dateCached.data }
+      }
 
-        return { combo, dates: normalized }
+      const { cart } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
+      const rawDates = await cart.getBookableDates({
+        searchRangeLower: window.windowStart,
+        searchRangeUpper: window.windowEnd,
       })
-    )
+      const normalized = (rawDates || []).map((d) => (typeof d === 'string' ? d : d.date || d))
+      setCache(dateCacheKey, normalized)
+
+      return { combo, dates: normalized }
+    }, 6)
 
     const datesFulfilled = dateResults.filter((r) => r.status === 'fulfilled').length
     const datesFailed = dateResults.filter((r) => r.status === 'rejected').length
@@ -324,26 +333,24 @@ export default async function handler(req, res) {
       }
     }
 
-    const timeResults = await Promise.allSettled(
-      timeFetches.map(async ({ combo, date }) => {
-        const timeCacheKey = `today-times:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${date}`
-        const timeCached = getCached(timeCacheKey, 60_000)
+    const timeResults = await batchSettled(timeFetches, async ({ combo, date }) => {
+      const timeCacheKey = `today-times:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${date}`
+      const timeCached = getCached(timeCacheKey, 60_000)
 
-        if (timeCached && !timeCached.stale) {
-          return { combo, date, times: timeCached.data }
-        }
+      if (timeCached && !timeCached.stale) {
+        return { combo, date, times: timeCached.data }
+      }
 
-        const { cart } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
-        const rawTimes = await cart.getBookableTimes({ date })
-        const normalized = (rawTimes || []).map((t) => ({
-          id: t.id || `${date}:${t.startTime}`,
-          startTime: t.startTime,
-        }))
+      const { cart } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
+      const rawTimes = await cart.getBookableTimes({ date })
+      const normalized = (rawTimes || []).map((t) => ({
+        id: t.id || `${date}:${t.startTime}`,
+        startTime: t.startTime,
+      }))
 
-        setCache(timeCacheKey, normalized)
-        return { combo, date, times: normalized }
-      })
-    )
+      setCache(timeCacheKey, normalized)
+      return { combo, date, times: normalized }
+    }, 6)
 
     const timesFulfilled = timeResults.filter((r) => r.status === 'fulfilled').length
     const timesFailed = timeResults.filter((r) => r.status === 'rejected').length
