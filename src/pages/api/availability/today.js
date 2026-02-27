@@ -227,7 +227,8 @@ export default async function handler(req, res) {
 
     const selectedProvider = filteredProviders.length === 1 ? filteredProviders[0] : null
 
-    const combos = []
+    // Build all valid provider×service×location combos
+    const allCombos = []
     for (const provider of filteredProviders) {
       const serviceMap = provider.boulevard_service_map || {}
       const mapSlugs = Object.keys(serviceMap)
@@ -245,7 +246,7 @@ export default async function handler(req, res) {
             continue
           }
 
-          combos.push({
+          allCombos.push({
             provider,
             providerId: provider.boulevard_provider_id,
             providerName: provider.name,
@@ -261,8 +262,30 @@ export default async function handler(req, res) {
       }
     }
 
-    // Avoid pathological call volume while still giving enough inventory depth.
-    const selectedCombos = combos.slice(0, 14)
+    // Prioritize: 1 combo per provider first (ensure everyone shows up),
+    // then backfill with remaining combos for service variety.
+    const MAX_COMBOS = 24
+    const selectedCombos = []
+    const usedProviders = new Set()
+    const usedKeys = new Set()
+
+    // Pass 1: one combo per provider (first service in their map)
+    for (const combo of allCombos) {
+      if (usedProviders.has(combo.providerId)) continue
+      usedProviders.add(combo.providerId)
+      const key = `${combo.providerId}:${combo.serviceItemId}:${combo.locationKey}`
+      usedKeys.add(key)
+      selectedCombos.push(combo)
+    }
+
+    // Pass 2: backfill remaining combos, up to MAX_COMBOS
+    for (const combo of allCombos) {
+      if (selectedCombos.length >= MAX_COMBOS) break
+      const key = `${combo.providerId}:${combo.serviceItemId}:${combo.locationKey}`
+      if (usedKeys.has(key)) continue
+      usedKeys.add(key)
+      selectedCombos.push(combo)
+    }
     const wantedDates = new Set(window.windowDates)
 
     const dateResults = await Promise.allSettled(
