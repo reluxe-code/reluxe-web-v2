@@ -113,6 +113,7 @@ function HeaderTwo({ sticky = true }) {
 
   // Desktop nav items
   const mainNav = [
+    { href: '/today', label: 'Now' },
     { href: '/services', label: 'Our Treatments' },
     { href: '/locations/westfield', label: 'Westfield' },
     { href: '/locations/carmel', label: 'Carmel' },
