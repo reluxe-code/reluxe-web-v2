@@ -1,6 +1,6 @@
 // src/pages/admin/boulevard-sync.js
 // Admin page: Boulevard Admin API connection test, backfill controls, sync monitoring.
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, Fragment } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { supabase } from '@/lib/supabase'
 
@@ -30,6 +30,18 @@ export default function BoulevardSync() {
   const [syncLogs, setSyncLogs] = useState([])
   const [stats, setStats] = useState(null)
   const [dateRange, setDateRange] = useState(null)
+  const [expandedLogId, setExpandedLogId] = useState(null)
+
+  // Entity browser
+  const [entityTab, setEntityTab] = useState('clients')
+  const [entityData, setEntityData] = useState([])
+  const [entityCount, setEntityCount] = useState(0)
+  const [entityPage, setEntityPage] = useState(1)
+  const [entityLoading, setEntityLoading] = useState(false)
+  const [entitySearch, setEntitySearch] = useState('')
+  const [entitySearchInput, setEntitySearchInput] = useState('')
+  const [entityFilters, setEntityFilters] = useState({})
+  const entitySearchTimer = useRef(null)
 
   // Load sync logs + stats on mount
   useEffect(() => { loadSyncLogs(); loadStats(); loadDateRange() }, [])
@@ -44,15 +56,19 @@ export default function BoulevardSync() {
   }
 
   async function loadStats() {
-    const [appts, clients, services] = await Promise.all([
+    const [appts, clients, services, memberships, packages] = await Promise.all([
       supabase.from('blvd_appointments').select('id', { count: 'exact', head: true }),
       supabase.from('blvd_clients').select('id', { count: 'exact', head: true }),
       supabase.from('blvd_appointment_services').select('id', { count: 'exact', head: true }),
+      supabase.from('blvd_memberships').select('id', { count: 'exact', head: true }),
+      supabase.from('blvd_packages').select('id', { count: 'exact', head: true }),
     ])
     setStats({
       appointments: appts.count || 0,
       clients: clients.count || 0,
       services: services.count || 0,
+      memberships: memberships.count || 0,
+      packages: packages.count || 0,
     })
   }
 
@@ -76,6 +92,90 @@ export default function BoulevardSync() {
       latest: latest.data?.start_at || null,
     })
   }
+
+  // Entity browser: debounced search
+  useEffect(() => {
+    entitySearchTimer.current = setTimeout(() => setEntitySearch(entitySearchInput), 400)
+    return () => clearTimeout(entitySearchTimer.current)
+  }, [entitySearchInput])
+
+  // Reset page on tab/filter/search change
+  useEffect(() => { setEntityPage(1) }, [entityTab, entitySearch, entityFilters])
+
+  const ENTITY_PAGE_SIZE = 25
+
+  const loadEntityData = useCallback(async () => {
+    setEntityLoading(true)
+    const from = (entityPage - 1) * ENTITY_PAGE_SIZE
+    const to = from + ENTITY_PAGE_SIZE - 1
+    let query, countQuery
+
+    switch (entityTab) {
+      case 'clients': {
+        query = supabase
+          .from('blvd_clients')
+          .select('id, first_name, last_name, name, email, phone, total_spend, visit_count, last_visit_at, account_credit, synced_at')
+          .order('synced_at', { ascending: false })
+          .range(from, to)
+        countQuery = supabase.from('blvd_clients').select('id', { count: 'exact', head: true })
+        if (entitySearch) {
+          query = query.or(`name.ilike.%${entitySearch}%,email.ilike.%${entitySearch}%,phone.ilike.%${entitySearch}%`)
+          countQuery = countQuery.or(`name.ilike.%${entitySearch}%,email.ilike.%${entitySearch}%,phone.ilike.%${entitySearch}%`)
+        }
+        break
+      }
+      case 'appointments': {
+        query = supabase
+          .from('blvd_appointments')
+          .select('id, start_at, status, location_key, cancelled_at, synced_at, blvd_clients(name)')
+          .order('start_at', { ascending: false })
+          .range(from, to)
+        countQuery = supabase.from('blvd_appointments').select('id', { count: 'exact', head: true })
+        if (entityFilters.status) {
+          query = query.eq('status', entityFilters.status)
+          countQuery = countQuery.eq('status', entityFilters.status)
+        }
+        if (entityFilters.location) {
+          query = query.eq('location_key', entityFilters.location)
+          countQuery = countQuery.eq('location_key', entityFilters.location)
+        }
+        break
+      }
+      case 'memberships': {
+        query = supabase
+          .from('blvd_memberships')
+          .select('id, name, status, start_on, unit_price, location_key, vouchers, synced_at, blvd_clients(name)')
+          .order('synced_at', { ascending: false })
+          .range(from, to)
+        countQuery = supabase.from('blvd_memberships').select('id', { count: 'exact', head: true })
+        if (entityFilters.status) {
+          query = query.eq('status', entityFilters.status)
+          countQuery = countQuery.eq('status', entityFilters.status)
+        }
+        break
+      }
+      case 'packages': {
+        query = supabase
+          .from('blvd_packages')
+          .select('id, name, status, purchased_at, expires_at, location_key, vouchers, synced_at, blvd_clients(name)')
+          .order('synced_at', { ascending: false })
+          .range(from, to)
+        countQuery = supabase.from('blvd_packages').select('id', { count: 'exact', head: true })
+        if (entityFilters.status) {
+          query = query.eq('status', entityFilters.status)
+          countQuery = countQuery.eq('status', entityFilters.status)
+        }
+        break
+      }
+    }
+
+    const [{ data }, { count }] = await Promise.all([query, countQuery])
+    setEntityData(data || [])
+    setEntityCount(count || 0)
+    setEntityLoading(false)
+  }, [entityTab, entityPage, entitySearch, entityFilters])
+
+  useEffect(() => { loadEntityData() }, [loadEntityData])
 
   // Test connection
   const handleTest = useCallback(async () => {
@@ -231,18 +331,26 @@ export default function BoulevardSync() {
 
       {/* Stats cards */}
       {stats && (
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="bg-white rounded-lg border p-4">
-            <p className="text-2xl font-bold">{stats.appointments.toLocaleString()}</p>
-            <p className="text-xs text-neutral-500">Appointments</p>
-          </div>
+        <div className="grid grid-cols-5 gap-4 mb-4">
           <div className="bg-white rounded-lg border p-4">
             <p className="text-2xl font-bold">{stats.clients.toLocaleString()}</p>
             <p className="text-xs text-neutral-500">Clients</p>
           </div>
           <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold">{stats.appointments.toLocaleString()}</p>
+            <p className="text-xs text-neutral-500">Appointments</p>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
             <p className="text-2xl font-bold">{stats.services.toLocaleString()}</p>
             <p className="text-xs text-neutral-500">Service Line Items</p>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold">{stats.memberships.toLocaleString()}</p>
+            <p className="text-xs text-neutral-500">Memberships</p>
+          </div>
+          <div className="bg-white rounded-lg border p-4">
+            <p className="text-2xl font-bold">{stats.packages.toLocaleString()}</p>
+            <p className="text-xs text-neutral-500">Packages</p>
           </div>
         </div>
       )}
@@ -418,7 +526,7 @@ export default function BoulevardSync() {
 
       {/* Sync log */}
       {syncLogs.length > 0 && (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-white rounded-xl border overflow-hidden mb-6">
           <div className="px-4 py-3 bg-neutral-50 border-b rounded-t-xl flex items-center justify-between">
             <h2 className="text-sm font-semibold">Sync History</h2>
             <button
@@ -431,6 +539,7 @@ export default function BoulevardSync() {
           <table className="w-full text-sm">
             <thead className="bg-neutral-50 border-b">
               <tr>
+                <th className="w-8 px-2 py-2" />
                 <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Type</th>
                 <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Status</th>
                 <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Records</th>
@@ -439,25 +548,359 @@ export default function BoulevardSync() {
               </tr>
             </thead>
             <tbody>
-              {syncLogs.map((log) => (
-                <tr key={log.id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                  <td className="px-4 py-2 font-medium text-xs">{log.sync_type}</td>
-                  <td className="px-4 py-2"><StatusBadge status={log.status} /></td>
-                  <td className="px-4 py-2 text-xs text-neutral-500">
-                    {log.records_processed || 0} processed, {log.records_created || 0} created
-                  </td>
-                  <td className="px-4 py-2 text-xs text-neutral-500">
-                    {new Date(log.started_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2 text-xs text-red-500 max-w-[200px] truncate">
-                    {log.error || '—'}
-                  </td>
-                </tr>
-              ))}
+              {syncLogs.map((log) => {
+                const isExpanded = expandedLogId === log.id
+                const meta = log.metadata || {}
+                const duration = log.completed_at && log.started_at
+                  ? Math.round((new Date(log.completed_at) - new Date(log.started_at)) / 1000)
+                  : null
+                return (
+                  <Fragment key={log.id}>
+                    <tr
+                      className="border-b hover:bg-neutral-50 cursor-pointer"
+                      onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                    >
+                      <td className="px-2 py-2 text-neutral-400">
+                        <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </td>
+                      <td className="px-4 py-2 font-medium text-xs">{log.sync_type}</td>
+                      <td className="px-4 py-2"><StatusBadge status={log.status} /></td>
+                      <td className="px-4 py-2 text-xs text-neutral-500">
+                        {log.records_processed || 0} processed, {log.records_created || 0} created
+                      </td>
+                      <td className="px-4 py-2 text-xs text-neutral-500">
+                        {new Date(log.started_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-red-500 max-w-[200px] truncate">
+                        {log.error || '—'}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 bg-neutral-50/70 border-b">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                            {duration != null && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{duration >= 60 ? `${Math.floor(duration / 60)}m ${duration % 60}s` : `${duration}s`}</p>
+                                <p className="text-[10px] text-neutral-500">Duration</p>
+                              </div>
+                            )}
+                            <div className="bg-white rounded-lg border p-2.5">
+                              <p className="text-sm font-bold">{log.records_processed || 0}</p>
+                              <p className="text-[10px] text-neutral-500">Processed</p>
+                            </div>
+                            <div className="bg-white rounded-lg border p-2.5">
+                              <p className="text-sm font-bold">{log.records_created || 0}</p>
+                              <p className="text-[10px] text-neutral-500">Created</p>
+                            </div>
+                            {(log.records_updated > 0) && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{log.records_updated}</p>
+                                <p className="text-[10px] text-neutral-500">Updated</p>
+                              </div>
+                            )}
+                            {meta.memberships_synced > 0 && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{meta.memberships_synced}</p>
+                                <p className="text-[10px] text-neutral-500">Memberships</p>
+                              </div>
+                            )}
+                            {meta.packages_synced > 0 && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{meta.packages_synced}</p>
+                                <p className="text-[10px] text-neutral-500">Packages</p>
+                              </div>
+                            )}
+                            {meta.credits_updated > 0 && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{meta.credits_updated}</p>
+                                <p className="text-[10px] text-neutral-500">Credits Updated</p>
+                              </div>
+                            )}
+                            {meta.lifecycle_updated > 0 && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{meta.lifecycle_updated}</p>
+                                <p className="text-[10px] text-neutral-500">Lifecycle Updated</p>
+                              </div>
+                            )}
+                            {meta.referral_enrolled > 0 && (
+                              <div className="bg-white rounded-lg border p-2.5">
+                                <p className="text-sm font-bold">{meta.referral_enrolled}</p>
+                                <p className="text-[10px] text-neutral-500">Referrals Enrolled</p>
+                              </div>
+                            )}
+                          </div>
+                          {meta.locations && (
+                            <p className="text-xs text-neutral-500 mb-1">
+                              <span className="font-medium text-neutral-600">Locations:</span> {Array.isArray(meta.locations) ? meta.locations.join(', ') : meta.locations}
+                            </p>
+                          )}
+                          {log.error && (
+                            <p className="text-xs text-red-600 mb-2 break-all">{log.error}</p>
+                          )}
+                          <details className="mt-2">
+                            <summary className="text-[10px] text-neutral-400 cursor-pointer hover:text-neutral-600">Raw metadata</summary>
+                            <pre className="mt-1 text-[10px] bg-white rounded border p-2 overflow-auto max-h-40 text-neutral-600">
+                              {JSON.stringify(meta, null, 2)}
+                            </pre>
+                          </details>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Entity browser */}
+      <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="px-4 py-3 bg-neutral-50 border-b rounded-t-xl flex items-center justify-between">
+          <div className="flex gap-1">
+            {[
+              { id: 'clients', label: 'Clients' },
+              { id: 'appointments', label: 'Appointments' },
+              { id: 'memberships', label: 'Memberships' },
+              { id: 'packages', label: 'Packages' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => { setEntityTab(tab.id); setEntitySearchInput(''); setEntityFilters({}) }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  entityTab === tab.id ? 'bg-black text-white' : 'text-neutral-600 hover:bg-neutral-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-neutral-400">{entityCount.toLocaleString()} total</span>
+        </div>
+
+        {/* Search / filters */}
+        <div className="px-4 py-3 border-b flex flex-wrap gap-3">
+          {entityTab === 'clients' && (
+            <input
+              type="text"
+              value={entitySearchInput}
+              onChange={(e) => setEntitySearchInput(e.target.value)}
+              placeholder="Search name, email, or phone..."
+              className="border rounded-lg px-3 py-2 text-sm bg-white w-72"
+            />
+          )}
+          {entityTab === 'appointments' && (
+            <>
+              <select
+                value={entityFilters.status || ''}
+                onChange={(e) => setEntityFilters((f) => ({ ...f, status: e.target.value || undefined }))}
+                className="border rounded-lg px-3 py-2 text-sm bg-white"
+              >
+                <option value="">All Statuses</option>
+                {['BOOKED', 'CONFIRMED', 'ARRIVED', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'NO_SHOW'].map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <select
+                value={entityFilters.location || ''}
+                onChange={(e) => setEntityFilters((f) => ({ ...f, location: e.target.value || undefined }))}
+                className="border rounded-lg px-3 py-2 text-sm bg-white"
+              >
+                <option value="">All Locations</option>
+                <option value="westfield">Westfield</option>
+                <option value="carmel">Carmel</option>
+              </select>
+            </>
+          )}
+          {entityTab === 'memberships' && (
+            <select
+              value={entityFilters.status || ''}
+              onChange={(e) => setEntityFilters((f) => ({ ...f, status: e.target.value || undefined }))}
+              className="border rounded-lg px-3 py-2 text-sm bg-white"
+            >
+              <option value="">All Statuses</option>
+              {['ACTIVE', 'CANCELLED', 'PAST_DUE', 'PAUSED'].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          )}
+          {entityTab === 'packages' && (
+            <select
+              value={entityFilters.status || ''}
+              onChange={(e) => setEntityFilters((f) => ({ ...f, status: e.target.value || undefined }))}
+              className="border rounded-lg px-3 py-2 text-sm bg-white"
+            >
+              <option value="">All Statuses</option>
+              {['ACTIVE', 'EXPIRED', 'COMPLETED', 'CANCELLED'].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {entityLoading && !entityData.length ? (
+          <div className="p-8 text-center text-neutral-400 text-sm">Loading...</div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-neutral-50 border-b">
+                  {entityTab === 'clients' && (
+                    <tr>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Name</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Email</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Phone</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Visits</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Spend</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Credit</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Last Visit</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Synced</th>
+                    </tr>
+                  )}
+                  {entityTab === 'appointments' && (
+                    <tr>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Client</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Date</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Status</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Location</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Synced</th>
+                    </tr>
+                  )}
+                  {entityTab === 'memberships' && (
+                    <tr>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Client</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Membership</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Status</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Start</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Price/mo</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Vouchers</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Synced</th>
+                    </tr>
+                  )}
+                  {entityTab === 'packages' && (
+                    <tr>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Client</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Package</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Status</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Purchased</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Expires</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Vouchers</th>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Synced</th>
+                    </tr>
+                  )}
+                </thead>
+                <tbody>
+                  {entityTab === 'clients' && entityData.map((row) => (
+                    <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
+                      <td className="px-4 py-2 font-medium">{row.name || `${row.first_name || ''} ${row.last_name || ''}`.trim() || '—'}</td>
+                      <td className="px-4 py-2 text-neutral-500 text-xs">{row.email || '—'}</td>
+                      <td className="px-4 py-2 text-neutral-500 text-xs">{row.phone || '—'}</td>
+                      <td className="px-4 py-2 text-right">{row.visit_count || 0}</td>
+                      <td className="px-4 py-2 text-right">${Math.round(Number(row.total_spend || 0)).toLocaleString()}</td>
+                      <td className="px-4 py-2 text-right">{row.account_credit > 0 ? `$${(row.account_credit / 100).toFixed(0)}` : '—'}</td>
+                      <td className="px-4 py-2 text-xs text-neutral-500">{row.last_visit_at ? new Date(row.last_visit_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—'}</td>
+                      <td className="px-4 py-2 text-xs text-neutral-400">{row.synced_at ? new Date(row.synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</td>
+                    </tr>
+                  ))}
+                  {entityTab === 'appointments' && entityData.map((row) => (
+                    <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
+                      <td className="px-4 py-2 font-medium">{row.blvd_clients?.name || '—'}</td>
+                      <td className="px-4 py-2 text-xs">{row.start_at ? new Date(row.start_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          row.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                          row.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                          row.status === 'ACTIVE' ? 'bg-blue-100 text-blue-700' :
+                          'bg-neutral-100 text-neutral-600'
+                        }`}>{row.status}</span>
+                      </td>
+                      <td className="px-4 py-2 text-xs text-neutral-500 capitalize">{row.location_key || '—'}</td>
+                      <td className="px-4 py-2 text-xs text-neutral-400">{row.synced_at ? new Date(row.synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</td>
+                    </tr>
+                  ))}
+                  {entityTab === 'memberships' && entityData.map((row) => {
+                    const vouchers = Array.isArray(row.vouchers) ? row.vouchers : (typeof row.vouchers === 'string' ? (() => { try { return JSON.parse(row.vouchers) } catch { return [] } })() : [])
+                    const voucherCount = vouchers.reduce((sum, v) => sum + (v.quantity || 0), 0)
+                    return (
+                      <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
+                        <td className="px-4 py-2 font-medium">{row.blvd_clients?.name || '—'}</td>
+                        <td className="px-4 py-2 text-xs">{row.name}</td>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            row.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' :
+                            row.status === 'CANCELLED' ? 'bg-neutral-100 text-neutral-500' :
+                            row.status === 'PAST_DUE' ? 'bg-red-100 text-red-700' :
+                            row.status === 'PAUSED' ? 'bg-amber-100 text-amber-700' :
+                            'bg-neutral-100 text-neutral-600'
+                          }`}>{row.status}</span>
+                        </td>
+                        <td className="px-4 py-2 text-xs text-neutral-500">{row.start_on ? new Date(row.start_on).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—'}</td>
+                        <td className="px-4 py-2 text-right text-xs">{row.unit_price ? `$${(row.unit_price / 100).toFixed(0)}` : '—'}</td>
+                        <td className="px-4 py-2 text-right">
+                          {voucherCount > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-xs font-medium" title={vouchers.map((v) => `${v.quantity}x ${v.services?.[0]?.name || 'voucher'}`).join(', ')}>
+                              {voucherCount}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-neutral-400">{row.synced_at ? new Date(row.synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</td>
+                      </tr>
+                    )
+                  })}
+                  {entityTab === 'packages' && entityData.map((row) => {
+                    const vouchers = Array.isArray(row.vouchers) ? row.vouchers : (typeof row.vouchers === 'string' ? (() => { try { return JSON.parse(row.vouchers) } catch { return [] } })() : [])
+                    const voucherCount = vouchers.reduce((sum, v) => sum + (v.quantity || 0), 0)
+                    const isExpired = row.expires_at && new Date(row.expires_at) < new Date()
+                    return (
+                      <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
+                        <td className="px-4 py-2 font-medium">{row.blvd_clients?.name || '—'}</td>
+                        <td className="px-4 py-2 text-xs">{row.name}</td>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            row.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' :
+                            row.status === 'EXPIRED' ? 'bg-red-100 text-red-700' :
+                            row.status === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
+                            'bg-neutral-100 text-neutral-600'
+                          }`}>{row.status}</span>
+                        </td>
+                        <td className="px-4 py-2 text-xs text-neutral-500">{row.purchased_at ? new Date(row.purchased_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—'}</td>
+                        <td className={`px-4 py-2 text-xs ${isExpired ? 'text-red-600 font-medium' : 'text-neutral-500'}`}>
+                          {row.expires_at ? new Date(row.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '—'}
+                        </td>
+                        <td className="px-4 py-2 text-right">
+                          {voucherCount > 0 ? (
+                            <span className="px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 text-xs font-medium" title={vouchers.map((v) => `${v.quantity}x ${v.services?.[0]?.name || 'voucher'}`).join(', ')}>
+                              {voucherCount}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-neutral-400">{row.synced_at ? new Date(row.synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}</td>
+                      </tr>
+                    )
+                  })}
+                  {entityData.length === 0 && (
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-neutral-400 text-sm">No records found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {entityCount > ENTITY_PAGE_SIZE && (
+              <div className="px-4 py-3 border-t flex items-center justify-between">
+                <p className="text-xs text-neutral-500">
+                  Showing {(entityPage - 1) * ENTITY_PAGE_SIZE + 1}–{Math.min(entityPage * ENTITY_PAGE_SIZE, entityCount)} of {entityCount.toLocaleString()}
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setEntityPage((p) => Math.max(1, p - 1))} disabled={entityPage <= 1} className="px-3 py-1 border rounded text-xs disabled:opacity-30 hover:bg-neutral-50">Previous</button>
+                  <button onClick={() => setEntityPage((p) => p + 1)} disabled={entityPage * ENTITY_PAGE_SIZE >= entityCount} className="px-3 py-1 border rounded text-xs disabled:opacity-30 hover:bg-neutral-50">Next</button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </AdminLayout>
   )
 }
