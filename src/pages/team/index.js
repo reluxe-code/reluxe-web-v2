@@ -208,7 +208,10 @@ function ProviderMatcher({ fonts, staffList }) {
 }
 
 function ReviewCarousel({ fonts, reviews: rawReviews }) {
-  const reviews = rawReviews.filter(r => (r.body || r.text || '').trim());
+  const reviews = rawReviews.filter(r => {
+    const raw = (r.body || r.text || '').replace(/<[^>]*>/g, '').trim();
+    return raw.length > 0;
+  });
   const [active, setActive] = useState(0);
   const visibleReviews = 3;
   if (!reviews.length) return null;
@@ -244,7 +247,7 @@ function ReviewCarousel({ fonts, reviews: rawReviews }) {
                 ))}
               </div>
               <p style={{ fontFamily: fonts.body, fontSize: typeScale.caption.size, color: colors.body, lineHeight: 1.6, marginBottom: '1rem', fontStyle: 'italic' }}>
-                &ldquo;{review.body || review.text}&rdquo;
+                &ldquo;{(review.body || review.text || '').replace(/<[^>]*>/g, '').trim()}&rdquo;
               </p>
               <div className="flex items-center gap-2 pt-3" style={{ borderTop: `1px solid ${colors.stone}` }}>
                 <div className="flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: `${colors.violet}10` }}>
@@ -276,12 +279,15 @@ function TeamPage({ fontKey, fonts, staffList, testimonials }) {
   });
   const nonEmpty = categories.filter(c => grouped[c].length > 0);
 
-  // Featured provider = first injector (usually the owner)
-  const featured = grouped.Injectors?.[0];
+  // Featured provider = rotate daily among injectors
+  const injectors = grouped.Injectors || [];
+  const dayIndex = new Date().getDate() % (injectors.length || 1);
+  const featured = injectors[dayIndex] || injectors[0];
   const featuredImg = featured?.featuredImage?.node?.sourceUrl;
   const featuredSubtitle = deriveSubtitle(featured);
   const featuredSpecialties = (featured?.staffFields?.specialties || []).map(s => s?.specialty || s).filter(Boolean);
-  const featuredBio = featured?.staffFields?.staffBio || '';
+  const featuredBioRaw = featured?.staffFields?.staffBio || '';
+  const featuredBio = featuredBioRaw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
   return (
     <>

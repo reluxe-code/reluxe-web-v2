@@ -725,3 +725,5 @@ export default function ReferralLandingPage({ code, referrerName, tier }) {
     </>
   )
 }
+
+ReferralLandingPage.getLayout = (page) => page

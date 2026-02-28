@@ -56,10 +56,10 @@ const REGISTRY = [
 // Safety: if a file is missing, fall back to default for that slug
 function withFallback(list) {
   const bySlug = new Map(list.filter(Boolean).map(s => [s.slug, s]));
-  ALL_DEFAULT_SLUGS.forEach(slug => {
-    if (!bySlug.has(slug)) {
-      const fallback = getDefaultService(slug);
-      if (fallback) bySlug.set(slug, fallback);
+  ALL_DEFAULT_SLUGS.forEach(key => {
+    const fallback = getDefaultService(key);
+    if (fallback && !bySlug.has(fallback.slug)) {
+      bySlug.set(fallback.slug, fallback);
     }
   });
   return Array.from(bySlug.values());
