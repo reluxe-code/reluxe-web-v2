@@ -10,7 +10,7 @@ import { useRouter } from 'next/router';
 function MobileTabBar({ isActivePath }) {
   const tabs = [
     { href: '/services',    label: 'Services',  Icon: FiGrid },
-    { href: '/deals',      label: 'Deals',    Icon: FiTag },   // update/rename if needed
+    { href: '/specials',   label: 'Specials', Icon: FiTag },
     { href: '/book/westfield',        label: 'Book WSTFLD',      Icon: FiCalendar },
     { href: '/book/carmel',        label: 'Book CRML',      Icon: FiCalendar },
     { href: '/locations',   label: 'Locations', Icon: FiMapPin },

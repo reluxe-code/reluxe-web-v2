@@ -152,7 +152,7 @@ module.exports = {
     else if (path === '/gift-cards') { priority = 0.75; changefreq = 'monthly'; }
     else if (path === '/rewards') { priority = 0.7; changefreq = 'monthly'; }
     // ── Deals ──
-    else if (path === '/hot-deals' || path === '/deals') { priority = 0.9; changefreq = 'daily'; }
+    else if (path === '/hot-deals' || path === '/deals' || path === '/specials') { priority = 0.9; changefreq = 'daily'; }
     else if (path.startsWith('/hot-deals/')) { priority = 0.85; changefreq = 'daily'; }
     else if (path === '/flash-sales' || path === '/black-friday') { priority = 0.8; changefreq = 'daily'; }
     // ── Reviews / results ──

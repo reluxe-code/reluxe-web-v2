@@ -127,7 +127,7 @@ function HeaderTwo({ sticky = true }) {
 
   // Utility bar items (right side)
   const utilItems = [
-    { href: '/deals', label: 'Deals' },
+    { href: '/specials', label: 'Specials' },
     { href: 'https://blvd.me/reluxemedspa/gift-cards', label: 'Gift Cards', external: true },
     { href: '/memberships', label: 'Memberships' },
     { href: '/reviews', label: 'Reviews' },
@@ -383,7 +383,7 @@ function HeaderTwo({ sticky = true }) {
               ];
 
               const dealsGifts = [
-                { href: '/deals', label: 'Current Deals' },
+                { href: '/specials', label: 'Current Specials' },
                 { href: 'https://blvd.me/reluxemedspa/gift-cards', label: 'Gift Cards', external: true },
                 { href: '/memberships', label: 'Memberships' },
                 { href: '/cherry-financing', label: 'Cherry Financing' },
@@ -471,7 +471,7 @@ function HeaderTwo({ sticky = true }) {
 
                   {/* Groups */}
                   <div className="space-y-4 pb-6">
-                    <Group title="Deals & Gifts" items={dealsGifts} defaultOpen />
+                    <Group title="Specials & Gifts" items={dealsGifts} defaultOpen />
                     <Group title="Treatments" items={services} defaultOpen />
                     <Group title="About & Providers" items={aboutTeam} />
                     <Group title="Events & Occasions" items={events} />

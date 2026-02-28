@@ -16,7 +16,7 @@ export default function TextListSignupCTA() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 md:flex-row">
         {/* Headline */}
         <div className="text-center md:text-left">
-          <h2 className="mb-1 text-2xl font-semibold">Want exclusive deals?</h2>
+          <h2 className="mb-1 text-2xl font-semibold">Want exclusive specials?</h2>
           <p className="text-sm text-gray-300">
             Join our text list & get VIP-only specials straight to your phone.
           </p>

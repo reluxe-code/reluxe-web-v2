@@ -23,6 +23,7 @@ const nextConfig = {
       //
       // --- Explicit page redirects ---
       //
+      { source: '/deals', destination: '/specials', permanent: true },
       { source: '/blog-2', destination: '/blog', permanent: true },
       { source: '/gift-cards-products-2', destination: '/shop', permanent: true },
       { source: '/online-booking', destination: '/book', permanent: true },
@@ -59,15 +60,15 @@ const nextConfig = {
       { source: '/spafinder-gift-cards-accepted-at-reluxe-med-spa-in-westfield-in', destination: '/shop', permanent: true },
       { source: '/book-botox-krista', destination: '/book/tox', permanent: true },
       { source: '/wedding', destination: '/weddings', permanent: true },
-      { source: '/mothers-day-specials', destination: '/deals', permanent: true },
+      { source: '/mothers-day-specials', destination: '/specials', permanent: true },
       { source: '/book-ipl-refresh', destination: '/services/ipl', permanent: true },
 
       { source: '/privacy-policy-2', destination: '/privacy-policy', permanent: true },
-      { source: '/book-yelp-vip', destination: '/deals', permanent: true },
+      { source: '/book-yelp-vip', destination: '/specials', permanent: true },
       { source: '/book-facial-offer', destination: '/book/facials', permanent: true },
       { source: '/book-now-v2', destination: '/book', permanent: true },
       { source: '/book-now-v3', destination: '/book', permanent: true },
-      { source: '/book-summer-special', destination: '/deals', permanent: true },
+      { source: '/book-summer-special', destination: '/specials', permanent: true },
       { source: '/book-summer-facial', destination: '/services/facials', permanent: true },
       // skipped: /return-policy -> /return-policy (circular)
       { source: '/book-massage-special', destination: '/book/massage', permanent: true },
@@ -104,7 +105,7 @@ const nextConfig = {
       { source: '/our-services/botox-treatments', destination: '/services/botox', permanent: true },
       { source: '/spafinder-gift-card-accepted-faqs', destination: '/shop', permanent: true },
       { source: '/book-glo2-offer', destination: '/services/glo2facial', permanent: true },
-      { source: '/current-specials', destination: '/deals', permanent: true },
+      { source: '/current-specials', destination: '/specials', permanent: true },
       { source: '/conditions/hair-removal', destination: '/services/laser-hair-removal', permanent: true },
 
       { source: '/beautybash24', destination: '/beauty-bash', permanent: true },
@@ -119,10 +120,10 @@ const nextConfig = {
       { source: '/about-reluxe-med-spa-in-westfield-indiana', destination: '/about', permanent: true },
 
       { source: '/book-tox-bonus', destination: '/book/tox', permanent: true },
-      { source: '/tox-specials', destination: '/deals', permanent: true },
-      { source: '/jeuveau-wrinkle-reset-duo-special', destination: '/deals', permanent: true },
-      { source: '/wrinkle-reset-duo-special', destination: '/deals', permanent: true },
-      { source: '/jeuveau-special', destination: '/deals', permanent: true },
+      { source: '/tox-specials', destination: '/specials', permanent: true },
+      { source: '/jeuveau-wrinkle-reset-duo-special', destination: '/specials', permanent: true },
+      { source: '/wrinkle-reset-duo-special', destination: '/specials', permanent: true },
+      { source: '/jeuveau-special', destination: '/specials', permanent: true },
 
       { source: '/wedding-raffle', destination: '/weddings', permanent: true },
       // skipped: /treatment-instructions -> /treatment-instructions (circular)

@@ -70,10 +70,10 @@ function playBuzz(ms = 1600) {
 }
 
 export default function SmartPromoModal({
-  id = "reluxe-deals",
-  title = "This Month’s Deals",
-  ctaText = "See Monthly Deals",
-  ctaHref = "/deals",
+  id = "reluxe-specials",
+  title = "This Month’s Specials",
+  ctaText = "See Monthly Specials",
+  ctaHref = "/specials",
   trigger = "both",
   delay = 1200,
   frequencyDays = 30,
