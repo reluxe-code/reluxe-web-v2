@@ -2,7 +2,7 @@
 // POST: compute all cohort candidates, apply anti-spam, insert into concierge_queue.
 import crypto from 'crypto'
 import { getServiceClient } from '@/lib/supabase'
-import { computeToxJourney, computeVoucherRecovery, computeAestheticWinback, computeLastMinuteGap } from '@/lib/concierge/cohorts'
+import { computeToxJourney, computeVoucherRecovery, computeAestheticWinback, computeLastMinuteGap, computePackageVoucherRecovery } from '@/lib/concierge/cohorts'
 import { applyAntiSpam } from '@/lib/concierge/antiSpam'
 import { buildSmsBody, pickVariant } from '@/lib/concierge/smsBuilder'
 import { generateConciergeLink } from '@/lib/concierge/linkService'
@@ -11,9 +11,10 @@ export const config = { maxDuration: 60 }
 
 const COHORT_FUNCTIONS = {
   tox_journey: computeToxJourney,
-  voucher_recovery: computeVoucherRecovery,
+  membership_voucher: computeVoucherRecovery,
   aesthetic_winback: computeAestheticWinback,
   last_minute_gap: computeLastMinuteGap,
+  package_voucher: computePackageVoucherRecovery,
 }
 
 export default async function handler(req, res) {
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
       if (!computeFn) continue
 
       try {
-        const candidates = await computeFn(db)
+        const candidates = await computeFn(db, engineConfig)
         cohortCounts[cohortKey] = { computed: candidates.length }
         allCandidates.push(...candidates)
       } catch (err) {
@@ -202,17 +203,20 @@ export default async function handler(req, res) {
 
       const cohortMeta = {
         tox_journey: { cohort: 'P1', priority: 1 },
-        voucher_recovery: { cohort: 'P2', priority: 2 },
+        membership_voucher: { cohort: 'P2', priority: 2 },
         aesthetic_winback: { cohort: 'P3', priority: 3 },
         last_minute_gap: { cohort: 'P4', priority: 4 },
+        package_voucher: { cohort: 'P5', priority: 5 },
       }[cohortKey] || { cohort: 'P0', priority: 0 }
 
       const testCandidate = {
         first_name: 'Kyle',
         provider_name: testProvider.name,
-        service_name: cohortKey === 'aesthetic_winback' ? 'HydraFacial' : 'Tox Treatment',
+        service_name: cohortKey === 'aesthetic_winback' ? 'HydraFacial' : cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : 'Tox Treatment',
         days_overdue: 30,
-        voucher_service: 'Monthly Facial',
+        voucher_service: cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : 'Monthly Facial',
+        sessions_remaining: cohortKey === 'package_voucher' ? 2 : undefined,
+        voucher_expiry_text: cohortKey === 'package_voucher' ? 'Heads up - these expire Jun 30, 2027. ' : undefined,
         location_key: 'westfield',
         account_credit: creditReminderThreshold > 0 ? 15000 : 0, // $150 test credit
       }

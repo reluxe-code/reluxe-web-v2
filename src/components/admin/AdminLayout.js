@@ -22,18 +22,18 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/products', label: 'Products' },
       { href: '/admin/intelligence/referrals', label: 'Referrals' },
       { href: '/admin/intelligence/leads', label: 'Leads' },
+      { href: '/admin/intelligence/content-engagement', label: 'Content Engagement' },
+      { href: '/admin/intelligence/experiments', label: 'Experiments' },
     ],
   },
   {
     label: 'Marketing',
-    href: '/admin/marketing',
     children: [
       { href: '/admin/intelligence/concierge', label: 'Daily Concierge' },
     ],
   },
   {
     label: 'Content',
-    href: '/admin/content',
     children: [
       { href: '/admin/blog', label: 'Blog Posts' },
       { href: '/admin/deals', label: 'Deals' },
@@ -44,7 +44,6 @@ const NAV_ITEMS = [
   },
   {
     label: 'Programs',
-    href: '/admin/programs',
     children: [
       { href: '/admin/memberships', label: 'Memberships & Credits' },
       { href: '/admin/velocity', label: 'Velocity Rewards' },
@@ -53,7 +52,6 @@ const NAV_ITEMS = [
   },
   {
     label: 'Operations',
-    href: '/admin/operations',
     children: [
       { href: '/admin/staff', label: 'Staff' },
       { href: '/admin/products', label: 'Products' },
@@ -117,19 +115,23 @@ export default function AdminLayout({ children }) {
           {NAV_ITEMS.map((item) => {
             if (item.children) {
               const childPaths = item.children.map((c) => c.href)
-              const isExpanded = router.pathname.startsWith(item.href) || childPaths.some((p) => router.pathname === p)
+              const isExpanded = (item.href && router.pathname.startsWith(item.href)) || childPaths.some((p) => router.pathname === p || router.pathname.startsWith(p + '/'))
+              const sectionHref = item.href || item.children[0]?.href
+              const HeaderTag = item.href ? Link : 'button'
+              const headerProps = item.href ? { href: item.href } : { type: 'button' }
               return (
                 <div key={item.label}>
-                  <Link
-                    href={item.href}
-                    className={`block px-3 py-2 rounded-lg text-sm transition ${
+                  <HeaderTag
+                    {...headerProps}
+                    onClick={!item.href ? () => router.push(sectionHref) : undefined}
+                    className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition ${
                       isExpanded
                         ? 'bg-neutral-700 text-white font-medium'
                         : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
                     }`}
                   >
                     {item.label}
-                  </Link>
+                  </HeaderTag>
                   {isExpanded && (
                     <div className="ml-3 mt-1 space-y-0.5 border-l border-neutral-700 pl-3">
                       {item.children.map((child) => {

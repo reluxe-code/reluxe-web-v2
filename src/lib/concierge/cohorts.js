@@ -8,6 +8,17 @@ const MIN_VISITS_FOR_PERSONALIZED_INTERVAL = 3
 const FACIAL_SLUGS = ['facials', 'glo2facial', 'hydrafacial']
 const FACIAL_WINBACK_WINDOW = { min: 55, max: 65 } // ~60 days
 
+// Series treatment slugs and their default intervals (days) for package voucher recovery.
+// Overridden by engineConfig.series_intervals when available.
+const SERIES_SLUG_PATTERNS = {
+  morpheus8: /morpheus|rf micro/i,
+  microneedling: /skinpen|skin pen|micro.?needl/i,
+  ipl: /ipl|bbl|photofacial|clearlift|opus/i,
+  'laser-hair-removal': /laser hair|lhr/i,
+}
+const DEFAULT_SERIES_INTERVALS = { morpheus8: 42, microneedling: 28, ipl: 28, 'laser-hair-removal': 42 }
+const DEFAULT_STANDALONE_INACTIVITY_DAYS = 21
+
 /**
  * Fetch all rows from a Supabase query, paginating past the 1000-row default.
  */
@@ -210,7 +221,7 @@ export async function computeVoucherRecovery(db) {
       client_id: client.id,
       phone: client.phone,
       first_name: client.first_name || client.name?.split(' ')[0] || null,
-      campaign_slug: 'voucher_recovery',
+      campaign_slug: 'membership_voucher',
       cohort: 'P2',
       priority: 2,
       provider_staff_id: providerId || null,
@@ -473,6 +484,228 @@ export async function computeLastMinuteGap(db) {
   }
 
   return candidates
+}
+
+// ============================================================
+// Cohort 5: Package Voucher Recovery (Priority 5)
+// ============================================================
+/**
+ * Finds patients with unused package vouchers.
+ * - Series treatments (Morpheus, SkinPen, IPL, Laser Hair): due based on per-service interval
+ * - Standalone (facials, massages, etc.): due after 21 days of inactivity
+ * - Expiry urgency: boosts priority + adds reminder text at 90/30/7 days before expiration
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} db
+ * @param {object} engineConfig - Concierge engine config from site_config
+ * @returns {Promise<Array>} candidates
+ */
+export async function computePackageVoucherRecovery(db, engineConfig = {}) {
+  const seriesIntervals = { ...DEFAULT_SERIES_INTERVALS, ...(engineConfig.series_intervals || {}) }
+  const standaloneInactivityDays = Number(engineConfig.package_standalone_inactivity_days || DEFAULT_STANDALONE_INACTIVITY_DAYS)
+  const expiryReminderDays = engineConfig.package_expiry_reminder_days || [90, 30, 7]
+
+  // Fetch active packages with unused vouchers
+  const packages = await fetchAllRows(() =>
+    db
+      .from('blvd_packages')
+      .select('id, client_id, client_boulevard_id, name, vouchers, location_key, purchased_at, expires_at')
+      .in('status', ['ACTIVE'])
+      .not('vouchers', 'is', null)
+  )
+
+  if (!packages.length) return []
+
+  // Filter to packages with unused vouchers (handle string + native JSONB)
+  const withVouchers = packages.filter((pkg) => {
+    let v = pkg.vouchers
+    if (!v) return false
+    if (typeof v === 'string') { try { v = JSON.parse(v) } catch { return false } }
+    if (!Array.isArray(v)) return false
+    pkg.vouchers = v
+    return v.some((item) => item.quantity > 0)
+  })
+
+  if (!withVouchers.length) return []
+
+  // Get client details
+  const clientIds = [...new Set(withVouchers.map((p) => p.client_id).filter(Boolean))]
+  const { data: clients } = await db
+    .from('blvd_clients')
+    .select('id, first_name, last_name, name, phone, email, last_visit_at')
+    .in('id', clientIds)
+    .not('phone', 'is', null)
+
+  const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]))
+
+  // Get upcoming appointments
+  const bookedSet = await getUpcomingBookedClients(db, clientIds)
+
+  // Get last appointment per client per service slug (for series timing)
+  const { data: recentSvcAppts } = await db
+    .from('blvd_appointment_services')
+    .select('service_slug, provider_staff_id, blvd_appointments!inner(client_id, start_at, status)')
+    .in('blvd_appointments.client_id', clientIds)
+    .in('blvd_appointments.status', ['completed', 'final'])
+    .order('blvd_appointments(start_at)', { ascending: false })
+
+  // Build map: clientId → { serviceSlug → { start_at, provider_staff_id } }
+  const clientServiceMap = {}
+  for (const row of recentSvcAppts || []) {
+    const appt = row.blvd_appointments
+    if (!appt?.client_id || !row.service_slug) continue
+    if (!clientServiceMap[appt.client_id]) clientServiceMap[appt.client_id] = {}
+    if (!clientServiceMap[appt.client_id][row.service_slug]) {
+      clientServiceMap[appt.client_id][row.service_slug] = {
+        start_at: appt.start_at,
+        provider_staff_id: row.provider_staff_id,
+      }
+    }
+  }
+
+  // Also get most recent provider per client (for standalone vouchers)
+  const clientProviderMap = {}
+  for (const row of recentSvcAppts || []) {
+    const appt = row.blvd_appointments
+    if (!appt?.client_id || clientProviderMap[appt.client_id]) continue
+    if (row.provider_staff_id) {
+      clientProviderMap[appt.client_id] = row.provider_staff_id
+    }
+  }
+
+  const allProviderIds = [...new Set([
+    ...Object.values(clientProviderMap),
+    ...(Object.values(clientServiceMap).flatMap((m) => Object.values(m).map((v) => v.provider_staff_id))),
+  ].filter(Boolean))]
+  const staffLookup = await getStaffLookup(db, allProviderIds)
+
+  const now = Date.now()
+  const dayMs = 24 * 60 * 60 * 1000
+  const candidates = []
+
+  for (const pkg of withVouchers) {
+    const client = clientMap[pkg.client_id]
+    if (!client) continue
+    if (bookedSet.has(client.id)) continue
+
+    // Compute expiry info
+    const expiresAt = pkg.expires_at ? new Date(pkg.expires_at) : null
+    const daysUntilExpiry = expiresAt ? Math.round((expiresAt.getTime() - now) / dayMs) : null
+    if (expiresAt && daysUntilExpiry < 0) continue // already expired
+
+    let expiryText = ''
+    let priorityBoost = 5 // default P5
+    if (daysUntilExpiry != null) {
+      const [tier1, tier2, tier3] = expiryReminderDays
+      const expiryDateStr = expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      if (daysUntilExpiry <= tier3) {
+        expiryText = `Last chance - these expire ${expiryDateStr}! `
+        priorityBoost = 1
+      } else if (daysUntilExpiry <= tier2) {
+        expiryText = `Don't forget - these expire ${expiryDateStr}! `
+        priorityBoost = 2
+      } else if (daysUntilExpiry <= tier1) {
+        expiryText = `Heads up - these expire ${expiryDateStr}. `
+        priorityBoost = 3
+      }
+    }
+
+    // Process each unused voucher in the package
+    for (const voucher of pkg.vouchers) {
+      if (!voucher.quantity || voucher.quantity <= 0) continue
+
+      const serviceName = voucher.services?.[0]?.name || pkg.name
+      const serviceSlug = classifySeriesService(serviceName)
+      const isSeries = !!serviceSlug
+
+      let daysOverdue = 0
+      let providerId = null
+      let logicLines = [`Package: ${pkg.name}`, `Voucher: ${serviceName} (${voucher.quantity} remaining)`]
+
+      if (isSeries) {
+        // Series: check last appointment for this service type
+        const interval = seriesIntervals[serviceSlug] || 42
+        const lastAppt = clientServiceMap[client.id]?.[serviceSlug]
+
+        if (lastAppt) {
+          const daysSince = Math.round((now - new Date(lastAppt.start_at).getTime()) / dayMs)
+          daysOverdue = daysSince - interval
+          if (daysOverdue < 0) continue // not due yet
+          providerId = lastAppt.provider_staff_id
+          logicLines.push(
+            `Series type: ${serviceSlug} (${interval}-day interval)`,
+            `Last session: ${daysSince} days ago`,
+            `Overdue by: ${daysOverdue} days`,
+          )
+        } else {
+          // No prior session found — they bought but never started, include them
+          daysOverdue = 0
+          logicLines.push(
+            `Series type: ${serviceSlug} (${interval}-day interval)`,
+            'No prior session found — package unused',
+          )
+        }
+      } else {
+        // Standalone: check last_visit_at
+        const daysSinceVisit = client.last_visit_at
+          ? Math.round((now - new Date(client.last_visit_at).getTime()) / dayMs)
+          : null
+
+        if (daysSinceVisit != null && daysSinceVisit < standaloneInactivityDays) continue // visited recently
+
+        daysOverdue = daysSinceVisit != null ? daysSinceVisit - standaloneInactivityDays : 0
+        providerId = clientProviderMap[client.id] || null
+        logicLines.push(
+          `Standalone voucher (${standaloneInactivityDays}-day inactivity threshold)`,
+          daysSinceVisit != null ? `No visit in ${daysSinceVisit} days` : 'No visit on record',
+        )
+      }
+
+      // Skip if this client already added (from another voucher in same/different package)
+      if (candidates.some((c) => c.client_id === client.id && c.voucher_service === serviceName)) continue
+
+      const staff = providerId ? staffLookup[providerId] : null
+
+      if (daysUntilExpiry != null) {
+        logicLines.push(`Expires: ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} (${daysUntilExpiry} days)`)
+      }
+      if (staff) logicLines.push(`Provider: ${staff.name}`)
+      logicLines.push('No upcoming appointment')
+
+      candidates.push({
+        client_id: client.id,
+        phone: client.phone,
+        first_name: client.first_name || client.name?.split(' ')[0] || null,
+        campaign_slug: 'package_voucher',
+        cohort: 'P5',
+        priority: priorityBoost,
+        provider_staff_id: providerId,
+        provider_name: staff?.name || null,
+        provider_slug: staff?.slug || null,
+        service_name: serviceName,
+        service_slug: serviceSlug,
+        voucher_service: serviceName,
+        sessions_remaining: voucher.quantity,
+        voucher_expiry_text: expiryText,
+        location_key: pkg.location_key,
+        days_overdue: daysOverdue,
+        avg_interval: null,
+        logic_trace: logicLines,
+      })
+    }
+  }
+
+  return candidates
+}
+
+/**
+ * Classify a service name as a series treatment slug, or null if standalone.
+ */
+function classifySeriesService(name) {
+  const n = (name || '').toLowerCase()
+  for (const [slug, pattern] of Object.entries(SERIES_SLUG_PATTERNS)) {
+    if (pattern.test(n)) return slug
+  }
+  return null
 }
 
 // ============================================================

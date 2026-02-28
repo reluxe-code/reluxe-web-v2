@@ -51,6 +51,8 @@ export function buildSmsBody(template, candidate, bookingUrl, opts = {}) {
     service_name: candidate.service_name || 'your treatment',
     days_overdue: String(candidate.days_overdue || ''),
     voucher_service: candidate.voucher_service || candidate.service_name || 'your service',
+    sessions_remaining: String(candidate.sessions_remaining || ''),
+    voucher_expiry: candidate.voucher_expiry_text || '',
     location_name: LOCATION_NAMES[candidate.location_key] || candidate.location_key || '',
     booking_link: bookingUrl || '',
     credit_reminder: creditReminder,

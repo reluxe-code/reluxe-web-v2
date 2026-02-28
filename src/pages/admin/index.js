@@ -207,9 +207,10 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   {[
                     { slug: 'tox_journey', label: 'Tox Journey', color: 'bg-violet-500' },
-                    { slug: 'voucher_recovery', label: 'Voucher Recovery', color: 'bg-blue-500' },
+                    { slug: 'membership_voucher', label: 'Membership Voucher', color: 'bg-blue-500' },
                     { slug: 'aesthetic_winback', label: 'Aesthetic Winback', color: 'bg-fuchsia-500' },
                     { slug: 'last_minute_gap', label: 'Last-Minute Gap', color: 'bg-amber-500' },
+                    { slug: 'package_voucher', label: 'Package Voucher', color: 'bg-teal-500' },
                   ].map(({ slug, label, color }) => {
                     const ready = concierge.ready_counts?.[slug] || 0
                     const flagged = concierge.flagged_counts?.[slug] || 0

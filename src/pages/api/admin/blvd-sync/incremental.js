@@ -80,6 +80,28 @@ const MEMBERSHIPS_QUERY = `
   }
 `
 
+const PACKAGES_QUERY = `
+  query GetPackages($first: Int!, $after: String) {
+    packages(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          name
+          status
+          startOn
+          clientId
+          locationId
+          vouchers {
+            quantity
+            services { id name }
+          }
+        }
+      }
+      pageInfo { hasNextPage endCursor }
+    }
+  }
+`
+
 const APPOINTMENTS_QUERY = `
   query GetRecentAppointments($locationId: ID!, $first: Int!, $after: String) {
     appointments(locationId: $locationId, first: $first, after: $after) {
@@ -317,6 +339,73 @@ export default async function handler(req, res) {
       console.error('Membership sync error (non-fatal):', mErr.message)
     }
 
+    // ── Sync packages (paginate all, upsert) ──
+    let packagesSynced = 0
+    try {
+      let pCursor = null
+      for (let pPage = 0; pPage < 20; pPage++) {
+        const pData = await adminQuery(PACKAGES_QUERY, {
+          first: 100,
+          after: pCursor,
+        })
+        const pEdges = pData.packages?.edges || []
+        const pPageInfo = pData.packages?.pageInfo || {}
+
+        for (const edge of pEdges) {
+          const p = edge.node
+          if (!p?.id) continue
+
+          // Resolve client internal ID
+          let pClientId = null
+          if (p.clientId) {
+            const { data: clientRow } = await db
+              .from('blvd_clients')
+              .select('id')
+              .eq('boulevard_id', p.clientId)
+              .maybeSingle()
+            pClientId = clientRow?.id || null
+          }
+
+          // Compute expiry based on policy:
+          // Purchased on/after 2026-01-01 → 18 months from purchase
+          // Purchased before 2026-01-01 → expires 2027-06-30
+          let expiresAt = null
+          const purchasedAt = p.startOn ? new Date(p.startOn) : null
+          if (purchasedAt) {
+            const cutoff = new Date('2026-01-01')
+            if (purchasedAt >= cutoff) {
+              expiresAt = new Date(purchasedAt)
+              expiresAt.setMonth(expiresAt.getMonth() + 18)
+            } else {
+              expiresAt = new Date('2027-06-30')
+            }
+          }
+
+          await db.from('blvd_packages').upsert({
+            boulevard_id: p.id,
+            client_id: pClientId,
+            client_boulevard_id: p.clientId,
+            name: p.name,
+            status: p.status,
+            purchased_at: p.startOn || null,
+            expires_at: expiresAt ? expiresAt.toISOString() : null,
+            location_boulevard_id: p.locationId || null,
+            location_key: LOCATION_URN_MAP[p.locationId] || null,
+            vouchers: p.vouchers || [],
+            synced_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'boulevard_id' })
+
+          packagesSynced++
+        }
+
+        if (!pPageInfo.hasNextPage) break
+        pCursor = pPageInfo.endCursor
+      }
+    } catch (pkgErr) {
+      console.error('Package sync error (non-fatal):', pkgErr.message)
+    }
+
     // ── Sync account credit for clients with memberships or recent activity ──
     let creditsUpdated = 0
     try {
@@ -442,12 +531,12 @@ export default async function handler(req, res) {
           completed_at: new Date().toISOString(),
           records_processed: processed,
           records_created: created,
-          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled },
+          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, packages_synced: packagesSynced, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled },
         })
         .eq('id', logId)
     }
 
-    return res.json({ ok: true, processed, created, lifecycleUpdated, membershipsSynced, creditsUpdated, referralEnrolled })
+    return res.json({ ok: true, processed, created, lifecycleUpdated, membershipsSynced, packagesSynced, creditsUpdated, referralEnrolled })
   } catch (err) {
     console.error('Incremental sync error:', err)
 

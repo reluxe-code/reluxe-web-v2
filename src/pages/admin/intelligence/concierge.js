@@ -6,34 +6,38 @@ import AdminLayout from '@/components/admin/AdminLayout'
 
 // ── Shared constants ──────────────────────────────────────────
 
-const CAMPAIGNS = ['tox_journey', 'voucher_recovery', 'aesthetic_winback', 'last_minute_gap']
-const COHORT_CODES = { tox_journey: 'P1', voucher_recovery: 'P2', aesthetic_winback: 'P3', last_minute_gap: 'P4' }
-const SLUG_FROM_COHORT = { P1: 'tox_journey', P2: 'voucher_recovery', P3: 'aesthetic_winback', P4: 'last_minute_gap' }
+const CAMPAIGNS = ['tox_journey', 'membership_voucher', 'aesthetic_winback', 'last_minute_gap', 'package_voucher']
+const COHORT_CODES = { tox_journey: 'P1', membership_voucher: 'P2', aesthetic_winback: 'P3', last_minute_gap: 'P4', package_voucher: 'P5' }
+const SLUG_FROM_COHORT = { P1: 'tox_journey', P2: 'membership_voucher', P3: 'aesthetic_winback', P4: 'last_minute_gap', P5: 'package_voucher' }
 
 const CAMPAIGN_LABELS = {
   tox_journey: 'Tox Journey',
-  voucher_recovery: 'Voucher Recovery',
+  membership_voucher: 'Membership Voucher',
   aesthetic_winback: 'Aesthetic Winback',
   last_minute_gap: 'Last-Minute Gap',
+  package_voucher: 'Package Voucher',
 }
 const CAMPAIGN_COLORS = {
-  tox_journey: 'violet', voucher_recovery: 'blue', aesthetic_winback: 'fuchsia', last_minute_gap: 'amber',
+  tox_journey: 'violet', membership_voucher: 'blue', aesthetic_winback: 'fuchsia', last_minute_gap: 'amber', package_voucher: 'teal',
 }
 const CAMPAIGN_BG = {
   tox_journey: 'bg-violet-50 border-violet-200',
-  voucher_recovery: 'bg-blue-50 border-blue-200',
+  membership_voucher: 'bg-blue-50 border-blue-200',
   aesthetic_winback: 'bg-fuchsia-50 border-fuchsia-200',
   last_minute_gap: 'bg-amber-50 border-amber-200',
+  package_voucher: 'bg-teal-50 border-teal-200',
 }
 const CAMPAIGN_RING = {
-  tox_journey: 'ring-violet-500', voucher_recovery: 'ring-blue-500', aesthetic_winback: 'ring-fuchsia-500', last_minute_gap: 'ring-amber-500',
+  tox_journey: 'ring-violet-500', membership_voucher: 'ring-blue-500', aesthetic_winback: 'ring-fuchsia-500', last_minute_gap: 'ring-amber-500', package_voucher: 'ring-teal-500',
 }
 const PLACEHOLDER_HELP = [
   { key: '{{first_name}}', desc: 'Patient first name' },
   { key: '{{provider_name}}', desc: 'Last provider' },
   { key: '{{service_name}}', desc: 'Service name' },
   { key: '{{days_overdue}}', desc: 'Days past due' },
-  { key: '{{voucher_service}}', desc: 'Voucher service (P2)' },
+  { key: '{{voucher_service}}', desc: 'Voucher service (P2/P5)' },
+  { key: '{{sessions_remaining}}', desc: 'Unused sessions count (P5)' },
+  { key: '{{voucher_expiry}}', desc: 'Expiry reminder text (P5)' },
   { key: '{{location_name}}', desc: 'Location' },
   { key: '{{booking_link}}', desc: 'Booking URL' },
   { key: '{{credit_reminder}}', desc: 'Auto credit note (if above threshold)' },
@@ -922,7 +926,7 @@ export default function DailyConcierge() {
                             <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Cycle</th>
                             <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Provider</th>
                           </>}
-                          {expandedProjCohort === 'voucher_recovery' && <>
+                          {expandedProjCohort === 'membership_voucher' && <>
                             <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Days Since Visit</th>
                             <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Voucher</th>
                             <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Membership</th>
@@ -944,7 +948,7 @@ export default function DailyConcierge() {
                               <td className="px-4 py-2 text-right text-neutral-500">{p.cycle}d</td>
                               <td className="px-4 py-2 text-neutral-600">{p.provider_name || '\u2014'}</td>
                             </>}
-                            {expandedProjCohort === 'voucher_recovery' && <>
+                            {expandedProjCohort === 'membership_voucher' && <>
                               <td className="px-4 py-2 text-right text-neutral-600">{p.days_since_visit != null ? `${p.days_since_visit}d` : '\u2014'}</td>
                               <td className="px-4 py-2 text-neutral-600 text-xs">{p.voucher_name}</td>
                               <td className="px-4 py-2 text-neutral-500 text-xs">{p.membership}</td>

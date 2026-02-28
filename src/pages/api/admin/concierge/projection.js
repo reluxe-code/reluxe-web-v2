@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       offset_days: offset,
       cohorts: {
         tox_journey: tox,
-        voucher_recovery: voucher,
+        membership_voucher: voucher,
         aesthetic_winback: winback,
         last_minute_gap: {
           count: 0,

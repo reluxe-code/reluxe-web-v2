@@ -9,9 +9,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://reluxemedspa.com'
 // Map campaign types to /start booking flow params
 const CAMPAIGN_BOOKING_PARAMS = {
   tox_journey: { path: '/start/provider', category: 'tox' },
-  voucher_recovery: { path: '/start/provider' },
+  membership_voucher: { path: '/start/provider' },
   aesthetic_winback: { path: '/start/provider' },
   last_minute_gap: { path: '/start/provider' },
+  package_voucher: { path: '/start/provider' },
 }
 
 /**
@@ -48,7 +49,7 @@ function buildDestination({ campaignSlug, providerSlug, serviceSlug, locationKey
  * @param {object} opts
  * @param {string} opts.clientId - Client UUID
  * @param {string} opts.providerSlug - Provider slug for pre-population
- * @param {string} opts.campaignSlug - Campaign type (tox_journey, voucher_recovery, etc.)
+ * @param {string} opts.campaignSlug - Campaign type (tox_journey, membership_voucher, etc.)
  * @param {string} [opts.serviceSlug] - Service slug for service pre-selection
  * @param {string} [opts.locationKey] - Location key
  * @returns {Promise<{ token: string, url: string }>}
