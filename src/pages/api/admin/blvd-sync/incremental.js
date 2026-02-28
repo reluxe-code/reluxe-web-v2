@@ -302,7 +302,7 @@ export default async function handler(req, res) {
             term_number: m.termNumber || 1,
             location_boulevard_id: m.locationId || null,
             location_key: LOCATION_URN_MAP[m.locationId] || null,
-            vouchers: JSON.stringify(m.vouchers || []),
+            vouchers: m.vouchers || [],
             synced_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }, { onConflict: 'boulevard_id' })

@@ -126,9 +126,14 @@ export async function computeVoucherRecovery(db) {
   if (!memberships.length) return []
 
   // Filter to memberships with unused vouchers
+  // Handle both native JSONB arrays and double-encoded strings from legacy sync
   const withVouchers = memberships.filter((m) => {
-    if (!m.vouchers || !Array.isArray(m.vouchers)) return false
-    return m.vouchers.some((v) => v.quantity > 0)
+    let v = m.vouchers
+    if (!v) return false
+    if (typeof v === 'string') { try { v = JSON.parse(v) } catch { return false } }
+    if (!Array.isArray(v)) return false
+    m.vouchers = v // normalize for downstream use
+    return v.some((item) => item.quantity > 0)
   })
 
   if (!withVouchers.length) return []
