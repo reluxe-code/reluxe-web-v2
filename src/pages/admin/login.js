@@ -127,3 +127,5 @@ export default function AdminLogin() {
     </>
   )
 }
+
+AdminLogin.getLayout = (page) => page

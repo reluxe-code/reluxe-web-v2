@@ -5,6 +5,7 @@ import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
 import { REVEAL_CATEGORIES } from '@/data/revealCategories'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const SLUG_MAP = Object.fromEntries(REVEAL_CATEGORIES.map(c => [c.id, c.slug]))
 const LABEL_MAP = Object.fromEntries(REVEAL_CATEGORIES.map(c => [c.slug, c.label]))
@@ -143,8 +144,19 @@ function curateTiles(candidates, limit = 16) {
   return selected
 }
 
+async function batchSettled(items, fn, concurrency = 6) {
+  const results = []
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency)
+    const batchResults = await Promise.allSettled(batch.map(fn))
+    results.push(...batchResults)
+  }
+  return results
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { locations = [], providerSlug, serviceSlugs = [], when, timeOfDay, limit = 16 } = req.body
 
@@ -212,16 +224,17 @@ export default async function handler(req, res) {
     // 2. Date range from filter
     const range = getDateRange(when)
 
-    // 3. Fetch dates for each combo (parallel, cached)
-    const dateResults = await Promise.allSettled(
-      selectedCombos.map(async (combo) => {
+    // 3. Fetch dates for each combo (batched to avoid rate limits)
+    const dateResults = await batchSettled(
+      selectedCombos, async (combo) => {
         const dateCacheKey = `reveal-dates:${combo.locationKey}:${combo.serviceItemId}:${combo.boulevardProviderId}:${range.lower}:${range.upper}`
         const cached = getCached(dateCacheKey, 120_000)
         if (cached && !cached.stale) return { combo, dates: cached.data }
 
-        const { cart } = await createCartWithItem(
+        const { cart, staffMismatch } = await createCartWithItem(
           combo.locationKey, combo.serviceItemId, combo.boulevardProviderId
         )
+        if (!cart || staffMismatch) return { combo, dates: [] }
         const rawDates = await cart.getBookableDates({
           searchRangeLower: range.lower,
           searchRangeUpper: range.upper,
@@ -237,8 +250,7 @@ export default async function handler(req, res) {
 
         setCache(dateCacheKey, filtered)
         return { combo, dates: filtered }
-      })
-    )
+      }, 6)
 
     // 4. For each combo with dates, fetch times for first 2 dates
     const timeFetches = []
@@ -251,15 +263,16 @@ export default async function handler(req, res) {
       }
     }
 
-    const timeResults = await Promise.allSettled(
-      timeFetches.map(async ({ combo, date }) => {
+    const timeResults = await batchSettled(
+      timeFetches, async ({ combo, date }) => {
         const timeCacheKey = `reveal-times:${combo.locationKey}:${combo.serviceItemId}:${combo.boulevardProviderId}:${date}`
         const cached = getCached(timeCacheKey, 60_000)
         if (cached && !cached.stale) return { combo, date, times: cached.data }
 
-        const { cart } = await createCartWithItem(
+        const { cart, staffMismatch } = await createCartWithItem(
           combo.locationKey, combo.serviceItemId, combo.boulevardProviderId
         )
+        if (!cart || staffMismatch) return { combo, date, times: [] }
         const rawTimes = await cart.getBookableTimes({ date })
         const times = (rawTimes || []).map(t => ({
           startTime: t.startTime,
@@ -267,8 +280,7 @@ export default async function handler(req, res) {
 
         setCache(timeCacheKey, times)
         return { combo, date, times }
-      })
-    )
+      }, 6)
 
     // 5. Build candidate tiles
     const allCandidates = []
@@ -317,6 +329,6 @@ export default async function handler(req, res) {
     })
   } catch (err) {
     console.error('[reveal/board]', err.message)
-    res.status(500).json({ error: 'Failed to build board. Please try again.' })
+    res.status(200).json({ tiles: [], moreTiles: [], meta: { totalCandidates: 0 } })
   }
 }

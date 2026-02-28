@@ -15,7 +15,7 @@ export default function ServiceSEO({ service, siteName = 'RELUXE Med Spa' }) {
     s.seo?.image ||
     s.heroImage ||
     s.gallery?.[0]?.src ||
-    '/images/opengraph-default.jpg'
+    '/images/og/new-default-1200x630.png'
 
   const toAbs = (src) => {
     if (!src) return ''

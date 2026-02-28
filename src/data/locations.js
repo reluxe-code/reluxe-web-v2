@@ -13,7 +13,7 @@ export const LOCATIONS = [
     parking: 'Free lot parking onsite.',
     neighborhoods: ['Grand Park', 'Bridgewater', 'Chatham Hills', 'Downtown Westfield'],
     landmarks: ['Grand Park', 'Birdies', 'Monon Trail'],
-    hoursNote: 'Open late select evenings.',
+    hoursNote: 'Mon\u2013Wed, Fri 9am\u20135pm \u00b7 Thu 9am\u20137pm \u00b7 Sat 9am\u20133pm',
     hoh: false, // House of Health — Carmel only
   },
   {
@@ -29,7 +29,7 @@ export const LOCATIONS = [
     parking: 'Free lot parking available.',
     neighborhoods: ['Arts & Design District', 'Midtown', 'Downtown Carmel', 'Home Place'],
     landmarks: ['Monon Trail', 'Carmel City Center', 'Jackson Grant'],
-    hoursNote: 'Convenient daytime appointments available including some 8AM appointments.',
+    hoursNote: 'Mon\u2013Fri 9am\u20135pm',
     hoh: true, // House of Health available here
   },
 ];

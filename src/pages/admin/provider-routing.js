@@ -473,3 +473,5 @@ export default function AdminProviderRouting() {
     </AdminLayout>
   )
 }
+
+AdminProviderRouting.getLayout = (page) => page

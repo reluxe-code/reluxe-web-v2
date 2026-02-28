@@ -4,9 +4,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { resolveReferralCode } from '@/lib/referralCodes'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   const { code, deviceId } = req.body
   if (!code) return res.status(400).json({ error: 'code required' })

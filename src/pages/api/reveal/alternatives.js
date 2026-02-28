@@ -2,6 +2,7 @@
 // Returns up to 3 alternative time slots when a tile is taken (409).
 import { createCartWithItem } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const BUSINESS_TZ = 'America/Indiana/Indianapolis'
 
@@ -20,6 +21,7 @@ function formatTimeLabel(startTime) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const {
     locationKey, serviceSlug, serviceLabel, serviceItemId,
@@ -39,7 +41,8 @@ export default async function handler(req, res) {
     if (cached && !cached.stale) {
       times = cached.data
     } else {
-      const { cart } = await createCartWithItem(locationKey, serviceItemId, boulevardProviderId)
+      const { cart, staffMismatch } = await createCartWithItem(locationKey, serviceItemId, boulevardProviderId)
+      if (!cart || staffMismatch) return res.json({ alternatives: [] })
       const rawTimes = await cart.getBookableTimes({ date })
       times = (rawTimes || []).map(t => t.startTime)
       setCache(timeCacheKey, times)
@@ -53,7 +56,8 @@ export default async function handler(req, res) {
       const nextDate = new Date(new Date(date + 'T12:00:00').getTime() + 86400000)
         .toISOString().split('T')[0]
       try {
-        const { cart } = await createCartWithItem(locationKey, serviceItemId, boulevardProviderId)
+        const { cart, staffMismatch } = await createCartWithItem(locationKey, serviceItemId, boulevardProviderId)
+        if (!cart || staffMismatch) throw new Error('staff mismatch')
         const rawTimes = await cart.getBookableTimes({ date: nextDate })
         const nextTimes = (rawTimes || []).map(t => ({ startTime: t.startTime, date: nextDate }))
         available = [

@@ -42,11 +42,11 @@ export async function getServerSideProps({ params, req }) {
     const resp = await fetch(`${siteUrl}/api/referral/${encodeURIComponent(code)}`)
     const data = await resp.json()
     if (!data.valid) {
-      return { redirect: { destination: '/beta/locations/westfield', permanent: false } }
+      return { redirect: { destination: '/locations/westfield', permanent: false } }
     }
     return { props: { code: data.code, referrerName: data.referrerFirstName, tier: data.tier } }
   } catch {
-    return { redirect: { destination: '/beta/locations/westfield', permanent: false } }
+    return { redirect: { destination: '/locations/westfield', permanent: false } }
   }
 }
 
@@ -385,7 +385,7 @@ function ReferralPageContent({ code, referrerName, tier }) {
   }, [code])
 
   const handleBookNow = (locationKey) => {
-    router.push(`/beta/locations/${locationKey}`)
+    router.push(`/locations/${locationKey}`)
   }
 
   return (

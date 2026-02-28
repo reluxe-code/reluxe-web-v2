@@ -1,461 +1,499 @@
-// src/pages/services/index.js
-import Head from 'next/head'
-import HeaderTwo from '@/components/header/header-2'
-import { serviceCategories } from '@/data/ServiceCategories'
-import Image from 'next/image'
-import Link from 'next/link'
-import dynamic from 'next/dynamic'
-import { Slide } from '@/components/swiper'
-import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai'
-import { servicesData } from '@/data/servicePricing'
-import AllServicesGrid from '@/components/services/AllServicesGrid'
-import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
-import { getTestimonialsSSR } from '@/lib/testimonials'
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import BetaLayout from '@/components/beta/BetaLayout';
+import ServiceCardGrid from '@/components/beta/ServiceCardGrid';
+import { colors, gradients, typeScale } from '@/components/preview/tokens';
+import { getServicesList } from '@/data/servicesList';
+import { getTestimonialsSSR } from '@/lib/testimonials';
+import GravityBookButton from '@/components/beta/GravityBookButton';
+import MemberPageWidget from '@/components/beta/MemberPageWidget';
 
-const SwiperComps = dynamic(() => import('@/components/swiper'), { ssr: false })
+/* ─── grain texture ─── */
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
-// ---- helpers for price display ----
-const fmtUSD = (n) => {
-  const x = Number(n);
-  if (Number.isNaN(x)) return '—';
-  return x < 10 && x % 1 !== 0 ? `$${x.toFixed(2)}` : `$${x.toLocaleString()}`;
+/* ─── privacy helper ─── */
+const privacyName = (n) => {
+  if (!n) return 'Patient';
+  return n.includes(' ') ? n.split(' ')[0] + ' ' + n.split(' ').pop()[0] + '.' : n;
 };
-const displayPrice = (s) => {
-  if (s.priceMin && s.priceMax) {
-    return `${fmtUSD(s.priceMin)}–${fmtUSD(s.priceMax)}${s.unit ? `/${s.unit}` : ''}`
-  }
-  if (typeof s.price === 'number') {
-    return `${fmtUSD(s.price)}${s.unit ? `/${s.unit}` : ''}`
-  }
-  return 'Varies'
-}
 
-// ---- optional Service + Offer JSON-LD for a few flagship items ----
-const buildServiceOfferSchema = (items = []) => {
-  if (!Array.isArray(items) || !items.length) return null
-  const graph = items.slice(0, 8).map((s) => {
-    const node = {
-      '@type': 'Service',
-      name: s.name,
-      provider: { '@type': 'MedicalBusiness', name: 'RELUXE Med Spa' },
-      url: `https://reluxemedspa.com/services/${s.slug}`
-    }
-    if (s.priceMin && s.priceMax) {
-      node.offers = {
-        '@type': 'AggregateOffer',
-        priceCurrency: 'USD',
-        lowPrice: s.priceMin,
-        highPrice: s.priceMax
-      }
-    } else if (typeof s.price === 'number') {
-      node.offers = {
-        '@type': 'Offer',
-        priceCurrency: 'USD',
-        price: s.price
-      }
-    }
-    return node
-  })
-  return { '@context': 'https://schema.org', '@graph': graph }
-}
+/* ─── quiz data ─── */
+const quizSteps = [
+  {
+    question: "What's your primary goal?",
+    options: [
+      { label: 'Smooth wrinkles & fine lines', icon: '✨', next: 1, tags: ['tox'] },
+      { label: 'Add volume or contour', icon: '💎', next: 1, tags: ['filler'] },
+      { label: 'Improve skin texture & tone', icon: '🔬', next: 1, tags: ['morpheus8', 'peels'] },
+      { label: 'Remove unwanted hair', icon: '⚡', next: null, tags: ['laser-hair-removal'] },
+      { label: 'Tighten or sculpt my body', icon: '💪', next: null, tags: ['evolvex'] },
+    ],
+  },
+  {
+    question: 'How much downtime can you handle?',
+    options: [
+      { label: 'Zero — back to life immediately', icon: '🏃', next: null, tags: ['tox', 'filler', 'clearlift', 'glo2facial'] },
+      { label: 'A day or two is fine', icon: '📅', next: null, tags: ['skinpen', 'peels', 'ipl'] },
+      { label: 'I want max results, whatever it takes', icon: '🔥', next: null, tags: ['morpheus8', 'co2'] },
+    ],
+  },
+];
 
-// Featured items for the carousel (ones with images worth showcasing)
-const featuredForCarousel = serviceCategories.filter(c => c.featured || c.popular)
+const quizResults = {
+  tox: { title: 'Tox (Botox/Dysport)', slug: 'tox', desc: 'Smooths lines while keeping your natural expression.' },
+  filler: { title: 'Dermal Fillers', slug: 'filler', desc: 'Restores volume and contours for a refreshed look.' },
+  morpheus8: { title: 'Morpheus8', slug: 'morpheus8', desc: 'RF microneedling that rebuilds collagen from within.' },
+  peels: { title: 'Chemical Peels', slug: 'peels', desc: 'Reveals fresh, smooth skin underneath.' },
+  'laser-hair-removal': { title: 'Laser Hair Removal', slug: 'laser-hair-removal', desc: 'Permanent hair reduction. No more shaving.' },
+  evolvex: { title: 'EvolveX Body', slug: 'evolvex', desc: 'RF body sculpting and skin tightening.' },
+  clearlift: { title: 'ClearLift', slug: 'clearlift', desc: 'Zero-downtime laser with real results.' },
+  glo2facial: { title: 'GLO2Facial', slug: 'glo2facial', desc: 'Instant glow with zero downtime.' },
+  skinpen: { title: 'SkinPen', slug: 'skinpen', desc: 'Microneedling for smoother, more even skin.' },
+  ipl: { title: 'IPL Photofacial', slug: 'ipl', desc: 'Clears sun spots, redness, and uneven tone.' },
+  co2: { title: 'CO₂ Laser', slug: 'co2', desc: 'Gold standard for deep resurfacing.' },
+};
 
-export async function getStaticProps() {
-  const testimonials = await getTestimonialsSSR({ limit: 20 })
-  return { props: { testimonials }, revalidate: 3600 }
-}
-
-export default function ServiceCategoriesPage({ testimonials = [] }) {
-  // -------- JSON-LD SCHEMA (catalog + faq + breadcrumbs) --------
-  const offerCatalogSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    '@id': 'https://reluxemedspa.com#org',
-    name: 'RELUXE Med Spa',
-    url: 'https://reluxemedspa.com',
-    hasOfferCatalog: {
-      '@type': 'OfferCatalog',
-      name: 'RELUXE Services',
-      itemListElement: [
-        {
-          '@type': 'OfferCatalog',
-          name: 'Injectables',
-          itemListElement: [
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Botox' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Jeuveau' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Daxxify' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Dysport' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Dermal Fillers' } }
-          ]
-        },
-        {
-          '@type': 'OfferCatalog',
-          name: 'Facials & Skin Health',
-          itemListElement: [
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'SkinPen Microneedling' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'HydraFacial' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Chemical Peels' } }
-          ]
-        },
-        {
-          '@type': 'OfferCatalog',
-          name: 'Lasers & RF',
-          itemListElement: [
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Laser Hair Removal' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'IPL Photofacial' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Morpheus8 RF Microneedling' } },
-            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Opus Plasma' } }
-          ]
-        },
-        {
-          '@type': 'OfferCatalog',
-          name: 'Massage',
-          itemListElement: [{ '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Therapeutic Massage' } }]
-        }
-      ]
-    }
-  }
-
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'How do I choose between Botox and Jeuveau?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text:
-            'Both are neuromodulators used to soften expression lines. Choice depends on goals and treatment plan—our injectors will recommend the best option during your consult.'
-        }
-      },
-      {
-        '@type': 'Question',
-        name: 'What\u2019s the downtime for SkinPen microneedling?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Most patients are pink for 24\u201348 hours with light flaking. Makeup is typically fine the next day; always follow your provider\u2019s aftercare.'
-        }
-      },
-      {
-        '@type': 'Question',
-        name: 'How many laser hair removal sessions will I need?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'A series is typical—many see results within 6–8 sessions depending on area, hair, and skin type.'
-        }
-      },
-      {
-        '@type': 'Question',
-        name: 'Do you serve both Westfield and Carmel?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes—RELUXE operates in Westfield and Carmel, serving Zionsville, Fishers, and North Indianapolis.'
-        }
-      },
-      {
-        '@type': 'Question',
-        name: 'Do you offer memberships or financing?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes—ask about RELUXE memberships and Cherry financing to spread out payments for your treatment plan.'
-        }
-      }
-    ]
-  }
-
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://reluxemedspa.com/' },
-      { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://reluxemedspa.com/services' }
-    ]
-  }
-
-  const serviceOfferSchema = buildServiceOfferSchema(servicesData)
+/* ─── scrolling ticker ─── */
+function TreatmentTicker({ fonts }) {
+  const treatments = ['Botox', 'Lip Filler', 'Morpheus8', 'Laser Hair Removal', 'HydraFacial', 'Chemical Peels', 'IPL', 'Sculptra', 'ClearLift', 'EvolveX', 'SkinPen', 'CO₂ Laser', 'Massage', 'GLO2Facial'];
+  const doubled = [...treatments, ...treatments];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Head>
-        <title>Med Spa Services & Pricing | Botox, Facials, Lasers | RELUXE Westfield & Carmel</title>
-        <meta
-          name="description"
-          content="Explore RELUXE Med Spa services and pricing in Westfield & Carmel: Botox & Jeuveau, facials, microneedling, laser hair removal, IPL, and skin tightening. Book online."
-        />
-        <link rel="canonical" href="https://reluxemedspa.com/services" />
-        <meta property="og:title" content="RELUXE Med Spa Services & Pricing — Westfield & Carmel" />
-        <meta property="og:description" content="Botox, facials, lasers, microneedling & more. Browse categories and view pricing." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://reluxemedspa.com/services" />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(offerCatalogSchema) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-        {serviceOfferSchema && (
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceOfferSchema) }} />
-        )}
-      </Head>
+    <div className="overflow-hidden" style={{ borderTop: `1px solid rgba(250,248,245,0.08)`, borderBottom: `1px solid rgba(250,248,245,0.08)` }}>
+      <motion.div
+        className="flex gap-8 py-4 whitespace-nowrap"
+        animate={{ x: ['0%', '-50%'] }}
+        transition={{ duration: 30, ease: 'linear', repeat: Infinity }}
+      >
+        {doubled.map((t, i) => (
+          <span key={i} className="flex items-center gap-3 shrink-0">
+            <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: 'rgba(250,248,245,0.35)' }}>{t}</span>
+            <span style={{ color: colors.violet, fontSize: '0.5rem' }}>●</span>
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
 
-      <HeaderTwo />
+/* ─── quiz component ─── */
+function TreatmentQuiz({ fonts, fontKey }) {
+  const [step, setStep] = useState(0);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [email, setEmail] = useState('');
+  const [captured, setCaptured] = useState(false);
 
-      {/* HERO */}
-      <header className="relative bg-[url('/images/hero/team.png')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-black/80" />
-        <div className="relative max-w-7xl mx-auto px-6 py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-            Med Spa Services in Westfield & Carmel
-          </h1>
-          <p className="mt-4 text-lg md:text-xl text-white/90 max-w-3xl mx-auto">
-            Botox® & Jeuveau® · Facials & SkinPen® · Laser Hair Removal · IPL Photofacial · Skin Tightening
+  function handleOption(opt) {
+    const newTags = [...selectedTags, ...opt.tags];
+    setSelectedTags(newTags);
+    if (opt.next !== null) {
+      setStep(opt.next);
+    } else {
+      setShowResults(true);
+    }
+  }
+
+  function reset() {
+    setStep(0);
+    setSelectedTags([]);
+    setShowResults(false);
+  }
+
+  async function handleCapture(e) {
+    e.preventDefault();
+    if (!email || !email.includes('@')) return;
+    try {
+      await fetch('/api/leads/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'services-quiz', tags: ['services-quiz', ...selectedTags] }),
+      });
+    } catch {}
+    setCaptured(true);
+  }
+
+  // Deduplicate and get top results
+  const resultSlugs = [...new Set(selectedTags)].slice(0, 3);
+  const results = resultSlugs.map((t) => quizResults[t]).filter(Boolean);
+
+  return (
+    <section id="quiz" style={{ backgroundColor: colors.ink, position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '10%', right: 0, width: '50%', height: '80%', background: `radial-gradient(ellipse at right, ${colors.violet}08, transparent 70%)`, pointerEvents: 'none' }} />
+
+      <div className="max-w-4xl mx-auto px-6 py-20 lg:py-28 relative">
+        <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-5" style={{ background: `${colors.violet}15`, border: `1px solid ${colors.violet}30` }}>
+            <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.violet, textTransform: 'uppercase', letterSpacing: '0.08em' }}>60-Second Quiz</span>
+          </div>
+          <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.white, marginBottom: '0.75rem' }}>
+            Not Sure Where to Start?
+          </h2>
+          <p style={{ fontFamily: fonts.body, fontSize: '1rem', color: 'rgba(250,248,245,0.45)', maxWidth: '26rem', margin: '0 auto' }}>
+            Answer a couple quick questions and we&rsquo;ll match you with your perfect treatment.
           </p>
+        </motion.div>
 
-          {/* Overview panel – popup style */}
-            <div className="relative mt-8 mx-auto max-w-5xl">
-              {/* soft glow accents */}
-              <div className="pointer-events-none absolute -left-24 -top-24 h-56 w-56 rounded-full bg-fuchsia-600/25 blur-3xl" />
-              <div className="pointer-events-none absolute -right-24 -bottom-24 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl" />
+        <AnimatePresence mode="wait">
+          {!showResults ? (
+            <motion.div key={`step-${step}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.35 }}>
+              {/* Progress */}
+              <div className="flex justify-center gap-2 mb-8">
+                {quizSteps.map((_, i) => (
+                  <div key={i} className="rounded-full" style={{ width: i <= step ? 32 : 8, height: 8, background: i <= step ? gradients.primary : 'rgba(250,248,245,0.1)', transition: 'all 0.3s' }} />
+                ))}
+              </div>
 
-              <div className="overflow-hidden rounded-3xl bg-neutral-950/90 text-white ring-1 ring-white/10 shadow-2xl backdrop-blur-md">
-                {/* header line (small) */}
-                <div className="px-6 pt-7 md:px-8">
-                  <p className="text-[11px] font-semibold tracking-[0.18em] text-white/60">
-                    SERVICES OVERVIEW
+              <h3 className="text-center mb-6" style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 600, color: colors.white }}>
+                {quizSteps[step].question}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                {quizSteps[step].options.map((opt, i) => (
+                  <motion.button
+                    key={opt.label}
+                    className="rounded-xl text-left p-5 transition-all duration-200 flex items-center gap-3"
+                    style={{ backgroundColor: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.08)', cursor: 'pointer' }}
+                    whileHover={{ backgroundColor: 'rgba(124,58,237,0.1)', borderColor: 'rgba(124,58,237,0.3)' }}
+                    onClick={() => handleOption(opt)}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <span style={{ fontSize: '1.25rem' }}>{opt.icon}</span>
+                    <span style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 500, color: colors.white }}>{opt.label}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="results" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+              <div className="text-center mb-6">
+                <h3 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.white, marginBottom: '0.5rem' }}>
+                  Your Perfect Match{results.length > 1 ? 'es' : ''}
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+                {results.map((r, i) => (
+                  <motion.a
+                    key={r.slug}
+                    href={`/services/${r.slug}`}
+                    className="rounded-2xl p-5 text-center group"
+                    style={{ background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.1)', textDecoration: 'none' }}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    whileHover={{ backgroundColor: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.3)', y: -4 }}
+                  >
+                    <h4 style={{ fontFamily: fonts.display, fontSize: '1rem', fontWeight: 700, color: colors.white, marginBottom: '0.375rem' }}>{r.title}</h4>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)', lineHeight: 1.5, marginBottom: '0.75rem' }}>{r.desc}</p>
+                    <span className="inline-flex items-center gap-1 transition-all duration-200 group-hover:gap-2" style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.violet }}>
+                      Learn More
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </span>
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* Email capture on results */}
+              {!captured ? (
+                <motion.div className="max-w-md mx-auto text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                  <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.4)', marginBottom: '0.75rem' }}>
+                    Want a custom plan based on your results? Drop your email.
                   </p>
-                </div>
+                  <form onSubmit={handleCapture} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                      className="flex-1 rounded-full px-5 py-3 outline-none"
+                      style={{ fontFamily: fonts.body, fontSize: '0.875rem', backgroundColor: 'rgba(250,248,245,0.06)', border: '1px solid rgba(250,248,245,0.1)', color: colors.white }}
+                    />
+                    <button type="submit" className="rounded-full shrink-0" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.75rem 1.5rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
+                      Send
+                    </button>
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.p className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.violet }}>
+                  We&rsquo;ll be in touch with your personalized plan.
+                </motion.p>
+              )}
 
-                {/* body */}
-                <div className="px-6 pb-7 pt-3 md:px-8">
-                  <p className="text-base md:text-lg leading-relaxed text-white/80">
-                    Discover RELUXE Med Spa&apos;s full menu of results-driven treatments in
-                    <strong> Westfield</strong> and <strong> Carmel</strong>. From
-                    confidence-boosting injectables to glow-building facials, microneedling,
-                    and advanced laser &amp; RF, our licensed team designs plans that look
-                    natural and feel authentically you. Explore categories below, preview
-                    pricing, or book a consult to build your personalized routine.
-                  </p>
+              <div className="flex flex-wrap justify-center gap-3 mt-8">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+                <button className="rounded-full" onClick={reset} style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.75rem 2rem', background: 'transparent', color: 'rgba(250,248,245,0.5)', border: '1px solid rgba(250,248,245,0.12)', cursor: 'pointer' }}>
+                  Retake Quiz
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
 
-                  {/* location chips */}
-                  <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs md:text-sm">
-                    <span className="px-3 py-1 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-400/25">
-                      Westfield
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-sky-400/15 text-sky-200 ring-1 ring-sky-400/25">
-                      Carmel
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-amber-400/15 text-amber-200 ring-1 ring-amber-400/25">
-                      Zionsville
-                    </span>
-                    <span className="px-3 py-1 rounded-full bg-fuchsia-400/15 text-fuchsia-200 ring-1 ring-fuchsia-400/25">
-                      North Indy
-                    </span>
+/* ─── page ─── */
+
+function ServicesPage({ fontKey, fonts, services, testimonials }) {
+  return (
+    <>
+      {/* ═══ HERO ═══ */}
+      <section className="relative overflow-hidden" style={{ backgroundColor: colors.ink }}>
+        {/* Background accents */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '60%', height: '80%', background: `radial-gradient(ellipse at center, ${colors.violet}12, transparent 65%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '50%', height: '60%', background: `radial-gradient(ellipse at center, ${colors.fuchsia}08, transparent 65%)`, pointerEvents: 'none' }} />
+
+        <div className="max-w-7xl mx-auto px-6 relative" style={{ paddingTop: 'clamp(7rem, 12vw, 10rem)', paddingBottom: 'clamp(4rem, 8vw, 6rem)' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1.25rem' }}>
+                Our Treatments
+              </p>
+              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.25rem' }}>
+                Expert Treatments.<br />
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Real Results.
+                </span>
+              </h1>
+              <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginBottom: '2rem' }}>
+                40+ FDA-approved treatments delivered by NPs, PAs, and licensed aestheticians. No assembly lines, no upselling &mdash; just honest expert care.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4 mb-10">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+                <a
+                  href="#treatments"
+                  className="rounded-full transition-all duration-200 hover:bg-white/5"
+                  style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2rem', color: 'rgba(250,248,245,0.6)', border: '1.5px solid rgba(250,248,245,0.12)', textDecoration: 'none', display: 'inline-block' }}
+                >
+                  Browse Treatments
+                </a>
+              </div>
+
+              {/* Trust stat strip */}
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                {[
+                  { value: '40+', label: 'Treatments' },
+                  { value: '5.0', label: 'Google Rating' },
+                  { value: '2', label: 'Locations' },
+                  { value: '6+', label: 'Years Experience' },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-2">
+                    <span style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.white }}>{stat.value}</span>
+                    <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,248,245,0.35)' }}>{stat.label}</span>
                   </div>
+                ))}
+              </div>
+            </motion.div>
 
-                  {/* actions */}
-                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <Link
-                      href="/book/consult/"
-                      className="inline-flex items-center justify-center rounded-2xl
-                                bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500
-                                px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-violet-500/20
-                                transition hover:brightness-[1.05] active:scale-[.99]"
-                    >
-                      Book a Consult
-                    </Link>
+            {/* Member widget (right column — hidden when logged out) */}
+            <motion.div className="relative" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}>
+              <MemberPageWidget variant="services" fonts={fonts} />
+            </motion.div>
+          </div>
+        </div>
 
-                    <Link
-                      href="/pricing"
-                      className="inline-flex items-center justify-center rounded-2xl
-                                bg-white/10 px-6 py-4 text-sm font-semibold text-white
-                                ring-1 ring-white/15 hover:bg-white/15"
-                    >
-                      View Full Pricing
-                    </Link>
-                  </div>
+        {/* Treatment ticker */}
+        <TreatmentTicker fonts={fonts} />
+      </section>
+
+      {/* ═══ SERVICE CARD GRID ═══ */}
+      <div id="treatments">
+        <ServiceCardGrid
+          services={services}
+          fonts={fonts}
+          label="Our Treatments"
+          heading="Find Your Perfect Treatment"
+        />
+      </div>
+
+      {/* ═══ SOCIAL PROOF STRIP ═══ */}
+      {testimonials.length > 0 && (
+        <section style={{ backgroundColor: '#fff', borderTop: `1px solid ${colors.stone}`, borderBottom: `1px solid ${colors.stone}` }}>
+          <div className="max-w-7xl mx-auto px-6 py-12 lg:py-16">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+              {/* Left: rating */}
+              <motion.div className="shrink-0" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+                <div className="flex items-center gap-1 mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} style={{ color: colors.violet, fontSize: '1.125rem' }}>★</span>
+                  ))}
                 </div>
+                <p style={{ fontFamily: fonts.display, fontSize: '1.75rem', fontWeight: 700, color: colors.heading }}>
+                  5.0 <span style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 400, color: colors.muted }}>from {testimonials.length}+ reviews</span>
+                </p>
+              </motion.div>
 
-                {/* bottom accent bar */}
-                <div className="h-[4px] w-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 opacity-70" />
+              {/* Right: scrolling testimonials */}
+              <div className="flex-1 overflow-hidden">
+                <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                  {testimonials.slice(0, 6).map((t, i) => (
+                    <motion.div
+                      key={t.id || i}
+                      className="rounded-xl p-4 shrink-0"
+                      style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, minWidth: 280, maxWidth: 320 }}
+                      initial={{ opacity: 0, y: 12 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.3, delay: i * 0.06 }}
+                    >
+                      <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.body, lineHeight: 1.5, fontStyle: 'italic', marginBottom: '0.5rem' }}>
+                        &ldquo;{(t.quote || '').length > 120 ? t.quote.slice(0, 120) + '...' : t.quote}&rdquo;
+                      </p>
+                      <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.muted }}>
+                        {privacyName(t.author_name)}
+                        {t.service && <span style={{ color: colors.violet }}> &middot; {t.service}</span>}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </div>
+          </div>
+        </section>
+      )}
 
-        </div>
-      </header>
+      {/* ═══ QUIZ / LEAD CAPTURE ═══ */}
+      <TreatmentQuiz fonts={fonts} fontKey={fontKey} />
 
-      {/* ── FEATURED CAROUSEL ── */}
-      <section id="featured" className="py-12 bg-azure">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Featured{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                Treatments
-              </span>
-            </h2>
-            <div className="flex gap-3 text-gray-500 text-xl">
-              <button className="svc-prev hover:text-black cursor-pointer" aria-label="Previous">
-                <AiOutlineLeft />
-              </button>
-              <button className="svc-next hover:text-black cursor-pointer" aria-label="Next">
-                <AiOutlineRight />
-              </button>
+      {/* ═══ HOW IT WORKS ═══ */}
+      <section style={{ backgroundColor: '#fff' }}>
+        <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '0.75rem' }}>How It Works</p>
+              <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading, marginBottom: '1rem' }}>
+                From Consult to Confidence in 4 Steps
+              </h2>
+              <p style={{ fontFamily: fonts.body, fontSize: '1rem', lineHeight: 1.6, color: colors.body, maxWidth: '28rem', marginBottom: '2rem' }}>
+                No awkward sales pitches. No assembly-line vibes. Just a genuine consultation with an expert who actually listens.
+              </p>
+              <GravityBookButton fontKey={fontKey} size="hero" />
+            </motion.div>
+
+            <div className="space-y-4">
+              {[
+                { step: '01', title: 'Free Consultation', detail: 'We learn your goals, assess your anatomy, and discuss all options. Zero pressure to book anything.', accent: colors.violet },
+                { step: '02', title: 'Custom Plan', detail: 'Your provider builds a treatment plan around your goals, timeline, and budget \u2014 not a one-size-fits-all menu.', accent: colors.fuchsia },
+                { step: '03', title: 'Treatment', detail: 'Relax in a private suite while your provider works. Most treatments take 15\u201345 minutes.', accent: colors.rose },
+                { step: '04', title: 'Aftercare + Follow-Up', detail: 'Clear instructions, direct text access to your provider, and a follow-up already on the calendar.', accent: colors.violet },
+              ].map((s, i) => (
+                <motion.div
+                  key={s.step}
+                  className="rounded-xl p-5 flex gap-4"
+                  style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                >
+                  <span
+                    className="flex-shrink-0 flex items-center justify-center rounded-full"
+                    style={{ width: 44, height: 44, background: `${s.accent}10`, fontFamily: fonts.display, fontSize: '0.875rem', fontWeight: 700, color: s.accent }}
+                  >
+                    {s.step}
+                  </span>
+                  <div>
+                    <h4 style={{ fontFamily: fonts.display, fontSize: '1rem', fontWeight: 600, color: colors.heading, marginBottom: '0.25rem' }}>{s.title}</h4>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body, lineHeight: 1.5 }}>{s.detail}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-
-          <SwiperComps
-            sliderCName="relative"
-            settings={{
-              pagination: false,
-              spaceBetween: 20,
-              slidesPerView: 3,
-              navigation: { prevEl: '.svc-prev', nextEl: '.svc-next' },
-              breakpoints: {
-                0: { slidesPerView: 2 },
-                640: { slidesPerView: 3 },
-                1024: { slidesPerView: 5 },
-              },
-              loop: true,
-            }}
-          >
-            {featuredForCarousel.map((item, idx) => (
-              <Slide key={idx}>
-                <Link href={item.href} className="block text-center group">
-                  <div className="relative aspect-square overflow-hidden rounded-xl shadow-lg bg-white mb-3">
-                    <Image
-                      src={item.image}
-                      alt={`${item.title} at RELUXE Med Spa`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                    />
-                    {item.popular && (
-                      <span className="absolute top-2 left-2 bg-black text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
-                        Most Popular
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-sm font-medium text-gray-800 group-hover:text-violet-600 transition">
-                    {item.title}
-                  </h3>
-                </Link>
-              </Slide>
-            ))}
-          </SwiperComps>
         </div>
       </section>
 
-      {/* ── ALL SERVICES GRID (tab-filtered) ── */}
-      <AllServicesGrid />
-
-      {/* ── TESTIMONIALS ── */}
-      {testimonials.length > 0 && (
-        <TestimonialWidget
-          testimonials={testimonials}
-          heading="What Our Patients Say"
-          subheading="Real reviews from real patients across all our services."
-        />
-      )}
-
-      {/* ── PRICING / FAQ / CTA ── */}
-      <main id="main" className="py-12 px-4 max-w-7xl mx-auto">
-        {/* Pricing preview */}
-        <section id="pricing">
-          <h2 className="text-2xl font-semibold text-neutral-900">Popular Pricing</h2>
-          <p className="mt-2 text-neutral-700">
-            A few favorites — see full menu for complete pricing and packages.
-          </p>
-
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(Array.isArray(servicesData) ? servicesData.slice(0, 9) : []).map((s, i) => (
-              <div key={i} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="font-medium text-neutral-900">{s.name}</div>
-                    {s.description && (
-                      <div className="text-xs text-neutral-600 mt-1">{s.description}</div>
-                    )}
-                    {s.note && <div className="text-[11px] text-neutral-500 mt-1">{s.note}</div>}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-neutral-900 font-semibold text-center">{displayPrice(s)}</div>
-                    {typeof s.memberPrice === 'number' && (
-                      <div className="mt-1 inline-flex flex-col items-end rounded-md px-2 py-1 bg-emerald-50 text-emerald-700 leading-tight">
-                        <div className="text-xs text-center">
-                          <span className="font-semibold">
-                            Member:<br />
-                            {fmtUSD(s.memberPrice)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <Link href="/pricing" className="rounded-lg bg-neutral-900 text-white px-4 py-2 text-sm hover:bg-neutral-800">
-              View Full Pricing
-            </Link>
-            <Link href="/memberships" className="rounded-lg bg-white ring-1 ring-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50">
-              Membership & Financing
-            </Link>
-          </div>
-        </section>
-
-        {/* Local intent / service area */}
-        <section className="mt-16 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-8">
-          <h2 className="text-xl md:text-2xl font-semibold text-neutral-900">Serving Westfield, Carmel & Nearby</h2>
-          <p className="mt-2 text-neutral-700">
-            Book at the location that works best for you—our team serves <strong>Westfield</strong>, <strong>Carmel</strong>, and surrounding areas like <strong>Zionsville</strong>, <strong>Fishers</strong>, and <strong>North Indianapolis</strong>.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/locations/westfield" className="rounded-lg bg-neutral-900 text-white px-4 py-2 text-sm hover:bg-neutral-800">Westfield Location</Link>
-            <Link href="/locations/carmel" className="rounded-lg bg-white ring-1 ring-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50">Carmel Location</Link>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section id="faq" className="mt-16">
-          <h2 className="text-2xl font-semibold text-neutral-900">Services FAQ</h2>
-          <dl className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <dt className="font-medium text-neutral-900">How do I choose between Botox and Jeuveau?</dt>
-              <dd className="mt-2 text-neutral-700">Both soften expression lines; your injector will recommend the right option during your consult based on your goals.</dd>
+      {/* ═══ BOTTOM CTA ═══ */}
+      <section style={{ background: gradients.primary, position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+        <div className="max-w-3xl mx-auto px-6 py-20 lg:py-28 text-center relative">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 700, color: '#fff', marginBottom: '1rem' }}>
+              Ready to Get Started?
+            </h2>
+            <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)', marginBottom: '2rem' }}>
+              Book a free consultation. We&rsquo;ll build a custom plan around your goals.
+            </p>
+            <div className="flex justify-center">
+              <GravityBookButton fontKey={fontKey} size="hero" />
             </div>
-            <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <dt className="font-medium text-neutral-900">What&apos;s the downtime for SkinPen microneedling?</dt>
-              <dd className="mt-2 text-neutral-700">Most patients are pink for 24–48 hours with light flaking; makeup is typically fine the next day.</dd>
-            </div>
-            <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <dt className="font-medium text-neutral-900">How many laser hair removal sessions will I need?</dt>
-              <dd className="mt-2 text-neutral-700">A series is typical—many see results within 6–8 sessions depending on area, hair, and skin type.</dd>
-            </div>
-            <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-              <dt className="font-medium text-neutral-900">Do you serve both Westfield and Carmel?</dt>
-              <dd className="mt-2 text-neutral-700">Yes—book at either location; we also serve Zionsville, Fishers, and North Indy.</dd>
-            </div>
-          </dl>
-        </section>
-
-        {/* Final CTA */}
-        <section className="mt-16 text-center">
-          <h2 className="text-2xl font-semibold text-neutral-900">Ready to start?</h2>
-          <p className="mt-2 text-neutral-700">Schedule a consultation and we&apos;ll build a treatment plan tailored to you.</p>
-          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/book" className="inline-flex items-center justify-center rounded-xl bg-black text-white px-5 py-3 font-semibold hover:bg-neutral-800">
-              Book Now
-            </Link>
-            <Link href="/pricing" className="inline-flex items-center justify-center rounded-xl bg-white text-black px-5 py-3 font-semibold ring-1 ring-black/10 hover:bg-neutral-50">
-              View Full Pricing
-            </Link>
-          </div>
-        </section>
-      </main>
-    </div>
-  )
+          </motion.div>
+        </div>
+      </section>
+    </>
+  );
 }
+
+/* ─── wrapper + data fetching ─── */
+
+export default function BetaServicesIndex({ services, testimonials }) {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'ItemList',
+        name: 'RELUXE Med Spa Treatments & Services',
+        description: 'Complete list of aesthetic treatments and services at RELUXE Med Spa in Westfield & Carmel, Indiana.',
+        numberOfItems: services.length,
+        itemListElement: services.filter(s => s.indexable !== false).map((s, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: s.name,
+          url: `https://reluxemedspa.com/services/${s.slug}`,
+        })),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://reluxemedspa.com' },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://reluxemedspa.com/services' },
+        ],
+      },
+    ],
+  };
+
+  return (
+    <BetaLayout
+      title="Med Spa Treatments — Botox, Fillers, Morpheus8, Facials & More"
+      description="Explore 40+ expert med spa treatments at RELUXE in Westfield & Carmel, IN. Botox, Daxxify, dermal fillers, Morpheus8, facials, laser hair removal & more. Transparent pricing. Book your free consultation."
+      canonical="https://reluxemedspa.com/services"
+      structuredData={structuredData}
+    >
+      {({ fontKey, fonts }) => <ServicesPage fontKey={fontKey} fonts={fonts} services={services} testimonials={testimonials} />}
+    </BetaLayout>
+  );
+}
+
+export async function getStaticProps() {
+  let services = [];
+  try {
+    const allServices = await getServicesList();
+    services = allServices.map((s) => ({
+      slug: s.slug,
+      name: s.name,
+      tagline: s.tagline || '',
+      indexable: s.indexable !== false,
+    }));
+  } catch (e) {
+    console.warn('Beta services: could not load services list', e.message);
+  }
+
+  let testimonials = [];
+  try {
+    testimonials = await getTestimonialsSSR({ limit: 20 });
+  } catch {}
+
+  return {
+    props: { services, testimonials },
+    revalidate: 3600,
+  };
+}
+
+BetaServicesIndex.getLayout = (page) => page;

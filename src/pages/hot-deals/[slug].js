@@ -145,7 +145,7 @@ export default function OfferPage({ offer }) {
         {offer?.seo?.description && (
           <meta name="description" content={offer.seo.description} />
         )}
-        {offer?.seo?.image && <meta property="og:image" content={offer.seo.image} />}
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger

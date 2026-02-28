@@ -60,3 +60,5 @@ export default function AdminDealsList() {
     </AdminLayout>
   )
 }
+
+AdminDealsList.getLayout = (page) => page

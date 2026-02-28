@@ -700,3 +700,5 @@ export default function AdminTestimonials() {
     </AdminLayout>
   )
 }
+
+AdminTestimonials.getLayout = (page) => page

@@ -3,6 +3,8 @@
 // Surfaces same-day + near-term openings for SMS/social/ad traffic.
 import { useState, useEffect, useCallback, useRef, Component } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { colors, gradients, fontPairings } from '@/components/preview/tokens'
 import ClientInfoForm from '@/components/booking/ClientInfoForm'
@@ -11,8 +13,8 @@ import { getTrackingToken } from '@/lib/trackingToken'
 
 const fonts = fontPairings.bold
 
-const PHONE_NUMBER = '3174008785'
-const PHONE_DISPLAY = '(317) 400-8785'
+const PHONE_NUMBER = '3177631142'
+const PHONE_DISPLAY = '(317) 763-1142'
 const REFRESH_INTERVAL_MS = 50_000 // ~50s (within 45-60s range)
 
 // ─── Error Boundary ───
@@ -1071,11 +1073,29 @@ export default function TodayPage() {
         `}</style>
       </Head>
 
-      <div style={{ minHeight: '100vh', backgroundColor: colors.ink, color: colors.white }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: colors.ink, color: colors.white }}>
+        {/* ─── Sticky Mobile Header ─── */}
+        <header style={{
+          position: 'sticky', top: 0, zIndex: 50, backgroundColor: '#000',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px',
+        }}>
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back to site
+          </Link>
+          <Link href="/" style={{ display: 'inline-flex' }}>
+            <Image src="/images/logo/logo.png" alt="RELUXE Med Spa" width={120} height={40} priority />
+          </Link>
+          <div style={{ width: 85 }} /> {/* spacer to center logo */}
+        </header>
+
+        {/* ─── Content ─── */}
+        <div style={{ flex: 1 }}>
         <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 1.25rem' }}>
 
-          {/* ─── Header ─── */}
-          <header style={{ paddingTop: '2rem', paddingBottom: '1rem' }}>
+          {/* ─── Page Header ─── */}
+          <header style={{ paddingTop: '1.5rem', paddingBottom: '1rem' }}>
             <p style={{
               fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 700,
               letterSpacing: '0.15em', textTransform: 'uppercase',
@@ -1282,6 +1302,17 @@ export default function TodayPage() {
             trackEvent={trackEvent}
           />
         )}
+        </div> {/* end flex:1 content */}
+
+        {/* ─── Sticky Mobile Footer ─── */}
+        <footer style={{
+          position: 'sticky', bottom: 0, zIndex: 50, backgroundColor: '#000',
+          padding: '10px 0', textAlign: 'center',
+        }}>
+          <span style={{ fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em' }}>
+            RELUXE Med Spa &nbsp;·&nbsp; <a href="tel:+13177631142" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>(317) 763-1142</a>
+          </span>
+        </footer>
       </div>
     </>
   )

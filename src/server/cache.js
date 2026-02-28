@@ -21,10 +21,10 @@ export function getCached(key, ttlMs = 120_000) {
 export function setCache(key, data) {
   store.set(key, { data, ts: Date.now() });
   // Evict oldest entries when map gets too large
-  if (store.size > 500) {
+  if (store.size > 1000) {
     const oldest = [...store.entries()]
       .sort((a, b) => a[1].ts - b[1].ts)
-      .slice(0, 100);
+      .slice(0, 200);
     oldest.forEach(([k]) => store.delete(k));
   }
 }

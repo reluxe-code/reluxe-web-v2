@@ -3,15 +3,17 @@
 // Lighter than for-service.js — no Boulevard availability calls.
 import { getServiceClient } from '@/lib/supabase'
 import { getCached, setCache } from '@/server/cache'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { locationKey } = req.query
   if (!locationKey) return res.status(400).json({ error: 'locationKey is required' })
 
   const cacheKey = `providers-at:${locationKey}`
-  const cached = getCached(cacheKey, 300_000) // 5 min
+  const cached = getCached(cacheKey, 1_800_000) // 30 min — staff roster is static
   if (cached && !cached.stale) return res.json(cached.data)
 
   try {
@@ -56,7 +58,7 @@ export default async function handler(req, res) {
     }))
 
     setCache(cacheKey, result)
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
+    res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600')
     res.json(result)
   } catch (err) {
     console.error('[blvd/providers/at-location]', err.message)

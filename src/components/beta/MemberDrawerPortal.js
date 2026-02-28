@@ -7,7 +7,7 @@ import RebookModal from '@/components/beta/RebookModal'
 import BookingFlowModal from '@/components/booking/BookingFlowModal'
 
 export default function MemberDrawerPortal({ fonts }) {
-  const { member, profile, isAuthenticated, drawerOpen, drawerTab, closeDrawer, rebookOpen, rebookData, closeRebookModal, refreshProfile, bookingModalOpen, bookingLocationKey, closeBookingModal } = useMember()
+  const { member, profile, isAuthenticated, drawerOpen, drawerTab, closeDrawer, rebookOpen, rebookData, closeRebookModal, refreshProfile, bookingModalOpen, bookingLocationKey, bookingServiceSlug, closeBookingModal } = useMember()
 
   return (
     <>
@@ -36,6 +36,7 @@ export default function MemberDrawerPortal({ fonts }) {
         isOpen={bookingModalOpen}
         onClose={closeBookingModal}
         locationKey={bookingLocationKey}
+        initialServiceSlug={bookingServiceSlug}
         fonts={fonts}
       />
     </>

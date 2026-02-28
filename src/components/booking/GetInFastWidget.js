@@ -112,7 +112,7 @@ function Card({ opening, isLastSlot, onBookClick, onCallClick }) {
       }}
     >
       <div className="flex items-center justify-between">
-        <p style={{ fontFamily: fonts.body, fontSize: '0.74rem', color: colors.violet, fontWeight: 600 }}>{opening.dayLabel}</p>
+        <p style={{ fontFamily: fonts.body, fontSize: '0.74rem', color: '#A78BFA', fontWeight: 600 }}>{opening.dayLabel}</p>
         {badge && (
           <span
             style={{

@@ -535,3 +535,5 @@ export default function CustomersPage() {
     </AdminLayout>
   )
 }
+
+CustomersPage.getLayout = (page) => page

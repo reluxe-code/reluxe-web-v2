@@ -152,3 +152,5 @@ export default function IntelligenceOverview() {
     </AdminLayout>
   )
 }
+
+IntelligenceOverview.getLayout = (page) => page

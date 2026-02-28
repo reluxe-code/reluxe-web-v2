@@ -438,7 +438,7 @@ export default function FlashSalePage() {
         />
         <meta
           property="og:image"
-          content="/images/deals/og-flash-sale.jpg"
+          content="https://reluxemedspa.com/images/og/new-default-1200x630.png"
         />
         <script
           type="application/ld+json"

@@ -99,3 +99,5 @@ export default function AdminDealEdit() {
     </AdminLayout>
   )
 }
+
+AdminDealEdit.getLayout = (page) => page

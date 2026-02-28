@@ -81,6 +81,7 @@ const nextConfig = {
       { source: '/book-facials', destination: '/services/facials', permanent: true },
       { source: '/book-morpheus8', destination: '/services/morpheus8', permanent: true },
       { source: '/book-sauna', destination: '/services/saltsauna', permanent: true },
+      { source: '/financing', destination: '/cherry-financing', permanent: false },
       { source: '/book-injectables-with-krista-botox-jeuveau-xeomin-rha-versa-neuromodulators-dermal-fillers', destination: '/team/krista', permanent: true },
       { source: '/book-massage-lead', destination: '/services/massage', permanent: true },
       { source: '/book-massage', destination: '/services/massage', permanent: true },
@@ -186,7 +187,8 @@ const nextConfig = {
       { source: '/service/rha-fillers-in-westfield-in', destination: '/services/rha', permanent: true },
       { source: '/service/revanesse-versa-lips-dermal-fillers-in-westfield-in', destination: '/services/versa', permanent: true },
       { source: '/service/relaxation-facial', destination: '/services/facials', permanent: true },
-      { source: '/service/haloir-salt-therapy', destination: '/saltsauna', permanent: true },
+      { source: '/service/haloir-salt-therapy', destination: '/services/saltsauna', permanent: true },
+      { source: '/services/salt-sauna', destination: '/services/saltsauna', permanent: true },
       { source: '/service/zo-skin-health-professional-skin-care', destination: '/services/skin-iq', permanent: true },
       { source: '/service/botox-in-westfield-in', destination: '/services/botox', permanent: true },
       { source: '/service/hydrafacial', destination: '/services/hydrafacial', permanent: true },
@@ -217,7 +219,14 @@ const nextConfig = {
       { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive, nosnippet, noimageindex' },
     ];
 
+    const apiSecurityHeaders = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'Cache-Control', value: 'no-store' },
+    ];
+
     return [
+      { source: '/api/:path*', headers: apiSecurityHeaders },
       { source: '/beta/:path*', headers: noIndexNoFollow },
       { source: '/preview/:path*', headers: noIndexNoFollow },
       { source: '/capture/:path*', headers: noIndexNoFollow },

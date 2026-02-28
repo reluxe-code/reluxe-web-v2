@@ -3,9 +3,19 @@
 // matching time slot, and reserves it — all on the SAME cart instance.
 // Supports single or multi-service bookings.
 import { createCartWithItem, createCartWithItems } from '@/server/blvd'
+import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
+import { recordSuccess, recordFailure, getCircuitState } from '@/server/circuitBreaker'
+
+const limiter = createRateLimiter('cart-create', 10, 60_000) // 10/min per IP
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, limiter, getClientIp(req))) return
+
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    return res.status(503).json({ error: 'Our booking system is temporarily busy. Please try again in a moment.', degraded: true })
+  }
 
   const { locationKey, serviceItemId, staffProviderId, date, startTime, selectedOptionIds, additionalItems } = req.body
 
@@ -30,6 +40,9 @@ export default async function handler(req, res) {
     } else {
       // Single-service path
       const result = await createCartWithItem(locationKey, serviceItemId, staffProviderId, selectedOptionIds)
+      if (result.staffMismatch) {
+        return res.status(409).json({ error: 'This provider does not offer the selected service at this location.' })
+      }
       cart = result.cart
       primaryItem = result.item
       primaryStaffVariant = result.staffVariant
@@ -52,6 +65,7 @@ export default async function handler(req, res) {
       return sum + (r.staffVariant?.duration || r.item?.listDurationRange?.max || 0)
     }, 0)
 
+    recordSuccess()
     res.json({
       cartId: reserved.id,
       expiresAt: reserved.expiresAt || null,
@@ -67,6 +81,7 @@ export default async function handler(req, res) {
       },
     })
   } catch (err) {
+    recordFailure()
     console.error('[blvd/cart/create]', err.message)
     res.status(500).json({ error: 'Failed to reserve. Please try again.' })
   }

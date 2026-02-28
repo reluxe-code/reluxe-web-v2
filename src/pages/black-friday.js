@@ -28,15 +28,15 @@ export default function BlackFridayArchivePage() {
         />
         <meta
           property="og:image"
-          content="https://reluxemedspa.com/images/promo/bf-flash.png"
+          content="https://reluxemedspa.com/images/og/new-default-1200x630.png"
         />
         <meta
           property="og:image:secure_url"
-          content="https://reluxemedspa.com/images/promo/bf-flash.png"
+          content="https://reluxemedspa.com/images/og/new-default-1200x630.png"
         />
         <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:width" content="1080" />
-        <meta property="og:image:height" content="1080" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content="https://reluxemedspa.com/black-friday" />
         <meta property="og:type" content="website" />
 
@@ -52,7 +52,7 @@ export default function BlackFridayArchivePage() {
         />
         <meta
           name="twitter:image"
-          content="https://reluxemedspa.com/images/promo/bf-flash.png"
+          content="https://reluxemedspa.com/images/og/new-default-1200x630.png"
         />
       </Head>
 

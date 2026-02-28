@@ -322,3 +322,5 @@ export default function ProductIntelligencePage() {
     </Layout>
   )
 }
+
+ProductIntelligencePage.getLayout = (page) => page

@@ -12,8 +12,7 @@ const SITE_URL = 'https://reluxemedspa.com'
 const PAGE_PATH = '/reluxe-way'
 const CANONICAL_URL = `${SITE_URL}${PAGE_PATH}`
 
-const OG_IMAGE = `${SITE_URL}/images/reluxe-way/reluxe-way-og.jpg` // ✅ create this (1200x630)
-const OG_IMAGE_SQUARE = `${SITE_URL}/images/reluxe-way/reluxe-way-og-square.jpg` // optional (1080x1080)
+const OG_IMAGE = `${SITE_URL}/images/og/new-default-1200x630.png`
 
 const PAGE_TITLE =
   'The RELUXE Way | Why Patients Choose RELUXE (Carmel & Westfield)'
@@ -231,9 +230,6 @@ export default function ReluxeWayHub() {
           property="og:image:alt"
           content="The RELUXE Way — why patients choose RELUXE in Carmel & Westfield"
         />
-        {/* Optional square */}
-        <meta property="og:image" content={OG_IMAGE_SQUARE} />
-
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={PAGE_TITLE} />

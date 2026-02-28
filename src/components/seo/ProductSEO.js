@@ -15,20 +15,20 @@ const LOCATIONS = [
       postalCode: '46074',
       addressCountry: 'US',
     },
-    telephone: '+1-317-399-4567',
+    telephone: '+1-317-763-1142',
   },
   {
     '@type': 'MedicalBusiness',
     name: 'RELUXE Med Spa — Carmel',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '14390 Clay Terrace Blvd Suite 172',
+      streetAddress: '10485 N Pennsylvania St',
       addressLocality: 'Carmel',
       addressRegion: 'IN',
-      postalCode: '46032',
+      postalCode: '46280',
       addressCountry: 'US',
     },
-    telephone: '+1-317-399-4567',
+    telephone: '+1-317-763-1142',
   },
 ]
 
@@ -47,7 +47,7 @@ export default function ProductSEO({ product, brand, siteName = 'RELUXE Med Spa'
   const title = p.seo_title || `${p.name} by ${b.name} | ${siteName}`
   const description = p.seo_description ||
     `${p.name} is a ${p.category || 'skincare product'} by ${b.name} featuring ${(p.key_ingredients || []).slice(0, 3).join(', ')}. Available at ${siteName} in Westfield & Carmel, IN.`
-  const image = toAbs(p.image_url || '/images/opengraph-default.jpg')
+  const image = toAbs(p.image_url || '/images/og/new-default-1200x630.png')
 
   // Product JSON-LD
   const purchaseType = p.purchase_type || b.purchase_type || 'in_clinic'

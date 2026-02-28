@@ -27,12 +27,12 @@ export default function MenPage() {
         <meta property="og:description" content="The secret to looking sharp and aging gracefully. Injectables, facials, laser hair removal, and massage—tailored for men." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/men" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/men/facial2.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
         <meta property="og:site_name" content="RELUXE Med Spa" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Men's Med Spa Services | RELUXE Med Spa" />
         <meta name="twitter:description" content="Discreet, natural results that boost confidence. Injectables, facials, laser hair removal, and massage—tailored for men." />
-        <meta name="twitter:image" content="https://reluxemedspa.com/images/men/facial2.jpg" />
+        <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
       <SeoJsonLd data={{
         '@context': 'https://schema.org',

@@ -627,3 +627,5 @@ export default function ExperimentsDashboard() {
     </AdminLayout>
   )
 }
+
+ExperimentsDashboard.getLayout = (page) => page

@@ -4,6 +4,7 @@
 // ✅ Adds attribution capture to email (UTMs, click IDs, first landing URL, referrer, device, duration, UA)
 
 import { getSmtpConfig, parseToList, escHtml, safeJson } from '@/lib/email'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 function maybeLink(url) {
   const u = String(url || '')
@@ -14,6 +15,8 @@ function maybeLink(url) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   try {
     const body = req.body || {}

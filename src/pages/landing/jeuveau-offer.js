@@ -34,7 +34,7 @@ export default function JeuveauIntroPage() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/jeuveau-intro" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/landing/jeuveau-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />

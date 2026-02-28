@@ -148,6 +148,26 @@ export default function ProductDetailPage({ product, brand, related }) {
         </div>
       </section>
 
+      {/* Colorescience Anniversary Sale Banner */}
+      {b.slug === 'colorescience' && (
+        <div className="py-4 px-4" style={{ background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
+          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
+            <div className="flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#CF7155' }}>Limited Time &middot; March 5–22</p>
+              <p className="text-lg font-bold mt-0.5" style={{ color: '#CF7155', fontStyle: 'italic', fontFamily: 'Playfair Display, serif' }}>Anniversary Sale: 20% Off Sitewide + Free Shipping</p>
+            </div>
+            <a
+              href="https://colorescience.com/reluxe-med-spa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold text-white whitespace-nowrap hover:opacity-90 transition"
+              style={{ background: 'linear-gradient(135deg, #CF7155, #B85A40)' }}>
+              Shop the Sale &rarr;
+            </a>
+          </div>
+        </div>
+      )}
+
       <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 space-y-14">
         {/* Full description */}
         {p.description && (

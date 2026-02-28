@@ -1,10 +1,9 @@
-// src/pages/reviews.js
-// Public page showing all recommendable testimonials with filters.
-
-import { useState, useMemo, useCallback } from 'react'
-import Head from 'next/head'
-import HeaderTwo from '@/components/header/header-2'
-import { getTestimonialsSSR } from '@/lib/testimonials'
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import BetaLayout from '@/components/beta/BetaLayout';
+import { colors, gradients, typeScale } from '@/components/preview/tokens';
+import { getTestimonialsSSR } from '@/lib/testimonials';
+import GravityBookButton from '@/components/beta/GravityBookButton';
 
 const SERVICE_LABELS = {
   tox: 'Tox', filler: 'Filler', 'facial-balancing': 'Facial Balancing',
@@ -14,229 +13,197 @@ const SERVICE_LABELS = {
   facials: 'Facials', glo2facial: 'Glo2Facial', hydrafacial: 'HydraFacial',
   peels: 'Peels', evolvex: 'EvolveX', massage: 'Massage',
   'salt-sauna': 'Salt Sauna', 'skin-iq': 'Skin IQ',
+};
+
+function privacyName(name) {
+  if (!name) return 'RELUXE Patient';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-function Star({ filled }) {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true" className={`h-4 w-4 ${filled ? 'fill-amber-400' : 'fill-neutral-200'}`}>
-      <path d="M10 1.5l2.47 5 5.53.8-4 3.9.95 5.52L10 14.9l-4.95 2.82.95-5.52-4-3.9 5.53-.8L10 1.5z" />
-    </svg>
-  )
-}
-
-function formatAuthor(name) {
-  if (!name) return 'RELUXE Patient'
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0]
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  try {
-    return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
-  } catch { return '' }
-}
-
-const QUOTE_LIMIT = 140
-
-function ReviewCard({ t }) {
-  const [expanded, setExpanded] = useState(false)
-  const serviceLabel = SERVICE_LABELS[t.service] || ''
-  const quote = t.quote || ''
-  const needsTruncate = quote.length > QUOTE_LIMIT
-  const displayQuote = needsTruncate && !expanded ? quote.slice(0, QUOTE_LIMIT).trimEnd() + '...' : quote
+function ReviewCard({ t, fonts, index }) {
+  const [expanded, setExpanded] = useState(false);
+  const serviceLabel = SERVICE_LABELS[t.service] || '';
+  const quote = t.quote || '';
+  const needsTruncate = quote.length > 200;
+  const displayQuote = needsTruncate && !expanded ? quote.slice(0, 200).trimEnd() + '...' : quote;
 
   return (
-    <div className="bg-white rounded-2xl border p-4 shadow-sm flex flex-col">
+    <motion.div
+      className="rounded-2xl p-6 lg:p-8 flex flex-col"
+      style={{ backgroundColor: colors.cream, borderLeft: `3px solid ${colors.violet}` }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4, delay: (index % 6) * 0.06 }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-1.5 gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {serviceLabel && (
-            <span className="inline-block text-[10px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 shrink-0">
-              {serviceLabel}
-            </span>
+            <span className="inline-block rounded-full px-2.5 py-1 shrink-0" style={{ background: `${colors.violet}12`, fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.violet, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{serviceLabel}</span>
           )}
           {t.provider && (
-            <span className="text-xs text-neutral-500 truncate">with {t.provider}</span>
+            <span className="truncate" style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>with {t.provider}</span>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-0.5">
-            {[0,1,2,3,4].map(n => <Star key={n} filled={n < t.rating} />)}
-          </div>
-          {t.review_date && (
-            <span className="text-[11px] text-neutral-400">{formatDate(t.review_date)}</span>
-          )}
+        <div className="flex gap-0.5 shrink-0">
+          {[...Array(t.rating || 5)].map((_, j) => (
+            <svg key={j} width="14" height="14" viewBox="0 0 16 16" fill={colors.violet}><path d="M8 1l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 11.8 3.8 14l.8-4.7L1.2 6l4.7-.7L8 1z" /></svg>
+          ))}
         </div>
       </div>
 
       {/* Quote */}
-      <p className="text-neutral-800 text-sm leading-snug flex-1">
+      <p className="flex-1 mb-4" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: colors.body, lineHeight: 1.625 }}>
         &ldquo;{displayQuote}&rdquo;
         {needsTruncate && (
-          <button
-            type="button"
-            onClick={() => setExpanded(e => !e)}
-            className="ml-1 text-violet-600 hover:text-violet-700 text-xs font-medium"
-          >
+          <button type="button" onClick={() => setExpanded((e) => !e)} className="ml-1" style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.violet, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             {expanded ? 'less' : 'more'}
           </button>
         )}
       </p>
 
       {/* Author */}
-      <p className="text-xs text-neutral-500 mt-2 pt-2 border-t border-gray-100">
-        &mdash; {formatAuthor(t.author_name)}
-        {t.location && (
-          <span className="text-neutral-400"> &middot; {t.location === 'carmel' ? 'Carmel' : 'Westfield'}</span>
-        )}
-      </p>
-    </div>
-  )
+      <div className="flex items-center gap-3 pt-4" style={{ borderTop: `1px solid ${colors.stone}` }}>
+        <div className="flex items-center justify-center rounded-full shrink-0" style={{ width: 36, height: 36, backgroundColor: colors.stone, color: colors.muted, fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600 }}>{t.author_name?.charAt(0) || '?'}</div>
+        <div>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.heading }}>{privacyName(t.author_name)}</p>
+          {t.location && <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>{t.location === 'carmel' ? 'Carmel' : 'Westfield'}</p>}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function BetaReviews({ testimonials = [] }) {
+  const [filterLocation, setFilterLocation] = useState('');
+  const [filterProvider, setFilterProvider] = useState('');
+  const [filterService, setFilterService] = useState('');
+  const [showCount, setShowCount] = useState(24);
+
+  const { providers, services } = useMemo(() => {
+    const provSet = new Set();
+    const svcSet = new Set();
+    for (const t of testimonials) {
+      if (t.provider) provSet.add(t.provider);
+      if (t.service) svcSet.add(t.service);
+    }
+    return { providers: [...provSet].sort(), services: [...svcSet].sort() };
+  }, [testimonials]);
+
+  const filtered = useMemo(() => {
+    return testimonials.filter((t) => {
+      if (filterLocation && t.location !== filterLocation) return false;
+      if (filterProvider && t.provider !== filterProvider) return false;
+      if (filterService && t.service !== filterService) return false;
+      return true;
+    });
+  }, [testimonials, filterLocation, filterProvider, filterService]);
+
+  const visible = filtered.slice(0, showCount);
+  const hasMore = showCount < filtered.length;
+
+  return (
+    <BetaLayout title="Patient Reviews — 5-Star Botox, Facials & Med Spa Reviews" description={`Read ${testimonials.length}+ real 5-star patient reviews from RELUXE Med Spa in Westfield and Carmel, Indiana. See why patients love our Botox, fillers, Morpheus8 & facial treatments.`} canonical="https://reluxemedspa.com/reviews">
+      {({ fontKey, fonts }) => (
+        <>
+          {/* Hero */}
+          <section style={{ backgroundColor: colors.ink }}>
+            <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28 text-center">
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Patient Reviews</p>
+                <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700, lineHeight: 1.08, color: colors.white, marginBottom: '1rem' }}>
+                  What Our Patients{' '}
+                  <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Really Say</span>
+                </h1>
+                <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', lineHeight: 1.6, color: 'rgba(250,248,245,0.55)', maxWidth: '28rem', margin: '0 auto' }}>
+                  {testimonials.length} five-star reviews from real patients. Zero bought. Zero filtered.
+                </p>
+              </motion.div>
+            </div>
+          </section>
+
+          {/* Stats bar */}
+          <section style={{ backgroundColor: colors.ink, paddingBottom: '2rem' }}>
+            <div className="max-w-4xl mx-auto px-6">
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { value: '5.0', label: 'Star Average' },
+                  { value: `${testimonials.length}+`, label: 'Total Reviews' },
+                  { value: '100%', label: 'Real Patients' },
+                ].map((stat, i) => (
+                  <motion.div key={stat.label} className="text-center rounded-xl py-4" style={{ backgroundColor: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.06)' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
+                    <p style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.white }}>{stat.value}</p>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{stat.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Filters + Reviews */}
+          <section style={{ backgroundColor: '#fff' }}>
+            <div className="max-w-7xl mx-auto px-6 py-12 lg:py-16">
+              {/* Filters */}
+              <div className="flex flex-wrap gap-3 items-center mb-10">
+                <select value={filterLocation} onChange={(e) => { setFilterLocation(e.target.value); setShowCount(24); }} className="rounded-full px-4 py-2.5 outline-none" style={{ fontFamily: fonts.body, fontSize: '0.875rem', backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, color: colors.heading }}>
+                  <option value="">All Locations</option>
+                  <option value="westfield">Westfield</option>
+                  <option value="carmel">Carmel</option>
+                </select>
+                <select value={filterProvider} onChange={(e) => { setFilterProvider(e.target.value); setShowCount(24); }} className="rounded-full px-4 py-2.5 outline-none" style={{ fontFamily: fonts.body, fontSize: '0.875rem', backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, color: colors.heading }}>
+                  <option value="">All Providers</option>
+                  {providers.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select value={filterService} onChange={(e) => { setFilterService(e.target.value); setShowCount(24); }} className="rounded-full px-4 py-2.5 outline-none" style={{ fontFamily: fonts.body, fontSize: '0.875rem', backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, color: colors.heading }}>
+                  <option value="">All Services</option>
+                  {services.map((s) => <option key={s} value={s}>{SERVICE_LABELS[s] || s}</option>)}
+                </select>
+                {(filterLocation || filterProvider || filterService) && (
+                  <button onClick={() => { setFilterLocation(''); setFilterProvider(''); setFilterService(''); setShowCount(24); }} style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.violet, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Clear Filters</button>
+                )}
+                <span className="ml-auto" style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>{filtered.length} reviews</span>
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {visible.map((t, i) => (
+                  <ReviewCard key={t.id} t={t} fonts={fonts} index={i} />
+                ))}
+              </div>
+
+              {/* Load more */}
+              {hasMore && (
+                <div className="text-center mt-12">
+                  <button onClick={() => setShowCount((c) => c + 24)} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2.5rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
+                    Load More ({filtered.length - showCount} remaining)
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Bottom CTA */}
+          <section style={{ background: gradients.primary, position: 'relative' }}>
+            <div className="max-w-3xl mx-auto px-6 py-20 text-center relative">
+              <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 700, color: '#fff', marginBottom: '1rem' }}>Ready to See What All the Hype Is About?</h2>
+              <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)', marginBottom: '2rem' }}>Book a free consultation and join the 5-star club.</p>
+              <div className="flex justify-center">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+    </BetaLayout>
+  );
 }
 
 export async function getStaticProps() {
-  // Fetch all 5-star recommendable reviews (no service/location filter)
-  const testimonials = await getTestimonialsSSR({ limit: 500 })
-  return { props: { testimonials }, revalidate: 3600 }
+  const testimonials = await getTestimonialsSSR({ limit: 500 });
+  return { props: { testimonials }, revalidate: 3600 };
 }
 
-export default function ReviewsPage({ testimonials = [] }) {
-  const [filterLocation, setFilterLocation] = useState('')
-  const [filterProvider, setFilterProvider] = useState('')
-  const [filterService, setFilterService] = useState('')
-  const [showCount, setShowCount] = useState(24)
-
-  // Derive unique providers and services from data
-  const { providers, services } = useMemo(() => {
-    const provSet = new Set()
-    const svcSet = new Set()
-    for (const t of testimonials) {
-      if (t.provider) provSet.add(t.provider)
-      if (t.service) svcSet.add(t.service)
-    }
-    return {
-      providers: [...provSet].sort(),
-      services: [...svcSet].sort(),
-    }
-  }, [testimonials])
-
-  const filtered = useMemo(() => {
-    return testimonials.filter(t => {
-      if (filterLocation && t.location !== filterLocation) return false
-      if (filterProvider && t.provider !== filterProvider) return false
-      if (filterService && t.service !== filterService) return false
-      return true
-    })
-  }, [testimonials, filterLocation, filterProvider, filterService])
-
-  const visible = filtered.slice(0, showCount)
-
-  // Aggregate rating for schema
-  const avgRating = testimonials.length
-    ? (testimonials.reduce((s, t) => s + t.rating, 0) / testimonials.length).toFixed(1)
-    : '5.0'
-
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "MedicalBusiness",
-    "name": "RELUXE Med Spa",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": avgRating,
-      "ratingCount": testimonials.length,
-      "bestRating": 5,
-      "worstRating": 1,
-    },
-  }
-
-  return (
-    <>
-      <Head>
-        <title>Patient Reviews | RELUXE Med Spa</title>
-        <meta name="description" content="Read real patient reviews from RELUXE Med Spa in Westfield and Carmel, Indiana. 5-star rated Botox, fillers, facials, laser treatments and more." />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      </Head>
-
-      <HeaderTwo />
-
-      <main className="min-h-screen bg-gray-50">
-        {/* Hero */}
-        <section className="bg-white border-b">
-          <div className="max-w-6xl mx-auto px-4 py-12 text-center">
-            <span className="inline-block text-xs tracking-widest uppercase text-gray-500 mb-2">Patient Reviews</span>
-            <h1 className="text-3xl md:text-4xl font-bold">
-              What Our{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                Patients Say
-              </span>
-            </h1>
-            <p className="text-lg text-gray-600 mt-2 max-w-2xl mx-auto">
-              {testimonials.length} five-star reviews from real patients across our Westfield and Carmel locations.
-            </p>
-          </div>
-        </section>
-
-        {/* Filters */}
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex flex-wrap gap-3 items-center">
-            <select
-              value={filterLocation}
-              onChange={e => { setFilterLocation(e.target.value); setShowCount(24) }}
-              className="border rounded-full px-4 py-2 text-sm bg-white"
-            >
-              <option value="">All Locations</option>
-              <option value="westfield">Westfield</option>
-              <option value="carmel">Carmel</option>
-            </select>
-            <select
-              value={filterProvider}
-              onChange={e => { setFilterProvider(e.target.value); setShowCount(24) }}
-              className="border rounded-full px-4 py-2 text-sm bg-white"
-            >
-              <option value="">All Providers</option>
-              {providers.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            <select
-              value={filterService}
-              onChange={e => { setFilterService(e.target.value); setShowCount(24) }}
-              className="border rounded-full px-4 py-2 text-sm bg-white"
-            >
-              <option value="">All Services</option>
-              {services.map(s => <option key={s} value={s}>{SERVICE_LABELS[s] || s}</option>)}
-            </select>
-            {(filterLocation || filterProvider || filterService) && (
-              <button
-                onClick={() => { setFilterLocation(''); setFilterProvider(''); setFilterService(''); setShowCount(24) }}
-                className="text-sm text-violet-600 hover:underline"
-              >
-                Clear Filters
-              </button>
-            )}
-            <span className="ml-auto text-sm text-gray-500">{filtered.length} reviews</span>
-          </div>
-        </div>
-
-        {/* Reviews Grid */}
-        <div className="max-w-6xl mx-auto px-4 pb-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {visible.map((t) => <ReviewCard key={t.id} t={t} />)}
-          </div>
-
-          {/* Load More */}
-          {showCount < filtered.length && (
-            <div className="text-center mt-8">
-              <button
-                onClick={() => setShowCount(c => c + 24)}
-                className="px-6 py-3 bg-black text-white rounded-full text-sm font-semibold hover:bg-neutral-800 transition"
-              >
-                Load More Reviews ({filtered.length - showCount} remaining)
-              </button>
-            </div>
-          )}
-        </div>
-      </main>
-    </>
-  )
-}
+BetaReviews.getLayout = (page) => page;

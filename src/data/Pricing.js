@@ -8,7 +8,7 @@ export const servicesData = [
       { name: 'Dysport', price: '$4.50/unit' },
       { name: 'Daxxify', price: '$7.00/unit' },
       { name: 'Lip Flip', price: '$100' },
-      { name: 'Tox Consultation', price: 'Complementary' },
+      { name: 'Tox Consultation', price: 'Complimentary' },
       { name: 'Facial Balancing', price: 'Consult Required' }
     ]
   },
@@ -19,7 +19,7 @@ export const servicesData = [
       { name: 'RHA', price: '$650' },
       { name: 'Restylane', price: '$700' },
       { name: 'PRP', price: '$500/injection' },
-      { name: 'Filler Disolving', price: 'Consult Required' },
+      { name: 'Filler Dissolving', price: 'Consult Required' },
       { name: 'Facial Balancing', price: 'Consult Required' },
       { name: 'Sculptra', price: '$800/vial' }
     ]
@@ -47,7 +47,7 @@ export const servicesData = [
     title: 'Lasers',
     items: [
       { name: 'CO2 Skin Resurfacing', price: '$800' },
-      { name: 'CO2 Skin Rejuvination', price: '$2400' },
+      { name: 'CO2 Skin Rejuvenation', price: '$2400' },
       { name: 'IPL Photofacial', price: '$350' },
       { name: 'ClearLift Skin Tightening', price: '$250' },
       { name: 'ClearSkin', price: '$300' },

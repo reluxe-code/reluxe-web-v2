@@ -4,9 +4,22 @@
 import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { recordSuccess, recordFailure, getCircuitState } from '@/server/circuitBreaker'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
+
+async function batchSettled(items, fn, concurrency = 4) {
+  const results = []
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency)
+    const batchResults = await Promise.allSettled(batch.map(fn))
+    results.push(...batchResults)
+  }
+  return results
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { serviceSlug, locationKey } = req.query
 
@@ -15,9 +28,15 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = `providers-for:${serviceSlug}:${locationKey}`
-  const cached = getCached(cacheKey, 300_000) // 5 min TTL
+  const cached = getCached(cacheKey, 600_000) // 10 min TTL
   if (cached && !cached.stale) {
     return res.json(cached.data)
+  }
+
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    if (cached) return res.json(cached.data)
+    return res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 
   try {
@@ -52,12 +71,13 @@ export default async function handler(req, res) {
     const today = new Date().toISOString().split('T')[0]
     const twoWeeksOut = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
 
-    const results = await Promise.allSettled(
-      eligible.map(async (s) => {
+    const results = await batchSettled(
+      eligible, async (s) => {
         const serviceItemId = s.boulevard_service_map[serviceSlug][locationKey]
         let nextDate = null
         try {
-          const { cart } = await createCartWithItem(locationKey, serviceItemId, s.boulevard_provider_id)
+          const { cart, staffMismatch } = await createCartWithItem(locationKey, serviceItemId, s.boulevard_provider_id)
+          if (!cart || staffMismatch) throw new Error('staff mismatch')
           const dates = await cart.getBookableDates({
             searchRangeLower: today,
             searchRangeUpper: twoWeeksOut,
@@ -77,8 +97,7 @@ export default async function handler(req, res) {
           serviceItemId,
           nextAvailableDate: nextDate,
         }
-      })
-    )
+      }, 4)
 
     const providers = results
       .filter(r => r.status === 'fulfilled')
@@ -91,11 +110,14 @@ export default async function handler(req, res) {
         return a.nextAvailableDate.localeCompare(b.nextAvailableDate)
       })
 
+    recordSuccess()
     setCache(cacheKey, providers)
+    res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1200')
     res.json(providers)
   } catch (err) {
+    recordFailure()
     console.error('[blvd/providers/for-service]', err.message)
     if (cached) return res.json(cached.data)
-    res.status(200).json([])
+    res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 }

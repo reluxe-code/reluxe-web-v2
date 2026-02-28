@@ -1,81 +1,33 @@
 // src/pages/package-voucher-policy.js
-import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
 
 export default function PackageVoucherPolicyPage() {
   const updated = 'January 1, 2026'
   const effective = 'January 1, 2026'
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Package & Voucher Policy | RELUXE Med Spa',
-    url: 'https://www.reluxemedspa.com/package-voucher-policy',
-    description:
-      'RELUXE Med Spa package and voucher validity, scheduling guidance, expiration policy (24 months), and how packages differ from gift cards.',
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.reluxemedspa.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Legal', item: 'https://www.reluxemedspa.com/legal' },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: 'Package & Voucher Policy',
-          item: 'https://www.reluxemedspa.com/package-voucher-policy',
-        },
-      ],
-    },
-    mainEntity: {
-      '@type': 'Organization',
-      name: 'RELUXE Med Spa',
-      url: 'https://www.reluxemedspa.com/',
-      contactPoint: [
-        {
-          '@type': 'ContactPoint',
-          contactType: 'customer service',
-          telephone: '+1-317-763-1142',
-          email: 'hello@reluxemedspa.com',
-        },
-      ],
-      address: [
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '514 E State Road 32',
-          addressLocality: 'Westfield',
-          addressRegion: 'IN',
-          postalCode: '46074',
-          addressCountry: 'US',
-        },
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '10485 N Pennsylvania St',
-          addressLocality: 'Carmel',
-          addressRegion: 'IN',
-          postalCode: '46032',
-          addressCountry: 'US',
-        },
-      ],
-    },
-  }
-
   return (
-    <>
-      <Head>
-        <title>Package & Voucher Policy | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Learn how RELUXE Med Spa packages and service vouchers work, including validity (24 months), scheduling guidance, and how packages differ from gift cards."
-        />
-        <link rel="canonical" href="https://www.reluxemedspa.com/package-voucher-policy" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </Head>
-
-      <HeaderTwo />
+    <BetaLayout
+      title="Package & Voucher Policy"
+      description="Learn how RELUXE Med Spa packages and service vouchers work, including validity (24 months), scheduling guidance, and how packages differ from gift cards."
+      canonical="https://reluxemedspa.com/package-voucher-policy"
+      structuredData={{
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Package & Voucher Policy | RELUXE Med Spa',
+        url: 'https://www.reluxemedspa.com/package-voucher-policy',
+        description: 'RELUXE Med Spa package and voucher validity, scheduling guidance, expiration policy (24 months).',
+        mainEntity: {
+          '@type': 'Organization',
+          name: 'RELUXE Med Spa',
+          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'hello@reluxemedspa.com' }],
+          address: [
+            { '@type': 'PostalAddress', streetAddress: '514 E State Road 32', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074', addressCountry: 'US' },
+            { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+          ],
+        },
+      }}
+    >
 
       {/* Page Header */}
       <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
@@ -262,7 +214,7 @@ export default function PackageVoucherPolicyPage() {
                   <strong>RELUXE Med Spa</strong>
                 </div>
                 <div>514 E State Road 32, Westfield, IN 46074</div>
-                <div>10485 N Pennsylvania St, Carmel, IN 46032</div>
+                <div>10485 N Pennsylvania St, Carmel, IN 46280</div>
                 <div>
                   <a href="mailto:hello@reluxemedspa.com" className="underline">
                     hello@reluxemedspa.com
@@ -293,6 +245,8 @@ export default function PackageVoucherPolicyPage() {
           </section>
         </div>
       </main>
-    </>
+    </BetaLayout>
   )
 }
+
+PackageVoucherPolicyPage.getLayout = (page) => page

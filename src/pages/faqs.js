@@ -1,169 +1,161 @@
-// src/pages/faq.js
-import { useRef, useState, useEffect } from 'react'
-import Head from 'next/head'
-import Image from 'next/image'
-import { Tab, Disclosure } from '@headlessui/react'
-import { AiOutlineQuestionCircle, AiOutlineMinus, AiOutlinePlus } from 'react-icons/ai'
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import Layout from '@/components/layout/layout'
-import HeaderTwo from '@/components/header/header-2'
-import faqData from '@/data/faqs'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import BetaLayout from '@/components/beta/BetaLayout';
+import { colors, gradients, typeScale } from '@/components/preview/tokens';
+import faqData from '@/data/faqs';
+import GravityBookButton from '@/components/beta/GravityBookButton';
 
-export default function FAQPage() {
-  // remove any empty keys
-  const sections = Object.keys(faqData).filter(Boolean)
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
-  // refs & state for scrolling tabs
-  const listRef = useRef(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
+const categories = Object.keys(faqData);
 
-  function updateArrows() {
-    const el = listRef.current
-    if (!el) return
-    setCanScrollLeft(el.scrollLeft > 0)
-    setCanScrollRight(el.scrollWidth - el.clientWidth - el.scrollLeft > 1)
-  }
+export default function BetaFaqs() {
+  const [activeTab, setActiveTab] = useState(categories[0]);
+  const [openFaq, setOpenFaq] = useState(0);
 
-  function scrollTabs(dir) {
-    const el = listRef.current
-    if (!el) return
-    el.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    updateArrows()
-    window.addEventListener('resize', updateArrows)
-    return () => window.removeEventListener('resize', updateArrows)
-  }, [])
-
-  // Build FAQ schema from all sections
-  const allFaqs = sections.flatMap(sec => (faqData[sec] || []))
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: allFaqs.map(f => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  }
+  const currentFaqs = faqData[activeTab] || [];
 
   return (
-    <Layout>
-      <Head>
-        <title>FAQs | RELUXE Med Spa in Westfield & Carmel, IN</title>
-        <meta name="description" content="Frequently asked questions about RELUXE Med Spa. Learn about Botox, facials, injectables, booking, cancellations, and more at our Westfield & Carmel locations." />
-        <link rel="canonical" href="https://reluxemedspa.com/faqs" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      </Head>
+    <BetaLayout
+      title="Frequently Asked Questions — Botox, Fillers, Facials & More"
+      description="Find answers to common questions about Botox, fillers, Morpheus8, facials, booking, pricing, memberships & more at RELUXE Med Spa in Westfield & Carmel, IN."
+      canonical="https://reluxemedspa.com/faqs"
+      structuredData={{
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'FAQPage',
+            mainEntity: Object.values(faqData).flat().slice(0, 20).map(f => ({
+              '@type': 'Question',
+              name: f.q,
+              acceptedAnswer: { '@type': 'Answer', text: f.a },
+            })),
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://reluxemedspa.com' },
+              { '@type': 'ListItem', position: 2, name: 'FAQs', item: 'https://reluxemedspa.com/faqs' },
+            ],
+          },
+        ],
+      }}
+    >
+      {({ fontKey, fonts }) => (
+        <>
+          {/* Hero */}
+          <section style={{ backgroundColor: colors.ink }}>
+            <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28 text-center">
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>FAQs</p>
+                <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700, lineHeight: 1.08, color: colors.white, marginBottom: '1rem' }}>
+                  Got Questions?{' '}
+                  <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>We Got You.</span>
+                </h1>
+                <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', lineHeight: 1.6, color: 'rgba(250,248,245,0.55)', maxWidth: '28rem', margin: '0 auto' }}>
+                  Everything you need to know about treatments, booking, pricing, and more.
+                </p>
+              </motion.div>
+            </div>
+          </section>
 
-      {/* Hero */}
-      <HeaderTwo
-        title="Frequently Asked Questions"
-        subtitle="Everything you need to know before your visit"
-        image="/images/faq/faq-hero.jpg"
-      />
+          {/* Tab navigation */}
+          <section style={{ backgroundColor: '#fff', borderBottom: `1px solid ${colors.stone}`, position: 'sticky', top: 0, zIndex: 30 }}>
+            <div className="max-w-7xl mx-auto px-6 py-3">
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => { setActiveTab(cat); setOpenFaq(0); }}
+                    className="rounded-full shrink-0 transition-colors duration-200"
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      padding: '0.5rem 1.25rem',
+                      background: activeTab === cat ? gradients.primary : 'transparent',
+                      color: activeTab === cat ? '#fff' : colors.body,
+                      border: activeTab === cat ? 'none' : `1px solid ${colors.stone}`,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Tab.Group>
-          <div className="relative mb-4">
-            {/* label above tabs */}
-            <p className="text-sm text-gray-600 mb-2">Browse by category:</p>
+          {/* FAQ Content */}
+          <section style={{ backgroundColor: '#fff' }}>
+            <div className="max-w-4xl mx-auto px-6 py-16 lg:py-24">
+              <AnimatePresence mode="wait">
+                <motion.div key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
+                  <h2 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading, marginBottom: '1.5rem' }}>{activeTab}</h2>
+                  <div className="border-t" style={{ borderColor: colors.stone }}>
+                    {currentFaqs.map((faq, i) => (
+                      <div key={i} className="border-b" style={{ borderColor: colors.stone }}>
+                        <button className="w-full text-left py-6 flex items-center justify-between gap-4" style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }} onClick={() => setOpenFaq(openFaq === i ? -1 : i)}>
+                          <span style={{ fontFamily: fonts.display, fontSize: '1.0625rem', fontWeight: 600, color: openFaq === i ? colors.violet : colors.heading, transition: 'color 0.2s' }}>{faq.q}</span>
+                          <motion.span style={{ fontSize: '1.25rem', color: colors.muted, flexShrink: 0, display: 'block', width: 24, height: 24, lineHeight: '24px', textAlign: 'center' }} animate={{ rotate: openFaq === i ? 45 : 0 }} transition={{ duration: 0.2 }}>+</motion.span>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {openFaq === i && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} style={{ overflow: 'hidden' }}>
+                              <p className="pb-6" style={{ fontFamily: fonts.body, fontSize: typeScale.body.size, lineHeight: typeScale.body.lineHeight, color: colors.body, maxWidth: '48rem', paddingRight: '2rem' }}>{faq.a}</p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </section>
 
-            {/* left arrow */}
-            {canScrollLeft && (
-              <button
-                onClick={() => scrollTabs('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white rounded-full shadow"
-              >
-                <ChevronLeftIcon className="w-5 h-5 text-gray-500" />
-              </button>
-            )}
+          {/* Quick links */}
+          <section style={{ backgroundColor: colors.cream }}>
+            <div className="max-w-7xl mx-auto px-6 py-24 lg:py-32">
+              <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Still Have Questions?</p>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>We&apos;re Here to Help</h2>
+              </motion.div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { title: 'Book a Consult', body: 'Our providers will answer your specific questions and build a custom plan.', href: null, cta: 'book' },
+                  { title: 'Call Us', body: '(317) 763-1142 \u2014 available by phone Mon\u2013Fri 9am\u20135pm. Clinic hours may vary by location.', href: 'tel:3177631142', cta: 'Call Now' },
+                  { title: 'Send a Message', body: 'Fill out our contact form and we\u2019ll get back to you within 24 hours.', href: '/contact', cta: 'Contact Us' },
+                ].map((card, i) => (
+                  <motion.div key={card.title} className="rounded-2xl p-8 text-center" style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
+                    <h3 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading, marginBottom: '0.5rem' }}>{card.title}</h3>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', lineHeight: 1.6, color: colors.body, marginBottom: '1.25rem' }}>{card.body}</p>
+                    {card.cta === 'book' ? (
+                      <GravityBookButton fontKey={fontKey} size="nav" />
+                    ) : (
+                      <a href={card.href} className="rounded-full inline-block" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', color: colors.violet, border: `1.5px solid ${colors.violet}`, textDecoration: 'none' }}>{card.cta}</a>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
 
-            {/* tab list */}
-            <Tab.List
-              ref={listRef}
-              onScroll={updateArrows}
-              className="flex space-x-3 overflow-x-auto no-scrollbar px-8 py-2"
-            >
-              {sections.map((sec) => (
-                <Tab
-                  key={sec}
-                  className={({ selected }) =>
-                    `whitespace-nowrap px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                      selected
-                        ? 'bg-reluxe-primary text-black shadow-lg'
-                        : 'text-gray-600 hover:bg-reluxe-primary/10 hover:text-reluxe-primary'
-                    }`
-                  }
-                >
-                  {sec}
-                </Tab>
-              ))}
-            </Tab.List>
-
-            {/* right arrow */}
-            {canScrollRight && (
-              <button
-                onClick={() => scrollTabs('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 bg-white rounded-full shadow"
-              >
-                <ChevronRightIcon className="w-5 h-5 text-gray-500" />
-              </button>
-            )}
-          </div>
-
-          {/* panels */}
-          <Tab.Panels className="space-y-12">
-            {sections.map((sec) => (
-              <Tab.Panel key={sec}>
-                {/* banner image */}
-                <div className="relative h-48 w-full mb-8 rounded-xl overflow-hidden shadow">
-                  <Image
-                    src={`/images/faq/${sec
-                      .toLowerCase()
-                      .replace(/[^a-z0-9]+/g, '-')}.jpg`}
-                    alt={sec}
-                    layout="fill"
-                    objectFit="cover"
-                  />
-                </div>
-
-                {/* accordions */}
-                <div className="space-y-4">
-                  {faqData[sec].map(({ q, a }) => (
-                    <Disclosure
-                      key={q}
-                      as="div"
-                      className="bg-white rounded-xl shadow-sm border border-gray-200"
-                    >
-                      {({ open }) => (
-                        <>
-                          <Disclosure.Button className="w-full flex items-center justify-between px-6 py-4 text-left">
-                            <div className="flex items-center space-x-2">
-                              <AiOutlineQuestionCircle className="w-5 h-5 text-reluxe-primary" />
-                              <span className="font-semibold text-gray-800">{q}</span>
-                            </div>
-                            {open ? (
-                              <AiOutlineMinus className="w-5 h-5 text-gray-500" />
-                            ) : (
-                              <AiOutlinePlus className="w-5 h-5 text-gray-500" />
-                            )}
-                          </Disclosure.Button>
-                          <Disclosure.Panel className="px-6 pb-4 text-gray-700">
-                            {a}
-                          </Disclosure.Panel>
-                        </>
-                      )}
-                    </Disclosure>
-                  ))}
-                </div>
-              </Tab.Panel>
-            ))}
-          </Tab.Panels>
-        </Tab.Group>
-      </main>
-    </Layout>
-  )
+          {/* Bottom CTA */}
+          <section style={{ background: gradients.primary, position: 'relative' }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+            <div className="max-w-3xl mx-auto px-6 py-20 text-center relative">
+              <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 700, color: '#fff', marginBottom: '1rem' }}>Ready to Get Started?</h2>
+              <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)', marginBottom: '2rem' }}>Book a free consultation &mdash; no pressure, just expert advice.</p>
+              <div className="flex justify-center">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+    </BetaLayout>
+  );
 }
+
+BetaFaqs.getLayout = (page) => page;

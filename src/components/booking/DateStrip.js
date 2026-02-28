@@ -90,7 +90,7 @@ export default function DateStrip({ availableDates = [], selectedDate, onSelect,
                 width: 64,
                 padding: '10px 0 6px',
                 cursor: isAvailable ? 'pointer' : 'default',
-                opacity: isAvailable ? 1 : 0.3,
+                opacity: isAvailable ? 1 : 0.45,
                 backgroundColor: isSelected ? colors.violet : isAvailable ? 'rgba(124,58,237,0.08)' : 'transparent',
                 border: isSelected
                   ? `2px solid ${colors.violet}`
@@ -115,7 +115,7 @@ export default function DateStrip({ availableDates = [], selectedDate, onSelect,
                   fontFamily: fonts?.body || 'system-ui',
                   fontSize: '1.25rem',
                   fontWeight: 700,
-                  color: isSelected ? '#fff' : colors.heading,
+                  color: isSelected ? '#fff' : colors.violet,
                   lineHeight: 1.2,
                 }}
               >

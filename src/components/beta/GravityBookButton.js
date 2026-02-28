@@ -19,7 +19,7 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
 
   const hasPreference = !!locationKey;
   const isNav = size === 'nav';
-  const locationLabel = locationKey === 'westfield' ? 'Westfield' : locationKey === 'carmel' ? 'Carmel' : null;
+  const locationLabel = locationKey === 'all' ? 'All' : locationKey === 'westfield' ? 'Westfield' : locationKey === 'carmel' ? 'Carmel' : null;
 
   // Close drawer on outside click
   useEffect(() => {
@@ -177,6 +177,47 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
               </p>
 
               <div className="space-y-2">
+                {/* All Locations */}
+                <motion.button
+                  className="w-full rounded-xl p-4 text-left flex items-center gap-3"
+                  style={{
+                    background: locationKey === 'all'
+                      ? 'linear-gradient(135deg, rgba(250,248,245,0.12), rgba(250,248,245,0.06))'
+                      : 'rgba(250,248,245,0.04)',
+                    border: locationKey === 'all'
+                      ? '1px solid rgba(250,248,245,0.2)'
+                      : '1px solid rgba(250,248,245,0.06)',
+                    cursor: 'pointer',
+                  }}
+                  whileHover={{
+                    background: 'linear-gradient(135deg, rgba(250,248,245,0.08), rgba(250,248,245,0.04))',
+                    borderColor: 'rgba(250,248,245,0.15)',
+                  }}
+                  onClick={() => handleLocationPick('all')}
+                >
+                  <div
+                    className="flex-shrink-0 flex items-center justify-center rounded-lg"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      background: 'linear-gradient(135deg, rgba(250,248,245,0.1), rgba(250,248,245,0.05))',
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(250,248,245,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <p style={{ fontFamily: fonts.display, fontSize: '0.9375rem', fontWeight: 600, color: colors.white }}>
+                      All Locations
+                    </p>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>Show either location</p>
+                  </div>
+                  <svg className="ml-auto flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(250,248,245,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </motion.button>
+
                 {/* Westfield card */}
                 <motion.button
                   className="w-full rounded-xl p-4 text-left flex items-center gap-3"

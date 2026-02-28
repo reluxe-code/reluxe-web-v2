@@ -224,3 +224,5 @@ function Detail({ label, value }) {
     </div>
   )
 }
+
+AdminFormSubmissionsPage.getLayout = (page) => page

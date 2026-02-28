@@ -623,3 +623,5 @@ export default function ToxEngine() {
     </AdminLayout>
   )
 }
+
+ToxEngine.getLayout = (page) => page

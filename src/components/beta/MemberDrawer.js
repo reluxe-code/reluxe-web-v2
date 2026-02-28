@@ -327,7 +327,7 @@ function ProvidersSection({ providers, fonts }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {providers.map((p, i) => (
-        <a key={p.slug || i} href={`/beta/team/${p.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.875rem 1rem', borderRadius: '0.75rem', background: i === 0 ? `${colors.violet}08` : 'rgba(250,248,245,0.03)', border: `1px solid ${i === 0 ? `${colors.violet}20` : 'rgba(250,248,245,0.06)'}`, textDecoration: 'none' }}>
+        <a key={p.slug || i} href={`/team/${p.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.875rem 1rem', borderRadius: '0.75rem', background: i === 0 ? `${colors.violet}08` : 'rgba(250,248,245,0.03)', border: `1px solid ${i === 0 ? `${colors.violet}20` : 'rgba(250,248,245,0.06)'}`, textDecoration: 'none' }}>
           {p.image
             ? <img src={p.image} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
             : <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(250,248,245,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(250,248,245,0.3)' }}>{(p.name || '?')[0]}</div>
@@ -720,23 +720,271 @@ function EmptyState({ text, fonts }) {
   return <div style={{ padding: 32, textAlign: 'center' }}><p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.3)' }}>{text}</p></div>
 }
 
+// ─── Section: Overview ───
+function OverviewSection({ member, profile, stats, fonts, onNavigate, onSignOut }) {
+  const tierLabels = { vip: 'VIP Member', high: 'Preferred Member', medium: 'RELUXE Member', low: 'RELUXE Member' }
+  const tier = tierLabels[stats?.ltv_bucket] || 'RELUXE Member'
+  const memberSince = stats?.first_visit
+    ? new Date(stats.first_visit).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : member?.onboarded_at ? new Date(member.onboarded_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null
+  const upcomingCount = profile?.upcomingAppointments?.length || 0
+  const nextAppt = profile?.upcomingAppointment
+  const visitCount = profile?.visits?.length || 0
+  const creditBalance = profile?.accountCredit?.formatted
+  const velocity = profile?.velocity
+  const membership = profile?.membership
+  const primaryProvider = profile?.primaryProvider
+  const recsCount = profile?.recommendations?.length || 0
+  const locationSplit = profile?.locationSplit
+
+  const cardStyle = {
+    padding: '1rem', borderRadius: '0.75rem',
+    background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)',
+    cursor: 'pointer', transition: 'border-color 0.15s',
+  }
+  const cardHover = (e) => { e.currentTarget.style.borderColor = 'rgba(250,248,245,0.15)' }
+  const cardLeave = (e) => { e.currentTarget.style.borderColor = 'rgba(250,248,245,0.06)' }
+  const chevron = <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.3, flexShrink: 0 }}><path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+  const sectionLabel = (text) => ({ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.35)', marginBottom: 6 })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* a. Account */}
+      <div style={{ ...cardStyle, background: `linear-gradient(135deg, ${colors.violet}12, ${colors.fuchsia}06)`, border: `1px solid ${colors.violet}20` }} onClick={() => onNavigate('account')} onMouseEnter={cardHover} onMouseLeave={cardLeave}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <p style={{ fontFamily: fonts.display, fontSize: '1rem', fontWeight: 700, color: colors.white }}>{tier}</p>
+            {member?.first_name && <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)', marginTop: 2 }}>{member.first_name} {member.last_name || ''}</p>}
+            {memberSince && <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.3)', marginTop: 2 }}>Member since {memberSince}</p>}
+          </div>
+          {chevron}
+        </div>
+      </div>
+
+      {/* b. Visits */}
+      <div style={cardStyle} onMouseEnter={cardHover} onMouseLeave={cardLeave}>
+        <p style={sectionLabel('Visits')}>Visits</p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1, padding: '0.625rem 0.75rem', borderRadius: '0.5rem', background: upcomingCount ? `${colors.violet}08` : 'transparent', border: `1px solid ${upcomingCount ? `${colors.violet}15` : 'rgba(250,248,245,0.06)'}`, cursor: 'pointer' }} onClick={() => onNavigate('upcoming')}>
+            <p style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: upcomingCount ? colors.violet : 'rgba(250,248,245,0.25)' }}>{upcomingCount}</p>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>Upcoming</p>
+            {nextAppt && <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(250,248,245,0.3)', marginTop: 4 }}>{nextAppt.service} · {new Date(nextAppt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>}
+          </div>
+          <div style={{ flex: 1, padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(250,248,245,0.06)', cursor: 'pointer' }} onClick={() => onNavigate('visits')}>
+            <p style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white }}>{stats?.total_visits || visitCount}</p>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>Past Visits</p>
+            {stats?.days_since_last_visit != null && <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(250,248,245,0.3)', marginTop: 4 }}>{stats.days_since_last_visit}d since last</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* c. Wallet */}
+      {(creditBalance || membership || velocity) && (
+        <div style={cardStyle} onClick={() => onNavigate('wallet')} onMouseEnter={cardHover} onMouseLeave={cardLeave}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <p style={sectionLabel('Wallet')}>Wallet</p>
+            {chevron}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+            {creditBalance && (
+              <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,0.1)', padding: '0.25rem 0.625rem', borderRadius: 999 }}>
+                {creditBalance} Credit
+              </span>
+            )}
+            {membership && (
+              <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: membership.status === 'ACTIVE' ? '#22c55e' : '#f59e0b', background: membership.status === 'ACTIVE' ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)', padding: '0.25rem 0.625rem', borderRadius: 999 }}>
+                {membership.name}
+              </span>
+            )}
+            {velocity && (
+              <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: colors.violet, background: `${colors.violet}12`, padding: '0.25rem 0.625rem', borderRadius: 999 }}>
+                {velocity.formatted} Rewards
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* d. Your RELUXE */}
+      <div style={cardStyle} onMouseEnter={cardHover} onMouseLeave={cardLeave}>
+        <p style={sectionLabel('Your RELUXE')}>Your RELUXE</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+          {primaryProvider && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => onNavigate('providers')}>
+              {primaryProvider.image
+                ? <img src={primaryProvider.image} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(250,248,245,0.06)' }} />
+              }
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.white }}>{primaryProvider.name}</p>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>{primaryProvider.visit_count} visit{primaryProvider.visit_count !== 1 ? 's' : ''} · Your go-to</p>
+              </div>
+              {chevron}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {locationSplit && (
+              <div style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(250,248,245,0.06)', cursor: 'pointer' }} onClick={() => onNavigate('locations')}>
+                <div style={{ display: 'flex', borderRadius: 999, overflow: 'hidden', height: 4, background: 'rgba(250,248,245,0.06)', marginBottom: 6 }}>
+                  {locationSplit.locations?.map((loc) => (
+                    <div key={loc.key} style={{ width: `${loc.pct}%`, background: loc.key === 'westfield' ? colors.violet : colors.fuchsia }} />
+                  ))}
+                </div>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>Locations</p>
+              </div>
+            )}
+            {recsCount > 0 && (
+              <div style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid rgba(250,248,245,0.06)', cursor: 'pointer' }} onClick={() => onNavigate('recommendations')}>
+                <p style={{ fontFamily: fonts.display, fontSize: '1rem', fontWeight: 700, color: colors.violet }}>{recsCount}</p>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>For You</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Sign out */}
+      {onSignOut && (
+        <button
+          onClick={onSignOut}
+          style={{
+            fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500,
+            color: 'rgba(250,248,245,0.4)', background: 'none', border: '1px solid rgba(250,248,245,0.08)',
+            borderRadius: 10, padding: '10px 16px', cursor: 'pointer', width: '100%', marginTop: 4,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(250,248,245,0.4)'; e.currentTarget.style.borderColor = 'rgba(250,248,245,0.08)' }}
+        >
+          Sign Out
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── Section: Wallet (combined credit + membership + rewards) ───
+function WalletSection({ membership, accountCredit, velocity, fonts, member }) {
+  const { openBookingModal } = useMember()
+
+  const STATUS_CFG = {
+    ACTIVE: { label: 'Active', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', icon: '✓' },
+    PAST_DUE: { label: 'Past Due', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: '!' },
+    PAUSED: { label: 'Paused', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: '⏸' },
+  }
+
+  const hasAnything = accountCredit || membership || velocity
+
+  if (!hasAnything) return <EmptyState text="No wallet items yet" fonts={fonts} />
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Account credit */}
+      {accountCredit && (
+        <div style={{ padding: '1.25rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04))', border: '1px solid rgba(34,197,94,0.2)' }}>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.4)', marginBottom: 6 }}>RELUXE Credit</p>
+          <p style={{ fontFamily: fonts.display, fontSize: '2rem', fontWeight: 700, color: '#22c55e' }}>{accountCredit.formatted}</p>
+          <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)', marginTop: 4 }}>Applied automatically at checkout</p>
+        </div>
+      )}
+
+      {/* Membership */}
+      {membership && (() => {
+        const cfg = STATUS_CFG[membership.status] || STATUS_CFG.ACTIVE
+        const vouchers = membership.vouchers || []
+        const allServices = vouchers.flatMap(v => v.services || [])
+
+        return (
+          <>
+            <div style={{ padding: '1.25rem', borderRadius: '0.75rem', background: cfg.bg, border: `1px solid ${cfg.color}25` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: cfg.color, background: `${cfg.color}20`, padding: '0.2rem 0.6rem', borderRadius: 999 }}>
+                  {cfg.icon} {cfg.label}
+                </span>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(250,248,245,0.5)' }}>
+                  {membership.priceFormatted}/mo
+                </span>
+              </div>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, color: colors.white, marginBottom: 4 }}>{membership.name}</p>
+              {membership.nextChargeDate && membership.status === 'ACTIVE' && (
+                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)' }}>
+                  Renews {new Date(membership.nextChargeDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              )}
+              {membership.status === 'PAUSED' && membership.unpauseOn && (
+                <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: '#f59e0b' }}>
+                  Resumes {new Date(membership.unpauseOn + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              )}
+            </div>
+
+            {allServices.length > 0 && (
+              <div>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.35)', marginBottom: 10 }}>Included Services</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {allServices.map((svc, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', background: `${colors.violet}08`, border: `1px solid ${colors.violet}12` }}>
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.white }}>{svc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })()}
+
+      {/* Velocity rewards */}
+      {velocity && (
+        <>
+          <div style={{ padding: '1.25rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05))', border: '1px solid rgba(139,92,246,0.25)' }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.4)', marginBottom: 6 }}>RELUXE Rewards</p>
+            <p style={{ fontFamily: fonts.display, fontSize: '2rem', fontWeight: 700, color: colors.violet }}>{velocity.formatted}</p>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)', marginTop: 4 }}>Applied automatically at checkout</p>
+          </div>
+          {velocity.isFrozen && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.625rem 1rem', borderRadius: '0.75rem', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.15)' }}>
+              <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: '#22c55e' }}>Protected — won&rsquo;t expire while you have a booking</span>
+            </div>
+          )}
+          {velocity.nextExpiryAt && !velocity.isFrozen && (() => {
+            const days = Math.max(0, Math.ceil((new Date(velocity.nextExpiryAt) - Date.now()) / 86400000))
+            if (days > 30) return null
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.625rem 1rem', borderRadius: '0.75rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: '#f59e0b' }}>
+                  {velocity.nextExpiryFormatted} expires in {days} day{days !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )
+          })()}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <StatBox label="Lifetime Earned" value={`$${((velocity.totalEarned || 0) / 100).toFixed(2)}`} fonts={fonts} />
+            <StatBox label="Expired" value={`$${((velocity.totalExpired || 0) / 100).toFixed(2)}`} fonts={fonts} />
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── Tab list ───
 const ALL_TABS = [
-  { key: 'visits', label: 'Visits' },
+  { key: 'overview', label: 'Overview' },
   { key: 'upcoming', label: 'Upcoming' },
+  { key: 'visits', label: 'Visits' },
+  { key: 'wallet', label: 'Wallet' },
   { key: 'tox', label: 'Tox' },
-  { key: 'rewards', label: 'Rewards' },
-  { key: 'membership', label: 'Membership' },
   { key: 'providers', label: 'Providers' },
-  { key: 'products', label: 'Products' },
   { key: 'locations', label: 'Locations' },
   { key: 'recommendations', label: 'For You' },
+  { key: 'products', label: 'Products' },
   { key: 'referrals', label: 'Referrals' },
   { key: 'account', label: 'Account' },
 ]
 
 // ─── Main Drawer ───
-export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', fonts, member, profile }) {
+export default function MemberDrawer({ isOpen, onClose, initialTab = 'overview', fonts, member, profile }) {
   const [activeTab, setActiveTab] = useState(initialTab)
 
   // Reset tab when drawer opens to a specific one
@@ -764,10 +1012,8 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
 
   // Filter tabs to those with data
   const tabs = ALL_TABS.filter((t) => {
-    if (t.key === 'upcoming' && !profile?.upcomingAppointments?.length) return false
+    if (t.key === 'wallet' && !profile?.membership && !profile?.accountCredit && !profile?.velocity) return false
     if (t.key === 'tox' && !profile?.toxStatus) return false
-    if (t.key === 'rewards' && !profile?.velocity) return false
-    if (t.key === 'membership' && !profile?.membership && !profile?.accountCredit) return false
     if (t.key === 'products' && !profile?.products?.items?.length) return false
     if (t.key === 'recommendations' && !profile?.recommendations?.length) return false
     return true
@@ -821,11 +1067,11 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
 
             {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
+              {activeTab === 'overview' && <OverviewSection member={member} profile={profile} stats={profile?.stats} fonts={fonts} onNavigate={setActiveTab} onSignOut={signOut} />}
               {activeTab === 'visits' && <VisitsSection visits={profile?.visits} fonts={fonts} onRebook={handleRebook} hasUpcoming={!!profile?.upcomingAppointments?.length} onNavigate={setActiveTab} />}
               {activeTab === 'upcoming' && <UpcomingSection appointments={profile?.upcomingAppointments} fonts={fonts} onNavigate={setActiveTab} member={member} />}
               {activeTab === 'tox' && <ToxSection toxStatus={profile?.toxStatus} fonts={fonts} onRebook={handleRebook} member={member} />}
-              {activeTab === 'rewards' && <VelocitySection velocity={profile?.velocity} fonts={fonts} member={member} />}
-              {activeTab === 'membership' && <MembershipSection membership={profile?.membership} accountCredit={profile?.accountCredit} fonts={fonts} />}
+              {activeTab === 'wallet' && <WalletSection membership={profile?.membership} accountCredit={profile?.accountCredit} velocity={profile?.velocity} fonts={fonts} member={member} />}
               {activeTab === 'providers' && <ProvidersSection providers={profile?.providers} fonts={fonts} />}
               {activeTab === 'products' && <ProductsSection products={profile?.products} fonts={fonts} />}
               {activeTab === 'locations' && <LocationsSection locationSplit={profile?.locationSplit} member={member} fonts={fonts} />}
@@ -833,7 +1079,7 @@ export default function MemberDrawer({ isOpen, onClose, initialTab = 'visits', f
               {activeTab === 'referrals' && <ReferralDashboard fonts={fonts} />}
               {activeTab === 'account' && <AccountSection member={member} stats={profile?.stats} accountCredit={profile?.accountCredit} membership={profile?.membership} fonts={fonts} onNavigate={setActiveTab} onSignOut={signOut} />}
 
-              {!['account', 'locations', 'products', 'membership'].includes(activeTab) && profile?.serviceCategories?.length > 0 && (
+              {!['overview', 'account', 'locations', 'products', 'wallet'].includes(activeTab) && profile?.serviceCategories?.length > 0 && (
                 <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(250,248,245,0.06)' }}>
                   <ServiceCategoriesSection categories={profile.serviceCategories} fonts={fonts} />
                 </div>

@@ -4,6 +4,7 @@
 import { getServiceClient } from '@/lib/supabase'
 import { getCached, setCache } from '@/server/cache'
 import { SLUG_TITLES } from '@/data/treatmentBundles'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 /** Normalize legacy slugs[] format to items[{slug,label}] */
 function normalizeBundle(b) {
@@ -13,10 +14,11 @@ function normalizeBundle(b) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { featured } = req.query
   const cacheKey = 'site-config:treatment_bundles'
-  const cached = getCached(cacheKey, 300_000) // 5 min
+  const cached = getCached(cacheKey, 3_600_000) // 1 hr — bundles are static
   if (cached && !cached.stale) {
     const bundles = filterBundles(cached.data, featured)
     return res.json(bundles)
@@ -35,7 +37,7 @@ export default async function handler(req, res) {
     const sorted = [...raw].sort((a, b) => (a.sort_order ?? 99) - (b.sort_order ?? 99))
 
     setCache(cacheKey, sorted)
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200')
     res.json(filterBundles(sorted, featured))
   } catch (err) {
     console.error('[blvd/bundles]', err.message)

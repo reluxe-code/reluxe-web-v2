@@ -5,14 +5,29 @@ import GravityBookButton from '@/components/beta/GravityBookButton';
 import { useMember } from '@/context/MemberContext';
 import { supabase } from '@/lib/supabase';
 import { formatPhone, isValidPhone } from '@/lib/phoneUtils';
+import { isValidEmail } from '@/lib/emailUtils';
+
+const SMS_ENABLED = process.env.NEXT_PUBLIC_SMS_ENABLED === 'true';
 
 const navLinks = [
-  { label: 'Services', href: '/beta/services' },
-  { label: 'Team', href: '/beta/team' },
-  { label: 'Westfield', href: '/beta/locations/westfield' },
-  { label: 'Carmel', href: '/beta/locations/carmel' },
-  { label: 'Inspiration', href: '/beta/inspiration' },
-  { label: 'Contact', href: '/beta/contact' },
+  { label: 'Services', href: '/services', children: [
+    { label: 'All Services', href: '/services' },
+    { label: 'Skincare', href: '/skincare' },
+    { label: 'Pricing', href: '/pricing' },
+  ]},
+  { label: 'Team', href: '/team' },
+  { label: 'Locations', href: '/locations/westfield', children: [
+    { label: 'Westfield', href: '/locations/westfield' },
+    { label: 'Carmel', href: '/locations/carmel' },
+  ]},
+  { label: 'Inspiration', href: '/inspiration', children: [
+    { label: 'Inspiration', href: '/inspiration' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Events', href: '/events' },
+    { label: 'Results', href: '/results' },
+  ]},
+  { label: 'Deals', href: '/deals' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 // ─── Compact dark-themed code input ───
@@ -61,7 +76,9 @@ function MiniCodeInput({ value = '', onChange, disabled, fonts }) {
 // ─── Nav Login Popover ───
 function NavLoginPopover({ fonts, onClose, inline }) {
   const { refreshProfile } = useMember();
-  const [step, setStep] = useState('phone'); // phone | otp
+  const [step, setStep] = useState('input'); // input | otp
+  const [method, setMethod] = useState('email'); // 'email' | 'phone'
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -69,6 +86,9 @@ function NavLoginPopover({ fonts, onClose, inline }) {
   const [resendCooldown, setResendCooldown] = useState(0);
   const submitted = useRef(false);
   const popoverRef = useRef(null);
+
+  const isEmail = method === 'email';
+  const identifier = isEmail ? email : phone;
 
   // Click outside to close (desktop only)
   useEffect(() => {
@@ -97,12 +117,17 @@ function NavLoginPopover({ fonts, onClose, inline }) {
 
   const sendOtp = async (e) => {
     e?.preventDefault();
-    if (!isValidPhone(phone)) { setError('Enter a valid 10-digit number'); return }
+    if (isEmail) {
+      if (!isValidEmail(email)) { setError('Enter a valid email address'); return }
+    } else {
+      if (!isValidPhone(phone)) { setError('Enter a valid 10-digit number'); return }
+    }
     setError(null); setLoading(true);
     try {
+      const body = isEmail ? { email } : { phone };
       const res = await fetch('/api/member/send-otp', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send code');
@@ -114,9 +139,12 @@ function NavLoginPopover({ fonts, onClose, inline }) {
   const verifyOtp = async (verifyCode) => {
     setError(null); setLoading(true);
     try {
+      const body = isEmail
+        ? { email, code: verifyCode }
+        : { phone, code: verifyCode };
       const res = await fetch('/api/member/verify-otp', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code: verifyCode }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid code');
@@ -129,16 +157,19 @@ function NavLoginPopover({ fonts, onClose, inline }) {
       refreshProfile();
       // Track conversion + identify contact in Bird
       if (window.reluxeTrack) {
-        window.reluxeTrack('member_signup', { method: 'otp', is_returning: !!data.isReturning });
+        window.reluxeTrack('member_signup', { method, is_returning: !!data.isReturning });
       }
       if (typeof window.Bird !== 'undefined' && window.Bird.contact) {
-        try { window.Bird.contact.identify({ strategy: 'Visitor', identifier: { key: 'phonenumber', value: phone } }) } catch (e) {}
+        const birdKey = isEmail ? 'emailaddress' : 'phonenumber';
+        try { window.Bird.contact.identify({ strategy: 'Visitor', identifier: { key: birdKey, value: identifier } }) } catch (e) {}
       }
       onClose();
     } catch (err) {
       setError(err.message); setCode(''); submitted.current = false;
     } finally { setLoading(false) }
   };
+
+  const displayIdentifier = isEmail ? email : formatPhone(phone);
 
   const wrapperStyle = inline ? {
     padding: '16px 0 0',
@@ -153,9 +184,9 @@ function NavLoginPopover({ fonts, onClose, inline }) {
   return (
     <div ref={popoverRef} style={wrapperStyle}>
       <AnimatePresence mode="wait">
-        {step === 'phone' ? (
+        {step === 'input' ? (
           <motion.form
-            key="phone"
+            key="input"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onSubmit={sendOtp}
           >
@@ -163,21 +194,37 @@ function NavLoginPopover({ fonts, onClose, inline }) {
               Sign in
             </p>
             <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)', marginBottom: 12 }}>
-              Enter your phone to access your account
+              {isEmail ? 'Enter your email to access your account' : 'Enter your phone to access your account'}
             </p>
-            <input
-              type="tel" inputMode="numeric" autoFocus
-              value={phone}
-              onChange={e => setPhone(formatPhone(e.target.value))}
-              placeholder="(317) 555-1234"
-              style={{
-                fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 500,
-                width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.625rem',
-                border: `1.5px solid ${error ? colors.rose : 'rgba(250,248,245,0.12)'}`,
-                backgroundColor: 'rgba(250,248,245,0.04)', color: colors.white,
-                outline: 'none', caretColor: colors.violet, boxSizing: 'border-box',
-              }}
-            />
+            {isEmail ? (
+              <input
+                type="email" inputMode="email" autoComplete="email" autoFocus
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="jane@example.com"
+                style={{
+                  fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 500,
+                  width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.625rem',
+                  border: `1.5px solid ${error ? colors.rose : 'rgba(250,248,245,0.12)'}`,
+                  backgroundColor: 'rgba(250,248,245,0.04)', color: colors.white,
+                  outline: 'none', caretColor: colors.violet, boxSizing: 'border-box',
+                }}
+              />
+            ) : (
+              <input
+                type="tel" inputMode="numeric" autoFocus
+                value={phone}
+                onChange={e => setPhone(formatPhone(e.target.value))}
+                placeholder="(317) 555-1234"
+                style={{
+                  fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 500,
+                  width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.625rem',
+                  border: `1.5px solid ${error ? colors.rose : 'rgba(250,248,245,0.12)'}`,
+                  backgroundColor: 'rgba(250,248,245,0.04)', color: colors.white,
+                  outline: 'none', caretColor: colors.violet, boxSizing: 'border-box',
+                }}
+              />
+            )}
             {error && <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.rose, marginTop: 4 }}>{error}</p>}
             <button
               type="submit" disabled={loading}
@@ -190,6 +237,15 @@ function NavLoginPopover({ fonts, onClose, inline }) {
             >
               {loading ? 'Sending...' : 'Send Code'}
             </button>
+            {SMS_ENABLED && (
+              <button
+                type="button"
+                onClick={() => { setMethod(isEmail ? 'phone' : 'email'); setError(null) }}
+                style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 8, width: '100%', textAlign: 'center', textDecoration: 'underline', textUnderlineOffset: 2 }}
+              >
+                {isEmail ? 'Use phone instead' : 'Use email instead'}
+              </button>
+            )}
           </motion.form>
         ) : (
           <motion.div
@@ -200,17 +256,17 @@ function NavLoginPopover({ fonts, onClose, inline }) {
               Enter your code
             </p>
             <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)', marginBottom: 12, textAlign: 'center' }}>
-              Sent to <span style={{ color: colors.white }}>{formatPhone(phone)}</span>
+              Sent to <span style={{ color: colors.white }}>{displayIdentifier}</span>
             </p>
             <MiniCodeInput value={code} onChange={v => { setCode(v); submitted.current = false }} disabled={loading} fonts={fonts} />
             {error && <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.rose, marginTop: 6, textAlign: 'center' }}>{error}</p>}
             {loading && <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)', marginTop: 6, textAlign: 'center' }}>Verifying...</p>}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 10 }}>
-              <button onClick={() => { setStep('phone'); setCode(''); setError(null); submitted.current = false }} style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}>
+              <button onClick={() => { setStep('input'); setCode(''); setError(null); submitted.current = false }} style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}>
                 Change
               </button>
               <button
-                onClick={() => { setResendCooldown(30); setError(null); fetch('/api/member/send-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) }).catch(() => setError('Resend failed')) }}
+                onClick={() => { setResendCooldown(30); setError(null); const body = isEmail ? { email } : { phone }; fetch('/api/member/send-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => setError('Resend failed')) }}
                 disabled={resendCooldown > 0}
                 style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: resendCooldown > 0 ? 'rgba(250,248,245,0.2)' : colors.violet, background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer' }}
               >
@@ -254,7 +310,7 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16 lg:h-20">
         {/* Logo */}
-        <a href="/beta" className="relative z-50">
+        <a href="/" className="relative z-50">
           <img
             src="/images/logo/logo.png"
             alt="RELUXE Med Spa"
@@ -422,7 +478,7 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
                     cursor: link.children ? 'default' : 'pointer',
                   }}
                 >
-                  {link.children ? 'Locations' : link.label}
+                  {link.label}
                 </motion.a>
                 {link.children && (
                   <div className="flex justify-center gap-6 mt-2">
@@ -477,6 +533,34 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
                   </button>
                 )
               )}
+
+              {/* Quick contact actions */}
+              <div className="flex items-center gap-4 mt-4">
+                <a
+                  href="tel:3177631142"
+                  className="flex items-center gap-2 rounded-full px-5 py-2.5 transition-colors duration-200 hover:bg-white/10"
+                  style={{
+                    border: '1px solid rgba(250,248,245,0.15)',
+                    textDecoration: 'none',
+                  }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(250,248,245,0.7)' }}>Call</span>
+                </a>
+                <a
+                  href="sms:3177631142"
+                  className="flex items-center gap-2 rounded-full px-5 py-2.5 transition-colors duration-200 hover:bg-white/10"
+                  style={{
+                    border: '1px solid rgba(250,248,245,0.15)',
+                    textDecoration: 'none',
+                  }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(250,248,245,0.7)' }}>Text</span>
+                </a>
+              </div>
             </motion.div>
           </motion.div>
         )}

@@ -506,3 +506,5 @@ export default function VelocityAdmin() {
     </AdminLayout>
   )
 }
+
+VelocityAdmin.getLayout = (page) => page

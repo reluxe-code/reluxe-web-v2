@@ -124,3 +124,5 @@ export default function AdminProductsList() {
     </AdminLayout>
   )
 }
+
+AdminProductsList.getLayout = (page) => page

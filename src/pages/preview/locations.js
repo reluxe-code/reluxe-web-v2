@@ -10,10 +10,11 @@ const locations = [
     description: 'Where it all started. Full treatment menu, salt room, infrared sauna, and the team that built RELUXE from the ground up.',
     address: '14767 Greyhound Plaza',
     city: 'Westfield, IN 46074',
-    phone: '(317) 399-4578',
+    phone: '(317) 763-1142',
     hours: [
-      { day: 'Monday–Friday', time: '9:00 AM – 7:00 PM' },
-      { day: 'Saturday', time: '9:00 AM – 4:00 PM' },
+      { day: 'Mon, Tue, Wed, Fri', time: '9:00 AM – 5:00 PM' },
+      { day: 'Thursday', time: '9:00 AM – 7:00 PM' },
+      { day: 'Saturday', time: '9:00 AM – 3:00 PM' },
       { day: 'Sunday', time: 'Closed' },
     ],
     amenities: ['Salt Room', 'Infrared Sauna', 'Full Treatment Menu', 'Private Suites', 'Free Parking', 'Complimentary Beverages'],
@@ -25,10 +26,9 @@ const locations = [
     description: 'Same obsessive standards. New energy. Partnered with House of Health for a next-level wellness experience.',
     address: '370 E Carmel Dr',
     city: 'Carmel, IN 46032',
-    phone: '(317) 399-4578',
+    phone: '(317) 763-1142',
     hours: [
-      { day: 'Monday–Friday', time: '9:00 AM – 7:00 PM' },
-      { day: 'Saturday', time: '9:00 AM – 4:00 PM' },
+      { day: 'Monday–Friday', time: '9:00 AM – 5:00 PM' },
       { day: 'Sunday', time: 'Closed' },
     ],
     amenities: ['House of Health Partnership', 'IV Therapy', 'Full Treatment Menu', 'Private Suites', 'Free Parking', 'Complimentary Beverages'],
@@ -280,7 +280,7 @@ function LocationsPage({ fontKey, fonts }) {
                 Send Message
               </button>
             </div>
-            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.25)', marginTop: '1rem' }}>Or call us directly: (317) 399-4578</p>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.25)', marginTop: '1rem' }}>Or call us directly: (317) 763-1142</p>
           </motion.div>
         </div>
       </section>

@@ -1,9 +1,12 @@
 // POST /api/gift-cards/claim
 // Authenticated member claims a gift card by code or claim token
 import { getServiceClient } from '@/lib/supabase'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   const token = req.headers.authorization?.replace('Bearer ', '')
   if (!token) return res.status(401).json({ error: 'Unauthorized' })

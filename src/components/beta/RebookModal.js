@@ -10,27 +10,10 @@ import { supabase } from '@/lib/supabase'
 import { REBOOK_INTERVALS, formatInterval } from '@/data/rebook-intervals'
 import DateStrip from '@/components/booking/DateStrip'
 import TimeGrid from '@/components/booking/TimeGrid'
+import { formatDateLong, formatDateShort, formatTime } from '@/lib/bookingFormatters'
+import { fetchAvailableDates, fetchAvailableTimes } from '@/lib/bookingApi'
 
 const LOCATION_LABELS = { westfield: 'Westfield', carmel: 'Carmel' }
-
-function formatDateLong(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-}
-
-function formatDateShort(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr + 'T12:00:00')
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-function formatTime(timeStr) {
-  if (!timeStr) return ''
-  // Handle both full ISO timestamps and bare HH:MM:SS strings
-  const d = new Date(timeStr.includes('T') ? timeStr : `2026-01-01T${timeStr}`)
-  if (isNaN(d.getTime())) return timeStr
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-}
 
 export default function RebookModal({ isOpen, onClose, onBooked, data, fonts }) {
   const { profile, refreshProfile, openBookingModal } = useMember()
@@ -118,25 +101,21 @@ export default function RebookModal({ isOpen, onClose, onBooked, data, fonts }) 
   // Fetch available dates
   useEffect(() => {
     if (!isOpen || !serviceItemId || !data?.locationKey) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const params = new URLSearchParams({
+    fetchAvailableDates({
       locationKey: data.locationKey,
       serviceItemId,
-      startDate: today,
-    })
-    if (boulevardProviderId) params.set('staffProviderId', boulevardProviderId)
-
-    fetch(`/api/blvd/availability/dates?${params}`)
-      .then(r => r.json())
-      .then(dates => {
-        setAvailableDates(Array.isArray(dates) ? dates : [])
-        setLoadingDates(false)
-      })
-      .catch(() => {
+      staffProviderId: boulevardProviderId,
+    }).then(({ dates, degraded }) => {
+      if (degraded) {
         setAvailableDates([])
         setLoadingDates(false)
-      })
+        setError('We\'re experiencing high demand. Please try the full booking flow.')
+        setStep('ERROR')
+        return
+      }
+      setAvailableDates(dates)
+      setLoadingDates(false)
+    })
   }, [isOpen, serviceItemId, boulevardProviderId, data?.locationKey])
 
   // Fetch times when date selected
@@ -145,25 +124,23 @@ export default function RebookModal({ isOpen, onClose, onBooked, data, fonts }) 
     setLoadingTimes(true)
     setTimes([])
     setSelectedTime(null)
-
-    const params = new URLSearchParams({
+    fetchAvailableTimes({
       locationKey: data.locationKey,
       serviceItemId,
+      staffProviderId: boulevardProviderId,
       date: selectedDate,
-    })
-    if (boulevardProviderId) params.set('staffProviderId', boulevardProviderId)
-
-    fetch(`/api/blvd/availability/times?${params}`)
-      .then(r => r.json())
-      .then(t => {
-        setTimes(Array.isArray(t) ? t : [])
-        setLoadingTimes(false)
-        setStep('TIME')
-      })
-      .catch(() => {
+    }).then(({ times: t, degraded }) => {
+      if (degraded) {
         setTimes([])
         setLoadingTimes(false)
-      })
+        setError('We\'re experiencing high demand. Please try the full booking flow.')
+        setStep('ERROR')
+        return
+      }
+      setTimes(t)
+      setLoadingTimes(false)
+      setStep('TIME')
+    })
   }, [selectedDate, serviceItemId, boulevardProviderId, data?.locationKey])
 
   const handleSelectDate = useCallback((dateStr) => {

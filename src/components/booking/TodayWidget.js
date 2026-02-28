@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { colors, gradients, fontPairings } from '@/components/preview/tokens'
 
 const fonts = fontPairings.bold
-const PHONE_NUMBER = '3174008785'
-const PHONE_DISPLAY = '(317) 400-8785'
+const PHONE_NUMBER = '3177631142'
+const PHONE_DISPLAY = '(317) 763-1142'
 const REFRESH_INTERVAL_MS = 50_000
 
 /**
@@ -110,7 +110,7 @@ export default function TodayWidget({
         </p>
         <a href="/today" style={{
           fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600,
-          color: colors.violet, textDecoration: 'underline', marginTop: '0.5rem', display: 'inline-block',
+          color: '#A78BFA', textDecoration: 'underline', marginTop: '0.5rem', display: 'inline-block',
         }}>
           Check full availability
         </a>
@@ -147,7 +147,7 @@ export default function TodayWidget({
           </h3>
           <a href="/today" style={{
             fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 500,
-            color: colors.violet, textDecoration: 'none',
+            color: '#A78BFA', textDecoration: 'none',
           }}>
             See all
           </a>
@@ -214,7 +214,7 @@ export default function TodayWidget({
               background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '0.75rem', padding: '0.75rem',
             }}>
-              <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: colors.violet, marginBottom: 1 }}>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: '#A78BFA', marginBottom: 1 }}>
                 {o.dayLabel}
               </p>
               <p style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white, lineHeight: 1.1 }}>

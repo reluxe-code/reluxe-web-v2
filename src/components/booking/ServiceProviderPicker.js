@@ -25,7 +25,7 @@ function ProviderCard({ provider, fonts, index }) {
 
   return (
     <motion.a
-      href={`/beta/team/${provider.slug}?service=${provider.serviceSlug || ''}`}
+      href={`/team/${provider.slug}?service=${provider.serviceSlug || ''}`}
       className="group rounded-2xl overflow-hidden transition-all duration-200"
       style={{
         backgroundColor: '#fff',

@@ -235,8 +235,8 @@ function buildGiftCardEmailHtml({ recipientName, senderName, amount, code, messa
     <a href="https://reluxemedspa.com/start" class="btn">Book Your Service</a>
     <p style="font-size: 12px; color: rgba(250,248,245,0.3); margin-top: 8px;">Present code <strong>${code}</strong> when you book or check in</p>
     <div class="locations">
-      <p><span class="loc-name">Westfield</span><br>2503 E 146th St, Suite 100, Westfield, IN 46074</p>
-      <p style="margin-top: 10px;"><span class="loc-name">Carmel</span><br>14390 Clay Terrace Blvd, Suite 159, Carmel, IN 46032</p>
+      <p><span class="loc-name">Westfield</span><br>514 E State Road 32, Westfield, IN 46074</p>
+      <p style="margin-top: 10px;"><span class="loc-name">Carmel</span><br>10485 N Pennsylvania St, Carmel, IN 46280</p>
       <p class="phone"><a href="tel:+13177631142">(317) 763-1142</a></p>
     </div>
   </div>

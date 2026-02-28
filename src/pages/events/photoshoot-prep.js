@@ -25,7 +25,7 @@ export default function PhotoshootPrepPage() {
         <meta property="og:title" content="Photoshoot & Headshot Prep | RELUXE Med Spa" />
         <meta property="og:description" content="Camera-ready skin for portraits, branding sessions, and engagement photos with smart timing and no-downtime glow." />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/treatments/photoshoot.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />

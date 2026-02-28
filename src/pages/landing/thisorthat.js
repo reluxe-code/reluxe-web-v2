@@ -572,7 +572,7 @@ export default function ThisOrThatPage() {
   function handleMembershipClick() {
     trackEvent('experiment_membership_click', { persona: persona?.name })
     updateSession({ membership_clicked: true })
-    window.open('/beta/membership', '_blank')
+    window.open('/memberships', '_blank')
   }
 
   // Track membership view

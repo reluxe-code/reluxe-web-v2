@@ -644,3 +644,5 @@ export default function PatientsReport() {
     </AdminLayout>
   )
 }
+
+PatientsReport.getLayout = (page) => page

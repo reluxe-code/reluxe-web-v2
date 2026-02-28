@@ -17,7 +17,7 @@ export default function BrandSEO({ brand, products = [], siteName = 'RELUXE Med 
   const title = `${b.name} in Carmel & Westfield | ${siteName}`
   const description = b.description ||
     `Shop ${b.name} at ${siteName} in Westfield and Carmel, Indiana. ${b.tagline || ''}`
-  const image = toAbs(b.hero_image || b.logo_url || '/images/opengraph-default.jpg')
+  const image = toAbs(b.hero_image || b.logo_url || '/images/og/new-default-1200x630.png')
 
   // Organization (brand)
   const ldOrg = {

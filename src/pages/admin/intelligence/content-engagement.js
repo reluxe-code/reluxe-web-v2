@@ -345,3 +345,5 @@ export default function ContentEngagementDashboard() {
     </AdminLayout>
   )
 }
+
+ContentEngagementDashboard.getLayout = (page) => page

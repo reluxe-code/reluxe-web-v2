@@ -461,3 +461,5 @@ export default function BoulevardSync() {
     </AdminLayout>
   )
 }
+
+BoulevardSync.getLayout = (page) => page

@@ -370,3 +370,5 @@ export default function AdminStaffEdit() {
     </AdminLayout>
   )
 }
+
+AdminStaffEdit.getLayout = (page) => page

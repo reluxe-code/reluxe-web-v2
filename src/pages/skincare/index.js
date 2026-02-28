@@ -76,12 +76,12 @@ export default function SkincareHub({ brands, topProducts, staffPicks }) {
         <meta property="og:description" content="Personalized routines with skinbetter science, Colorescience, SkinCeuticals, Hydrinity, and Universkin." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/skincare" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/brands/og-skincare.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
         <meta property="og:site_name" content="RELUXE Med Spa" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Medical-Grade Skincare | RELUXE Med Spa" />
         <meta name="twitter:description" content="Personalized skincare routines with skinbetter science, Colorescience, SkinCeuticals & more." />
-        <meta name="twitter:image" content="https://reluxemedspa.com/images/brands/og-skincare.jpg" />
+        <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />
@@ -113,6 +113,25 @@ export default function SkincareHub({ brands, topProducts, staffPicks }) {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Colorescience Anniversary Sale */}
+      <section className="py-8 px-4" style={{ background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
+          <div className="flex-1">
+            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#CF7155' }}>Limited Time &middot; March 5–22</p>
+            <h3 className="text-2xl md:text-3xl font-bold" style={{ color: '#CF7155', fontStyle: 'italic', fontFamily: 'Playfair Display, serif' }}>Colorescience Anniversary Sale</h3>
+            <p className="mt-2 text-neutral-600">20% off sitewide &mdash; no exclusions. Free shipping on all orders. Free gifts at $125+ and $250+.</p>
+          </div>
+          <a
+            href="https://colorescience.com/reluxe-med-spa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-2xl px-8 py-3 font-semibold text-white whitespace-nowrap hover:opacity-90 transition"
+            style={{ background: 'linear-gradient(135deg, #CF7155, #B85A40)' }}>
+            Shop the Sale &rarr;
+          </a>
         </div>
       </section>
 

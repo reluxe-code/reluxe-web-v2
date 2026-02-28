@@ -1,17 +1,25 @@
 // src/pages/api/member/send-otp.js
-// Sends an SMS OTP via Supabase Auth for member phone login.
+// Sends an OTP via Supabase Auth for member login (email or SMS).
 import { createClient } from '@supabase/supabase-js'
 import { isValidPhone, toE164 } from '@/lib/phoneUtils'
+import { isValidEmail, normalizeEmail } from '@/lib/emailUtils'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+  const ip = getClientIp(req)
+  if (applyRateLimit(req, res, rateLimiters.tight, ip)) return
+  if (applyRateLimit(req, res, rateLimiters.otpHour, ip)) return
 
-  const { phone } = req.body || {}
-  if (!phone || !isValidPhone(phone)) {
-    return res.status(400).json({ error: 'Valid US phone number required' })
+  const { phone, email } = req.body || {}
+
+  // Determine method
+  const useEmail = !!email
+  const usePhone = !!phone
+
+  if (!useEmail && !usePhone) {
+    return res.status(400).json({ error: 'Email or phone number required' })
   }
-
-  const e164 = toE164(phone)
 
   // Use a dedicated admin client for auth operations
   const supabase = createClient(
@@ -19,27 +27,79 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   )
 
-  const { error } = await supabase.auth.admin.createUser({
-    phone: e164,
-    phone_confirm: false,
-  }).catch(() => ({ error: null }))
-  // Ignore "user already exists" — we just want to ensure the user exists
-
-  // Now send the OTP
   const anonClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 
-  const { error: otpError } = await anonClient.auth.signInWithOtp({ phone: e164 })
-
-  if (otpError) {
-    console.error('[member/send-otp]', otpError.message)
-    if (otpError.message.includes('rate')) {
-      return res.status(429).json({ error: 'Too many requests. Please wait a moment.' })
+  if (useEmail) {
+    const normalized = normalizeEmail(email)
+    if (!isValidEmail(normalized)) {
+      return res.status(400).json({ error: 'Valid email address required' })
     }
-    return res.status(500).json({ error: 'Failed to send verification code' })
+
+    // Ensure auth user exists (email_confirm: true so Supabase doesn't send its own confirmation email)
+    await supabase.auth.admin.createUser({
+      email: normalized,
+      email_confirm: true,
+    }).catch((e) => {
+      console.error('[member/send-otp] createUser (email) exception:', e.message)
+      return { error: null }
+    })
+
+    console.log('[member/send-otp] Sending email OTP to:', normalized)
+    const { data: otpData, error: otpError } = await anonClient.auth.signInWithOtp({ email: normalized })
+
+    if (otpError) {
+      console.error('[member/send-otp] Email OTP error:', JSON.stringify({
+        message: otpError.message,
+        status: otpError.status,
+        code: otpError.code,
+      }, null, 2))
+      if (otpError.status === 429 || otpError.code === 'over_email_send_rate_limit' || otpError.message?.includes('rate') || otpError.message?.includes('seconds')) {
+        return res.status(429).json({ error: 'Please wait a moment before requesting another code.' })
+      }
+      return res.status(500).json({ error: 'Failed to send verification code', debug: otpError.message })
+    }
+
+    console.log('[member/send-otp] Email OTP success:', JSON.stringify(otpData))
+    return res.json({ success: true, method: 'email' })
   }
 
-  res.json({ success: true })
+  // Phone path (existing logic)
+  if (!isValidPhone(phone)) {
+    return res.status(400).json({ error: 'Valid US phone number required' })
+  }
+
+  const e164 = toE164(phone)
+
+  // Ensure auth user exists
+  const { error } = await supabase.auth.admin.createUser({
+    phone: e164,
+    phone_confirm: false,
+  }).catch((e) => {
+    console.error('[member/send-otp] createUser exception:', e.message)
+    return { error: null }
+  })
+  if (error) {
+    console.log('[member/send-otp] createUser error (may be expected):', error.message)
+  }
+
+  console.log('[member/send-otp] Sending SMS OTP to:', e164)
+  const { data: otpData, error: otpError } = await anonClient.auth.signInWithOtp({ phone: e164 })
+
+  if (otpError) {
+    console.error('[member/send-otp] SMS OTP error:', JSON.stringify({
+      message: otpError.message,
+      status: otpError.status,
+      code: otpError.code,
+    }, null, 2))
+    if (otpError.message?.includes('rate')) {
+      return res.status(429).json({ error: 'Too many requests. Please wait a moment.' })
+    }
+    return res.status(500).json({ error: 'Failed to send verification code', debug: otpError.message })
+  }
+
+  console.log('[member/send-otp] SMS OTP success:', JSON.stringify(otpData))
+  res.json({ success: true, method: 'sms' })
 }

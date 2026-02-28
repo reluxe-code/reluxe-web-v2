@@ -13,8 +13,7 @@ const SITE_URL = 'https://reluxemedspa.com'
 const PAGE_PATH = '/reluxe-way/local-on-purpose'
 const CANONICAL_URL = `${SITE_URL}${PAGE_PATH}`
 
-const OG_IMAGE = `${SITE_URL}/images/reluxe-way/local-on-purpose-og.jpg` // ✅ create (1200x630)
-const OG_IMAGE_SQUARE = `${SITE_URL}/images/reluxe-way/local-on-purpose-og-square.jpg` // optional (1080x1080)
+const OG_IMAGE = `${SITE_URL}/images/og/new-default-1200x630.png`
 
 const HUB_URL = '/reluxe-way'
 const TOX_PRICING_URL = '/reluxe-way/tox-pricing'
@@ -144,8 +143,6 @@ export default function LocalOnPurposePage() {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Local. Family-Owned. On Purpose. — RELUXE (Carmel & Westfield)" />
-        <meta property="og:image" content={OG_IMAGE_SQUARE} />
-
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Local. Family-Owned. On Purpose. — The RELUXE Way" />

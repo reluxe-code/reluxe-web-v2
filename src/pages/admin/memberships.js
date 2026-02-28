@@ -546,3 +546,5 @@ export default function MembershipsPage() {
     </AdminLayout>
   )
 }
+
+MembershipsPage.getLayout = (page) => page

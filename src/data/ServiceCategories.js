@@ -151,7 +151,7 @@ export const serviceCategories = [
   {
     title: 'Salt & Sauna',
     image: '/images/service/categories/massage.png',
-    href: '/services/salt-sauna',
+    href: '/services/saltsauna',
     featured: false,
   },
   {

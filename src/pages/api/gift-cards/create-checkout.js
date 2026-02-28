@@ -13,6 +13,7 @@ import {
 } from '@/lib/giftCards'
 import { syncOneGiftCard } from '@/lib/blvdGiftCards'
 import { trackBirdEvent } from '@/lib/birdTracking'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const isSandbox = (process.env.SQUARE_APPLICATION_ID || '').startsWith('sandbox-')
 
@@ -23,6 +24,8 @@ const squareClient = new SquareClient({
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   try {
     const {

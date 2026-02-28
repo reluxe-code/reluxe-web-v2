@@ -13,6 +13,13 @@ import GravityBookButton from '@/components/beta/GravityBookButton';
 import { getCompatibleAddons, MAX_SERVICES_PER_BOOKING } from '@/data/bookingRules';
 import { SLUG_TITLES } from '@/data/treatmentBundles';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
+import {
+  formatTime, formatDate, formatDuration,
+  normalizeMoneyValue, formatCurrency, isConsultationLike, formatPriceRange,
+  formatOptionPriceDelta, toggleOption,
+} from '@/lib/bookingFormatters';
+import { cachedFetch } from '@/lib/apiCache';
+import WidgetFallback from './WidgetFallback';
 
 const fetcher = (url) => fetch(url).then((r) => r.json());
 const SHOW_MORE_THRESHOLD = 4;
@@ -21,79 +28,6 @@ const LOCATION_INFO = {
   westfield: { name: 'RELUXE Westfield', address: '514 E State Road 32, Westfield, IN', phone: '317.763.1142' },
   carmel: { name: 'RELUXE Carmel', address: '10485 N Pennsylvania St, Carmel, IN', phone: '317.763.1142' },
 };
-
-function formatTime(startTime) {
-  if (!startTime) return '';
-  try {
-    return new Date(startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  } catch { return startTime; }
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  try {
-    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  } catch { return dateStr; }
-}
-
-function formatDuration(minutes) {
-  if (!minutes) return '';
-  if (minutes < 60) return `${minutes} min`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-function normalizeMoneyValue(v) {
-  if (v == null) return null;
-  if (typeof v === 'number' && Number.isFinite(v)) return v >= 1000 ? v / 100 : v;
-  if (typeof v === 'string') {
-    const source = String(v);
-    const n = Number(source.replace(/[^\d.-]/g, ''));
-    if (!Number.isFinite(n)) return null;
-    if (source.includes('.')) return n;
-    return n >= 1000 ? n / 100 : n;
-  }
-  if (typeof v === 'object') {
-    const raw = v.amount ?? v.value ?? v.cents ?? v.centAmount ?? null;
-    if (raw == null) return null;
-    const n = Number(raw);
-    if (!Number.isFinite(n)) return null;
-    if (v.cents != null || v.centAmount != null) return n / 100;
-    return n >= 1000 ? n / 100 : n;
-  }
-  return null;
-}
-
-function formatCurrency(n) {
-  if (n == null || !Number.isFinite(n)) return null;
-  return `$${Number(n).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function isConsultationLike(name, categoryName) {
-  const text = `${name || ''} ${categoryName || ''}`.toLowerCase();
-  return /consult/.test(text) || /not sure where to start|get started|reveal/.test(text);
-}
-
-function formatPriceRange(price, { name, categoryName } = {}) {
-  if (!price) return null;
-  const min = normalizeMoneyValue(price.min);
-  const max = normalizeMoneyValue(price.max);
-  const consultation = isConsultationLike(name, categoryName);
-  if (min == null && max == null) return null;
-  if ((min ?? 0) === 0 && (max ?? 0) === 0) return consultation ? 'FREE' : 'Varies';
-  if (min != null && max != null) {
-    if (Math.abs(min - max) < 0.01) return formatCurrency(min);
-    return `${formatCurrency(min)} - ${formatCurrency(max)}`;
-  }
-  if (min === 0) return consultation ? 'FREE' : 'Varies';
-  if (min != null) return `${formatCurrency(min)}+`;
-  if (max === 0) return consultation ? 'FREE' : 'Varies';
-  return `Up to ${formatCurrency(max)}`;
-}
 
 function normalizeServiceId(value) {
   if (!value) return '';
@@ -110,14 +44,6 @@ function idsMatch(a, b) {
   const aNorm = normalizeServiceId(a);
   const bNorm = normalizeServiceId(b);
   return !!aNorm && !!bNorm && aNorm === bNorm;
-}
-
-function formatOptionPriceDelta(priceDelta) {
-  if (priceDelta == null || priceDelta === '') return null;
-  const amount = normalizeMoneyValue(priceDelta);
-  if (amount == null) return null;
-  if (Math.abs(amount) < 0.005) return 'Varies';
-  return `${amount > 0 ? '+' : '-'}${formatCurrency(Math.abs(amount))}`;
 }
 
 // ─── Options Step (reused for main + addon services) ───
@@ -263,23 +189,6 @@ function ExpandedServiceMenu({ categories, loading, onSelectCategory, fonts, pri
   );
 }
 
-// Helper: toggle option within a group
-function toggleOption(prev, group, option) {
-  const isRadio = group.maxLimit === 1;
-  const isSelected = prev.some((o) => o.id === option.id);
-  if (isRadio) {
-    const withoutGroup = prev.filter((o) => !group.options.some((go) => go.id === o.id));
-    return isSelected ? withoutGroup : [...withoutGroup, option];
-  }
-  if (isSelected) return prev.filter((o) => o.id !== option.id);
-  if (group.maxLimit) {
-    const count = prev.filter((o) => group.options.some((go) => go.id === o.id)).length;
-    if (count >= group.maxLimit) return prev;
-  }
-  return [...prev, option];
-}
-
-
 export default function ProviderAvailabilityPicker(props) {
   if (!props.boulevardProviderId) {
     return <GravityBookButton fontKey={props.fontKey} size="hero" />;
@@ -333,6 +242,8 @@ function ProviderAvailabilityPickerInner({
   const [directServiceItem, setDirectServiceItem] = useState(null); // { id, name, categoryName }
   const [pendingCategory, setPendingCategory] = useState(null); // multi-item category awaiting sub-pick
   const [addonPendingCategory, setAddonPendingCategory] = useState(null); // add-on category awaiting sub-pick
+
+  const [degraded, setDegraded] = useState(false);
 
   // When 'any' location, use the first location as a proxy for options/duration queries
   const isAnyLocation = selectedLocation === 'any';
@@ -429,7 +340,7 @@ function ProviderAvailabilityPickerInner({
       for (const item of cat.items || []) {
         map.set(item.id, {
           duration: item.duration || null,
-          priceLabel: formatPriceRange(item.price, { name: item.name, categoryName: cat.name }),
+          priceLabel: formatPriceRange(item.price, item.name, cat.name),
           categoryName: cat.name || null,
         });
       }
@@ -541,7 +452,7 @@ function ProviderAvailabilityPickerInner({
     toFetch.forEach((addon) => {
       const addonKey = addon.catalogId || addon.slug;
       const addonItemId = resolveItemId(addon, effectiveLocation);
-      fetch(
+      cachedFetch(
         `/api/blvd/services/options?locationKey=${effectiveLocation}&serviceItemId=${encodeURIComponent(addonItemId)}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`
       )
         .then((r) => r.json())
@@ -568,12 +479,13 @@ function ProviderAvailabilityPickerInner({
     optionsServiceItemId
       ? `/api/blvd/services/options?locationKey=${effectiveLocation}&serviceItemId=${encodeURIComponent(optionsServiceItemId)}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`
       : null,
-    fetcher,
+    (url) => cachedFetch(url).then((r) => r.json()),
     { revalidateOnFocus: false, dedupingInterval: 120000 }
   );
 
   useEffect(() => {
     if (!serviceInfo) return;
+    if (serviceInfo.degraded) { setDegraded(true); return; }
     const dur = serviceInfo.duration?.staffDuration || serviceInfo.duration?.max || serviceInfo.duration?.min || null;
     setServiceDuration(dur);
     const groups = (serviceInfo.optionGroups || []).filter((g) => g.options?.length > 0);
@@ -658,9 +570,10 @@ function ProviderAvailabilityPickerInner({
       if (loc && boulevardProviderId) {
         setExpandedMenuLoading(true);
 
-        fetch(`/api/blvd/services/menu?locationKey=${loc}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`)
+        cachedFetch(`/api/blvd/services/menu?locationKey=${loc}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`)
           .then((r) => r.json())
           .then((data) => {
+            if (data?.degraded) { setDegraded(true); setExpandedMenuLoading(false); return; }
             setExpandedMenuData(data);
             setExpandedMenuLoading(false);
             const cat = (data.categories || []).find((c) =>
@@ -790,20 +703,23 @@ function ProviderAvailabilityPickerInner({
             return url ? fetch(url).then((r) => r.json()).catch(() => []) : [];
           })
         );
+        if (results.some((r) => r?.degraded)) { setDegraded(true); return { dates: [], locationMap: null }; }
         // Build per-date location map: { '2026-02-23': ['carmel', 'westfield'] }
         const locationMap = {};
         locations.forEach((loc, i) => {
-          (results[i] || []).forEach((date) => {
+          const dates = Array.isArray(results[i]) ? results[i] : [];
+          dates.forEach((date) => {
             if (!locationMap[date]) locationMap[date] = [];
             locationMap[date].push(loc.key);
           });
         });
-        const allDates = [...new Set(results.flat())].sort();
+        const allDates = [...new Set(results.flat().filter((d) => typeof d === 'string'))].sort();
         return { dates: allDates, locationMap };
       }
       const url = buildDatesUrl(selectedLocation);
-      const dates = url ? await fetch(url).then((r) => r.json()) : [];
-      return { dates, locationMap: null };
+      const data = url ? await fetch(url).then((r) => r.json()) : [];
+      if (data?.degraded) { setDegraded(true); return { dates: [], locationMap: null }; }
+      return { dates: Array.isArray(data) ? data : [], locationMap: null };
     },
     { revalidateOnFocus: false, dedupingInterval: 60000 }
   );
@@ -855,17 +771,22 @@ function ProviderAvailabilityPickerInner({
           locations.map((loc) => {
             const url = buildTimesUrl(loc.key, selectedDate);
             return url
-              ? fetch(url).then((r) => r.json()).then((slots) =>
-                  (slots || []).map((s) => ({ ...s, locationKey: loc.key, locationLabel: loc.label }))
-                ).catch(() => [])
+              ? fetch(url).then((r) => r.json()).then((data) => {
+                  if (data?.degraded) return { degraded: true };
+                  return (data || []).map((s) => ({ ...s, locationKey: loc.key, locationLabel: loc.label }));
+                }).catch(() => [])
               : [];
           })
         );
+        if (results.some((r) => r?.degraded)) { setDegraded(true); return []; }
         // Merge and sort by startTime
         return results.flat().sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
       }
       const url = buildTimesUrl(selectedLocation, selectedDate);
-      return url ? fetch(url).then((r) => r.json()) : [];
+      if (!url) return [];
+      const data = await fetch(url).then((r) => r.json());
+      if (data?.degraded) { setDegraded(true); return []; }
+      return Array.isArray(data) ? data : [];
     },
     { revalidateOnFocus: false, dedupingInterval: 30000 }
   );
@@ -894,11 +815,12 @@ function ProviderAvailabilityPickerInner({
         if (isAnyLocation) {
           const results = await Promise.all(
             locations.map((loc) =>
-              fetch(`/api/blvd/services/menu?locationKey=${loc.key}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`)
+              cachedFetch(`/api/blvd/services/menu?locationKey=${loc.key}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`)
                 .then((r) => r.json())
                 .catch(() => ({ categories: [] }))
             )
           );
+          if (results.some((r) => r?.degraded)) { setDegraded(true); setExpandedMenuLoading(false); return; }
           const mergedMap = new Map();
           for (const result of results) {
             for (const cat of result.categories || []) {
@@ -915,10 +837,12 @@ function ProviderAvailabilityPickerInner({
             categories: [...mergedMap.values()].map((c) => ({ ...c, items: [...c.items.values()] })),
           });
         } else {
-          const res = await fetch(
+          const res = await cachedFetch(
             `/api/blvd/services/menu?locationKey=${effectiveLocation}&staffProviderId=${encodeURIComponent(boulevardProviderId)}`
           );
-          setExpandedMenuData(await res.json());
+          const data = await res.json();
+          if (data?.degraded) { setDegraded(true); setExpandedMenuLoading(false); return; }
+          setExpandedMenuData(data);
         }
       } catch {
         setExpandedMenuData({ categories: [] });
@@ -1203,6 +1127,7 @@ function ProviderAvailabilityPickerInner({
         body: JSON.stringify(body),
       });
       const data = await res.json();
+      if (data.degraded) { setDegraded(true); setReserving(false); return; }
       if (!res.ok) throw new Error(data.error || 'Failed to reserve');
       setCartData(data);
       if (data.duration) setServiceDuration(data.duration);
@@ -1342,6 +1267,16 @@ function ProviderAvailabilityPickerInner({
     backgroundColor: `${colors.violet}08`,
     border: `1px solid ${colors.violet}20`,
   };
+
+  if (degraded) {
+    return (
+      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}` }}>
+        <div className="px-6 py-5">
+          <WidgetFallback locationKey={effectiveLocation} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}` }}>
@@ -1553,9 +1488,9 @@ function ProviderAvailabilityPickerInner({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span>{item.name}</span>
-                      {formatPriceRange(item.price, { name: item.name, categoryName: pendingCategory?.name }) && (
+                      {formatPriceRange(item.price, item.name, pendingCategory?.name) && (
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.violet, whiteSpace: 'nowrap' }}>
-                          {formatPriceRange(item.price, { name: item.name, categoryName: pendingCategory?.name })}
+                          {formatPriceRange(item.price, item.name, pendingCategory?.name)}
                         </span>
                       )}
                     </div>
@@ -1581,9 +1516,9 @@ function ProviderAvailabilityPickerInner({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span>{item.name}</span>
-                      {formatPriceRange(item.price, { name: item.name, categoryName: addonPendingCategory?.name }) && (
+                      {formatPriceRange(item.price, item.name, addonPendingCategory?.name) && (
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: colors.violet, whiteSpace: 'nowrap' }}>
-                          {formatPriceRange(item.price, { name: item.name, categoryName: addonPendingCategory?.name })}
+                          {formatPriceRange(item.price, item.name, addonPendingCategory?.name)}
                         </span>
                       )}
                     </div>

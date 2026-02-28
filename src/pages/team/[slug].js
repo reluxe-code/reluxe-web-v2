@@ -1,328 +1,464 @@
-// src/pages/team/[slug].js
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { motion } from 'framer-motion';
+import BetaLayout from '@/components/beta/BetaLayout';
+import { colors, gradients, typeScale } from '@/components/preview/tokens';
+import { getServiceClient } from '@/lib/supabase';
+import { toWPStaffShape } from '@/lib/staff-helpers';
+import { getTestimonialsSSR } from '@/lib/testimonials';
+import GravityBookButton from '@/components/beta/GravityBookButton';
+import ProviderAvailabilityPicker from '@/components/booking/ProviderAvailabilityPicker';
+import ScarcityBadge from '@/components/booking/ScarcityBadge';
+import { getBundlesForProvider } from '@/data/treatmentBundles';
+import { categorizeProvider } from '@/lib/provider-roles';
 
-import Head from 'next/head'
-import HeaderTwo from '@/components/header/header-2'
-import dynamic from 'next/dynamic'
-import HeroSplitSection from '@/components/team/HeroSplitSection'
-import MoreAboutMeSliderSection from '@/components/team/MoreAboutMeSliderSection'
-import { getServiceClient } from '@/lib/supabase'
-import { toWPStaffShape } from '@/lib/staff-helpers'
-import { getTestimonialsSSR } from '@/lib/testimonials'
-import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
-// 🚫 SSR can mismatch on browser-only code inside sliders/galleries.
-// ✅ Load ResultsSection only on the client to avoid hydration errors.
-const ResultsSection = dynamic(() => import('@/components/gallery/ResultsSection'), {
-  ssr: false,
-  loading: () => null,
-})
+const privacyName = (n) => {
+  if (!n) return 'Patient';
+  return n.includes(' ') ? n.split(' ')[0] + ' ' + n.split(' ').pop()[0] + '.' : n;
+};
 
-// —————————————————————————————————————————————
-// Data fetching
-// —————————————————————————————————————————————
-export async function getStaticPaths() {
-  const sb = getServiceClient()
-  const { data } = await sb
-    .from('staff')
-    .select('slug')
-    .eq('status', 'published')
+/* ─── specialty → service slug mapping ─── */
+const SPECIALTY_MAP = [
+  { key: /tox|botox|jeuveau|xeomin|dysport/i, title: 'Tox', slug: 'tox' },
+  { key: /filler|lip|facial balanc/i, title: 'Dermal Fillers', slug: 'filler' },
+  { key: /sculptra/i, title: 'Sculptra', slug: 'sculptra' },
+  { key: /morpheus/i, title: 'Morpheus8', slug: 'morpheus8' },
+  { key: /skinpen|microneed/i, title: 'Microneedling', slug: 'microneedling' },
+  { key: /ipl|photofacial/i, title: 'IPL Photofacial', slug: 'ipl' },
+  { key: /laser hair/i, title: 'Laser Hair Removal', slug: 'laser-hair-removal' },
+  { key: /hydrafacial/i, title: 'HydraFacial', slug: 'hydrafacial' },
+  { key: /glo2/i, title: 'Glo2Facial', slug: 'glo2facial' },
+  { key: /facial|peel/i, title: 'Facials & Peels', slug: 'facials' },
+  { key: /massage/i, title: 'Massage', slug: 'massage' },
+];
 
-  const paths = (data || [])
-    .filter((s) => s?.slug)
-    .map((s) => ({ params: { slug: s.slug } }))
-
-  return { paths, fallback: 'blocking' }
+function specialtyToServices(specialties = []) {
+  const seen = new Set();
+  const items = [];
+  specialties.forEach(sObj => {
+    const name = (sObj?.specialty || '').trim();
+    if (!name) return;
+    const match = SPECIALTY_MAP.find(m => m.key.test(name));
+    if (match && !seen.has(match.slug)) {
+      seen.add(match.slug);
+      items.push(match);
+    }
+  });
+  return items;
 }
 
-// Generate a stable, server-only rotation key to avoid SSR/CSR mismatch
-function buildRotationKey(d = new Date()) {
-  const startOfYearUTC = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  const ms = d - startOfYearUTC
-  const dayMs = 86400000
-  const week = Math.ceil(((ms / dayMs) + startOfYearUTC.getUTCDay() + 1) / 7)
-  return `${d.getUTCFullYear()}-W${week}`
+/* ─── page ─── */
+function ProviderDetailPage({ fontKey, fonts, person, testimonials }) {
+  const router = useRouter();
+  const { service: qService, category: qCategory, date: qDate } = router.query;
+  const f = person?.staffFields || {};
+  const name = person?.name || person?.title || '';
+  const firstName = name.split(/\s/)[0];
+  const role = f?.staffTitle || f?.stafftitle || f?.role || '';
+  const bio = f?.staffBio || '';
+  const funFact = f?.stafffunfact || null;
+  const bookingUrl = f?.staffbookingurl || null;
+
+  const transparentBgUrl = f?.transparentbg?.sourceUrl || f?.transparentbg?.mediaItemUrl || null;
+  const featuredUrl = person?.featuredImage?.node?.sourceUrl || null;
+  const heroImg = transparentBgUrl || featuredUrl;
+
+  const specialties = f?.specialties || [];
+  const credentials = f?.credentials || [];
+  const availability = f?.availability || [];
+  const locations = (f?.location || []);
+  const locationNames = locations.map(l => l?.title || l?.slug || '').filter(Boolean);
+
+  const brandItems = specialtyToServices(specialties);
+  const locFlags = {};
+  locations.forEach(l => {
+    const s = String(l?.slug || l?.title || '').toLowerCase();
+    if (s.includes('carmel')) locFlags.carmel = true;
+    if (s.includes('westfield')) locFlags.westfield = true;
+  });
+
+  // Boulevard booking data
+  const boulevardProviderId = person?.boulevardProviderId || null;
+  const boulevardServiceMap = person?.boulevardServiceMap || {};
+  const pickerLocations = [];
+  if (locFlags.westfield) pickerLocations.push({ key: 'westfield', label: 'Westfield' });
+  if (locFlags.carmel) pickerLocations.push({ key: 'carmel', label: 'Carmel' });
+
+  const hasPicker = brandItems.length > 0 && boulevardProviderId;
+
+  // Treatment bundles: filter global defaults by this provider's capabilities + role
+  const providerRole = categorizeProvider(person);
+  const treatmentBundles = boulevardProviderId
+    ? getBundlesForProvider(
+        boulevardServiceMap,
+        pickerLocations.length === 1 ? pickerLocations[0].key : 'any',
+        pickerLocations,
+        person?.treatmentBundles ?? null,
+        person?._globalBundles ?? null,
+        providerRole
+      )
+    : [];
+
+  return (
+    <>
+      {/* ─── Compact Hero ─── */}
+      <section className="relative" style={{ backgroundColor: colors.ink, paddingTop: 80, paddingBottom: 0 }}>
+        <div style={{ position: 'absolute', top: '10%', right: '-5%', width: '45%', height: '80%', background: `radial-gradient(ellipse, ${colors.violet}10, transparent 65%)`, pointerEvents: 'none' }} />
+        <div className="max-w-6xl mx-auto px-6 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-end">
+            {/* Text — compact */}
+            <motion.div className="lg:col-span-3 pb-8 lg:pb-10" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+              <a href="/team" className="inline-flex items-center gap-1.5 mb-3 transition-colors duration-200" style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,248,245,0.4)', textDecoration: 'none' }}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                All Team
+              </a>
+              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 700, lineHeight: 1.1, color: colors.white, marginBottom: '0.375rem' }}>
+                {name}
+              </h1>
+              {role && (
+                <p style={{ fontFamily: fonts.body, fontSize: '1rem', fontWeight: 500, color: colors.violet, marginBottom: '0.5rem' }}>{role}</p>
+              )}
+              {locationNames.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {locationNames.map(l => (
+                    <span key={l} className="rounded-full px-2.5 py-0.5" style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: 'rgba(250,248,245,0.6)', background: 'rgba(250,248,245,0.06)', border: '1px solid rgba(250,248,245,0.1)' }}>{l}</span>
+                  ))}
+                </div>
+              )}
+              {!hasPicker && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <GravityBookButton fontKey={fontKey} size="hero" />
+                </div>
+              )}
+            </motion.div>
+
+            {/* Hero image — right side, compact */}
+            {heroImg && (
+              <motion.div className="lg:col-span-2 hidden lg:block" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
+                <div className="rounded-t-2xl overflow-hidden" style={{ maxHeight: 320 }}>
+                  <img src={heroImg} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Featured Booking Picker ─── */}
+      {hasPicker && (
+        <section style={{ backgroundColor: colors.cream }}>
+          <div className="max-w-6xl mx-auto px-6 py-8 lg:py-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+              {/* Picker + sidebar grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main picker — takes 2/3 on desktop, full on mobile */}
+                <div className="lg:col-span-2">
+                  <ProviderAvailabilityPicker
+                    providerName={name}
+                    boulevardProviderId={boulevardProviderId}
+                    specialties={brandItems}
+                    locations={pickerLocations}
+                    boulevardServiceMap={boulevardServiceMap}
+                    fontKey={fontKey}
+                    fonts={fonts}
+                    initialService={qService}
+                    initialCategory={qCategory}
+                    initialDate={qDate}
+                    treatmentBundles={treatmentBundles}
+                  />
+                </div>
+
+                {/* Right column — specialties + scarcity */}
+                <div className="space-y-3">
+                  <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '0.25rem' }}>
+                    {firstName}&rsquo;s Services
+                  </p>
+                  {brandItems.map((item, i) => (
+                    <motion.a
+                      key={item.slug}
+                      href={`/services/${item.slug}`}
+                      className="flex items-center justify-between rounded-xl p-4 group transition-all duration-200"
+                      style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}`, textDecoration: 'none' }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 + i * 0.04 }}
+                      whileHover={{ y: -2 }}
+                    >
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, color: colors.heading }}>
+                        {item.title}
+                      </span>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="transition-transform duration-200 group-hover:translate-x-0.5">
+                        <path d="M6 12L10 8L6 4" stroke={colors.violet} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </motion.a>
+                  ))}
+
+                  {boulevardProviderId && pickerLocations[0] && (
+                    <motion.div
+                      className="rounded-xl p-4"
+                      style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}` }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                    >
+                      <ScarcityBadge
+                        locationKey={pickerLocations[0].key}
+                        staffProviderId={boulevardProviderId}
+                        variant="sidebar"
+                        fonts={fonts}
+                      />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── Mobile Image (below picker on mobile) ─── */}
+      {heroImg && (
+        <div className="lg:hidden" style={{ backgroundColor: '#fff' }}>
+          <div className="max-w-sm mx-auto px-6 py-6">
+            <div className="rounded-2xl overflow-hidden" style={{ aspectRatio: '3/4' }}>
+              <img src={heroImg} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Bio + Details ─── */}
+      <section style={{ backgroundColor: '#fff' }}>
+        <div className="max-w-5xl mx-auto px-6 py-12 lg:py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Bio */}
+            <div className="lg:col-span-2">
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '0.75rem' }}>About</p>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, color: colors.heading, marginBottom: '1rem' }}>
+                  Meet {firstName}
+                </h2>
+                {bio && (
+                  <div style={{ fontFamily: fonts.body, fontSize: typeScale.body.size, lineHeight: typeScale.body.lineHeight, color: colors.body }} dangerouslySetInnerHTML={{ __html: bio }} />
+                )}
+                {funFact && (
+                  <div className="mt-6 rounded-xl p-5" style={{ borderLeft: `3px solid ${colors.violet}`, backgroundColor: colors.cream }}>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.violet, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.375rem' }}>Fun Fact</p>
+                    <p style={{ fontFamily: fonts.body, fontSize: typeScale.caption.size, color: colors.body, lineHeight: 1.5 }}>{funFact}</p>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-5">
+              {specialties.length > 0 && (
+                <motion.div className="rounded-2xl p-6" style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
+                  <h3 style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.muted, marginBottom: '0.75rem' }}>Specialties</h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {specialties.map((s, i) => (
+                      <span key={i} className="rounded-full px-2.5 py-1" style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 500, color: colors.violet, background: `${colors.violet}08`, border: `1px solid ${colors.violet}15` }}>
+                        {s?.specialty || s}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {credentials.length > 0 && (
+                <motion.div className="rounded-2xl p-6" style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.06 }}>
+                  <h3 style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.muted, marginBottom: '0.75rem' }}>Credentials</h3>
+                  <ul className="space-y-1.5" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {credentials.map((c, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ marginTop: 2, flexShrink: 0 }}><path d="M13.5 4.5L6.5 11.5L2.5 7.5" stroke={colors.violet} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.body }}>{c?.credentialItem || c}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+
+              {availability.length > 0 && (
+                <motion.div className="rounded-2xl p-6" style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.12 }}>
+                  <h3 style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: colors.muted, marginBottom: '0.75rem' }}>Availability</h3>
+                  {availability.filter(a => a?.day && a?.hours).map((a, i) => (
+                    <div key={i} className="flex justify-between mb-1.5">
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.body }}>{a.day}</span>
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: colors.heading }}>{a.hours}</span>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Testimonials ─── */}
+      {testimonials.length > 0 && (
+        <section style={{ backgroundColor: colors.cream }}>
+          <div className="max-w-7xl mx-auto px-6 py-12 lg:py-16">
+            <motion.div className="mb-8" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '0.75rem' }}>Patient Love</p>
+              <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, color: colors.heading }}>
+                What Patients Say About {firstName}
+              </h2>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {testimonials.slice(0, 6).map((t, i) => (
+                <motion.div key={t.id || i} className="rounded-2xl p-6" style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.05 }}>
+                  <div className="flex gap-0.5 mb-3">
+                    {[...Array(t.rating || 5)].map((_, j) => (
+                      <span key={j} style={{ color: colors.violet, fontSize: '0.875rem' }}>★</span>
+                    ))}
+                  </div>
+                  <p style={{ fontFamily: fonts.body, fontSize: typeScale.caption.size, color: colors.body, lineHeight: 1.6, marginBottom: '1rem', fontStyle: 'italic' }}>
+                    &ldquo;{(t.quote || '').length > 200 ? t.quote.slice(0, 200) + '...' : t.quote}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-2 pt-3" style={{ borderTop: `1px solid ${colors.stone}` }}>
+                    <div className="flex items-center justify-center rounded-full" style={{ width: 32, height: 32, background: `${colors.violet}10` }}>
+                      <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.violet }}>{(t.author_name || '?')[0]}</span>
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.heading }}>{privacyName(t.author_name)}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Video Intro */}
+      {f?.videoIntro && (
+        <section style={{ backgroundColor: '#fff' }}>
+          <div className="max-w-4xl mx-auto px-6 py-12 lg:py-16">
+            <motion.div className="mb-6" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, color: colors.heading }}>Meet {firstName}</h2>
+            </motion.div>
+            <div className="rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+              <iframe src={f.videoIntro} title={`Video intro by ${name}`} frameBorder="0" allowFullScreen style={{ width: '100%', height: '100%' }} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Bottom CTA */}
+      <section style={{ background: gradients.primary, position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+        <div className="max-w-3xl mx-auto px-6 py-12 text-center relative">
+          <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.5rem, 3.5vw, 2.5rem)', fontWeight: 700, color: '#fff', marginBottom: '0.75rem' }}>
+            Ready to See {firstName}?
+          </h2>
+          <p style={{ fontFamily: fonts.body, fontSize: '1rem', color: 'rgba(255,255,255,0.8)', marginBottom: '1.5rem' }}>
+            Book your appointment and experience the RELUXE difference.
+          </p>
+          <div className="flex justify-center">
+            <GravityBookButton fontKey={fontKey} size="hero" />
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* ─── wrapper + data ─── */
+
+export default function BetaTeamSlug({ person, testimonials }) {
+  const name = person?.name || person?.title || 'Provider';
+  const slug = person?.slug || '';
+  const role = person?.staffFields?.staffTitle || person?.staffFields?.stafftitle || person?.staffFields?.role || '';
+  const bio = person?.staffFields?.staffBio || '';
+  const canonical = `https://reluxemedspa.com/team/${slug}`;
+  const heroImg = person?.staffFields?.transparentbg?.sourceUrl || person?.featuredImage?.node?.sourceUrl || null;
+  const specialties = (person?.staffFields?.specialties || []).map(s => s?.specialty || s).filter(Boolean);
+  const locationNames = (person?.staffFields?.location || []).map(l => l?.title || l?.slug || '').filter(Boolean);
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Person',
+        name,
+        jobTitle: role,
+        url: canonical,
+        ...(heroImg ? { image: heroImg } : {}),
+        ...(bio ? { description: bio.length > 300 ? bio.slice(0, 300) : bio } : {}),
+        worksFor: { '@type': 'MedicalBusiness', name: 'RELUXE Med Spa', '@id': 'https://reluxemedspa.com#org' },
+        ...(specialties.length > 0 ? { knowsAbout: specialties } : {}),
+        ...(locationNames.length > 0 ? { workLocation: locationNames.map(l => ({ '@type': 'Place', name: `RELUXE Med Spa — ${l}` })) } : {}),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://reluxemedspa.com' },
+          { '@type': 'ListItem', position: 2, name: 'Team', item: 'https://reluxemedspa.com/team' },
+          { '@type': 'ListItem', position: 3, name, item: canonical },
+        ],
+      },
+    ],
+  };
+
+  const specialtyText = specialties.length > 0 ? ` Specializing in ${specialties.slice(0, 3).join(', ')}.` : '';
+  const locationText = locationNames.length > 0 ? ` ${locationNames.join(' & ')}, Indiana.` : ' Westfield & Carmel, Indiana.';
+
+  return (
+    <BetaLayout
+      title={`${name}${role ? `, ${role}` : ''} — RELUXE Med Spa`}
+      description={`Meet ${name}${role ? `, ${role}` : ''} at RELUXE Med Spa.${specialtyText}${locationText} Book your appointment today.`}
+      canonical={canonical}
+      structuredData={structuredData}
+    >
+      {({ fontKey, fonts }) => (
+        <ProviderDetailPage fontKey={fontKey} fonts={fonts} person={person} testimonials={testimonials} />
+      )}
+    </BetaLayout>
+  );
+}
+
+export async function getStaticPaths() {
+  const sb = getServiceClient();
+  const { data } = await sb.from('staff').select('slug').eq('status', 'published');
+  const paths = (data || []).filter(s => s?.slug).map(s => ({ params: { slug: s.slug } }));
+  return { paths, fallback: 'blocking' };
 }
 
 export async function getStaticProps({ params }) {
-  const sb = getServiceClient()
+  const sb = getServiceClient();
   const { data } = await sb
     .from('staff')
     .select('*')
     .eq('slug', params.slug)
     .eq('status', 'published')
+    .limit(1);
+
+  const row = data?.[0];
+  if (!row) return { notFound: true };
+
+  const person = toWPStaffShape(row);
+
+  // Fetch global treatment bundles from site_config (falls back to hardcoded defaults)
+  const { data: configRow } = await sb
+    .from('site_config')
+    .select('value')
+    .eq('key', 'treatment_bundles')
     .limit(1)
+    .single();
+  if (configRow?.value) {
+    person._globalBundles = configRow.value;
+  }
 
-  const row = data?.[0]
-  if (!row) return { notFound: true }
-
-  // Transform to WP shape so all downstream components work unchanged
-  const person = toWPStaffShape(row)
-
-  // ✅ compute on server, serialize to client
-  const rotationKey = buildRotationKey()
-
-  // Fetch testimonials for this provider by first name
-  const firstName = (row.name || '').split(/\s/)[0]
-  const testimonials = firstName ? await getTestimonialsSSR({ provider: firstName, limit: 15 }) : []
+  const firstName = (row.name || '').split(/\s/)[0];
+  const testimonials = firstName ? await getTestimonialsSSR({ provider: firstName, limit: 20 }) : [];
 
   return {
-    props: { person, rotationKey, testimonials },
+    props: { person, testimonials },
     revalidate: 300,
-  }
-}
-
-// —————————————————————————————————————————————
-// Helpers
-// —————————————————————————————————————————————
-const SPECIALTY_ASSETS = [
-  { key: /tox|botox|jeuveau|xeomin|dysport/i, title: 'Tox',       img: '/images/service/210x70/jeuveau.png', href: '/services/tox', slug: 'tox' },
-  { key: /filler|lip/i,                         title: 'Filler',    img: '/images/service/210x70/filler.png',  href: '/services/filler', slug: 'filler' },
-  { key: /sculptra/i,                           title: 'Sculptra',  img: '/images/service/210x70/sculptra.png',href: '/services/sculptra', slug: 'sculptra' },
-  { key: /morpheus/i,                           title: 'Morpheus8', img: '/images/service/210x70/m8.png',      href: '/services/morpheus8', slug: 'morpheus8' },
-  { key: /skinpen|microneed/i,                  title: 'SkinPen',   img: '/images/service/210x70/skinpen.png', href: '/services/skinpen', slug: 'skinpen' },
-  { key: /ipl|photofacial/i,                    title: 'IPL',       img: '/images/service/210x70/ipl.png',     href: '/services/ipl', slug: 'ipl' },
-  { key: /laser hair/i,                         title: 'Hair Removal', img: '/images/service/210x70/lhr.png',  href: '/services/laser-hair-removal', slug: 'laser-hair-removal' },
-  { key: /hydrafacial/i,                        title: 'HydraFacial', img: '/images/service/210x70/hydrafacial.png', href: '/services/hydrafacial', slug: 'hydrafacial' },
-  { key: /glo2/i,                               title: 'Glo2Facial', img: '/images/service/210x70/glo2.png',   href: '/services/glo2facial', slug: 'glo2facial' },
-]
-
-const BOOK_WESTFIELD_DEFAULT = '/book/westfield'
-const BOOK_CARMEL_DEFAULT    = '/book/carmel'
-
-function brandItemsFromSpecialties(specialties = []) {
-  const items = []
-  const seen = new Set()
-  specialties.forEach((sObj) => {
-    const name = (sObj?.specialty || '').trim()
-    if (!name) return
-    const match = SPECIALTY_ASSETS.find(a => a.key.test(name))
-    if (match && !seen.has(match.title)) {
-      seen.add(match.title)
-      items.push({
-        id: items.length + 1,
-        title: match.title,
-        href: match.href,
-        slug: match.slug,
-      })
-    }
-  })
-  return items
-}
-
-function formatCredentialsHTML(credentials = []) {
-  const list = credentials.map(c => c?.credentialItem).filter(Boolean)
-  return list.length ? list.join('<br/>') : ''
-}
-function formatAvailabilityHTML(avail = []) {
-  const list = avail
-    .filter(a => a?.day && a?.hours)
-    .map(a => `${a.day}: ${a.hours}`)
-  return list.length ? list.join('<br/>') : ''
-}
-function formatSpecialtiesHTML(specialties = []) {
-  const list = specialties.map(s => s?.specialty).filter(Boolean)
-  return list.length ? list.join('<br/>') : ''
-}
-
-function buildBookingHref({ location, serviceSlug }) {
-  const base = location === 'carmel' ? BOOK_CARMEL_DEFAULT : BOOK_WESTFIELD_DEFAULT
-  return serviceSlug ? `${base}?service=${encodeURIComponent(serviceSlug)}` : base
-}
-
-function getLocationFlagsFromAcfLocation(acfLocation) {
-  const locs = Array.isArray(acfLocation) ? acfLocation : (acfLocation ? [acfLocation] : [])
-  let carmel = false
-  let westfield = false
-  for (const l of locs) {
-    const s = String(l?.slug || l?.title || '').toLowerCase()
-    if (s.includes('carmel')) carmel = true
-    if (s.includes('westfield')) westfield = true
-  }
-  return { carmel, westfield }
-}
-
-// —————————————————————————————————————————————
-// Page
-// —————————————————————————————————————————————
-export default function StaffProfile({ person, rotationKey, testimonials = [] }) {
-  const f = person?.staffFields || {}
-
-  const specialties = f?.specialties || []
-  const credentials = f?.credentials || []
-  const availability = f?.availability || []
-  const socials = f?.socialProfiles || []
-
-  const transparentBgUrl = f?.transparentbg?.sourceUrl || f?.transparentbg?.mediaItemUrl || null
-  const featuredUrl = person?.featuredImage?.node?.sourceUrl || null
-  const heroImageUrl = transparentBgUrl || featuredUrl
-
-  const brandItems = brandItemsFromSpecialties(specialties)
-  const { carmel, westfield } = getLocationFlagsFromAcfLocation(f?.location)
-
-  const credentialsHTML  = formatCredentialsHTML(credentials)
-  const availabilityHTML = formatAvailabilityHTML(availability)
-  const specialtiesHTML  = formatSpecialtiesHTML(specialties)
-
-  const seoTitle = `${person.title}${f?.stafftitle ? `, ${f.stafftitle}` : ''} | RELUXE Med Spa Team`;
-  const seoDesc = `Meet ${person.title}${f?.stafftitle ? `, ${f.stafftitle}` : ''} at RELUXE Med Spa in Carmel & Westfield, IN.${specialties.length ? ` Specializing in ${specialties.slice(0,3).map(s=>s.specialty).join(', ')}.` : ''} Book your appointment today.`;
-  const pageUrl = `https://reluxemedspa.com/team/${person.slug}`;
-  const seoImage = heroImageUrl || 'https://reluxemedspa.com/images/team/team-hero.jpg';
-
-  const personSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: person.title,
-    jobTitle: f?.stafftitle || undefined,
-    image: seoImage,
-    url: pageUrl,
-    worksFor: {
-      '@type': 'MedicalBusiness',
-      name: 'RELUXE Med Spa',
-      url: 'https://reluxemedspa.com',
-    },
-    ...(specialties.length && {
-      knowsAbout: specialties.map(s => s.specialty).filter(Boolean),
-    }),
   };
-
-  return (
-    <>
-      <Head>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDesc} />
-        <link rel="canonical" href={pageUrl} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDesc} />
-        <meta property="og:type" content="profile" />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:image" content={seoImage} />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={seoTitle} />
-        <meta name="twitter:description" content={seoDesc} />
-        <meta name="twitter:image" content={seoImage} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
-      </Head>
-
-      <HeaderTwo />
-
-      <section className="w-full bg-azure">
-        <div className="max-w-5xl mx-auto px-6">
-          <HeroSplitSection
-            name={person.title}
-            subtitle={f?.stafftitle || ''}
-            bio={(f?.staffBio || '').replace(/<[^>]*>/g, '')}
-            imageUrl={heroImageUrl}
-            locations={f?.location}
-            socials={socials}
-          />
-        </div>
-      </section>
-
-      <section name="XXXX" className="w-full bg-white">
-        {/* ✅ ResultsSection loads only on the client; rotationKey is server-stable */}
-        <ResultsSection providerSlug={person.title} rotationKey={rotationKey} />
-      </section>
-
-      <section className="w-full bg-white">
-        <MoreAboutMeSliderSection
-          title={`About ${person.title}`}
-          bio={(f?.staffBio || '').replace(/<[^>]*>/g, '')}
-          backgroundImage={heroImageUrl || '/images/staff/default-blur.png'}
-          items={[]}
-        />
-
-        <div className="max-w-5xl mx-auto px-6 mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {credentialsHTML && (
-            <div className="rounded-2xl border shadow-sm p-5">
-              <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Credentials</div>
-              <div className="prose text-sm" dangerouslySetInnerHTML={{ __html: credentialsHTML }} />
-              <div className="mt-3 text-xs text-gray-400">Verified</div>
-            </div>
-          )}
-          {availabilityHTML && (
-            <div className="rounded-2xl border shadow-sm p-5">
-              <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Availability</div>
-              <div className="prose text-sm" dangerouslySetInnerHTML={{ __html: availabilityHTML }} />
-              <div className="mt-3 text-xs text-gray-400">Current Hours</div>
-            </div>
-          )}
-          {specialtiesHTML && (
-            <div className="rounded-2xl border shadow-sm p-5">
-              <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">My Specialties</div>
-              <div className="prose text-sm" dangerouslySetInnerHTML={{ __html: specialtiesHTML }} />
-              <div className="mt-3 text-xs text-gray-400">Most Popular</div>
-            </div>
-          )}
-        </div>
-
-        {brandItems?.length > 0 && (
-          <div className="max-w-5xl mx-auto px-6 mt-10 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Book by Specialty</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {brandItems.map(item => {
-                const carmelHref    = buildBookingHref({ location: 'carmel', serviceSlug: item.slug })
-                const westfieldHref = buildBookingHref({ location: 'westfield', serviceSlug: item.slug })
-                return (
-                  <div key={item.id} className="rounded-2xl border shadow-sm p-4 flex flex-col">
-                    <div className="flex items-center gap-3">
-                      <img src={item.clientimage} alt={item.title} className="h-10 w-auto" />
-                      <div className="font-semibold">{item.title}</div>
-                    </div>
-                    <a href={item.href} className="text-sm mt-2 underline">Learn about {item.title}</a>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {carmel && (
-                        <a
-                          href={carmelHref}
-                          className="text-sm inline-flex items-center rounded-lg px-3 py-1 border font-medium hover:bg-gray-50"
-                        >
-                          Book in Carmel
-                        </a>
-                      )}
-                      {westfield && (
-                        <a
-                          href={westfieldHref}
-                          className="text-sm inline-flex items-center rounded-lg px-3 py-1 border font-medium hover:bg-gray-50"
-                        >
-                          Book in Westfield
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Testimonials */}
-        {testimonials.length > 0 && (
-          <div className="mt-10">
-            <TestimonialWidget
-              testimonials={testimonials}
-              heading={`What Patients Say About ${person.title?.split(' ')[0] || 'This Provider'}`}
-              subheading={`Reviews from patients treated by ${person.title?.split(' ')[0] || 'this provider'}.`}
-              showViewAll={false}
-            />
-          </div>
-        )}
-
-        {f?.videoIntro && (
-          <div className="mt-10 max-w-5xl mx-auto px-6">
-            <h2 className="text-xl font-semibold mb-2">Intro Video</h2>
-            <div className="aspect-w-16 aspect-h-9">
-              <iframe
-                src={f.videoIntro}
-                title={`Video intro by ${person.title}`}
-                frameBorder="0"
-                allowFullScreen
-                className="w-full h-full rounded-lg"
-              />
-            </div>
-          </div>
-        )}
-      </section>
-    </>
-  )
 }
+
+BetaTeamSlug.getLayout = (page) => page;

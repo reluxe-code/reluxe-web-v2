@@ -30,7 +30,7 @@ export default function PostPage({ post, publishedDate }) {
   const plainExcerpt = (post.excerpt || '').replace(/<[^>]+>/g, '').trim();
   const seoTitle = `${plainTitle} | RELUXE Med Spa Blog`;
   const pageUrl = `https://reluxemedspa.com/blog/${post.slug}`;
-  const seoImage = post.featured_image || 'https://reluxemedspa.com/images/blog/blog-hero.jpg';
+  const seoImage = 'https://reluxemedspa.com/images/og/new-default-1200x630.png';
 
   const articleSchema = {
     '@context': 'https://schema.org',

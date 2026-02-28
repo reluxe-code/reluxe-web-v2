@@ -217,3 +217,5 @@ export default function AdminBrands() {
     </AdminLayout>
   )
 }
+
+AdminBrands.getLayout = (page) => page

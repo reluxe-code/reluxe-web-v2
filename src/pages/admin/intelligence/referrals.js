@@ -411,3 +411,5 @@ export default function ReferralsDashboard() {
     </AdminLayout>
   )
 }
+
+ReferralsDashboard.getLayout = (page) => page

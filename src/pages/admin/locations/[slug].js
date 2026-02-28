@@ -82,3 +82,5 @@ export default function AdminLocationEdit() {
     </AdminLayout>
   )
 }
+
+AdminLocationEdit.getLayout = (page) => page

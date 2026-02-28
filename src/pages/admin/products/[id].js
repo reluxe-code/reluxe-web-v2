@@ -395,3 +395,5 @@ function Field({ label, required, children }) {
     </div>
   )
 }
+
+AdminProductEdit.getLayout = (page) => page

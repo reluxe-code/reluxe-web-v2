@@ -3,6 +3,8 @@
 // Used by the "Looking for something else?" expanded menu in the booking picker.
 import { blvd, LOCATION_IDS, getLocationById } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { recordSuccess, recordFailure, getCircuitState } from '@/server/circuitBreaker'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export const config = { maxDuration: 30 }
 
@@ -22,6 +24,7 @@ function matchId(sdkId, targetId) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { locationKey, staffProviderId } = req.query
 
@@ -30,9 +33,15 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = `menu:v2:${locationKey}:${staffProviderId || 'all'}`
-  const cached = getCached(cacheKey, 600_000) // 10 min TTL
+  const cached = getCached(cacheKey, 3_600_000) // 1 hr TTL — menu is static
   if (cached && !cached.stale) {
     return res.json(cached.data)
+  }
+
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    if (cached) return res.json(cached.data)
+    return res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 
   try {
@@ -106,11 +115,14 @@ export default async function handler(req, res) {
       }
     }
 
+    recordSuccess()
     setCache(cacheKey, result)
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200')
     res.json(result)
   } catch (err) {
+    recordFailure()
     console.error('[blvd/services/menu]', err.message)
     if (cached) return res.json(cached.data)
-    res.status(200).json({ categories: [] })
+    res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true, categories: [] })
   }
 }

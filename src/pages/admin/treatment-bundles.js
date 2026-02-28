@@ -571,3 +571,5 @@ function BundleForm({ form, onUpdate, onAddCatalogItem, onRemoveItem, onUpdateIt
     </div>
   )
 }
+
+AdminTreatmentBundles.getLayout = (page) => page

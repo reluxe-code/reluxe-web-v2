@@ -1,488 +1,213 @@
-// src/pages/memberships.js
-import { useEffect, useMemo, useState } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import HeaderTwo from '@/components/header/header-2'
-import { Disclosure } from '@headlessui/react'
-import {
-  CheckCircleIcon,
-  ChevronDownIcon,
-  SparklesIcon,
-  ShieldCheckIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import BetaLayout from '@/components/beta/BetaLayout';
+import { colors, gradients, typeScale } from '@/components/preview/tokens';
+import GravityBookButton from '@/components/beta/GravityBookButton';
 
-const SITE_URL = 'https://reluxemedspa.com'
-const PAGE_URL = `${SITE_URL}/memberships`
-const OG_IMAGE = `${SITE_URL}/images/og/memberships-og.jpg` // update if needed
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
-// -------------------------------
-// Promo Feature Flag
-// -------------------------------
-// If you prefer manual control, set this true in January.
-const FORCE_JANUARY_PROMO = false
-
-// -------------------------------
-// Membership Data (from your images)
-// -------------------------------
 const plans = [
   {
     key: '100',
     title: 'VIP $100 Membership',
-    price: 100,
+    price: '$100',
     priceDisplay: '$100 / month',
-    januaryStartPrice: 50,
     voucherLabel: '1 voucher per month (choose 1 service)',
     voucherIncludes: ['60-minute Massage', 'Signature Facial', '10 units Choice Tox', 'Lip Flip'],
     href: '/buy/essential',
     bestFor: 'Perfect if you want consistent self-care + flexible savings each month.',
+    gradient: 'linear-gradient(135deg, #7C3AED, #5B21B6)',
   },
   {
     key: '200',
     title: 'VIP $200 Membership',
-    price: 200,
+    price: '$200',
     priceDisplay: '$200 / month',
-    januaryStartPrice: 50,
     voucherLabel: '1 voucher per month (choose 1 service)',
     voucherIncludes: ['Glo2Facial', 'Hydrafacial', 'Facial + Massage', '120-minute Massage', '20 units Choice Tox'],
     href: '/buy/elite',
-    bestFor: 'Best for bigger monthly value—premium facials, longer massage, or more tox units.',
+    bestFor: 'Best for bigger monthly value \u2014 premium facials, longer massage, or more tox units.',
+    gradient: 'linear-gradient(135deg, #C026D3, #9333EA)',
   },
-]
+];
 
 const additionalBenefits = [
-  { title: '10% off', desc: 'Single service*' },
-  { title: '10% off', desc: 'Packages*' },
-  { title: '15% off', desc: 'All products*' },
-  { title: 'Member pricing', desc: 'Per-unit tox' },
-  { title: 'FREE', desc: 'Monthly sauna' },
-  { title: '$50 off', desc: 'All filler' },
-]
+  { title: '10% off', desc: 'Single Services' },
+  { title: '10% off', desc: 'Packages' },
+  { title: '15% off', desc: 'All Products' },
+  { title: 'Member Pricing', desc: 'Per-unit Tox' },
+  { title: 'FREE', desc: 'Monthly Sauna' },
+  { title: '$50 off', desc: 'All Filler' },
+];
 
 const faqs = [
-  {
-    q: 'Is there a commitment?',
-    a: `We recommend a 12-month commitment for best results and best value, but you can cancel anytime with 30 days notice.`,
-  },
-  {
-    q: 'Do vouchers expire?',
-    a: `Vouchers never expire while your membership is active. If you cancel, you have 90 days to use any unused vouchers. After 90 days, unused vouchers are forfeited.`,
-  },
-  {
-    q: 'Can I share my voucher?',
-    a: `Yes—vouchers can be shared (for example, with a family member).`,
-  },
-  {
-    q: 'How does tox work with membership?',
-    a: `You always get the best (member) per-unit pricing on tox. You can also use your monthly vouchers for “Choice Tox” units (10 units on the $100 membership, 20 units on the $200 membership). Many clients bank those vouchers and apply them toward their quarterly tox appointment.`,
-  },
-  {
-    q: 'Are the “Additional Benefits” different between $100 and $200?',
-    a: `No—both memberships include the same VIP benefits and discounts. The only difference is what your monthly voucher can be used for.`,
-  },
-  {
-    q: 'What about the January $50 start promo?',
-    a: `In January, memberships start at $50 for your first month and renew at the regular monthly price in month 2. If you received a promotional first month (free or discounted), you must complete at least 3 payments. If you cancel before 3 payments, we may charge the promotional balance.`,
-  },
-]
+  { q: 'Is there a commitment?', a: 'We recommend a 12-month commitment for best results and best value, but you can cancel anytime with 30 days notice.' },
+  { q: 'Do vouchers expire?', a: 'Vouchers never expire while your membership is active. If you cancel, you have 90 days to use any unused vouchers.' },
+  { q: 'Can I share my voucher?', a: 'Yes \u2014 vouchers can be shared with a family member.' },
+  { q: 'How does tox work with membership?', a: 'You always get the best (member) per-unit pricing on tox. You can also use your monthly vouchers for "Choice Tox" units. Many clients bank those vouchers and apply them toward their quarterly tox appointment.' },
+  { q: 'Are the benefits different between $100 and $200?', a: 'No \u2014 both memberships include the same VIP benefits and discounts. The only difference is what your monthly voucher can be used for.' },
+];
 
-// -------------------------------
-// SEO
-// -------------------------------
-const TITLE = 'Med Spa Memberships in Carmel & Westfield | RELUXE Med Spa'
-const DESCRIPTION =
-  'RELUXE Med Spa memberships in Carmel & Westfield, Indiana. Choose a $100 or $200 VIP membership, get a monthly voucher you can use on your favorite services, and unlock member-only pricing and perks.'
-const KEYWORDS =
-  'med spa membership, tox membership, Botox membership, facial membership, massage membership, Carmel med spa, Westfield med spa, RELUXE memberships'
+const quickValues = [
+  { title: 'Choose your service', body: 'Each month you receive 1 voucher for your choice of included services.' },
+  { title: 'Best pricing always', body: 'VIP members get member pricing on tox + exclusive discounts on services and products.' },
+  { title: 'Bank it when life gets busy', body: 'Vouchers never expire with an active membership (and you have 90 days after canceling).' },
+];
 
-const breadcrumbJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-    { '@type': 'ListItem', position: 2, name: 'Memberships', item: PAGE_URL },
-  ],
-}
-
-const faqJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faqs.map((f) => ({
-    '@type': 'Question',
-    name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
-  })),
-}
-
-function buildOfferCatalogJsonLd() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'OfferCatalog',
-    name: 'RELUXE Med Spa VIP Memberships',
-    url: PAGE_URL,
-    itemListElement: plans.map((p, idx) => ({
-      '@type': 'Offer',
-      name: p.title,
-      price: p.price,
-      priceCurrency: 'USD',
-      category: 'Membership',
-      url: `${SITE_URL}${p.href}`,
-      position: idx + 1,
-      availability: 'https://schema.org/InStock',
-      eligibleRegion: [
-        { '@type': 'City', name: 'Carmel, IN' },
-        { '@type': 'City', name: 'Westfield, IN' },
-      ],
-      seller: {
-        '@type': 'LocalBusiness',
-        name: 'RELUXE Med Spa',
-        address: [
-          { '@type': 'PostalAddress', addressLocality: 'Westfield', addressRegion: 'IN' },
-          { '@type': 'PostalAddress', addressLocality: 'Carmel', addressRegion: 'IN' },
-        ],
-      },
-    })),
-  }
-}
-
-export default function MembershipsPage() {
-  const [isJanuaryPromo, setIsJanuaryPromo] = useState(FORCE_JANUARY_PROMO)
-
-  useEffect(() => {
-    if (FORCE_JANUARY_PROMO) return
-    const now = new Date()
-    setIsJanuaryPromo(now.getMonth() === 0) // January = 0
-  }, [])
-
-  const offerCatalogJsonLd = useMemo(() => buildOfferCatalogJsonLd(), [])
+export default function BetaMemberships() {
+  const [openFaq, setOpenFaq] = useState(-1);
 
   return (
-    <div className="bg-white min-h-screen">
-      <Head>
-        <title>{TITLE}</title>
-        <meta name="description" content={DESCRIPTION} />
-        <meta name="keywords" content={KEYWORDS} />
-        <link rel="canonical" href={PAGE_URL} />
-
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={TITLE} />
-        <meta property="og:description" content={DESCRIPTION} />
-        <meta property="og:url" content={PAGE_URL} />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:image:alt" content="RELUXE Med Spa Memberships" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={TITLE} />
-        <meta name="twitter:description" content={DESCRIPTION} />
-        <meta name="twitter:image" content={OG_IMAGE} />
-
-        <meta name="geo.region" content="US-IN" />
-        <meta name="geo.placename" content="Carmel, Westfield" />
-
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(offerCatalogJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      </Head>
-
-      <HeaderTwo />
-
-      {/* HERO */}
-      <header className="relative bg-[url('/images/page-banner/memberships-header.png')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-black/80" />
-        <div className="relative max-w-7xl mx-auto px-6 py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-            RELUXE VIP Memberships
-            <span className="block text-white/90">Westfield & Carmel</span>
-          </h1>
-
-          <p className="mt-4 text-lg md:text-xl text-white/90 max-w-3xl mx-auto">
-            Pick your monthly voucher. Unlock VIP discounts. Always get your best pricing on tox.
-          </p>
-
-          {/* Overview panel – popup style (matches Services page) */}
-          <div className="relative mt-8 mx-auto max-w-5xl">
-            {/* soft glow accents */}
-            <div className="pointer-events-none absolute -left-24 -top-24 h-56 w-56 rounded-full bg-fuchsia-600/25 blur-3xl" />
-            <div className="pointer-events-none absolute -right-24 -bottom-24 h-56 w-56 rounded-full bg-indigo-500/20 blur-3xl" />
-
-            <div className="overflow-hidden rounded-3xl bg-neutral-950/90 text-white ring-1 ring-white/10 shadow-2xl backdrop-blur-md">
-              {/* header line (small) */}
-              <div className="px-6 pt-7 md:px-8">
-                <p className="text-[11px] font-semibold tracking-[0.18em] text-white/60">
-                  MEMBERSHIP OVERVIEW
+    <BetaLayout title="VIP Med Spa Memberships — Save on Botox, Fillers & Facials" description="RELUXE Med Spa VIP memberships in Carmel & Westfield, IN. $100 or $200/month membership, monthly treatment voucher, and 15% off all Botox, fillers, facials & more." canonical="https://reluxemedspa.com/memberships">
+      {({ fontKey, fonts }) => (
+        <>
+          {/* Hero */}
+          <section className="relative" style={{ backgroundColor: colors.ink, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '-30%', left: '-10%', width: '60%', height: '160%', background: `linear-gradient(180deg, ${colors.violet}15, ${colors.fuchsia}08, transparent)`, borderRadius: '50%', filter: 'blur(100px)', pointerEvents: 'none' }} />
+            <div className="max-w-7xl mx-auto px-6 py-24 lg:py-36 relative text-center">
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>VIP Membership</p>
+                <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.25rem, 5vw, 4rem)', fontWeight: 700, lineHeight: 1.08, color: colors.white, marginBottom: '1rem' }}>
+                  Your Glow-Up,{' '}
+                  <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>On Autopilot.</span>
+                </h1>
+                <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', lineHeight: 1.6, color: 'rgba(250,248,245,0.55)', maxWidth: '32rem', margin: '0 auto 2rem' }}>
+                  Pick your monthly voucher. Unlock VIP discounts. Always get your best pricing on tox.
                 </p>
-              </div>
-
-              {/* body */}
-              <div className="px-6 pb-7 pt-3 md:px-8">
-                {isJanuaryPromo && (
-                  <div className="mb-5 rounded-2xl bg-white/10 ring-1 ring-white/15 p-4 text-left">
-                    <p className="font-extrabold text-white">
-                      January Special: Start for <span className="text-white">$50</span>
-                    </p>
-                    <p className="mt-1 text-sm text-white/80">
-                      All memberships start at <span className="font-semibold">$50</span> in January and renew at regular
-                      price in month 2. Promotional start requires <span className="font-semibold">3 payments</span>.
-                    </p>
-                  </div>
-                )}
-
-                <p className="text-base md:text-lg leading-relaxed text-white/80">
-                  RELUXE VIP Memberships make it easy to stay consistent with your glow.
-                  Each month you receive <strong>1 voucher</strong> you can use toward the services you
-                  love—massage, facials, and even <strong>Choice Tox units</strong>.
-                  Plus, you’ll always get our <strong>best member pricing</strong> on tox and VIP savings across services,
-                  packages, products, and filler.
-                </p>
-
-                {/* highlight chips */}
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs md:text-sm">
-                  <span className="px-3 py-1 rounded-full bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-400/25">
-                    Bank vouchers
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-sky-400/15 text-sky-200 ring-1 ring-sky-400/25">
-                    Best tox pricing
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-amber-400/15 text-amber-200 ring-1 ring-amber-400/25">
-                    VIP discounts
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-fuchsia-400/15 text-fuchsia-200 ring-1 ring-fuchsia-400/25">
-                    Westfield + Carmel
-                  </span>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {['Bank vouchers', 'Best tox pricing', 'VIP discounts', 'Westfield + Carmel'].map((chip) => (
+                    <span key={chip} className="rounded-full px-4 py-1.5" style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: 'rgba(250,248,245,0.7)', background: 'rgba(250,248,245,0.06)', border: '1px solid rgba(250,248,245,0.08)' }}>{chip}</span>
+                  ))}
                 </div>
-
-                {/* actions */}
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <Link
-                    href="#plans"
-                    className="inline-flex items-center justify-center rounded-2xl
-                              bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500
-                              px-6 py-4 text-sm font-semibold text-white shadow-lg shadow-violet-500/20
-                              transition hover:brightness-[1.05] active:scale-[.99]"
-                  >
-                    View Membership Options
-                  </Link>
-
-                  <Link
-                    href="/book/consult/"
-                    className="inline-flex items-center justify-center rounded-2xl
-                              bg-white/10 px-6 py-4 text-sm font-semibold text-white
-                              ring-1 ring-white/15 hover:bg-white/15"
-                  >
-                    Not sure? Book a Consult
-                  </Link>
-                </div>
-
-                {/* optional tiny helper line */}
-                <div className="mt-4 text-xs text-white/60">
-                  Tip: Many members bank their Choice Tox vouchers and apply them toward quarterly tox visits.
-                </div>
-              </div>
-
-              {/* bottom accent bar */}
-              <div className="h-[4px] w-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 opacity-70" />
+              </motion.div>
             </div>
-          </div>
-        </div>
-      </header>
+          </section>
 
-
-      <main className="max-w-7xl mx-auto px-4 py-14 md:py-18 space-y-16">
-        {/* QUICK VALUE STRIP */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-2xl border border-gray-200 p-6">
-            <p className="font-bold text-lg">Choose your service</p>
-            <p className="text-gray-700 mt-1">
-              Each month you receive <span className="font-semibold">1 voucher</span> for your choice of included
-              services.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 p-6">
-            <p className="font-bold text-lg">Best pricing always</p>
-            <p className="text-gray-700 mt-1">
-              VIP members get <span className="font-semibold">member pricing</span> on tox + exclusive discounts on
-              services and products.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 p-6">
-            <p className="font-bold text-lg">Bank it when life gets busy</p>
-            <p className="text-gray-700 mt-1">
-              Vouchers never expire with an active membership (and you have 90 days after canceling).
-            </p>
-          </div>
-        </section>
-
-        {/* PLANS */}
-        <section id="plans">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-extrabold">Pick your monthly membership</h2>
-            <p className="mt-3 text-gray-700">
-              Same VIP benefits for both memberships—your voucher options are what change.
-            </p>
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {plans.map((plan) => (
-              <div key={plan.key} className="rounded-3xl border border-gray-200 bg-white shadow-sm p-7 md:p-8 flex flex-col">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-2xl font-extrabold">{plan.title}</h3>
-                    <p className="mt-1 text-gray-700">{plan.bestFor}</p>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-3xl font-extrabold text-reluxe-primary">
-                      {isJanuaryPromo ? `$${plan.januaryStartPrice}` : `$${plan.price}`}
-                      <span className="text-base font-semibold text-gray-700"> / mo</span>
+          {/* Quick Value Strip */}
+          <section style={{ backgroundColor: '#fff' }}>
+            <div className="max-w-7xl mx-auto px-6 py-16">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {quickValues.map((v, i) => (
+                  <motion.div key={v.title} className="rounded-2xl p-6 lg:p-8" style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
+                    <div className="flex items-center justify-center rounded-xl mb-4" style={{ width: 44, height: 44, background: `${colors.violet}10` }}>
+                      <span style={{ fontFamily: fonts.body, fontSize: '1rem', fontWeight: 700, color: colors.violet }}>{String(i + 1).padStart(2, '0')}</span>
                     </div>
-                    {isJanuaryPromo ? (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Then <span className="font-semibold">{plan.priceDisplay}</span> in month 2
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-600 mt-1">{plan.priceDisplay}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-6 rounded-2xl bg-gray-50 border border-gray-200 p-5">
-                  <p className="font-bold">{plan.voucherLabel}</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Vouchers can be shared and banked for later use.
-                  </p>
-
-                  <ul className="mt-4 space-y-2">
-                    {plan.voucherIncludes.map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <CheckCircleIcon className="h-5 w-5 text-reluxe-primary mt-0.5" />
-                        <span className="text-gray-800">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                  <Link
-                    href={plan.href}
-                    className="inline-flex justify-center items-center rounded-full bg-reluxe-primary hover:bg-reluxe-primary-dark px-6 py-3 font-semibold text-white"
-                  >
-                    {isJanuaryPromo ? 'Start for $50' : 'Start Membership'}
-                  </Link>
-                  <Link
-                    href="#faq"
-                    className="inline-flex justify-center items-center rounded-full border border-gray-300 hover:bg-gray-50 px-6 py-3 font-semibold text-gray-900"
-                  >
-                    Read FAQs
-                  </Link>
-                </div>
-
-                {isJanuaryPromo && (
-                  <p className="mt-4 text-xs text-gray-500">
-                    Promotional first month requires 3 payments. Early cancellation may result in a promotional balance charge.
-                  </p>
-                )}
+                    <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading, marginBottom: '0.5rem' }}>{v.title}</h3>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', lineHeight: 1.6, color: colors.body }}>{v.body}</p>
+                  </motion.div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ADDITIONAL BENEFITS */}
-        <section>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-extrabold">VIP Benefits (included with both)</h2>
-              <p className="mt-2 text-gray-700">
-                As a VIP member, you get additional benefits & the best price on everything.
-              </p>
             </div>
+          </section>
 
-            <div className="inline-flex items-center gap-2 text-sm text-gray-600">
-              <ClockIcon className="h-5 w-5" />
-              Perks apply while membership is active.
-            </div>
-          </div>
+          {/* Plans */}
+          <section style={{ backgroundColor: colors.cream }}>
+            <div className="max-w-7xl mx-auto px-6 py-24 lg:py-32">
+              <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading, marginBottom: '0.75rem' }}>Pick Your Membership</h2>
+                <p style={{ fontFamily: fonts.body, fontSize: typeScale.body.size, color: colors.body }}>Same VIP benefits for both &mdash; your voucher options are what change.</p>
+              </motion.div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {plans.map((plan, i) => (
+                  <motion.div key={plan.key} className="rounded-2xl overflow-hidden" style={{ backgroundColor: '#fff', border: `1px solid ${colors.stone}`, boxShadow: '0 4px 24px rgba(0,0,0,0.04)' }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
+                    <div style={{ height: '3px', background: plan.gradient }} />
+                    <div className="p-8 lg:p-10">
+                      <div className="flex items-start justify-between gap-4 mb-6">
+                        <div>
+                          <h3 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading }}>{plan.title}</h3>
+                          <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: colors.body, marginTop: '0.25rem' }}>{plan.bestFor}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p style={{ fontFamily: fonts.display, fontSize: '2rem', fontWeight: 700, color: colors.heading }}>{plan.price}<span style={{ fontSize: '1rem', fontWeight: 500, color: colors.muted }}>/mo</span></p>
+                        </div>
+                      </div>
 
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-5">
-            {additionalBenefits.map((b) => (
-              <div key={b.title + b.desc} className="rounded-2xl border border-gray-200 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-extrabold">{b.title}</div>
-                <div className="mt-2 text-sm font-semibold tracking-wide text-gray-700 uppercase">{b.desc}</div>
+                      <div className="rounded-xl p-5" style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }}>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 700, color: colors.heading, marginBottom: '0.25rem' }}>{plan.voucherLabel}</p>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.muted, marginBottom: '1rem' }}>Vouchers can be shared and banked for later use.</p>
+                        <ul className="space-y-2">
+                          {plan.voucherIncludes.map((item) => (
+                            <li key={item} className="flex items-center gap-2.5">
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill={`${colors.violet}15`}/><path d="M5 8l2 2 4-4" stroke={colors.violet} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              <span style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: colors.heading }}>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 mt-6">
+                        <a href={plan.href} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2rem', background: gradients.primary, color: '#fff', textDecoration: 'none', display: 'inline-block' }}>Start Membership</a>
+                        <a href="#faq" className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2rem', backgroundColor: '#fff', color: colors.heading, border: `1px solid ${colors.stone}`, textDecoration: 'none', display: 'inline-block' }}>Read FAQs</a>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          </section>
 
-          <p className="mt-5 text-xs text-gray-500">
-            *Discounts apply to eligible services/products. Cannot be combined with other offers unless explicitly stated.
-          </p>
-        </section>
+          {/* Additional Benefits */}
+          <section style={{ backgroundColor: '#fff' }}>
+            <div className="max-w-7xl mx-auto px-6 py-24 lg:py-32">
+              <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Included With Both</p>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>VIP Benefits</h2>
+              </motion.div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                {additionalBenefits.map((b, i) => (
+                  <motion.div key={b.title + b.desc} className="rounded-2xl p-6 text-center" style={{ backgroundColor: colors.cream, border: `1px solid ${colors.stone}` }} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.06 }}>
+                    <p style={{ fontFamily: fonts.display, fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 700, color: colors.heading, marginBottom: '0.25rem' }}>{b.title}</p>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{b.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+              <p className="text-center mt-6" style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>*Discounts apply to eligible services/products. Cannot be combined with other offers unless explicitly stated.</p>
+            </div>
+          </section>
 
-        {/* FAQ */}
-        <section id="faq" className="scroll-mt-24">
-          <div className="text-center max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-extrabold">Membership FAQs</h2>
-            <p className="mt-3 text-gray-700">
-              Quick answers to the most common questions about VIP membership at RELUXE.
-            </p>
-          </div>
+          {/* FAQ */}
+          <section id="faq" className="scroll-mt-24" style={{ backgroundColor: colors.cream }}>
+            <div className="max-w-4xl mx-auto px-6 py-24 lg:py-32">
+              <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Common Questions</p>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>Membership FAQs</h2>
+              </motion.div>
+              <div className="border-t" style={{ borderColor: colors.stone }}>
+                {faqs.map((faq, i) => (
+                  <motion.div key={i} className="border-b" style={{ borderColor: colors.stone }} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.06 }}>
+                    <button className="w-full text-left py-6 flex items-center justify-between gap-4" style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }} onClick={() => setOpenFaq(openFaq === i ? -1 : i)}>
+                      <span style={{ fontFamily: fonts.display, fontSize: '1.0625rem', fontWeight: 600, color: openFaq === i ? colors.violet : colors.heading, transition: 'color 0.2s' }}>{faq.q}</span>
+                      <motion.span style={{ fontSize: '1.25rem', color: colors.muted, flexShrink: 0, display: 'block', width: 24, height: 24, lineHeight: '24px', textAlign: 'center' }} animate={{ rotate: openFaq === i ? 45 : 0 }} transition={{ duration: 0.2 }}>+</motion.span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {openFaq === i && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} style={{ overflow: 'hidden' }}>
+                          <p className="pb-6" style={{ fontFamily: fonts.body, fontSize: typeScale.body.size, lineHeight: typeScale.body.lineHeight, color: colors.body, maxWidth: '48rem', paddingRight: '2rem' }}>{faq.a}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
 
-          <div className="mt-10 max-w-3xl mx-auto divide-y divide-gray-200 rounded-3xl border border-gray-200 bg-white overflow-hidden">
-            {faqs.map((item) => (
-              <Disclosure key={item.q}>
-                {({ open }) => (
-                  <div className="p-6">
-                    <Disclosure.Button className="w-full flex items-center justify-between gap-4 text-left">
-                      <span className="text-lg font-bold text-gray-900">{item.q}</span>
-                      <ChevronDownIcon
-                        className={`h-6 w-6 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
-                      />
-                    </Disclosure.Button>
-                    <Disclosure.Panel className="mt-3 text-gray-700 leading-relaxed">
-                      {item.a}
-                    </Disclosure.Panel>
-                  </div>
-                )}
-              </Disclosure>
-            ))}
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="rounded-3xl bg-gray-50 border border-gray-200 p-8 md:p-10 text-center">
-          <h2 className="text-3xl font-extrabold">Ready to join VIP?</h2>
-          <p className="mt-3 text-gray-700 max-w-2xl mx-auto">
-            Start today and enjoy member pricing, VIP perks, and a monthly voucher you can use on the services you love most.
-          </p>
-
-          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
-            <Link
-              href="/buy-membership"
-              className="inline-flex justify-center items-center rounded-full bg-reluxe-primary hover:bg-reluxe-primary-dark px-8 py-4 font-semibold text-white"
-            >
-              Start Your Membership
-            </Link>
-            <Link
-              href="/consultations"
-              className="inline-flex justify-center items-center rounded-full border border-gray-300 hover:bg-white px-8 py-4 font-semibold text-gray-900"
-            >
-              Not sure? Book a Consult
-            </Link>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            Questions? Call <a className="font-semibold underline" href="tel:3177631142">317-763-1142</a> or reply to any text from us.
-          </p>
-        </section>
-      </main>
-    </div>
-  )
+          {/* Bottom CTA */}
+          <section style={{ background: gradients.primary, position: 'relative' }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
+            <div className="max-w-3xl mx-auto px-6 py-20 text-center relative">
+              <h2 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.75rem, 4vw, 3rem)', fontWeight: 700, color: '#fff', marginBottom: '1rem' }}>Ready to Join VIP?</h2>
+              <p style={{ fontFamily: fonts.body, fontSize: '1.0625rem', color: 'rgba(255,255,255,0.8)', marginBottom: '1rem' }}>Start today and enjoy member pricing, VIP perks, and a monthly voucher.</p>
+              <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(255,255,255,0.6)', marginBottom: '2rem' }}>Questions? Call <a href="tel:3177631142" style={{ color: '#fff', fontWeight: 600, textDecoration: 'underline' }}>(317) 763-1142</a></p>
+              <div className="flex justify-center">
+                <GravityBookButton fontKey={fontKey} size="hero" />
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+    </BetaLayout>
+  );
 }
+
+BetaMemberships.getLayout = (page) => page;

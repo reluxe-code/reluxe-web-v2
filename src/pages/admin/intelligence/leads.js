@@ -759,3 +759,5 @@ export default function LeadsDashboard() {
     </AdminLayout>
   )
 }
+
+LeadsDashboard.getLayout = (page) => page

@@ -1,68 +1,32 @@
 // pages/return-policy.js
-
-import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
 
 export default function ReturnPolicyPage() {
   const updated = 'August 26, 2025'
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Product Return Policy | RELUXE Med Spa',
-    url: 'https://www.reluxemedspa.com/return-policy',
-    description:
-      'RELUXE Med Spa skincare product return policy: timelines for opened/unopened items, defective products, allergy reactions, exchanges, refunds, non-returnable items, and how to start a return.',
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.reluxemedspa.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Product Return Policy', item: 'https://www.reluxemedspa.com/return-policy' },
-      ],
-    },
-    mainEntity: {
-      '@type': 'Organization',
-      name: 'RELUXE Med Spa',
-      url: 'https://www.reluxemedspa.com/',
-      contactPoint: [
-        { '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'help@reluxemedspa.com' },
-      ],
-      address: [
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '514 E State Road 32',
-          addressLocality: 'Westfield',
-          addressRegion: 'IN',
-          postalCode: '46074',
-          addressCountry: 'US',
-        },
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '10485 N Pennsylvania St',
-          addressLocality: 'Carmel',
-          addressRegion: 'IN',
-          postalCode: '46032',
-          addressCountry: 'US',
-        },
-      ],
-    },
-  }
-
   return (
-    <>
-      <Head>
-        <title>Product Return Policy | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Learn how to return skincare products purchased from RELUXE Med Spa. See timelines for opened/unopened items, defective products, allergy reactions, refunds, exchanges, and non-returnables."
-        />
-        <link rel="canonical" href="https://www.reluxemedspa.com/return-policy" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      </Head>
-
-      {/* Page Header */}
-      <HeaderTwo />
+    <BetaLayout
+      title="Product Return Policy"
+      description="Learn how to return skincare products purchased from RELUXE Med Spa. See timelines for opened/unopened items, defective products, allergy reactions, refunds, exchanges, and non-returnables."
+      canonical="https://reluxemedspa.com/return-policy"
+      structuredData={{
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Product Return Policy | RELUXE Med Spa',
+        url: 'https://www.reluxemedspa.com/return-policy',
+        description: 'RELUXE Med Spa skincare product return policy.',
+        mainEntity: {
+          '@type': 'Organization',
+          name: 'RELUXE Med Spa',
+          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'help@reluxemedspa.com' }],
+          address: [
+            { '@type': 'PostalAddress', streetAddress: '514 E State Road 32', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074', addressCountry: 'US' },
+            { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+          ],
+        },
+      }}
+    >
       <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
           <p className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Store Policies</p>
@@ -195,7 +159,7 @@ export default function ReturnPolicyPage() {
               <address className="not-italic mt-2 space-y-1">
                 <div><strong>RELUXE Med Spa</strong></div>
                 <div>514 E State Road 32, Westfield, IN 46074</div>
-                <div>10485 N Pennsylvania St, Carmel, IN 46032</div>
+                <div>10485 N Pennsylvania St, Carmel, IN 46280</div>
                 <div><a href="mailto:help@reluxemedspa.com" className="underline">help@reluxemedspa.com</a></div>
                 <div><a href="tel:+13177631142" className="underline">(317) 763-1142</a></div>
               </address>
@@ -218,6 +182,8 @@ export default function ReturnPolicyPage() {
           </section>
         </div>
       </main>
-    </>
+    </BetaLayout>
   )
 }
+
+ReturnPolicyPage.getLayout = (page) => page

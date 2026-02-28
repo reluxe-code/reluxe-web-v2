@@ -2,9 +2,12 @@
 // Sends an email on every quiz completion (and lead update), using Brevo SMTP env vars.
 
 import { getSmtpConfig, parseToList, escHtml, safeJson } from '@/lib/email'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   try {
     // Payload from your quiz page

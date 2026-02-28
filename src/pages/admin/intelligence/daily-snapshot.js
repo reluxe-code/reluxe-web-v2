@@ -326,3 +326,5 @@ export default function DailySnapshotPage() {
     </Layout>
   )
 }
+
+DailySnapshotPage.getLayout = (page) => page

@@ -10,6 +10,10 @@ import { FiPhone, FiMessageSquare } from 'react-icons/fi';
 import LocationSwitcherMini from '@/components/location/LocationSwitcherMini';
 
 function HeaderTwo({ sticky = true }) {
+  // Neutralized: BetaNavBar is now rendered via Layout wrapper for all pages.
+  // Old header code preserved below for reference during migration testing.
+  return null;
+
   const [offcanvas, setOffcanvas] = useState(false);
   const router = useRouter();
   const header = useRef(null);

@@ -97,3 +97,5 @@ export default function AdminBlogList() {
     </AdminLayout>
   )
 }
+
+AdminBlogList.getLayout = (page) => page

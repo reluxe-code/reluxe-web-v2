@@ -9,12 +9,17 @@
 import { blvd } from '@/server/blvd'
 import { adminQuery } from '@/server/blvdAdmin'
 import { upsertBirdContact } from '@/lib/birdContacts'
+import { getServiceClient } from '@/lib/supabase'
+import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
+
+const limiter = createRateLimiter('checkout', 5, 60_000) // 5/min per IP
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, limiter, getClientIp(req))) return
 
   const { cartId } = req.query
-  const { firstName, lastName, email, phone, ownershipVerified, referralCode, locationKey, bookingSessionId } = req.body
+  const { firstName, lastName, email, phone, ownershipVerified, referralCode, locationKey, bookingSessionId, allowDuplicate } = req.body
   const hasClientInfo = firstName && lastName && email
 
   if (!cartId) {
@@ -22,6 +27,50 @@ export default async function handler(req, res) {
   }
   if (!hasClientInfo && !ownershipVerified) {
     return res.status(400).json({ error: 'Client info or ownership verification required' })
+  }
+
+  // --- Duplicate booking check ---
+  if (!allowDuplicate && (phone || email)) {
+    try {
+      const db = getServiceClient()
+      const since = new Date(Date.now() - 48 * 3600_000).toISOString()
+      let dupeQuery = db
+        .from('booking_sessions')
+        .select('session_id, service_name, provider_name, location_key, completed_at, contact_phone, contact_email')
+        .eq('outcome', 'completed')
+        .gte('completed_at', since)
+
+      // Match by phone or email
+      const conditions = []
+      if (phone) {
+        const cleanPhone = phone.replace(/\D/g, '').slice(-10)
+        if (cleanPhone) conditions.push(`contact_phone.like.%${cleanPhone}`)
+      }
+      if (email) conditions.push(`contact_email.eq.${email.toLowerCase()}`)
+      if (conditions.length) dupeQuery = dupeQuery.or(conditions.join(','))
+
+      // Optionally narrow to same location
+      if (locationKey) dupeQuery = dupeQuery.eq('location_key', locationKey)
+
+      const { data: recentBookings } = await dupeQuery.order('completed_at', { ascending: false }).limit(3)
+
+      if (recentBookings?.length) {
+        return res.status(409).json({
+          error: 'You already have a recent booking.',
+          existingBookings: recentBookings.map((b) => ({
+            service: b.service_name || 'Service',
+            provider: b.provider_name || null,
+            location: b.location_key || null,
+            completedAt: b.completed_at,
+          })),
+          message: 'It looks like you already booked recently. If this is intentional, you can confirm to proceed.',
+          allowDuplicateFlag: true,
+        })
+      }
+    } catch (dupeErr) {
+      // Non-blocking: if the check fails, allow checkout to proceed
+      console.warn('[blvd/checkout] Duplicate check failed:', dupeErr.message)
+    }
   }
 
   try {
@@ -59,13 +108,26 @@ export default async function handler(req, res) {
       console.log('[blvd/checkout] Ownership verified but no client info on cart — using Admin API')
     }
 
-    // Try normal SDK checkout first, fall back to Admin API
+    // Require client info to be present on the cart before checkout
+    const finalClient = cart.clientInformation
+    if (!finalClient?.firstName || !finalClient?.email) {
+      return res.status(400).json({ error: 'Client information is required to complete checkout.' })
+    }
+
+    // Try normal SDK checkout first
     let result
     try {
       result = await cart.checkout()
     } catch (sdkErr) {
-      console.log('[blvd/checkout] SDK checkout failed:', sdkErr.message, '— falling back to Admin API')
-      // Fall back to Admin API checkout — bypasses payment/client info requirements
+      const msg = sdkErr.message || ''
+      // Only allow Admin API fallback for specific safe scenarios
+      // (e.g. free services where no payment method is needed)
+      const isSafeToFallback = msg.includes('payment') && !cart.summary?.paymentMethodRequired
+      if (!isSafeToFallback) {
+        console.error('[blvd/checkout] SDK checkout failed (no safe fallback):', msg)
+        throw sdkErr
+      }
+      console.log('[blvd/checkout] SDK checkout failed (payment not required, using Admin fallback):', msg)
       const adminResult = await adminQuery(
         `mutation CheckoutCart($input: CheckoutCartInput!) {
           checkoutCart(input: $input) {
@@ -76,7 +138,7 @@ export default async function handler(req, res) {
         { input: { id: cartId } }
       )
       result = adminResult.checkoutCart
-      console.log('[blvd/checkout] Admin API checkout succeeded')
+      console.log('[blvd/checkout] Admin API checkout succeeded (safe fallback)')
     }
 
     const appointment = result.appointments?.[0]
@@ -109,6 +171,7 @@ export default async function handler(req, res) {
         email: (email || ci.email || '').toLowerCase() || undefined,
         firstName: firstName || ci.firstName || undefined,
         lastName: lastName || ci.lastName || undefined,
+        source: 'checkout',
       }).catch((err) => console.warn('[checkout] Bird sync failed:', err.message))
     }
 

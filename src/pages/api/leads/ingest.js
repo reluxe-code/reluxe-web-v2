@@ -135,6 +135,8 @@ export default async function handler(req, res) {
         email: email || undefined,
         firstName: (lead.first_name || '').trim() || undefined,
         lastName: (lead.last_name || '').trim() || undefined,
+        source: 'leads_ingest',
+        leadId: newLead.id,
       }).then((result) => {
         if (result.ok && result.contactId) {
           db.from('leads')

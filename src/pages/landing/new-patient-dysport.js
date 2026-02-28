@@ -71,7 +71,7 @@ export default function NewPatientDysportPage() {
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/new-patient-dysport" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/landing/new-patient-dysport-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />

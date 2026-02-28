@@ -6,6 +6,7 @@ import { categorizeProvider, roleMatches } from '@/lib/provider-roles';
 import { getBundlesForProvider, TREATMENT_BUNDLES } from '@/data/treatmentBundles';
 import { normalizeToken, providerLocationKeys, matchesLocation } from '@/lib/start-booking';
 import { getWeightedProviders, selectProviderByWeight } from '@/lib/provider-routing';
+import { normalizeMoneyValue, formatCurrency, isConsultationLike, formatPriceRange } from '@/lib/bookingFormatters';
 
 const FIRST_AVAILABLE_SLUG = '__first_available__';
 
@@ -52,54 +53,6 @@ function specialtyToServices(specialties = [], boulevardServiceMap = null) {
     });
   }
   return items;
-}
-
-function normalizeMoneyValue(v) {
-  if (v == null) return null;
-  if (typeof v === 'number' && Number.isFinite(v)) return v >= 1000 ? v / 100 : v;
-  if (typeof v === 'string') {
-    const source = String(v);
-    const n = Number(source.replace(/[^\d.-]/g, ''));
-    if (!Number.isFinite(n)) return null;
-    if (source.includes('.')) return n;
-    return n >= 1000 ? n / 100 : n;
-  }
-  if (typeof v === 'object') {
-    const raw = v.amount ?? v.value ?? v.cents ?? v.centAmount ?? null;
-    if (raw == null) return null;
-    const n = Number(raw);
-    if (!Number.isFinite(n)) return null;
-    if (v.cents != null || v.centAmount != null) return n / 100;
-    return n >= 1000 ? n / 100 : n;
-  }
-  return null;
-}
-
-function formatCurrency(n) {
-  if (n == null || !Number.isFinite(n)) return null;
-  return `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function isConsultationLike(name = '') {
-  const text = String(name || '').toLowerCase();
-  return /consult|not sure where to start|get started|reveal/.test(text);
-}
-
-function formatPriceRange(price, name = '') {
-  if (!price) return isConsultationLike(name) ? 'FREE' : 'Varies';
-  const min = normalizeMoneyValue(price.min ?? price.minPrice ?? price.minimum ?? price);
-  const max = normalizeMoneyValue(price.max ?? price.maxPrice ?? price.maximum ?? price);
-  const consultation = isConsultationLike(name);
-  if (min == null && max == null) return consultation ? 'FREE' : 'Varies';
-  if ((min ?? 0) === 0 && (max ?? 0) === 0) return consultation ? 'FREE' : 'Varies';
-  if (min != null && max != null) {
-    if (Math.abs(min - max) < 0.01) return formatCurrency(min);
-    return `${formatCurrency(min)} - ${formatCurrency(max)}`;
-  }
-  if (min === 0) return consultation ? 'FREE' : 'Varies';
-  if (min != null) return `${formatCurrency(min)}+`;
-  if (max === 0) return consultation ? 'FREE' : 'Varies';
-  return `Up to ${formatCurrency(max)}`;
 }
 
 function normalizeName(v) {

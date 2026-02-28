@@ -23,11 +23,38 @@ export default async function handler(req, res) {
 
   const db = getServiceClient()
 
-  const { data: member } = await db
+  let { data: member } = await db
     .from('members')
     .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
     .eq('auth_user_id', user.id)
     .maybeSingle()
+
+  // If no member record yet (e.g. upsert failed during verify), auto-create from auth user
+  if (!member) {
+    const insertData = { auth_user_id: user.id, updated_at: new Date().toISOString() }
+    if (user.email) insertData.email = user.email
+    if (user.phone) insertData.phone = user.phone
+    const { data: created, error: createErr } = await db
+      .from('members')
+      .upsert(insertData, { onConflict: 'auth_user_id' })
+      .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
+      .single()
+    if (createErr) {
+      console.error('[member/profile] auto-create failed:', createErr.message)
+      // Retry without phone if NOT NULL constraint
+      if (createErr.code === '23502' || createErr.message?.includes('null')) {
+        delete insertData.phone
+        const { data: retried } = await db
+          .from('members')
+          .upsert(insertData, { onConflict: 'auth_user_id' })
+          .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
+          .single()
+        member = retried
+      }
+    } else {
+      member = created
+    }
+  }
 
   if (!member) return res.status(404).json({ error: 'Member profile not found' })
 
@@ -52,7 +79,46 @@ export default async function handler(req, res) {
     locationSplit: null,
   }
 
-  if (!member.blvd_client_id) return res.json(result)
+  // Late-link: if no blvd_client_id, try to find the Boulevard client by phone or email
+  if (!member.blvd_client_id) {
+    let foundClient = null
+
+    // Try phone-based lookup first (most reliable)
+    if (!foundClient && member.phone) {
+      const digits = (member.phone || '').replace(/\D/g, '')
+      const last10 = digits.slice(-10)
+      if (last10.length === 10) {
+        const { data } = await db
+          .from('blvd_clients')
+          .select('id')
+          .or(`phone.ilike.%${last10}%,phone.ilike.%${last10.slice(0,3)}%${last10.slice(3,6)}%${last10.slice(6)}%`)
+          .order('visit_count', { ascending: false, nullsFirst: false })
+          .limit(1)
+          .maybeSingle()
+        foundClient = data
+      }
+    }
+
+    // Try email-based lookup
+    if (!foundClient && member.email) {
+      const { data } = await db
+        .from('blvd_clients')
+        .select('id')
+        .ilike('email', member.email)
+        .order('visit_count', { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle()
+      foundClient = data
+    }
+
+    if (foundClient) {
+      // Link the Boulevard client to this member
+      await db.from('members').update({ blvd_client_id: foundClient.id }).eq('id', member.id)
+      member.blvd_client_id = foundClient.id
+    } else {
+      return res.json(result)
+    }
+  }
 
   const clientId = member.blvd_client_id
 
@@ -69,6 +135,17 @@ export default async function handler(req, res) {
       .select('id, boulevard_id')
       .eq('phone', member.phone)
     for (const c of (phoneClients || [])) {
+      if (!allClientIds.includes(c.id)) allClientIds.push(c.id)
+      if (c.boulevard_id && !allBlvdUrns.includes(c.boulevard_id)) allBlvdUrns.push(c.boulevard_id)
+    }
+  }
+  // Add all email-matched clients
+  if (member.email) {
+    const { data: emailClients } = await db
+      .from('blvd_clients')
+      .select('id, boulevard_id')
+      .ilike('email', member.email)
+    for (const c of (emailClients || [])) {
       if (!allClientIds.includes(c.id)) allClientIds.push(c.id)
       if (c.boulevard_id && !allBlvdUrns.includes(c.boulevard_id)) allBlvdUrns.push(c.boulevard_id)
     }

@@ -103,7 +103,7 @@ export default function NewPatientToxPage() {
         <meta property="og:description" content="Choose the right tox and dose with experienced RELUXE nurse injectors. Westfield & Carmel." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/new-patient-tox" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/landing/new-patient-tox-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />

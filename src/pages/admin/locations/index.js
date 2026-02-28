@@ -50,3 +50,5 @@ export default function AdminLocationsList() {
     </AdminLayout>
   )
 }
+
+AdminLocationsList.getLayout = (page) => page

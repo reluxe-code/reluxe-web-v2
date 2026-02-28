@@ -416,3 +416,5 @@ export default function BookingFunnelDashboard() {
     </AdminLayout>
   )
 }
+
+BookingFunnelDashboard.getLayout = (page) => page

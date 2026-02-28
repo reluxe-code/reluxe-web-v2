@@ -46,7 +46,7 @@ const faqData = {
   'Westfield FAQ': [
     {
       q: 'What are Westfield hours?',
-      a: 'Mon–Fri: 9 AM–7 PM, Sat: 9 AM–4 PM, Closed Sundays.',
+      a: 'Mon, Tue, Wed, Fri: 9 AM–5 PM, Thu: 9 AM–7 PM, Sat: 9 AM–3 PM, Closed Sundays.',
     },
     {
       q: 'Is this location wheelchair accessible?',

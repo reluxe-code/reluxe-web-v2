@@ -39,9 +39,17 @@ export const CARMEL_ALTERNATIVES = {
   opus: [
     { slug: 'morpheus8', label: 'Morpheus8' },
   ],
-  'salt-sauna': [],
-  massage: [],
-  'skin-iq': [],
+  'salt-sauna': [
+    { slug: 'glo2facial', label: 'Glo2Facial' },
+    { slug: 'facials', label: 'Signature Facials' },
+  ],
+  massage: [
+    { slug: 'facials', label: 'Facials' },
+  ],
+  'skin-iq': [
+    { slug: 'facials', label: 'Facials' },
+    { slug: 'peels', label: 'Chemical Peels' },
+  ],
 };
 
 /** Check if a service slug is offered at a given location key. */

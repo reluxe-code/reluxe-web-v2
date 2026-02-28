@@ -2,6 +2,9 @@
 // Verifies the SMS code, takes ownership, and re-reserves the time slot.
 // Boulevard's takeOwnershipByCode clears the reserved time, so we must re-reserve.
 import { blvd } from '@/server/blvd'
+import { createRateLimiter, applyRateLimit } from '@/lib/rateLimit'
+
+const limiter = createRateLimiter('verify-code', 5, 600_000) // 5 attempts per 10 min per cart
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -12,6 +15,8 @@ export default async function handler(req, res) {
   if (!cartId || !codeId || !code) {
     return res.status(400).json({ error: 'cartId, codeId, and code are required' })
   }
+
+  if (applyRateLimit(req, res, limiter, cartId)) return
 
   try {
     let cart = await blvd.carts.get(cartId)

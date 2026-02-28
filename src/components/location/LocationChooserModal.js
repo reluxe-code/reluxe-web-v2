@@ -36,6 +36,12 @@ export default function LocationChooserModal() {
         <h3 className="text-xl font-bold mb-2">Choose your location</h3>
         <p className="text-sm text-neutral-600 mb-4">We’ll remember your choice for faster booking.</p>
         <div className="grid grid-cols-2 gap-3">
+          <button
+            className="col-span-2 rounded-lg border px-4 py-3 text-center font-semibold hover:bg-gray-50"
+            onClick={() => choose('all')}
+          >
+            All Locations
+          </button>
           {Object.entries(LOCATIONS).map(([key, v]) => (
             <button
               key={key}

@@ -219,3 +219,5 @@ export default function RebookingReport() {
     </AdminLayout>
   )
 }
+
+RebookingReport.getLayout = (page) => page

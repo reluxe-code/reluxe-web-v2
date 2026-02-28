@@ -7,6 +7,9 @@ import { colors, gradients } from '@/components/preview/tokens'
 import { useMember } from '@/context/MemberContext'
 import { supabase } from '@/lib/supabase'
 import { formatPhone, isValidPhone } from '@/lib/phoneUtils'
+import { isValidEmail } from '@/lib/emailUtils'
+
+const SMS_ENABLED = process.env.NEXT_PUBLIC_SMS_ENABLED === 'true'
 import CodeInput from '@/components/booking/CodeInput'
 
 const INTEREST_OPTIONS = [
@@ -48,30 +51,39 @@ function LtvBadge({ bucket, fonts }) {
 
 // ─── ANONYMOUS State ───
 function AnonymousCard({ fonts, onSendOtp }) {
+  const [method, setMethod] = useState('email') // 'email' | 'phone'
+  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!isValidPhone(phone)) { setError('Enter a valid 10-digit phone number'); return }
+    if (method === 'email') {
+      if (!isValidEmail(email)) { setError('Enter a valid email address'); return }
+    } else {
+      if (!isValidPhone(phone)) { setError('Enter a valid 10-digit phone number'); return }
+    }
     setError(null)
     setLoading(true)
     try {
+      const body = method === 'email' ? { email } : { phone }
       const res = await fetch('/api/member/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to send code')
-      onSendOtp(phone)
+      onSendOtp({ method, identifier: method === 'email' ? email : phone })
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
+
+  const isEmail = method === 'email'
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -87,26 +99,46 @@ function AnonymousCard({ fonts, onSendOtp }) {
           Recognize Me
         </h3>
         <p style={{ fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(250,248,245,0.55)', lineHeight: 1.6, marginBottom: 24 }}>
-          Enter your phone to see your beauty journey, rebook in one tap, and unlock your personalized experience.
+          {isEmail
+            ? 'Enter your email to see your beauty journey, rebook in one tap, and unlock your personalized experience.'
+            : 'Enter your phone to see your beauty journey, rebook in one tap, and unlock your personalized experience.'}
         </p>
 
         <label style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: 'rgba(250,248,245,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 6 }}>
-          Phone Number
+          {isEmail ? 'Email Address' : 'Phone Number'}
         </label>
-        <input
-          type="tel"
-          inputMode="numeric"
-          value={phone}
-          onChange={(e) => setPhone(formatPhone(e.target.value))}
-          placeholder="(317) 555-1234"
-          style={{
-            fontFamily: fonts.body, fontSize: '1.0625rem', fontWeight: 500,
-            width: '100%', padding: '0.875rem 1rem', borderRadius: '0.75rem',
-            border: `1.5px solid ${error ? colors.rose : 'rgba(250,248,245,0.12)'}`,
-            backgroundColor: 'rgba(250,248,245,0.04)', color: colors.white,
-            outline: 'none', caretColor: colors.violet,
-          }}
-        />
+        {isEmail ? (
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="jane@example.com"
+            style={{
+              fontFamily: fonts.body, fontSize: '1.0625rem', fontWeight: 500,
+              width: '100%', padding: '0.875rem 1rem', borderRadius: '0.75rem',
+              border: `1.5px solid ${error ? colors.rose : 'rgba(250,248,245,0.12)'}`,
+              backgroundColor: 'rgba(250,248,245,0.04)', color: colors.white,
+              outline: 'none', caretColor: colors.violet,
+            }}
+          />
+        ) : (
+          <input
+            type="tel"
+            inputMode="numeric"
+            value={phone}
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
+            placeholder="(317) 555-1234"
+            style={{
+              fontFamily: fonts.body, fontSize: '1.0625rem', fontWeight: 500,
+              width: '100%', padding: '0.875rem 1rem', borderRadius: '0.75rem',
+              border: `1.5px solid ${error ? colors.rose : 'rgba(250,248,245,0.12)'}`,
+              backgroundColor: 'rgba(250,248,245,0.04)', color: colors.white,
+              outline: 'none', caretColor: colors.violet,
+            }}
+          />
+        )}
         {error && (
           <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.rose, marginTop: 6 }}>{error}</p>
         )}
@@ -126,7 +158,17 @@ function AnonymousCard({ fonts, onSendOtp }) {
         {loading ? 'Sending code...' : 'Recognize Me →'}
       </button>
 
-      <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.3)', textAlign: 'center', marginTop: 12 }}>
+      {SMS_ENABLED && (
+        <button
+          type="button"
+          onClick={() => { setMethod(isEmail ? 'phone' : 'email'); setError(null) }}
+          style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 10, textAlign: 'center', textDecoration: 'underline', textUnderlineOffset: 2 }}
+        >
+          {isEmail ? 'Use phone number instead' : 'Use email instead'}
+        </button>
+      )}
+
+      <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.3)', textAlign: 'center', marginTop: SMS_ENABLED ? 6 : 12 }}>
         First time? We'll get you set up in 30 seconds.
       </p>
     </form>
@@ -134,12 +176,14 @@ function AnonymousCard({ fonts, onSendOtp }) {
 }
 
 // ─── OTP_SENT State ───
-function OtpCard({ phone, fonts, onVerified, onChangeNumber }) {
+function OtpCard({ method, identifier, fonts, onVerified, onChangeIdentifier }) {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [resendCooldown, setResendCooldown] = useState(30)
   const submitted = useRef(false)
+
+  const isEmail = method === 'email'
 
   // Resend countdown
   useEffect(() => {
@@ -160,10 +204,13 @@ function OtpCard({ phone, fonts, onVerified, onChangeNumber }) {
     setError(null)
     setLoading(true)
     try {
+      const body = isEmail
+        ? { email: identifier, code: verifyCode }
+        : { phone: identifier, code: verifyCode }
       const res = await fetch('/api/member/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code: verifyCode }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Invalid code')
@@ -190,15 +237,18 @@ function OtpCard({ phone, fonts, onVerified, onChangeNumber }) {
     setResendCooldown(30)
     setError(null)
     try {
+      const body = isEmail ? { email: identifier } : { phone: identifier }
       await fetch('/api/member/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify(body),
       })
     } catch {
       setError('Failed to resend code')
     }
   }
+
+  const displayIdentifier = isEmail ? identifier : formatPhone(identifier)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'center' }}>
@@ -206,7 +256,7 @@ function OtpCard({ phone, fonts, onVerified, onChangeNumber }) {
         Enter your code
       </h3>
       <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.5)', textAlign: 'center', marginBottom: 32 }}>
-        Sent to <span style={{ color: colors.white, fontWeight: 500 }}>{formatPhone(phone)}</span>
+        Sent to <span style={{ color: colors.white, fontWeight: 500 }}>{displayIdentifier}</span>
       </p>
 
       <div style={{ marginBottom: 24 }}>
@@ -227,8 +277,8 @@ function OtpCard({ phone, fonts, onVerified, onChangeNumber }) {
       )}
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 8 }}>
-        <button onClick={onChangeNumber} style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: 'rgba(250,248,245,0.45)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}>
-          Change number
+        <button onClick={onChangeIdentifier} style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: 'rgba(250,248,245,0.45)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }}>
+          {isEmail ? 'Change email' : 'Change number'}
         </button>
         <button
           onClick={handleResend}
@@ -521,14 +571,13 @@ function DashboardCard({ fonts, member, profile }) {
 export default function HeroIdentityCard({ fonts }) {
   const { member, profile, isLoading, isAuthenticated, refreshProfile } = useMember()
   const [step, setStep] = useState('ANONYMOUS')  // ANONYMOUS | OTP_SENT | INTERESTS | DASHBOARD
-  const [phone, setPhone] = useState('')
+  const [authMethod, setAuthMethod] = useState('email') // 'email' | 'phone'
+  const [authIdentifier, setAuthIdentifier] = useState('')
 
   // Determine the correct step based on member state
   useEffect(() => {
     if (isLoading) return
     if (isAuthenticated && member) {
-      // Returning client with history → dashboard
-      // New client without interests → interests
       const hasInterests = member.interests && member.interests.length > 0
       const isReturning = !!member.blvd_client_id
       if (isReturning || hasInterests) {
@@ -541,30 +590,29 @@ export default function HeroIdentityCard({ fonts }) {
     }
   }, [isLoading, isAuthenticated, member])
 
-  const handleOtpSent = (phoneNumber) => {
-    setPhone(phoneNumber)
+  const handleOtpSent = ({ method, identifier }) => {
+    setAuthMethod(method)
+    setAuthIdentifier(identifier)
     setStep('OTP_SENT')
   }
 
   const handleVerified = (data) => {
-    // MemberContext will pick up the SIGNED_IN event and fetch profile
-    // But we can fast-path the UI transition
     if (data.isReturning) {
       setStep('DASHBOARD')
     } else {
       const hasInterests = data.member?.interests?.length > 0
       setStep(hasInterests ? 'DASHBOARD' : 'INTERESTS')
     }
-    // Ensure context is refreshed
     refreshProfile()
 
     // Track conversion + identify contact in Bird
     if (typeof window !== 'undefined') {
       if (window.reluxeTrack) {
-        window.reluxeTrack('member_signup', { method: 'otp', is_returning: !!data.isReturning })
+        window.reluxeTrack('member_signup', { method: authMethod, is_returning: !!data.isReturning })
       }
       if (typeof window.Bird !== 'undefined' && window.Bird.contact) {
-        try { window.Bird.contact.identify({ strategy: 'Visitor', identifier: { key: 'phonenumber', value: phone } }) } catch (e) {}
+        const birdKey = authMethod === 'email' ? 'emailaddress' : 'phonenumber'
+        try { window.Bird.contact.identify({ strategy: 'Visitor', identifier: { key: birdKey, value: authIdentifier } }) } catch (e) {}
       }
     }
   }
@@ -593,7 +641,7 @@ export default function HeroIdentityCard({ fonts }) {
         )}
         {step === 'OTP_SENT' && (
           <motion.div key="otp" {...fadeVariants} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <OtpCard phone={phone} fonts={fonts} onVerified={handleVerified} onChangeNumber={() => setStep('ANONYMOUS')} />
+            <OtpCard method={authMethod} identifier={authIdentifier} fonts={fonts} onVerified={handleVerified} onChangeIdentifier={() => setStep('ANONYMOUS')} />
           </motion.div>
         )}
         {step === 'INTERESTS' && (

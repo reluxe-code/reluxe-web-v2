@@ -160,3 +160,5 @@ export default function ProvidersReport() {
     </AdminLayout>
   )
 }
+
+ProvidersReport.getLayout = (page) => page

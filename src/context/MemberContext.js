@@ -3,6 +3,7 @@
 // Follows the same pattern as LocationContext.js.
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { trackAuditEvent } from '@/hooks/useAuditTracker'
 
 const Ctx = createContext({
   member: null,
@@ -33,6 +34,7 @@ export function MemberProvider({ children }) {
   const [rebookData, setRebookData] = useState(null)
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
   const [bookingLocationKey, setBookingLocationKey] = useState(null)
+  const [bookingServiceSlug, setBookingServiceSlug] = useState(null)
 
   const fetchProfile = useCallback(async (accessToken) => {
     try {
@@ -57,6 +59,7 @@ export function MemberProvider({ children }) {
       })
     } catch (e) {
       console.warn('[MemberContext] profile fetch error:', e.message)
+      trackAuditEvent('login_failure', 'Profile fetch failed after auth', { error: e.message })
       setMember(null)
       setProfile(null)
     }
@@ -72,13 +75,13 @@ export function MemberProvider({ children }) {
       }
     })
 
-    // Listen for auth state changes
+    // Listen for auth state changes (SIGNED_IN + TOKEN_REFRESHED)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setMember(null)
         setProfile(null)
       }
-      if (event === 'SIGNED_IN' && session?.access_token) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.access_token) {
         fetchProfile(session.access_token)
       }
     })
@@ -99,7 +102,7 @@ export function MemberProvider({ children }) {
     }
   }, [fetchProfile])
 
-  const openDrawer = useCallback((tab = 'visits') => {
+  const openDrawer = useCallback((tab = 'overview') => {
     setDrawerTab(tab)
     setDrawerOpen(true)
   }, [])
@@ -119,22 +122,24 @@ export function MemberProvider({ children }) {
     setRebookData(null)
   }, [])
 
-  const openBookingModal = useCallback((locationKey) => {
+  const openBookingModal = useCallback((locationKey, serviceSlug) => {
     setDrawerOpen(false)
     setRebookOpen(false)
     setBookingLocationKey(locationKey)
+    setBookingServiceSlug(serviceSlug || null)
     setBookingModalOpen(true)
   }, [])
 
   const closeBookingModal = useCallback(() => {
     setBookingModalOpen(false)
     setBookingLocationKey(null)
+    setBookingServiceSlug(null)
   }, [])
 
   const isAuthenticated = !!member
 
   return (
-    <Ctx.Provider value={{ member, profile, isLoading, isAuthenticated, signOut, refreshProfile, drawerOpen, drawerTab, openDrawer, closeDrawer, rebookOpen, rebookData, openRebookModal, closeRebookModal, bookingModalOpen, bookingLocationKey, openBookingModal, closeBookingModal }}>
+    <Ctx.Provider value={{ member, profile, isLoading, isAuthenticated, signOut, refreshProfile, drawerOpen, drawerTab, openDrawer, closeDrawer, rebookOpen, rebookData, openRebookModal, closeRebookModal, bookingModalOpen, bookingLocationKey, bookingServiceSlug, openBookingModal, closeBookingModal }}>
       {children}
     </Ctx.Provider>
   )

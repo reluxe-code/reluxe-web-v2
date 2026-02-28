@@ -11,87 +11,23 @@ import TimeGrid from './TimeGrid'
 import ClientInfoForm from './ClientInfoForm'
 import { SLUG_TITLES } from '@/data/treatmentBundles'
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics'
+import WidgetFallback from './WidgetFallback'
+import { trackAuditEvent } from '@/hooks/useAuditTracker'
+import { SERVICE_BOOKING_MAP } from '@/data/serviceBookingMap'
+import {
+  formatTime, formatDate, formatDuration, daysAgo,
+  normalizeMoneyValue, formatCurrency, isConsultationLike, formatPriceRange,
+  toggleOption, findMenuItemId, findMenuItem, findServiceIdAtLocation,
+} from '@/lib/bookingFormatters'
+import {
+  fetchAvailableDates, fetchAvailableTimes, createCartReservation,
+  fetchServiceMenu, fetchServiceOptions, fetchProvidersAtLocation,
+} from '@/lib/bookingApi'
+import { cachedFetch } from '@/lib/apiCache'
 
 const LOCATION_INFO = {
   westfield: { name: 'RELUXE Westfield', label: 'Westfield', address: '514 E State Road 32' },
   carmel: { name: 'RELUXE Carmel', label: 'Carmel', address: '10485 N Pennsylvania St' },
-}
-
-// ─── Helpers ───
-
-function formatTime(startTime) {
-  if (!startTime) return ''
-  try { return new Date(startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) }
-  catch { return startTime }
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  try { return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) }
-  catch { return dateStr }
-}
-
-function formatDuration(minutes) {
-  if (!minutes) return ''
-  if (minutes < 60) return `${minutes} min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
-
-function daysAgo(dateStr) {
-  if (!dateStr) return null
-  const d = new Date(dateStr)
-  const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
-  if (diff === 0) return 'today'
-  if (diff === 1) return 'yesterday'
-  return `${diff}d ago`
-}
-
-function normalizeMoneyValue(v) {
-  if (v == null) return null
-  if (typeof v === 'number' && Number.isFinite(v)) return v >= 1000 ? v / 100 : v
-  if (typeof v === 'string') {
-    const n = Number(String(v).replace(/[^\d.-]/g, ''))
-    if (!Number.isFinite(n)) return null
-    return String(v).includes('.') ? n : (n >= 1000 ? n / 100 : n)
-  }
-  if (typeof v === 'object') {
-    const raw = v.amount ?? v.value ?? v.cents ?? v.centAmount ?? null
-    if (raw == null) return null
-    const n = Number(raw)
-    if (!Number.isFinite(n)) return null
-    if (v.cents != null || v.centAmount != null) return n / 100
-    return n >= 1000 ? n / 100 : n
-  }
-  return null
-}
-
-function formatCurrency(n) {
-  if (n == null || !Number.isFinite(n)) return null
-  return `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-}
-
-function isConsultationLike(name, categoryName) {
-  const text = `${name || ''} ${categoryName || ''}`.toLowerCase()
-  return /consult/.test(text) || /not sure where to start|get started|reveal/.test(text)
-}
-
-function formatPriceRange(price, name, categoryName) {
-  if (!price) return null
-  const min = normalizeMoneyValue(price.min)
-  const max = normalizeMoneyValue(price.max)
-  const consultation = isConsultationLike(name, categoryName)
-  if (min == null && max == null) return null
-  if ((min ?? 0) === 0 && (max ?? 0) === 0) return consultation ? 'FREE' : 'Varies'
-  if (min != null && max != null) {
-    if (Math.abs(min - max) < 0.01) return formatCurrency(min)
-    return `${formatCurrency(min)}–${formatCurrency(max)}`
-  }
-  if (min === 0) return consultation ? 'FREE' : 'Varies'
-  if (min != null) return `${formatCurrency(min)}+`
-  if (max === 0) return consultation ? 'FREE' : 'Varies'
-  return `Up to ${formatCurrency(max)}`
 }
 
 // ─── Reducer ───
@@ -115,6 +51,9 @@ function reducer(state, action) {
   switch (action.type) {
     case 'NAVIGATE':
       return { ...state, step: action.step, history: [...state.history, state.step], ...(action.payload || {}) }
+    case 'REPLACE':
+      // Replace current step without adding to history (for auto-advance skips)
+      return { ...state, step: action.step, ...(action.payload || {}) }
     case 'BACK': {
       const prev = state.history.at(-1) || 'HOME'
       const clean = {}
@@ -125,6 +64,7 @@ function reducer(state, action) {
       if (state.step === 'CATEGORY_ITEMS') { clean.selectedCategory = null }
       if (state.step === 'BUNDLE_ITEMS') { clean.selectedBundle = null }
       if (state.step === 'PROVIDER_SERVICES') { clean.selectedProvider = null }
+      if (state.step === 'PROVIDER_SELECT') { clean.selectedProvider = null }
       return { ...state, ...clean, step: prev, history: state.history.slice(0, -1) }
     }
     case 'SELECT_PROVIDER':
@@ -152,7 +92,7 @@ function reducer(state, action) {
 
 // ─── Main Component ───
 
-export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }) {
+export default function BookingFlowModal({ isOpen, onClose, locationKey, initialServiceSlug, fonts }) {
   const { member, profile, isAuthenticated, openDrawer, refreshProfile, openBookingModal } = useMember()
   const [state, dispatch] = useReducer(reducer, initialState)
   const { step, history, selectedProvider, selectedService, selectedCategory, selectedBundle, selectedOptions, selectedDate, selectedTime, cartData, anonTab, error } = state
@@ -181,10 +121,24 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
 
   const [featuredBundles, setFeaturedBundles] = useState(null)
   const [bundlesLoading, setBundlesLoading] = useState(false)
+  const [degraded, setDegraded] = useState(false)
+  const [showTroubleLink, setShowTroubleLink] = useState(false)
+  const [serviceProviders, setServiceProviders] = useState(null)
+  const [serviceProvidersLoading, setServiceProvidersLoading] = useState(false)
+  const [altMenuData, setAltMenuData] = useState(null)
+  const [dateLocationMap, setDateLocationMap] = useState(null)
+
+  // Derived multi-location values
+  const isAllLocations = locationKey === 'all'
+  const primaryLocation = isAllLocations ? 'westfield' : locationKey
+  const locationsList = isAllLocations
+    ? [{ key: 'westfield', label: 'Westfield' }, { key: 'carmel', label: 'Carmel' }]
+    : []
 
   const menuFetchedRef = useRef(null)
   const bundlesFetchedRef = useRef(false)
   const prevLocationRef = useRef(null)
+  const deepLinkConsumedRef = useRef(false)
 
   // ── Reset when modal opens/closes or location changes ──
   const [trackedOpen, setTrackedOpen] = useState(false)
@@ -193,11 +147,14 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
   const resetLocationData = () => {
     dispatch({ type: 'RESET' })
     setMenuData(null)
+    setAltMenuData(null)
     setProviderMenuData(null)
     setProviders(null)
     setServiceInfo(null)
+    setServiceProviders(null)
     setAvailableDates([])
     setAvailableTimes([])
+    setDateLocationMap(null)
     menuFetchedRef.current = null
     prevLocationRef.current = null
     // Note: featuredBundles are global (not location-specific), so we keep them
@@ -207,11 +164,13 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     resetLocationData()
     setFeaturedBundles(null)
     bundlesFetchedRef.current = false
+    setDegraded(false)
   }
 
   if (isOpen && !trackedOpen) {
     setTrackedOpen(true)
     setTrackedLocation(locationKey)
+    deepLinkConsumedRef.current = false
     resetAll()
   }
   if (isOpen && locationKey && locationKey !== trackedLocation) {
@@ -223,9 +182,16 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     setTrackedLocation(null)
   }
 
-  const otherLocation = locationKey === 'westfield' ? 'carmel' : 'westfield'
+  // Show "Having trouble?" after 10s in the modal
+  useEffect(() => {
+    if (!isOpen) { setShowTroubleLink(false); return }
+    const t = setTimeout(() => setShowTroubleLink(true), 10000)
+    return () => clearTimeout(t)
+  }, [isOpen])
+
+  const otherLocation = isAllLocations ? null : (locationKey === 'westfield' ? 'carmel' : 'westfield')
   const switchLocation = useCallback(() => {
-    openBookingModal(otherLocation)
+    if (otherLocation) openBookingModal(otherLocation)
   }, [openBookingModal, otherLocation])
 
   // ── Fetch location service menu (for anon services tab) ──
@@ -234,18 +200,76 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     if (menuFetchedRef.current === locationKey) return
     menuFetchedRef.current = locationKey
     setMenuLoading(true)
-    fetch(`/api/blvd/services/menu?locationKey=${locationKey}`)
-      .then(r => r.json())
-      .then(data => { setMenuData(data); setMenuLoading(false) })
-      .catch(() => { setMenuData({ categories: [] }); setMenuLoading(false) })
+    fetchServiceMenu({ locationKey }).then(({ primary, alt, degraded: deg }) => {
+      if (deg) { setDegraded(true); setMenuLoading(false); return }
+      setMenuData(primary); setAltMenuData(alt); setMenuLoading(false)
+    })
   }, [isOpen, locationKey])
+
+  // ── Deep-link: auto-navigate to a specific service/category when initialServiceSlug is set ──
+  useEffect(() => {
+    if (!initialServiceSlug || !menuData || menuLoading || deepLinkConsumedRef.current) return
+    if (step !== 'HOME') return // Only deep-link from HOME
+    deepLinkConsumedRef.current = true
+
+    const mapping = SERVICE_BOOKING_MAP[initialServiceSlug]
+    if (!mapping) return // Unknown slug, stay on HOME
+
+    const categories = menuData?.categories || []
+
+    if (mapping.type === 'service' && mapping.blvdId) {
+      // Find the item by Boulevard ID across all categories
+      for (const cat of categories) {
+        const item = (cat.items || []).find(i => {
+          // Boulevard IDs may have prefixes like 'urn:blvd:...' — compare the UUID portion
+          const itemUuid = (i.id || '').split(':').pop()?.toLowerCase()
+          const targetUuid = mapping.blvdId.replace('s_', '').toLowerCase()
+          return itemUuid === targetUuid
+        })
+        if (item) {
+          dispatch({ type: 'SELECT_SERVICE', service: { id: item.id, name: item.name, slug: initialServiceSlug, categoryName: cat.name } })
+          dispatch({ type: 'NAVIGATE', step: 'OPTIONS' })
+          return
+        }
+      }
+      // Fallback: try name matching if ID didn't match
+      for (const cat of categories) {
+        const item = (cat.items || []).find(i =>
+          i.name?.toLowerCase().includes(mapping.name.toLowerCase()) ||
+          mapping.name.toLowerCase().includes(i.name?.toLowerCase())
+        )
+        if (item) {
+          dispatch({ type: 'SELECT_SERVICE', service: { id: item.id, name: item.name, slug: initialServiceSlug, categoryName: cat.name } })
+          dispatch({ type: 'NAVIGATE', step: 'OPTIONS' })
+          return
+        }
+      }
+    } else if (mapping.type === 'category' && mapping.match) {
+      // Find the matching Boulevard category
+      const matchLower = mapping.match.toLowerCase()
+      const cat = categories.find(c => c.name?.toLowerCase().includes(matchLower))
+      if (cat) {
+        if (cat.items?.length === 1) {
+          // Single item in category — go straight to it
+          const item = cat.items[0]
+          dispatch({ type: 'SELECT_SERVICE', service: { id: item.id, name: item.name, slug: initialServiceSlug, categoryName: cat.name } })
+          dispatch({ type: 'NAVIGATE', step: 'OPTIONS' })
+        } else {
+          // Multiple items — show category items
+          dispatch({ type: 'NAVIGATE', step: 'CATEGORY_ITEMS', payload: { selectedCategory: cat } })
+        }
+        return
+      }
+    }
+    // If nothing matched, stay on HOME
+  }, [initialServiceSlug, menuData, menuLoading, step])
 
   // ── Fetch featured bundles from site_config ──
   useEffect(() => {
     if (!isOpen || bundlesFetchedRef.current) return
     bundlesFetchedRef.current = true
     setBundlesLoading(true)
-    fetch('/api/blvd/bundles?featured=true')
+    cachedFetch('/api/blvd/bundles?featured=true')
       .then(r => r.json())
       .then(data => { setFeaturedBundles(Array.isArray(data) ? data : []); setBundlesLoading(false) })
       .catch(() => { setFeaturedBundles([]); setBundlesLoading(false) })
@@ -261,59 +285,110 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
   const fetchProviders = useCallback(() => {
     if (providers || providersLoading) return
     setProvidersLoading(true)
-    fetch(`/api/blvd/providers/at-location?locationKey=${locationKey}`)
-      .then(r => r.json())
-      .then(data => { setProviders(data); setProvidersLoading(false) })
-      .catch(() => { setProviders([]); setProvidersLoading(false) })
+    fetchProvidersAtLocation({ locationKey }).then(({ data }) => {
+      setProviders(data); setProvidersLoading(false)
+    })
   }, [locationKey, providers, providersLoading])
 
   // ── Fetch provider-specific menu ──
   const fetchProviderMenu = useCallback((provider) => {
-    if (!provider?.boulevardProviderId || !locationKey) return
+    if (!provider?.boulevardProviderId || !primaryLocation) return
     setProviderMenuLoading(true)
     setProviderMenuData(null)
-    fetch(`/api/blvd/services/menu?locationKey=${locationKey}&staffProviderId=${encodeURIComponent(provider.boulevardProviderId)}`)
-      .then(r => r.json())
-      .then(data => { setProviderMenuData(data); setProviderMenuLoading(false) })
-      .catch(() => { setProviderMenuData({ categories: [] }); setProviderMenuLoading(false) })
-  }, [locationKey])
+    fetchServiceMenu({ locationKey: primaryLocation, staffProviderId: provider.boulevardProviderId })
+      .then(({ primary, degraded: deg }) => {
+        if (deg) { setProviderMenuData({ categories: [] }); setProviderMenuLoading(false); return }
+        setProviderMenuData(primary); setProviderMenuLoading(false)
+      })
+  }, [primaryLocation])
 
   // ── Fetch service options when service is selected ──
   useEffect(() => {
     if (!selectedService?.id || !locationKey) return
     setOptionsLoading(true)
     setServiceInfo(null)
-    const params = new URLSearchParams({ locationKey, serviceItemId: selectedService.id })
-    if (selectedProvider?.boulevardProviderId) params.set('staffProviderId', selectedProvider.boulevardProviderId)
-    fetch(`/api/blvd/services/options?${params}`)
-      .then(r => r.json())
-      .then(data => { setServiceInfo(data); setOptionsLoading(false) })
-      .catch(() => { setServiceInfo(null); setOptionsLoading(false) })
+    fetchServiceOptions({
+      locationKey,
+      serviceItemId: selectedService.id,
+      staffProviderId: selectedProvider?.boulevardProviderId,
+    }).then(({ data, degraded: deg }) => {
+      if (deg) { setDegraded(true); setOptionsLoading(false); return }
+      setServiceInfo(data); setOptionsLoading(false)
+    })
   }, [selectedService?.id, locationKey, selectedProvider?.boulevardProviderId])
 
   // Auto-advance past OPTIONS if service has no option groups
+  // Use REPLACE instead of NAVIGATE so OPTIONS doesn't end up in history
+  // (otherwise back from DATE_TIME → OPTIONS → auto-advance → DATE_TIME loop)
   useEffect(() => {
     if (step !== 'OPTIONS' || optionsLoading || !serviceInfo) return
     const groups = (serviceInfo.optionGroups || []).filter(g => g.options?.length > 0)
     if (groups.length === 0) {
-      dispatch({ type: 'NAVIGATE', step: 'DATE_TIME' })
+      dispatch({ type: 'REPLACE', step: selectedProvider ? 'DATE_TIME' : 'PROVIDER_SELECT' })
     }
   }, [step, optionsLoading, serviceInfo])
+
+  // ── Filter providers who can do the selected service (client-side from at-location data) ──
+  const prevProviderSelectService = useRef(null)
+  useEffect(() => {
+    if (step !== 'PROVIDER_SELECT' || !selectedService?.id || !locationKey) return
+    // Reset when entering this step for a new service
+    if (prevProviderSelectService.current !== selectedService.id) {
+      prevProviderSelectService.current = selectedService.id
+      setServiceProviders(null)
+      setServiceProvidersLoading(true)
+    }
+    // Ensure providers are loaded
+    if (!providers && !providersLoading) { fetchProviders(); return }
+    if (providersLoading || !providers) return
+    // Filter providers who have this serviceItemId in their boulevardServiceMap
+    const altServiceId = isAllLocations ? findServiceIdAtLocation(selectedService, altMenuData) : null
+    const matching = providers.filter(p => {
+      const map = p.boulevardServiceMap || {}
+      return Object.values(map).some(locMap => {
+        if (!locMap || typeof locMap !== 'object') return false
+        if (locMap[primaryLocation] === selectedService.id) return true
+        if (isAllLocations && altServiceId && locMap.carmel === altServiceId) return true
+        return false
+      })
+    })
+    setServiceProviders(matching)
+    setServiceProvidersLoading(false)
+  }, [step, selectedService?.id, locationKey, isAllLocations, primaryLocation, altMenuData, providers, providersLoading, fetchProviders])
+
+  // Auto-advance past PROVIDER_SELECT if ≤1 provider
+  useEffect(() => {
+    if (step !== 'PROVIDER_SELECT' || serviceProviders === null) return
+    if (serviceProviders.length <= 1) {
+      if (serviceProviders.length === 1) {
+        const p = serviceProviders[0]
+        dispatch({ type: 'SELECT_PROVIDER', provider: {
+          name: p.name, slug: p.slug, boulevardProviderId: p.boulevardProviderId, image: p.image,
+        }})
+      }
+      dispatch({ type: 'REPLACE', step: 'DATE_TIME' })
+    }
+  }, [step, serviceProviders])
 
   // ── Fetch available dates ──
   useEffect(() => {
     if (step !== 'DATE_TIME' || !selectedService?.id || !locationKey) return
     setDatesLoading(true)
     setAvailableDates([])
-    const today = new Date().toISOString().split('T')[0]
-    const endDate = new Date(Date.now() + 183 * 86400000).toISOString().split('T')[0]
-    const params = new URLSearchParams({ locationKey, serviceItemId: selectedService.id, startDate: today, endDate })
-    if (selectedProvider?.boulevardProviderId) params.set('staffProviderId', selectedProvider.boulevardProviderId)
-    fetch(`/api/blvd/availability/dates?${params}`)
-      .then(r => r.json())
-      .then(dates => { setAvailableDates(Array.isArray(dates) ? dates : []); setDatesLoading(false) })
-      .catch(() => { setAvailableDates([]); setDatesLoading(false) })
-  }, [step, selectedService?.id, locationKey, selectedProvider?.boulevardProviderId])
+    setDateLocationMap(null)
+    const altServiceItemId = isAllLocations ? findServiceIdAtLocation(selectedService, altMenuData) : undefined
+    fetchAvailableDates({
+      locationKey,
+      serviceItemId: selectedService.id,
+      altServiceItemId,
+      staffProviderId: selectedProvider?.boulevardProviderId,
+    }).then(({ dates, locationMap, degraded: deg }) => {
+      if (deg) { setDegraded(true); setDatesLoading(false); return }
+      setAvailableDates(dates)
+      setDateLocationMap(locationMap)
+      setDatesLoading(false)
+    })
+  }, [step, selectedService?.id, locationKey, selectedProvider?.boulevardProviderId, isAllLocations, altMenuData])
 
   // Auto-select first date
   useEffect(() => {
@@ -327,13 +402,19 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     if (!selectedDate || !selectedService?.id || !locationKey) return
     setTimesLoading(true)
     setAvailableTimes([])
-    const params = new URLSearchParams({ locationKey, serviceItemId: selectedService.id, date: selectedDate })
-    if (selectedProvider?.boulevardProviderId) params.set('staffProviderId', selectedProvider.boulevardProviderId)
-    fetch(`/api/blvd/availability/times?${params}`)
-      .then(r => r.json())
-      .then(times => { setAvailableTimes(Array.isArray(times) ? times : []); setTimesLoading(false) })
-      .catch(() => { setAvailableTimes([]); setTimesLoading(false) })
-  }, [selectedDate, selectedService?.id, locationKey, selectedProvider?.boulevardProviderId])
+    const altServiceItemId = isAllLocations ? findServiceIdAtLocation(selectedService, altMenuData) : undefined
+    fetchAvailableTimes({
+      locationKey,
+      serviceItemId: selectedService.id,
+      altServiceItemId,
+      staffProviderId: selectedProvider?.boulevardProviderId,
+      date: selectedDate,
+      dateLocationMap,
+    }).then(({ times, degraded: deg }) => {
+      if (deg) { setDegraded(true); setTimesLoading(false); return }
+      setAvailableTimes(times); setTimesLoading(false)
+    })
+  }, [selectedDate, selectedService?.id, locationKey, selectedProvider?.boulevardProviderId, isAllLocations, altMenuData, dateLocationMap])
 
   // ── Reserve time slot (create cart) ──
   const handleSelectTime = useCallback(async (slot) => {
@@ -342,30 +423,28 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     setReserving(true)
     trackTimeSelect(slot)
     try {
-      const body = {
+      const altServiceItemId = isAllLocations ? findServiceIdAtLocation(selectedService, altMenuData) : undefined
+      const result = await createCartReservation({
         locationKey,
         serviceItemId: selectedService.id,
-        staffProviderId: selectedProvider?.boulevardProviderId || undefined,
+        altServiceItemId,
+        staffProviderId: selectedProvider?.boulevardProviderId,
         date: selectedDate,
-        startTime: slot.startTime,
+        slot,
         selectedOptionIds: selectedOptions.map(o => o.id),
-      }
-      const res = await fetch('/api/blvd/cart/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to reserve')
-      dispatch({ type: 'SET_CART', data })
+      if (result.degraded) { setDegraded(true); setReserving(false); return }
+      if (result.error) throw new Error(result.error)
+      dispatch({ type: 'SET_CART', data: result.data })
       dispatch({ type: 'NAVIGATE', step: 'CHECKOUT' })
     } catch (err) {
       dispatch({ type: 'SET_ERROR', error: err.message })
       dispatch({ type: 'SELECT_TIME', time: null })
+      trackAuditEvent('booking_error', err.message, { step: 'DATE_TIME', locationKey })
     } finally {
       setReserving(false)
     }
-  }, [locationKey, selectedService, selectedProvider, selectedDate, selectedOptions, trackTimeSelect])
+  }, [locationKey, isAllLocations, altMenuData, selectedService, selectedProvider, selectedDate, selectedOptions, trackTimeSelect])
 
   // ── Navigation helpers ──
   const goBack = useCallback(() => {
@@ -411,8 +490,8 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
   const handleRebook = useCallback((svc) => {
     const provider = svc.provider
     // Resolve service item ID from provider's service map
-    const serviceItemId = provider?.serviceMap?.[svc.slug]?.[locationKey]
-      || (profile?.providers?.find(p => p.staffId === provider?.staffId)?.serviceMap?.[svc.slug]?.[locationKey])
+    const serviceItemId = provider?.serviceMap?.[svc.slug]?.[primaryLocation]
+      || (profile?.providers?.find(p => p.staffId === provider?.staffId)?.serviceMap?.[svc.slug]?.[primaryLocation])
     if (!serviceItemId) {
       // Fall back to categories view
       dispatch({ type: 'NAVIGATE', step: 'CATEGORIES' })
@@ -428,7 +507,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     dispatch({ type: 'SELECT_SERVICE', service: { id: serviceItemId, name: svc.name, slug: svc.slug } })
     dispatch({ type: 'NAVIGATE', step: 'DATE_TIME' })
     trackServiceSelect({ name: svc.name, id: serviceItemId })
-  }, [locationKey, profile?.providers, trackServiceSelect])
+  }, [primaryLocation, profile?.providers, trackServiceSelect])
 
   // ── Handle provider selection ──
   const handleSelectProvider = useCallback((provider) => {
@@ -437,6 +516,20 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     fetchProviderMenu(provider)
     trackProviderSelect(provider)
   }, [fetchProviderMenu, trackProviderSelect])
+
+  // ── Handle provider selection for a service (PROVIDER_SELECT step) ──
+  const handleSelectServiceProvider = useCallback((provider) => {
+    if (provider) {
+      dispatch({ type: 'SELECT_PROVIDER', provider: {
+        name: provider.name, slug: provider.slug,
+        boulevardProviderId: provider.boulevardProviderId, image: provider.image,
+      }})
+    } else {
+      // "No Preference" — clear provider
+      dispatch({ type: 'SELECT_PROVIDER', provider: null })
+    }
+    dispatch({ type: 'NAVIGATE', step: 'DATE_TIME' })
+  }, [])
 
   // ── Handle category selection ──
   const handleSelectCategory = useCallback((cat) => {
@@ -478,15 +571,11 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
     dispatch({ type: 'SELECT_OPTIONS', options: toggleOption(selectedOptions, group, option) })
   }, [selectedOptions])
 
-  // ── Close on Escape ──
-  useEffect(() => {
-    if (!isOpen) return
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
+  // Modal can only be closed via the X button — no backdrop click or Escape key
 
-  const locInfo = locationKey ? LOCATION_INFO[locationKey] : null
+  const locInfo = isAllLocations
+    ? { name: 'All Locations', label: 'All Locations', address: 'Westfield & Carmel' }
+    : locationKey ? LOCATION_INFO[locationKey] : null
   const canGoBack = step !== 'HOME'
   const duration = serviceInfo?.duration?.staffDuration || serviceInfo?.duration?.max || serviceInfo?.duration?.min || null
 
@@ -521,7 +610,6 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            onClick={onClose}
             style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
           />
 
@@ -569,7 +657,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
                       </svg>
                       <div>
@@ -581,16 +669,34 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={switchLocation}
-                      style={{
-                        fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600,
-                        color: colors.violet, background: 'none', border: 'none',
-                        cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.25rem 0',
-                      }}
-                    >
-                      Switch to {LOCATION_INFO[otherLocation]?.label || otherLocation}
-                    </button>
+                    {isAllLocations ? (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {locationsList.map((loc) => (
+                          <button
+                            key={loc.key}
+                            onClick={() => openBookingModal(loc.key)}
+                            style={{
+                              fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600,
+                              color: '#A78BFA', background: `${colors.violet}12`, border: `1px solid ${colors.violet}25`,
+                              borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.25rem 0.5rem',
+                            }}
+                          >
+                            {loc.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={switchLocation}
+                        style={{
+                          fontFamily: fonts?.body, fontSize: '0.6875rem', fontWeight: 600,
+                          color: '#A78BFA', background: 'none', border: 'none',
+                          cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.25rem 0',
+                        }}
+                      >
+                        Switch to {LOCATION_INFO[otherLocation]?.label || otherLocation}
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -621,6 +727,16 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
 
               {/* ── Step Content ── */}
               <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem' }}>
+                {degraded ? (
+                  <WidgetFallback
+                    slug={selectedService?.slug || selectedBundle?.items?.[0]?.slug}
+                    serviceName={selectedService?.name}
+                    categoryName={selectedCategory?.name}
+                    locationKey={locationKey}
+                    onClose={onClose}
+                    fonts={fonts}
+                  />
+                ) : (
                 <AnimatePresence mode="wait">
                   {/* ── HOME ── */}
                   {step === 'HOME' && (
@@ -730,7 +846,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                                 <span style={{ fontWeight: 600, color: colors.white }}>{itemName}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                   {priceLabel && (
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: priceLabel === 'FREE' ? '#22c55e' : colors.violet, whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: priceLabel === 'FREE' ? '#22c55e' : '#A78BFA', whiteSpace: 'nowrap' }}>
                                       {priceLabel}
                                     </span>
                                   )}
@@ -752,13 +868,107 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                           optionGroups={(serviceInfo?.optionGroups || []).filter(g => g.options?.length > 0)}
                           selectedOptions={selectedOptions}
                           onToggleOption={handleToggleOption}
-                          onContinue={() => dispatch({ type: 'NAVIGATE', step: 'DATE_TIME' })}
+                          onContinue={() => dispatch({ type: 'NAVIGATE', step: selectedProvider ? 'DATE_TIME' : 'PROVIDER_SELECT' })}
                           onSkip={() => {
                             dispatch({ type: 'SELECT_OPTIONS', options: [] })
-                            dispatch({ type: 'NAVIGATE', step: 'DATE_TIME' })
+                            dispatch({ type: 'NAVIGATE', step: selectedProvider ? 'DATE_TIME' : 'PROVIDER_SELECT' })
                           }}
                           fonts={fonts}
                         />
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* ── PROVIDER_SELECT ── */}
+                  {step === 'PROVIDER_SELECT' && (
+                    <motion.div key="provider-select" {...stepAnim}>
+                      <p style={sectionLabel(fonts)}>Choose a Provider</p>
+                      {serviceProvidersLoading ? <LoadingSkeleton count={3} /> : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {/* No Preference option — always first */}
+                          <button
+                            onClick={() => handleSelectServiceProvider(null)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 12,
+                              padding: '0.75rem', borderRadius: 12, cursor: 'pointer',
+                              background: 'rgba(167,139,250,0.06)',
+                              border: `1.5px solid ${colors.violet}30`,
+                              textAlign: 'left', width: '100%',
+                              transition: 'border-color 0.15s, background 0.15s',
+                            }}
+                          >
+                            <div style={{
+                              width: 44, height: 44, borderRadius: '50%',
+                              background: `linear-gradient(135deg, ${colors.violet}25, ${colors.fuchsia}20)`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                            }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" />
+                              </svg>
+                            </div>
+                            <div>
+                              <span style={{ fontFamily: fonts?.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white, display: 'block' }}>
+                                No Preference
+                              </span>
+                              <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)' }}>
+                                Show all available times
+                              </span>
+                            </div>
+                          </button>
+
+                          {/* Individual providers */}
+                          {(serviceProviders || []).map(p => (
+                            <button
+                              key={p.slug}
+                              onClick={() => handleSelectServiceProvider(p)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 12,
+                                padding: '0.75rem', borderRadius: 12, cursor: 'pointer',
+                                background: 'rgba(250,248,245,0.03)',
+                                border: '1px solid rgba(250,248,245,0.08)',
+                                textAlign: 'left', width: '100%',
+                                transition: 'border-color 0.15s, background 0.15s',
+                              }}
+                            >
+                              {p.image ? (
+                                <img
+                                  src={p.image}
+                                  alt={p.name}
+                                  style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: 44, height: 44, borderRadius: '50%',
+                                  background: 'rgba(250,248,245,0.06)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                                }}>
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(250,248,245,0.3)" strokeWidth="1.5">
+                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                                  </svg>
+                                </div>
+                              )}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ fontFamily: fonts?.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white, display: 'block' }}>
+                                  {p.name}
+                                </span>
+                                {p.title && (
+                                  <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {p.title}
+                                  </span>
+                                )}
+                              </div>
+                              {p.nextAvailableDate && (
+                                <span style={{
+                                  fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600,
+                                  color: colors.violet, background: `${colors.violet}12`,
+                                  padding: '3px 8px', borderRadius: 999, flexShrink: 0,
+                                }}>
+                                  Next: {new Date(p.nextAvailableDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </motion.div>
                   )}
@@ -786,6 +996,8 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                           selectedDate={selectedDate}
                           onSelect={(d) => { dispatch({ type: 'SELECT_DATE', date: d }); trackDateSelect(d) }}
                           fonts={fonts}
+                          dateLocationMap={isAllLocations ? dateLocationMap : undefined}
+                          locations={isAllLocations ? locationsList : undefined}
                         />
                       )}
 
@@ -883,6 +1095,28 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, fonts }
                     </motion.div>
                   )}
                 </AnimatePresence>
+                )}
+
+                {/* "Having trouble?" off-ramp — appears after 10s */}
+                {showTroubleLink && step !== 'BOOKED' && (
+                  <div style={{ textAlign: 'center', padding: '1rem 0 0.5rem', borderTop: '1px solid rgba(250,248,245,0.06)', marginTop: '1rem' }}>
+                    <button
+                      onClick={() => {
+                        trackAuditEvent('booking_fallback', 'Modal off-ramp', { step, locationKey })
+                        if (window.__openBlvdForSlug) window.__openBlvdForSlug('', locationKey)
+                        onClose()
+                      }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: fonts?.body, fontSize: '0.75rem',
+                        color: 'rgba(250,248,245,0.35)',
+                        textDecoration: 'underline', textUnderlineOffset: 2,
+                      }}
+                    >
+                      Having trouble? Use classic booking
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -973,7 +1207,7 @@ function AuthHome({ member, profile, recentServices, fonts, locationKey, onSelec
             {profile?.visits?.length > 5 && (
               <button
                 onClick={onOpenDrawer}
-                style={{ fontFamily: fonts?.body, fontSize: '0.75rem', fontWeight: 600, color: colors.violet, background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0', textAlign: 'center' }}
+                style={{ fontFamily: fonts?.body, fontSize: '0.75rem', fontWeight: 600, color: '#A78BFA', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0', textAlign: 'center' }}
               >
                 View all history →
               </button>
@@ -1044,7 +1278,7 @@ function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, pr
                         {bundle.description}
                       </span>
                     )}
-                    <span style={{ fontSize: '0.5625rem', color: colors.violet, marginTop: 6 }}>
+                    <span style={{ fontSize: '0.5625rem', color: '#A78BFA', marginTop: 6 }}>
                       {(bundle.availableItems || bundle.items).length} option{(bundle.availableItems || bundle.items).length !== 1 ? 's' : ''} →
                     </span>
                   </button>
@@ -1053,7 +1287,7 @@ function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, pr
               {locationBundles.length > VISIBLE_BUNDLES && !showAllBundles && (
                 <button
                   onClick={() => setShowAllBundles(true)}
-                  style={{ fontFamily: fonts?.body, fontSize: '0.75rem', fontWeight: 600, color: colors.violet, background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0', textAlign: 'center', width: '100%' }}
+                  style={{ fontFamily: fonts?.body, fontSize: '0.75rem', fontWeight: 600, color: '#A78BFA', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0', textAlign: 'center', width: '100%' }}
                 >
                   See {locationBundles.length - VISIBLE_BUNDLES} more →
                 </button>
@@ -1090,7 +1324,7 @@ function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, pr
                   </span>
                 </div>
               </div>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke={colors.violet} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
                 style={{ transform: showCategories ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}
               >
                 <polyline points="5 8 10 13 15 8" />
@@ -1143,7 +1377,7 @@ function CategoryList({ categories, fonts, onSelectCategory }) {
               {cat.items?.length === 1 && (() => {
                 const label = formatPriceRange(cat.items[0].price, cat.items[0].name, cat.name)
                 return label ? (
-                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: label === 'FREE' ? '#22c55e' : colors.violet }}>
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: label === 'FREE' ? '#22c55e' : '#A78BFA' }}>
                     {label}
                   </span>
                 ) : null
@@ -1177,7 +1411,7 @@ function ServiceItemCard({ item, fonts, onClick, categoryName }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {priceLabel && (
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: priceLabel === 'FREE' ? '#22c55e' : colors.violet, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: priceLabel === 'FREE' ? '#22c55e' : '#A78BFA', whiteSpace: 'nowrap' }}>
               {priceLabel}
             </span>
           )}
@@ -1235,6 +1469,19 @@ function ProviderList({ providers, fonts, onSelectProvider }) {
 function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue, onSkip, fonts }) {
   if (!optionGroups?.length) return null
 
+  const [openGroup, setOpenGroup] = useState(null)
+  const dropdownRef = useRef(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openGroup) return
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpenGroup(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [openGroup])
+
   const hasRequired = optionGroups.some(g => (g.minLimit || 0) >= 1)
   const allRequiredMet = optionGroups.every(g => {
     const min = g.minLimit || 0
@@ -1244,52 +1491,113 @@ function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue
   })
 
   return (
-    <div>
+    <div ref={dropdownRef} style={{ paddingBottom: openGroup ? 220 : 0, transition: 'padding 0.2s' }}>
       {optionGroups.map(group => {
         const isRadio = group.maxLimit === 1
         const isRequired = (group.minLimit || 0) >= 1
+        const isOpen = openGroup === group.id
+        const groupSelected = (group.options || []).filter(o => selectedOptions.some(s => s.id === o.id))
+
+        let triggerLabel = isRequired ? 'Select...' : 'None (optional)'
+        if (groupSelected.length === 1) triggerLabel = groupSelected[0].name
+        else if (groupSelected.length > 1) triggerLabel = groupSelected.map(o => o.name).join(', ')
+
         return (
-          <div key={group.id} style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div key={group.id} style={{ marginBottom: 12, position: 'relative' }}>
+            {/* Label row */}
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
               <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.white, margin: 0 }}>
                 {group.name}
               </p>
               {group.maxLimit && (
-                <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: isRequired ? colors.violet : 'rgba(250,248,245,0.4)' }}>
+                <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: isRequired ? '#A78BFA' : 'rgba(250,248,245,0.4)' }}>
                   {isRadio ? 'choose 1' : `up to ${group.maxLimit}`}
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {group.options.map(opt => {
-                const isSelected = selectedOptions.some(o => o.id === opt.id)
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => onToggleOption(group, opt)}
-                    style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 12, padding: '0.75rem', borderRadius: 12, cursor: 'pointer',
-                      border: isSelected ? `1.5px solid ${colors.violet}` : '1px solid rgba(250,248,245,0.08)',
-                      background: isSelected ? `${colors.violet}10` : 'rgba(250,248,245,0.03)',
-                      fontFamily: fonts?.body, fontSize: '0.8125rem', textAlign: 'left', width: '100%',
-                    }}
-                  >
-                    <span style={{
-                      width: 18, height: 18, borderRadius: isRadio ? '50%' : 4, flexShrink: 0, marginTop: 1,
-                      border: isSelected ? `2px solid ${colors.violet}` : '1.5px solid rgba(250,248,245,0.2)',
-                      background: isSelected ? colors.violet : 'transparent',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {isSelected && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M10 3L4.5 8.5L2 6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontWeight: 600, color: colors.white }}>{opt.name}</span>
-                      {opt.description && <p style={{ fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)', margin: '2px 0 0', lineHeight: 1.35 }}>{opt.description}</p>}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+
+            {/* Dropdown trigger */}
+            <button
+              onClick={() => setOpenGroup(isOpen ? null : group.id)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0.625rem 0.875rem', borderRadius: 10, cursor: 'pointer',
+                border: groupSelected.length ? '1.5px solid #A78BFA' : '1px solid rgba(250,248,245,0.12)',
+                background: groupSelected.length ? 'rgba(167,139,250,0.08)' : 'rgba(250,248,245,0.03)',
+                fontFamily: fonts?.body, fontSize: '0.8125rem', textAlign: 'left',
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+            >
+              <span style={{
+                color: groupSelected.length ? colors.white : 'rgba(250,248,245,0.4)',
+                fontWeight: groupSelected.length ? 500 : 400,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, marginRight: 8,
+              }}>
+                {triggerLabel}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{
+                flexShrink: 0, transition: 'transform 0.2s',
+                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}>
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* Dropdown panel */}
+            {isOpen && (
+              <div style={{
+                position: 'absolute', left: 0, right: 0, top: '100%', zIndex: 20,
+                marginTop: 4, borderRadius: 10, overflow: 'hidden',
+                border: '1px solid rgba(250,248,245,0.1)',
+                background: '#1a1a1f', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                maxHeight: 280, overflowY: 'auto',
+              }}>
+                {group.options.map((opt, idx) => {
+                  const isSelected = selectedOptions.some(o => o.id === opt.id)
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        onToggleOption(group, opt)
+                        if (isRadio) setOpenGroup(null)
+                      }}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '0.625rem 0.875rem', cursor: 'pointer', textAlign: 'left',
+                        borderTop: idx > 0 ? '1px solid rgba(250,248,245,0.06)' : 'none',
+                        border: 'none', borderBottom: 'none', borderLeft: 'none', borderRight: 'none',
+                        borderTopStyle: idx > 0 ? 'solid' : 'none',
+                        borderTopWidth: idx > 0 ? 1 : 0,
+                        borderTopColor: 'rgba(250,248,245,0.06)',
+                        background: isSelected ? 'rgba(167,139,250,0.12)' : 'transparent',
+                        fontFamily: fonts?.body, fontSize: '0.8125rem',
+                        transition: 'background 0.1s',
+                      }}
+                      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'rgba(250,248,245,0.04)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = isSelected ? 'rgba(167,139,250,0.12)' : 'transparent' }}
+                    >
+                      {/* Checkbox/radio indicator */}
+                      <span style={{
+                        width: 16, height: 16, borderRadius: isRadio ? '50%' : 3, flexShrink: 0,
+                        border: isSelected ? '2px solid #A78BFA' : '1.5px solid rgba(250,248,245,0.2)',
+                        background: isSelected ? '#A78BFA' : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {isSelected && <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M10 3L4.5 8.5L2 6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontWeight: 500, color: isSelected ? colors.white : 'rgba(250,248,245,0.7)' }}>{opt.name}</span>
+                        {opt.description && (
+                          <p style={{ fontSize: '0.625rem', color: 'rgba(250,248,245,0.35)', margin: '1px 0 0', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {opt.description}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )
       })}
@@ -1341,10 +1649,10 @@ const stepAnim = {
 
 function pillStyle(fonts) {
   return {
-    fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600,
-    color: colors.violet, background: `${colors.violet}10`,
-    border: `1px solid ${colors.violet}25`, borderRadius: 999,
-    padding: '0.25rem 0.625rem', display: 'inline-block',
+    fontFamily: fonts?.body, fontSize: '0.6875rem', fontWeight: 600,
+    color: '#A78BFA', background: `${colors.violet}14`,
+    border: `1px solid ${colors.violet}30`, borderRadius: 999,
+    padding: '0.3rem 0.75rem', display: 'inline-block',
   }
 }
 
@@ -1387,41 +1695,3 @@ function ctaButton(fonts) {
   }
 }
 
-// ─── Utilities ───
-
-function toggleOption(prev, group, option) {
-  const isRadio = group.maxLimit === 1
-  const isSelected = prev.some(o => o.id === option.id)
-  if (isRadio) {
-    const withoutGroup = prev.filter(o => !group.options.some(go => go.id === o.id))
-    return isSelected ? withoutGroup : [...withoutGroup, option]
-  }
-  if (isSelected) return prev.filter(o => o.id !== option.id)
-  if (group.maxLimit) {
-    const count = prev.filter(o => group.options.some(go => go.id === o.id)).length
-    if (count >= group.maxLimit) return prev
-  }
-  return [...prev, option]
-}
-
-function findMenuItemId(menuData, name) {
-  if (!menuData?.categories || !name) return null
-  const lower = name.toLowerCase()
-  for (const cat of menuData.categories) {
-    for (const item of cat.items || []) {
-      if ((item.name || '').toLowerCase() === lower) return item.id
-    }
-  }
-  return null
-}
-
-function findMenuItem(menuData, name) {
-  if (!menuData?.categories || !name) return null
-  const lower = name.toLowerCase()
-  for (const cat of menuData.categories) {
-    for (const item of cat.items || []) {
-      if ((item.name || '').toLowerCase() === lower) return item
-    }
-  }
-  return null
-}

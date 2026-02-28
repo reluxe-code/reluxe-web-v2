@@ -204,3 +204,5 @@ export default function AdminBlogEdit() {
     </AdminLayout>
   )
 }
+
+AdminBlogEdit.getLayout = (page) => page

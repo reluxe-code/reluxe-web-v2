@@ -11,6 +11,7 @@ import { useGAUX } from '@/hooks/useGAUX'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { captureTrackingToken } from '@/lib/trackingToken'
+import { useAuditTracker } from '@/hooks/useAuditTracker'
 
 // Extracted script components
 import AnalyticsScripts, { GA_ID } from '@/components/analytics/AnalyticsScripts'
@@ -18,7 +19,10 @@ import BoulevardScripts from '@/components/booking/BoulevardScripts'
 
 // Location preference provider & chooser
 import { LocationProvider } from '@/context/LocationContext'
+import { MemberProvider } from '@/context/MemberContext'
 import LocationChooserModal from '@/components/location/LocationChooserModal'
+import MemberDrawerPortal from '@/components/beta/MemberDrawerPortal'
+import { fontPairings } from '@/components/preview/tokens'
 
 // Guard against React DOM crash when browser extensions or mobile autofill
 // modify the DOM outside of React's control. The "removeChild" error
@@ -58,7 +62,7 @@ function sendFBPageview() {
   }
 }
 
-function waitForGtag(cb, maxTries = 60) {
+function waitForGtag(cb, maxTries = 120) {
   let tries = 0
   const t = setInterval(() => {
     if (typeof window !== 'undefined' && typeof window.gtag === 'function' && window.__gaReady) {
@@ -72,6 +76,7 @@ function waitForGtag(cb, maxTries = 60) {
 
 function MyApp({ Component, pageProps }) {
   useGAUX()
+  useAuditTracker()
   const router = useRouter()
 
   useEffect(() => {
@@ -109,6 +114,7 @@ function MyApp({ Component, pageProps }) {
   if (getLayout) {
     return (
       <>
+        <AnalyticsScripts />
         <Head>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <link rel="shortcut icon" href="/favicon.png" />
@@ -127,23 +133,27 @@ function MyApp({ Component, pageProps }) {
       <BoulevardScripts />
 
       <LocationProvider>
-        <Layout>
-          <Head>
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <link rel="shortcut icon" href="/favicon.png" />
-            {/* Default OG image — overridden by any page that sets its own og:image */}
-            <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta property="og:image:type" content="image/png" />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-          </Head>
+        <MemberProvider>
+          <Layout>
+            <Head>
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <link rel="shortcut icon" href="/favicon.png" />
+              <link rel="stylesheet" href={fontPairings.bold.googleUrl} />
+              {/* Default OG image — overridden by any page that sets its own og:image */}
+              <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
+              <meta property="og:image:width" content="1200" />
+              <meta property="og:image:height" content="630" />
+              <meta property="og:image:type" content="image/png" />
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
+            </Head>
 
-          <Component {...pageProps} />
-          <ScrollToTop />
-          <LocationChooserModal />
-        </Layout>
+            <Component {...pageProps} />
+            <ScrollToTop />
+            <LocationChooserModal />
+          </Layout>
+          <MemberDrawerPortal fonts={fontPairings.bold} />
+        </MemberProvider>
       </LocationProvider>
       <Analytics />
       <SpeedInsights />

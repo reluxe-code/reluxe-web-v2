@@ -5,6 +5,7 @@ import Script from 'next/script'
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID || ''
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || ''
 const BIRD_CONFIG_URL = process.env.NEXT_PUBLIC_BIRD_CONFIG_URL || ''
+const IS_DEV = process.env.NODE_ENV === 'development'
 
 export default function AnalyticsScripts() {
   return (
@@ -33,6 +34,25 @@ export default function AnalyticsScripts() {
         `}
       </Script>
 
+      {/* GA4 Consent Mode v2 defaults — must come before gtag config */}
+      {GA_ID && (
+        <Script id="ga-consent-defaults" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              analytics_storage: 'granted',
+              ad_storage: 'granted',
+              ad_user_data: 'granted',
+              ad_personalization: 'granted',
+              functionality_storage: 'granted',
+              personalization_storage: 'granted',
+              security_storage: 'granted',
+            });
+          `}
+        </Script>
+      )}
+
       {/* Google Analytics 4 (gtag) */}
       {GA_ID && (
         <>
@@ -46,7 +66,7 @@ export default function AnalyticsScripts() {
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${GA_ID}', { send_page_view: false });
+              gtag('config', '${GA_ID}', { send_page_view: false${IS_DEV ? ", debug_mode: true" : ''} });
               window.__gaReady = true;
             `}
           </Script>

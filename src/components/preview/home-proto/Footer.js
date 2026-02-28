@@ -149,7 +149,7 @@ export default function Footer({ fontKey = 'bold' }) {
               Book Now
             </button>
             <a
-              href="tel:3171234567"
+              href="tel:3177631142"
               className="block transition-colors duration-200 hover:text-white"
               style={{
                 fontFamily: fonts.body,
@@ -159,7 +159,7 @@ export default function Footer({ fontKey = 'bold' }) {
                 textAlign: 'center',
               }}
             >
-              (317) 399-4578
+              (317) 763-1142
             </a>
           </div>
         </div>

@@ -1,6 +1,24 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /dashboard/
+Disallow: /app/
+Disallow: /start/
+Disallow: /book/
+Disallow: /today
+Disallow: /today_v1
+Disallow: /reveal
+Disallow: /search
+Disallow: /referral/
+Disallow: /r/
+Disallow: /capture/
+Disallow: /beta/
+Disallow: /preview/
+Disallow: /shop/
+Disallow: /sitemap
 
 # Host
 Host: https://reluxemedspa.com

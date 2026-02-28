@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { getCurrentBalance, updateBalanceCache, pushCreditToBlvd, formatCents } from '@/lib/velocity'
+import { rateLimiters, applyRateLimit } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -12,6 +13,7 @@ export default async function handler(req, res) {
   const anonClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
   if (authError || !user) return res.status(401).json({ error: 'Invalid session' })
+  if (applyRateLimit(req, res, rateLimiters.tight, user.id)) return
 
   const db = getServiceClient()
   const { trigger } = req.body

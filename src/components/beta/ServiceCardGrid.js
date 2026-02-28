@@ -120,7 +120,7 @@ function ServiceCard({ svc, fonts, index, onBook }) {
             Book Now
           </button>
           <a
-            href={`/beta/services/${svc.slug}`}
+            href={`/services/${svc.slug}`}
             className="rounded-full transition-all duration-200 hover:bg-gray-50"
             style={{
               fontFamily: fonts.body,
@@ -211,7 +211,7 @@ export default function ServiceCardGrid({ services, fonts, label, heading, bg })
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((svc, i) => (
-              <ServiceCard key={svc.slug} svc={svc} fonts={fonts} index={i} onBook={() => openBookingModal(locationKey || 'westfield')} />
+              <ServiceCard key={svc.slug} svc={svc} fonts={fonts} index={i} onBook={() => openBookingModal(locationKey || 'westfield', svc.slug)} />
             ))}
           </div>
         )}

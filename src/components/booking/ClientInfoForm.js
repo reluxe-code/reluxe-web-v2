@@ -13,13 +13,20 @@ function validateEmail(email) {
 }
 
 // ─── Countdown Timer ───
+const MAX_HOLD_MS = 10 * 60 * 1000; // Show 10-minute hold to users
+
 function CountdownTimer({ expiresAt, fonts, onExpired }) {
   const [remaining, setRemaining] = useState(null);
+  const cappedExpiry = useRef(null);
 
   useEffect(() => {
     if (!expiresAt) return;
+    // Cap the displayed hold time to 10 minutes from now (Boulevard gives 30)
+    const blvdExpiry = new Date(expiresAt).getTime();
+    const tenMinFromNow = Date.now() + MAX_HOLD_MS;
+    cappedExpiry.current = Math.min(blvdExpiry, tenMinFromNow);
     const update = () => {
-      const diff = Math.max(0, new Date(expiresAt).getTime() - Date.now());
+      const diff = Math.max(0, cappedExpiry.current - Date.now());
       setRemaining(diff);
       if (diff === 0 && onExpired) onExpired();
     };
@@ -84,6 +91,10 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
   const [confirmation, setConfirmation] = useState(null);
   const [confirmEmail, setConfirmEmail] = useState('');
 
+  // Duplicate booking warning
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
+  const [pendingCheckoutArgs, setPendingCheckoutArgs] = useState(null);
+
   // Focus management
   useEffect(() => { if (subStep === SUB_PHONE) phoneRef.current?.focus(); }, [subStep]);
   useEffect(() => { if (subStep === SUB_DETAILS) firstRef.current?.focus(); }, [subStep]);
@@ -96,7 +107,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
   }, [resendCooldown]);
 
   // ─── Checkout helper (used by both auto-checkout and manual submit) ───
-  const doCheckout = async ({ firstName, lastName, email, ownershipVerified } = {}) => {
+  const doCheckout = async ({ firstName, lastName, email, ownershipVerified, allowDuplicate } = {}) => {
     try {
       const body = { ownershipVerified: ownershipVerified || false };
       if (firstName && lastName && email) {
@@ -105,6 +116,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
         body.email = email;
         body.phone = toE164(phone);
       }
+      if (allowDuplicate) body.allowDuplicate = true;
       // Pass referral code for attribution
       const refCode = getReferralCode();
       if (refCode) body.referralCode = refCode;
@@ -118,6 +130,11 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
 
       if (!res.ok) {
         if (res.status === 410) { if (onExpired) onExpired(); return { expired: true }; }
+        if (res.status === 409 && data.allowDuplicateFlag) {
+          setDuplicateWarning(data);
+          setPendingCheckoutArgs({ firstName, lastName, email, ownershipVerified });
+          return { duplicate: true };
+        }
         if (data.needsClientInfo) return { needsClientInfo: true };
         throw new Error(data.error || 'Checkout failed');
       }
@@ -130,6 +147,18 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
     } catch (err) {
       return { error: err.message };
     }
+  };
+
+  // ─── Proceed despite duplicate warning ───
+  const handleProceedAnyway = async () => {
+    setDuplicateWarning(null);
+    setSubmitting(true);
+    const result = await doCheckout({ ...pendingCheckoutArgs, allowDuplicate: true });
+    if (!result.success && !result.expired) {
+      setServerError(result.error || 'Checkout failed. Please try again.');
+    }
+    setSubmitting(false);
+    setPendingCheckoutArgs(null);
   };
 
   // ─── Phone Step ───
@@ -189,7 +218,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
 
       const result = await doCheckout({ ownershipVerified: true });
 
-      if (result.success || result.expired) return;
+      if (result.success || result.expired || result.duplicate) return;
 
       // Boulevard needs more info — fall back to details form
       if (data.client) {
@@ -294,6 +323,51 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.7 : 1,
   });
+
+  // ─── DUPLICATE BOOKING WARNING ───
+  if (duplicateWarning) {
+    return (
+      <div>
+        <CountdownTimer expiresAt={expiresAt} fonts={fonts} onExpired={onExpired} />
+        <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: '#FFF7ED', border: '1px solid #FDBA74' }}>
+          <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.875rem', fontWeight: 600, color: '#9A3412', marginBottom: '0.5rem' }}>
+            You already have a recent booking
+          </p>
+          {duplicateWarning.existingBookings?.map((b, i) => (
+            <div key={i} className="rounded-lg p-2.5 mb-2" style={{ backgroundColor: '#fff', border: '1px solid #FED7AA' }}>
+              <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.8125rem', fontWeight: 600, color: colors.heading }}>
+                {b.service || 'Service'}
+              </p>
+              {b.provider && (
+                <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', color: colors.muted }}>
+                  with {b.provider}
+                </p>
+              )}
+              {b.completedAt && (
+                <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', color: colors.muted }}>
+                  Booked {new Date(b.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          ))}
+          <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', color: '#B45309', marginTop: '0.5rem' }}>
+            If this is a different appointment, you can still proceed.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button type="button" onClick={() => { setDuplicateWarning(null); setPendingCheckoutArgs(null); }}
+            className="flex-1 rounded-full transition-colors duration-200"
+            style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.875rem', fontWeight: 600, padding: '0.75rem 1.5rem', color: colors.body, backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, cursor: 'pointer' }}>
+            Go Back
+          </button>
+          <button type="button" onClick={handleProceedAnyway} disabled={submitting}
+            className="flex-1 rounded-full transition-opacity duration-200" style={primaryBtn(submitting)}>
+            {submitting ? 'Confirming...' : 'Book Anyway'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ─── CONFIRMATION ───
   if (confirmation) {
@@ -411,11 +485,11 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
         </div>
         <div className="flex items-center justify-between mb-4">
           <button type="button" onClick={() => { setSubStep(SUB_PHONE); setCode(''); setVerifyError(null); }}
-            style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', fontWeight: 500, color: colors.violet, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', fontWeight: 500, color: '#A78BFA', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             Change number
           </button>
           <button type="button" onClick={handleResend} disabled={resendCooldown > 0 || sendingCode}
-            style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', fontWeight: 500, color: resendCooldown > 0 ? colors.muted : colors.violet, background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer', padding: 0 }}>
+            style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', fontWeight: 500, color: resendCooldown > 0 ? colors.muted : '#A78BFA', background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'default' : 'pointer', padding: 0 }}>
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : sendingCode ? 'Sending...' : 'Resend code'}
           </button>
         </div>
@@ -435,10 +509,10 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
       <div className="flex items-center gap-2 rounded-lg p-2.5 mb-4"
         style={{ backgroundColor: `${colors.violet}06`, border: `1px solid ${colors.violet}15` }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M20 6L9 17L4 12" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M20 6L9 17L4 12" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <span style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 500, color: colors.heading }}>{phone}</span>
-        <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: colors.violet, marginLeft: 'auto' }}>Verified</span>
+        <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: '#A78BFA', marginLeft: 'auto' }}>Verified</span>
       </div>
 
       <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', color: colors.muted, marginBottom: '0.75rem' }}>

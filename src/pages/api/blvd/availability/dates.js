@@ -3,9 +3,12 @@
 // Supports multi-service via optional additionalItems param.
 import { createCartWithItem, createCartWithItems } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { recordSuccess, recordFailure, getCircuitState } from '@/server/circuitBreaker'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { locationKey, serviceItemId, staffProviderId, startDate, endDate, additionalItems } = req.query
 
@@ -20,9 +23,15 @@ export default async function handler(req, res) {
 
   const additionalKey = parsedAdditional.map(i => i.serviceItemId).sort().join(',')
   const cacheKey = `dates:${locationKey}:${serviceItemId}:${staffProviderId || 'any'}:${startDate}:${endDate}:${additionalKey}`
-  const cached = getCached(cacheKey, 120_000)
+  const cached = getCached(cacheKey, 300_000) // 5 min
   if (cached && !cached.stale) {
     return res.json(cached.data)
+  }
+
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    if (cached) return res.json(cached.data)
+    return res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 
   try {
@@ -33,6 +42,7 @@ export default async function handler(req, res) {
       cart = result.cart
     } else {
       const result = await createCartWithItem(locationKey, serviceItemId, staffProviderId)
+      if (result.staffMismatch) return res.json([])
       cart = result.cart
     }
 
@@ -42,11 +52,14 @@ export default async function handler(req, res) {
     })
 
     const result = (dates || []).map(d => typeof d === 'string' ? d : d.date || d)
+    recordSuccess()
     setCache(cacheKey, result)
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300')
     res.json(result)
   } catch (err) {
+    recordFailure()
     console.error('[blvd/availability/dates]', err.message)
     if (cached) return res.json(cached.data)
-    res.status(200).json([])
+    res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 }

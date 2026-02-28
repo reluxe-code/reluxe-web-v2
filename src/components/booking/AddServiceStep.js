@@ -139,7 +139,7 @@ export default function AddServiceStep({
                 fontFamily: fonts?.body,
                 fontSize: '0.6875rem',
                 fontWeight: 600,
-                color: colors.violet,
+                color: '#A78BFA',
                 backgroundColor: `${colors.violet}08`,
                 border: `1px solid ${colors.violet}20`,
               }}
@@ -205,7 +205,7 @@ export default function AddServiceStep({
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
-                  color: colors.violet,
+                  color: '#A78BFA',
                   marginBottom: '0.375rem',
                 }}>
                   Recommended
@@ -305,7 +305,7 @@ function ServiceRow({ item, fonts, onClick }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: colors.violet,
+          color: '#A78BFA',
           fontSize: '0.875rem',
           fontWeight: 300,
         }}
@@ -333,7 +333,7 @@ function ServiceRow({ item, fonts, onClick }) {
       </div>
       <div className="flex-shrink-0 flex items-center gap-2">
         {item.duration > 0 && (
-          <span style={{ fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600, color: colors.violet, opacity: 0.7, whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600, color: '#A78BFA', opacity: 0.7, whiteSpace: 'nowrap' }}>
             {formatDuration(item.duration)}
           </span>
         )}

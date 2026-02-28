@@ -105,7 +105,7 @@ export default function NewPatientDaxxifyPage() {
         <meta property="og:description" content={`Start with ${OFFER_BASELINE}, customize from there. Add-ons at ${OFFER_ADDON}.`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://reluxemedspa.com/landing/new-patient-daxxify" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/landing/new-patient-daxxify-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />

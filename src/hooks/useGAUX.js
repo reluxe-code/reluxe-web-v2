@@ -1,27 +1,37 @@
 // hooks/useGAUX.js
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/router'
 import { gaEvent } from '@/lib/ga' // must expose gaEvent(name, params)
 
+// Read current path at event-fire time so SPA navigations are always accurate
+function currentPath() {
+  return (window.location?.pathname || '') + (window.location?.search || '')
+}
+
 export function useGAUX() {
+  const router = useRouter()
+  const firedRef = useRef(new Set())
+
+  // Reset scroll-depth milestones on each route change
+  useEffect(() => {
+    firedRef.current = new Set()
+  }, [router.asPath])
+
   useEffect(() => {
     if (typeof window === 'undefined') return
-
-    const pagePath =
-      (window.location?.pathname || '') + (window.location?.search || '')
 
     /* ---------------------------
        Scroll depth (25/50/75/100)
     ---------------------------- */
-    const fired = new Set()
     const onScroll = () => {
       const h = document.documentElement
       const scrolled = h.scrollTop || document.body.scrollTop || 0
       const height = (h.scrollHeight - h.clientHeight) || 1
       const pct = Math.min(100, Math.round((scrolled / height) * 100))
       ;[25, 50, 75, 100].forEach((mark) => {
-        if (pct >= mark && !fired.has(mark)) {
-          fired.add(mark)
-          gaEvent('scroll_depth', { depth_pct: mark, page_path: pagePath })
+        if (pct >= mark && !firedRef.current.has(mark)) {
+          firedRef.current.add(mark)
+          gaEvent('scroll_depth', { depth_pct: mark, page_path: currentPath() })
         }
       })
     }
@@ -33,7 +43,7 @@ export function useGAUX() {
     let idleTimer = null
     const IDLE_MS = 15000
     const markIdle = () =>
-      gaEvent('idle_detected', { idle_ms: IDLE_MS, page_path: pagePath })
+      gaEvent('idle_detected', { idle_ms: IDLE_MS, page_path: currentPath() })
 
     const resetIdle = () => {
       clearTimeout(idleTimer)
@@ -68,7 +78,7 @@ export function useGAUX() {
         click_text,
         href,
         section,
-        page_path: pagePath,
+        page_path: currentPath(),
       })
 
       // Rage-click heuristic: 3 clicks within 2s within 50px
@@ -80,7 +90,7 @@ export function useGAUX() {
         if (lastClick.count === 3) {
           gaEvent('rage_clicks', {
             selector: click_id || click_text || '(unknown)',
-            page_path: pagePath,
+            page_path: currentPath(),
           })
         }
       } else {

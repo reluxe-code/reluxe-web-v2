@@ -1,68 +1,33 @@
 // pages/messaging-terms.js
-
-import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
 
 export default function MessagingTermsPage() {
   const updated = 'August 26, 2025'
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Messaging Terms & Conditions | RELUXE Med Spa',
-    url: 'https://www.reluxemedspa.com/messaging-terms',
-    description:
-      'RELUXE Med Spa messaging terms for SMS/MMS marketing and informational alerts: opt-in/opt-out, HELP/STOP, message frequency, carrier disclaimer, data rates, and privacy.',
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.reluxemedspa.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Messaging Terms', item: 'https://www.reluxemedspa.com/messaging-terms' },
-      ],
-    },
-    mainEntity: {
-      '@type': 'Organization',
-      name: 'RELUXE Med Spa',
-      url: 'https://www.reluxemedspa.com/',
-      contactPoint: [
-        { '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'support@reluxemedspa.com' },
-      ],
-      address: [
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '514 E State Road 32',
-          addressLocality: 'Westfield',
-          addressRegion: 'IN',
-          postalCode: '46074',
-          addressCountry: 'US',
-        },
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '10485 N Pennsylvania St',
-          addressLocality: 'Carmel',
-          addressRegion: 'IN',
-          postalCode: '46032',
-          addressCountry: 'US',
-        },
-      ],
-    },
-  }
-
   return (
-    <>
-      <Head>
-        <title>Messaging Terms & Conditions | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Read the RELUXE Med Spa SMS/MMS messaging terms: consent, message frequency, STOP/HELP, data rates, carrier disclaimer, quiet hours, and privacy details."
-        />
-        <link rel="canonical" href="https://www.reluxemedspa.com/messaging-terms" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      </Head>
-
-      {/* Page Header */}
-      <HeaderTwo />
+    <BetaLayout
+      title="Messaging Terms & Conditions"
+      description="Read the RELUXE Med Spa SMS/MMS messaging terms: consent, message frequency, STOP/HELP, data rates, carrier disclaimer, quiet hours, and privacy details."
+      canonical="https://reluxemedspa.com/messaging-terms"
+      structuredData={{
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Messaging Terms & Conditions | RELUXE Med Spa',
+        url: 'https://www.reluxemedspa.com/messaging-terms',
+        description: 'RELUXE Med Spa messaging terms for SMS/MMS marketing and informational alerts.',
+        mainEntity: {
+          '@type': 'Organization',
+          name: 'RELUXE Med Spa',
+          url: 'https://www.reluxemedspa.com/',
+          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'support@reluxemedspa.com' }],
+          address: [
+            { '@type': 'PostalAddress', streetAddress: '514 E State Road 32', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074', addressCountry: 'US' },
+            { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+          ],
+        },
+      }}
+    >
       <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
           <p className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Legal</p>
@@ -201,7 +166,7 @@ export default function MessagingTermsPage() {
               <address className="not-italic mt-2 space-y-1">
                 <div><strong>RELUXE Med Spa</strong></div>
                 <div>514 E State Road 32, Westfield, IN 46074</div>
-                <div>10485 N Pennsylvania St, Carmel, IN 46032</div>
+                <div>10485 N Pennsylvania St, Carmel, IN 46280</div>
                 <div><a href="mailto:support@reluxemedspa.com" className="underline">support@reluxemedspa.com</a></div>
                 <div><a href="tel:+13177631142" className="underline">(317) 763-1142</a></div>
               </address>
@@ -218,6 +183,8 @@ export default function MessagingTermsPage() {
           </section>
         </div>
       </main>
-    </>
+    </BetaLayout>
   )
 }
+
+MessagingTermsPage.getLayout = (page) => page

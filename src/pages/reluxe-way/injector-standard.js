@@ -13,8 +13,7 @@ const SITE_URL = 'https://reluxemedspa.com'
 const PAGE_PATH = '/reluxe-way/injector-standard'
 const CANONICAL_URL = `${SITE_URL}${PAGE_PATH}`
 
-const OG_IMAGE = `${SITE_URL}/images/reluxe-way/injector-standard-og.jpg` // ✅ create (1200x630)
-const OG_IMAGE_SQUARE = `${SITE_URL}/images/reluxe-way/injector-standard-og-square.jpg` // optional (1080x1080)
+const OG_IMAGE = `${SITE_URL}/images/og/new-default-1200x630.png`
 
 const HUB_URL = '/reluxe-way'
 const TOX_PRICING_URL = '/reluxe-way/tox-pricing'
@@ -148,8 +147,6 @@ export default function InjectorStandardPage() {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="The Injector Standard — The RELUXE Way (Carmel & Westfield)" />
-        <meta property="og:image" content={OG_IMAGE_SQUARE} />
-
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="The Injector Standard — The RELUXE Way" />

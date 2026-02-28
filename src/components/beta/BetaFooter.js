@@ -3,31 +3,31 @@ import GravityBookButton from '@/components/beta/GravityBookButton';
 
 const footerLinks = {
   Treatments: [
-    { label: 'Botox & Tox', href: '/beta/services/tox' },
-    { label: 'Dermal Fillers', href: '/beta/services/filler' },
-    { label: 'Morpheus8', href: '/beta/services/morpheus8' },
-    { label: 'Laser Hair Removal', href: '/beta/services/laser-hair-removal' },
-    { label: 'Facials & Peels', href: '/beta/services/facials' },
-    { label: 'All Services', href: '/beta/services' },
+    { label: 'Botox & Tox', href: '/services/tox' },
+    { label: 'Dermal Fillers', href: '/services/filler' },
+    { label: 'Morpheus8', href: '/services/morpheus8' },
+    { label: 'Laser Hair Removal', href: '/services/laser-hair-removal' },
+    { label: 'Facials & Peels', href: '/services/facials' },
+    { label: 'All Services', href: '/services' },
   ],
   Locations: [
-    { label: 'Carmel', href: '/beta/locations/carmel' },
-    { label: 'Westfield', href: '/beta/locations/westfield' },
-    { label: 'All Locations', href: '/beta/locations' },
+    { label: 'Carmel', href: '/locations/carmel' },
+    { label: 'Westfield', href: '/locations/westfield' },
+    { label: 'All Locations', href: '/locations' },
   ],
   Company: [
-    { label: 'About RELUXE', href: '/beta/about' },
-    { label: 'Our Team', href: '/beta/team' },
-    { label: 'Reviews', href: '/beta/reviews' },
-    { label: 'Contact', href: '/beta/contact' },
+    { label: 'About RELUXE', href: '/about' },
+    { label: 'Our Team', href: '/team' },
+    { label: 'Reviews', href: '/reviews' },
+    { label: 'Contact', href: '/contact' },
   ],
   Resources: [
-    { label: 'Pricing', href: '/beta/pricing' },
-    { label: 'Memberships', href: '/beta/memberships' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'Memberships', href: '/memberships' },
     { label: 'Refer & Earn $25', href: '/referral' },
-    { label: 'FAQs', href: '/beta/faqs' },
-    { label: 'Results', href: '/beta/results' },
-    { label: 'Inspiration', href: '/beta/inspiration' },
+    { label: 'FAQs', href: '/faqs' },
+    { label: 'Results', href: '/results' },
+    { label: 'Inspiration', href: '/inspiration' },
   ],
 };
 
@@ -39,10 +39,10 @@ export default function BetaFooter({ fontKey = 'bold' }) {
       <div style={{ height: '2px', background: gradients.primary }} />
 
       <div className="max-w-7xl mx-auto px-6 py-16 lg:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
-          {/* Brand column */}
-          <div className="lg:col-span-2">
-            <a href="/beta" className="inline-block mb-4">
+        {/* Top row: Brand + CTA */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 mb-14">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <a href="/" className="inline-block flex-shrink-0">
               <img
                 src="/images/logo/logo.png"
                 alt="RELUXE Med Spa"
@@ -50,7 +50,7 @@ export default function BetaFooter({ fontKey = 'bold' }) {
               />
             </a>
             <p
-              className="mb-6 max-w-xs"
+              className="max-w-sm"
               style={{
                 fontFamily: fonts.body,
                 fontSize: '0.9375rem',
@@ -60,7 +60,9 @@ export default function BetaFooter({ fontKey = 'bold' }) {
             >
               Indiana&apos;s premier med spa. Expert providers, honest advice, and results that speak for themselves.
             </p>
+          </div>
 
+          <div className="flex items-center gap-5">
             <div className="flex items-center gap-3">
               {[
                 { label: 'IG', href: 'https://www.instagram.com/reluxemedspa' },
@@ -93,11 +95,28 @@ export default function BetaFooter({ fontKey = 'bold' }) {
                 </a>
               ))}
             </div>
+            <div className="hidden lg:block" style={{ width: 1, height: 24, backgroundColor: 'rgba(250,248,245,0.1)' }} />
+            <GravityBookButton fontKey={fontKey} size="nav" />
+            <a
+              href="tel:3177631142"
+              className="transition-colors duration-200 hover:text-white"
+              style={{
+                fontFamily: fonts.body,
+                fontSize: '0.875rem',
+                color: 'rgba(250,248,245,0.55)',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              (317) 763-1142
+            </a>
           </div>
+        </div>
 
-          {/* Link columns */}
+        {/* Link columns — full width, 2-col lists under each heading */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {Object.entries(footerLinks).map(([heading, links]) => (
-            <div key={heading} className="lg:col-span-2">
+            <div key={heading}>
               <p
                 className="mb-4"
                 style={{
@@ -108,7 +127,7 @@ export default function BetaFooter({ fontKey = 'bold' }) {
               >
                 {heading}
               </p>
-              <ul className="space-y-3" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {links.map((link) => (
                   <li key={link.label}>
                     <a
@@ -116,7 +135,7 @@ export default function BetaFooter({ fontKey = 'bold' }) {
                       className="transition-colors duration-200 hover:text-white"
                       style={{
                         fontFamily: fonts.body,
-                        fontSize: '0.875rem',
+                        fontSize: '0.8125rem',
                         color: 'rgba(250,248,245,0.55)',
                         textDecoration: 'none',
                       }}
@@ -128,41 +147,11 @@ export default function BetaFooter({ fontKey = 'bold' }) {
               </ul>
             </div>
           ))}
-
-          {/* Contact / CTA column */}
-          <div className="lg:col-span-2">
-            <p
-              className="mb-4"
-              style={{
-                fontFamily: fonts.body,
-                ...typeScale.label,
-                color: 'rgba(250,248,245,0.35)',
-              }}
-            >
-              Get Started
-            </p>
-            <div className="mb-4">
-              <GravityBookButton fontKey={fontKey} size="nav" />
-            </div>
-            <a
-              href="tel:3177631142"
-              className="block transition-colors duration-200 hover:text-white"
-              style={{
-                fontFamily: fonts.body,
-                fontSize: '0.875rem',
-                color: 'rgba(250,248,245,0.55)',
-                textDecoration: 'none',
-                textAlign: 'center',
-              }}
-            >
-              (317) 763-1142
-            </a>
-          </div>
         </div>
 
         {/* Bottom bar */}
         <div
-          className="mt-16 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="mt-14 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4"
           style={{ borderTop: '1px solid rgba(250,248,245,0.06)' }}
         >
           <p
@@ -176,9 +165,9 @@ export default function BetaFooter({ fontKey = 'bold' }) {
           </p>
           <div className="flex items-center gap-6">
             {[
+              { label: 'Site Directory', href: '/sitemap' },
               { label: 'Privacy', href: '/privacy-policy' },
               { label: 'Terms', href: '/terms' },
-              { label: 'Accessibility', href: '/accessibility' },
             ].map((item) => (
               <a
                 key={item.label}
@@ -195,6 +184,24 @@ export default function BetaFooter({ fontKey = 'bold' }) {
               </a>
             ))}
           </div>
+          <p
+            style={{
+              fontFamily: fonts.body,
+              fontSize: '0.75rem',
+              color: 'rgba(250,248,245,0.2)',
+            }}
+          >
+            Made with {'<3'} by{' '}
+            <a
+              href="https://goodlookingco.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors duration-200 hover:text-white"
+              style={{ color: 'rgba(250,248,245,0.3)', textDecoration: 'none' }}
+            >
+              Ridiculously Good Looking Co.
+            </a>
+          </p>
         </div>
       </div>
     </footer>

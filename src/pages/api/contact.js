@@ -1,6 +1,7 @@
 // src/pages/api/contact.js
 import { z } from 'zod';
 import { getSmtpConfig, escHtml } from '@/lib/email';
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // -------- Validation (no captcha) --------
 const schema = z.object({
@@ -85,6 +86,8 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   try {
     const json = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;

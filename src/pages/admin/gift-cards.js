@@ -713,3 +713,5 @@ export default function GiftCardsAdmin() {
     </AdminLayout>
   )
 }
+
+GiftCardsAdmin.getLayout = (page) => page

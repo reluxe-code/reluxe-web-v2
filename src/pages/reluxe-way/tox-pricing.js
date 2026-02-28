@@ -27,8 +27,7 @@ const CONSULT_NAME = 'Getting Started with RELUXE'
 const SITE_URL = 'https://reluxemedspa.com'
 const PAGE_PATH = '/reluxe-way/tox-pricing'
 const CANONICAL_URL = `${SITE_URL}${PAGE_PATH}`
-const OG_IMAGE = `${SITE_URL}/images/reluxe-way/tox-pricing-og.jpg`
-const OG_IMAGE_SQUARE = `${SITE_URL}/images/reluxe-way/tox-pricing-og-square.jpg` // optional
+const OG_IMAGE = `${SITE_URL}/images/og/new-default-1200x630.png`
 
 // Contact / social
 const MARKETING_SMS = '3173609000'
@@ -327,9 +326,6 @@ export default function ReluxeWayToxPricingPage() {
           property="og:image:alt"
           content="RELUXE Tox Pricing — Transparent pricing for Botox, Daxxify, Jeuveau, Dysport in Carmel & Westfield"
         />
-        {/* Optional square */}
-        <meta property="og:image" content={OG_IMAGE_SQUARE} />
-
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="RELUXE Tox Pricing — Carmel & Westfield" />

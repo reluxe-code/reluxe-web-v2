@@ -11,7 +11,7 @@ const description =
   'Current promotions and monthly specials at RELUXE Med Spa—limited-time offers on injectables, skin, laser, and more.';
 
 // Social preview image
-const ogImage = `${SITE}/images/promo/deals.png`;
+const ogImage = `${SITE}/images/og/new-default-1200x630.png`;
 
 // -------------------------------
 // Page Feature Flags
@@ -190,7 +190,7 @@ const Q1_DEALS = [
     id: 'membership-kickoff',
     badge: 'Best Value',
     title: 'New Year. New You. — Membership Kickoff',
-    price: '$50 to start any membership in January',
+    price: '$50 to start any membership this quarter',
     finePrint: 'Applies to $100, $200, and Massage memberships. 12-month membership commitment.',
     why:
       'The easiest way to stay consistent, keep pricing predictable, and stack perks all year.',

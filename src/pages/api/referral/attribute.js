@@ -5,14 +5,36 @@
 import { getServiceClient } from '@/lib/supabase'
 import { adminQuery } from '@/server/blvdAdmin'
 import { resolveReferralCode } from '@/lib/referralCodes'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   const { code, phone, email, deviceId, appointmentId, clientId, locationKey, bookingSessionId } = req.body
   if (!code) return res.status(400).json({ error: 'code required' })
 
   const db = getServiceClient()
+
+  // Idempotency: if this appointmentId was already attributed, return existing record
+  if (appointmentId) {
+    const { data: existing } = await db
+      .from('referrals')
+      .select('id, status, fraud_flags, referee_credit_issued')
+      .eq('appointment_blvd_id', appointmentId)
+      .limit(1)
+    if (existing?.[0]) {
+      return res.json({
+        ok: true,
+        referralId: existing[0].id,
+        status: existing[0].status,
+        refereeCredited: existing[0].referee_credit_issued || false,
+        fraudFlags: existing[0].fraud_flags || [],
+        deduplicated: true,
+      })
+    }
+  }
 
   // Look up the referral code (supports code, custom_code, or phone number)
   const rc = await resolveReferralCode(db, code)
@@ -100,24 +122,8 @@ export default async function handler(req, res) {
   }
 
   if (!referral) {
-    // No matching click found — create one retroactively
-    const { data: newRef } = await db
-      .from('referrals')
-      .insert({
-        referral_code_id: rc.id,
-        referrer_member_id: rc.member_id,
-        referee_device_id: deviceId || null,
-        referee_phone: phone || null,
-        referee_email: email || null,
-        status: 'clicked',
-      })
-      .select('*')
-      .single()
-    referral = newRef
-  }
-
-  if (!referral) {
-    return res.status(500).json({ error: 'Failed to create referral record' })
+    // No matching referral click found — do not create one retroactively
+    return res.json({ ok: true, noReferralFound: true })
   }
 
   // --- Fraud checks ---

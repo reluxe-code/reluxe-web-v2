@@ -17,29 +17,31 @@ function writeCookie(name, value, maxAge = MAX_AGE) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}`;
 }
 
+const isValidKey = (k) => k === 'all' || !!LOCATIONS[k];
+
 export function getStoredLocationKey() {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     const loc = params.get('loc');
-    if (loc && LOCATIONS[loc]) {
+    if (loc && isValidKey(loc)) {
       writeCookie(COOKIE, loc);
       try { localStorage.setItem(COOKIE, loc); } catch {}
       return loc;
     }
   }
   const ck = readCookie(COOKIE);
-  if (ck && LOCATIONS[ck]) return ck;
+  if (ck && isValidKey(ck)) return ck;
   if (typeof window !== 'undefined') {
     try {
       const ls = localStorage.getItem(COOKIE);
-      if (ls && LOCATIONS[ls]) return ls;
+      if (ls && isValidKey(ls)) return ls;
     } catch {}
   }
   return null;
 }
 
 export function setStoredLocationKey(k) {
-  if (!LOCATIONS[k]) return;
+  if (!isValidKey(k)) return;
   writeCookie(COOKIE, k);
   try { localStorage.setItem(COOKIE, k); } catch {}
 }

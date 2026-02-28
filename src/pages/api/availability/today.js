@@ -1,7 +1,9 @@
 import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem, LOCATION_IDS } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { recordSuccess, recordFailure, getCircuitState } from '@/server/circuitBreaker'
 import { REVEAL_CATEGORIES } from '@/data/revealCategories'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const WINDOW_TZ = 'America/New_York'
 const LOCATION_LABELS = {
@@ -182,6 +184,7 @@ function buildWhyShowingLine({ provider, locationKey }) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const {
     locationId,
@@ -207,12 +210,18 @@ export default async function handler(req, res) {
   ].join(':')
 
   const topCacheKey = `today-availability:${comboCachePrefix}:${limitNum}`
-  const topCachedFresh = getCached(topCacheKey, 120_000)    // 2 min fresh
-  const topCachedStale = getCached(topCacheKey, 600_000)    // 10 min stale fallback
+  const topCachedFresh = getCached(topCacheKey, 300_000)    // 5 min fresh
+  const topCachedStale = getCached(topCacheKey, 1_800_000)  // 30 min stale fallback
   // Serve from cache if fresh AND non-empty
   if (topCachedFresh && !topCachedFresh.stale && topCachedFresh.data?.totalOpenings > 0) {
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300')
     return res.json(topCachedFresh.data)
+  }
+
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    if (topCachedStale?.data) return res.json(topCachedStale.data)
+    return res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 
   try {
@@ -302,13 +311,14 @@ export default async function handler(req, res) {
 
     const dateResults = await batchSettled(selectedCombos, async (combo) => {
       const dateCacheKey = `today-dates:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${window.windowStart}:${window.windowEnd}`
-      const dateCached = getCached(dateCacheKey, 120_000)
+      const dateCached = getCached(dateCacheKey, 300_000)
 
       if (dateCached && !dateCached.stale) {
         return { combo, dates: dateCached.data }
       }
 
-      const { cart } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
+      const { cart, staffMismatch } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
+      if (!cart || staffMismatch) return { combo, dates: [] }
       const rawDates = await cart.getBookableDates({
         searchRangeLower: window.windowStart,
         searchRangeUpper: window.windowEnd,
@@ -336,13 +346,14 @@ export default async function handler(req, res) {
 
     const timeResults = await batchSettled(timeFetches, async ({ combo, date }) => {
       const timeCacheKey = `today-times:${combo.providerId}:${combo.locationKey}:${combo.serviceItemId}:${date}`
-      const timeCached = getCached(timeCacheKey, 120_000)
+      const timeCached = getCached(timeCacheKey, 300_000)
 
       if (timeCached && !timeCached.stale) {
         return { combo, date, times: timeCached.data }
       }
 
-      const { cart } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
+      const { cart, staffMismatch } = await createCartWithItem(combo.locationKey, combo.serviceItemId, combo.providerId)
+      if (!cart || staffMismatch) return { combo, date, times: [] }
       const rawTimes = await cart.getBookableTimes({ date })
       const normalized = (rawTimes || []).map((t) => ({
         id: t.id || `${date}:${t.startTime}`,
@@ -450,6 +461,8 @@ export default async function handler(req, res) {
       })),
     }
 
+    recordSuccess()
+
     // Only cache non-empty results — empty may be a transient Boulevard failure
     if (totalOpenings > 0) {
       setCache(topCacheKey, payload)
@@ -458,13 +471,14 @@ export default async function handler(req, res) {
     // If Boulevard returned 0 but we have stale cache with results, serve stale instead of empty
     if (totalOpenings === 0 && topCachedStale?.data?.totalOpenings > 0) {
       console.log(`[availability/today] Boulevard returned 0, serving stale cache with ${topCachedStale.data.totalOpenings} openings`)
-      res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60')
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
       return res.json(topCachedStale.data)
     }
 
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120')
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300')
     return res.json(payload)
   } catch (err) {
+    recordFailure()
     console.error('[availability/today]', err.message)
 
     if (topCachedStale?.data) {

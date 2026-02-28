@@ -243,3 +243,5 @@ export default function ActionsReport() {
     </AdminLayout>
   )
 }
+
+ActionsReport.getLayout = (page) => page

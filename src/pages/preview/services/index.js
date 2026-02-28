@@ -585,13 +585,13 @@ function ServicesPage({ fontKey, fonts }) {
                     VIP Membership
                   </span>
                   <h3 style={{ fontFamily: fonts.display, fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 700, color: '#fff', marginBottom: '0.75rem' }}>
-                    Save 15% on Everything
+                    VIP Membership
                   </h3>
                   <p style={{ fontFamily: fonts.body, fontSize: '1rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, maxWidth: '22rem', marginBottom: '1rem' }}>
-                    Monthly treatments, exclusive perks, priority booking, and member-only pricing starting at $99/month.
+                    Monthly treatments, exclusive perks, and member-only pricing starting at $99/month.
                   </p>
                   <ul className="space-y-2 mb-6">
-                    {['15% off all treatments', 'Priority booking', 'Monthly treatment credit', 'Exclusive member events'].map((perk) => (
+                    {['One service every month (or save for tox)', '10% off other services', '10% off packages', '15% off products', 'Best pricing on tox', 'Additional VIP benefits'].map((perk) => (
                       <li key={perk} className="flex items-center gap-2">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.2)" /><path d="M5 8L7 10L11 6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                         <span style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(255,255,255,0.85)' }}>{perk}</span>

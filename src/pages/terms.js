@@ -1,34 +1,23 @@
 // pages/terms.js
-import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
 
 export default function TermsOfServicePage() {
-  const updated = 'August 26, 2025'
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Terms of Service | RELUXE Med Spa',
-    url: 'https://www.reluxemedspa.com/terms',
-    description:
-      'Terms of Service for RELUXE Med Spa: use of website, disclaimers, pricing accuracy, promotions, liability, and customer responsibilities.',
-  }
+  const updated = 'February 27, 2026'
 
   return (
-    <>
-      <Head>
-        <title>Terms of Service | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Comprehensive Terms of Service for RELUXE Med Spa: website use, disclaimers, pricing accuracy, promotions, liability limits, and customer responsibilities."
-        />
-        <link rel="canonical" href="https://www.reluxemedspa.com/terms" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Terms of Service"
+      description="Comprehensive Terms of Service for RELUXE Med Spa: website use, disclaimers, pricing accuracy, promotions, liability limits, and customer responsibilities."
+      canonical="https://reluxemedspa.com/terms"
+      structuredData={{
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Terms of Service | RELUXE Med Spa',
+        url: 'https://www.reluxemedspa.com/terms',
+        description: 'Terms of Service for RELUXE Med Spa: use of website, disclaimers, pricing accuracy, promotions, liability, and customer responsibilities.',
+      }}
+    >
       <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
           <p className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Legal</p>
@@ -116,39 +105,44 @@ export default function TermsOfServicePage() {
             (via email, SMS, or website notices). You agree that such communications satisfy legal requirements for written communications.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">7. Third-Party Links & Services</h3>
+          <h3 className="mt-8 text-2xl font-bold">7. SMS Consent and Messaging Terms</h3>
+          <p className="mt-2">
+            By providing your mobile phone number to RELUXE Med Spa, you agree to receive text messages for account verification and login authentication purposes. You consent to receive one-time passcodes (OTP) and transactional notifications via SMS when you request them. Message and data rates may apply. You can opt out at any time by replying STOP. For help, reply HELP or contact our support team.
+          </p>
+
+          <h3 className="mt-8 text-2xl font-bold">8. Third-Party Links & Services</h3>
           <p className="mt-2">
             The Site may contain links to third-party sites or integrate with booking, payment, or analytics services.
             RELUXE is not responsible for third-party content, practices, or policies. Use of such services is at your own risk.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">8. Intellectual Property</h3>
+          <h3 className="mt-8 text-2xl font-bold">9. Intellectual Property</h3>
           <p className="mt-2">
             All trademarks, logos, graphics, and content on the Site are the property of RELUXE Med Spa or its licensors.
             You may not copy, reproduce, modify, or distribute materials without prior written consent.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">9. Termination of Access</h3>
+          <h3 className="mt-8 text-2xl font-bold">10. Termination of Access</h3>
           <p className="mt-2">
             RELUXE reserves the right to suspend or terminate your access to the Site at our discretion, without notice,
             for conduct that violates these Terms or is otherwise harmful.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">10. Limitation of Liability</h3>
+          <h3 className="mt-8 text-2xl font-bold">11. Limitation of Liability</h3>
           <p className="mt-2">
             To the fullest extent permitted by law, RELUXE Med Spa, its affiliates, and providers are not liable for any indirect,
             incidental, consequential, special, or punitive damages arising out of your use of the Site or services—even if advised of the possibility.
             Our liability is limited to the amount you paid for the service or product giving rise to the claim.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">11. Indemnification</h3>
+          <h3 className="mt-8 text-2xl font-bold">12. Indemnification</h3>
           <p className="mt-2">
             You agree to defend, indemnify, and hold harmless RELUXE Med Spa, its owners, employees, and affiliates from and against any claims,
             damages, liabilities, costs, or expenses (including attorneys’ fees) arising out of your use of the Site, your breach of these Terms,
             or your violation of any law or rights of a third party.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">12. Governing Law & Dispute Resolution</h3>
+          <h3 className="mt-8 text-2xl font-bold">13. Governing Law & Dispute Resolution</h3>
           <p className="mt-2">
             These Terms are governed by the laws of the State of Indiana, without regard to conflict of law principles.
             Any disputes shall be resolved in the state or federal courts located in Hamilton County, Indiana.
@@ -157,17 +151,17 @@ export default function TermsOfServicePage() {
             At RELUXE’s discretion, disputes may also be subject to binding arbitration under the rules of the American Arbitration Association.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">13. Changes to Terms</h3>
+          <h3 className="mt-8 text-2xl font-bold">14. Changes to Terms</h3>
           <p className="mt-2">
             We may update these Terms periodically. Updates will be effective immediately upon posting.
             Your continued use of the Site constitutes acceptance of the revised Terms.
           </p>
 
-          <h3 className="mt-8 text-2xl font-bold">14. Contact Us</h3>
+          <h3 className="mt-8 text-2xl font-bold">15. Contact Us</h3>
           <address className="not-italic mt-2 space-y-1">
             <div><strong>RELUXE Med Spa</strong></div>
             <div>514 E State Road 32, Westfield, IN 46074</div>
-            <div>10485 N Pennsylvania St, Carmel, IN 46032</div>
+            <div>10485 N Pennsylvania St, Carmel, IN 46280</div>
             <div><a href="mailto:hello@reluxemedspa.com" className="underline">hello@reluxemedspa.com</a></div>
             <div><a href="tel:+13177631142" className="underline">(317) 763-1142</a></div>
           </address>
@@ -177,6 +171,8 @@ export default function TermsOfServicePage() {
           </div>
         </div>
       </main>
-    </>
+    </BetaLayout>
   )
 }
+
+TermsOfServicePage.getLayout = (page) => page

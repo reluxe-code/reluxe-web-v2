@@ -19,14 +19,43 @@ export const LOCATION_IDS = {
   carmel: process.env.BLVD_LOCATION_ID_CARMEL || '3ce18260-2e1f-4beb-8fcf-341bc85a682c',
 }
 
+// Location cache: locations never change, so cache for 1 hour with
+// in-flight deduplication to prevent thundering-herd on cold starts.
+const _locCache = new Map() // key → { data, ts, promise }
+const _LOC_TTL = 3_600_000  // 1 hour
+
 export async function getLocationById(locationId) {
-  const business = await blvd.businesses.get()
-  const locations = await business.getLocations()
   const id = locationId || process.env.BLVD_DEFAULT_LOCATION_ID
-  // SDK returns URN-format IDs like urn:blvd:Location:uuid — match flexibly
-  const loc = locations.find((l) => l.id === id || l.id === `urn:blvd:Location:${id}` || l.id?.includes(id))
-  if (!loc) throw new Error(`Location not found: ${id}`)
-  return loc
+  const now = Date.now()
+  const entry = _locCache.get(id)
+
+  // Fresh cache hit
+  if (entry?.data && (now - entry.ts) < _LOC_TTL) return entry.data
+
+  // Deduplicate in-flight requests
+  if (entry?.promise) return entry.promise
+
+  const promise = (async () => {
+    try {
+      const business = await blvd.businesses.get()
+      const locations = await business.getLocations()
+      // SDK returns URN-format IDs like urn:blvd:Location:uuid — match flexibly
+      const loc = locations.find((l) => l.id === id || l.id === `urn:blvd:Location:${id}` || l.id?.includes(id))
+      if (!loc) throw new Error(`Location not found: ${id}`)
+      _locCache.set(id, { data: loc, ts: Date.now(), promise: null })
+      return loc
+    } catch (err) {
+      // Clear in-flight promise so next caller retries
+      const cur = _locCache.get(id)
+      if (cur) cur.promise = null
+      // Serve stale data rather than crashing
+      if (entry?.data) return entry.data
+      throw err
+    }
+  })()
+
+  _locCache.set(id, { ...(entry || {}), promise })
+  return promise
 }
 
 /**
@@ -47,7 +76,7 @@ export async function createCartWithItem(locationKey, serviceItemId, staffProvid
   let cart = await blvd.carts.create(location)
 
   const categories = await cart.getAvailableCategories()
-  const allItems = categories.flatMap((c) => c.availableItems || [])
+  const allItems = (categories || []).flatMap((c) => c.availableItems || [])
 
   // SDK may return URN or plain IDs — match flexibly
   const item = allItems.find((i) => i.id === serviceItemId || i.id?.includes(serviceItemId) || serviceItemId?.includes(i.id))
@@ -61,6 +90,13 @@ export async function createCartWithItem(locationKey, serviceItemId, staffProvid
       v.staff?.id?.includes(staffProviderId) ||
       staffProviderId?.includes(v.staff?.id)
     )
+    // If a specific provider was requested but isn't a valid variant for this
+    // service+location, bail out. Without this guard the cart would be created
+    // without a staff filter and return availability for ALL providers — which
+    // the caller would incorrectly attribute to the requested provider.
+    if (!staffVariant) {
+      return { cart: null, item, staffVariant: null, staffMismatch: true }
+    }
   }
 
   // Resolve selected options from their IDs
@@ -78,7 +114,7 @@ export async function createCartWithItem(locationKey, serviceItemId, staffProvid
   if (selectedOptions?.length) opts.options = selectedOptions
   cart = await cart.addBookableItem(item, opts)
 
-  return { cart, item, staffVariant }
+  return { cart, item, staffVariant, staffMismatch: false }
 }
 
 // Flexible ID match helper
@@ -104,7 +140,7 @@ export async function createCartWithItems(locationKey, items, staffProviderId) {
 
   // Fetch available items ONCE for all services
   const categories = await cart.getAvailableCategories()
-  const allAvailable = categories.flatMap((c) => c.availableItems || [])
+  const allAvailable = (categories || []).flatMap((c) => c.availableItems || [])
 
   const results = []
 

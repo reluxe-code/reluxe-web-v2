@@ -1,6 +1,10 @@
 // src/pages/api/blvd/cart/[cartId]/send-code.js
 // Sends an SMS verification code via Boulevard's cart ownership flow.
 import { blvd } from '@/server/blvd'
+import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
+
+const limiterByCart = createRateLimiter('send-code-cart', 3, 60_000)  // 3/min per cart
+const limiterByIp = createRateLimiter('send-code-ip', 10, 3600_000)  // 10/hour per IP
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -11,6 +15,9 @@ export default async function handler(req, res) {
   if (!cartId || !phone) {
     return res.status(400).json({ error: 'cartId and phone are required' })
   }
+
+  if (applyRateLimit(req, res, limiterByCart, cartId)) return
+  if (applyRateLimit(req, res, limiterByIp, getClientIp(req))) return
 
   try {
     const cart = await blvd.carts.get(cartId)

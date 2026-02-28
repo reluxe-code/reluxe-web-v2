@@ -2,9 +2,12 @@
 // Skinbetter Quiz → email results to hello@reluxemedspa.com (every completion)
 
 import { getSmtpConfig, escHtml, safeJson } from '@/lib/email'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' })
+
+  if (applyRateLimit(req, res, rateLimiters.tight, getClientIp(req))) return
 
   const {
     eventType,

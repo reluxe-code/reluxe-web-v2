@@ -731,7 +731,7 @@ export default function SpfQuizLandingPage() {
         <meta property="og:description" content="Find your SPF match in under 45 seconds." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="https://reluxemedspa.com/images/landing/spf-quiz-og.jpg" />
+        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
       </Head>
 
       <HeaderTwo />
@@ -754,6 +754,24 @@ export default function SpfQuizLandingPage() {
         </div>
         </section>
 
+
+      {/* Colorescience Anniversary Sale Banner */}
+      <div className="py-4 px-4" style={{ background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
+          <div className="flex-1">
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#CF7155' }}>Limited Time &middot; March 5–22</p>
+            <p className="text-lg font-bold mt-0.5" style={{ color: '#CF7155', fontStyle: 'italic', fontFamily: 'Playfair Display, serif' }}>Anniversary Sale: 20% Off Sitewide + Free Shipping</p>
+          </div>
+          <a
+            href="https://colorescience.com/reluxe-med-spa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold text-white whitespace-nowrap hover:opacity-90 transition"
+            style={{ background: 'linear-gradient(135deg, #CF7155, #B85A40)' }}>
+            Shop the Sale &rarr;
+          </a>
+        </div>
+      </div>
 
       {/* Main */}
       <section className="bg-neutral-50 py-6 sm:py-8">

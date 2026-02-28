@@ -1,69 +1,33 @@
 // pages/privacy-policy.js
-
-import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
 
 export default function PrivacyPolicyPage() {
   const updated = 'August 26, 2025'
   const effective = 'May 4, 2024'
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Privacy Policy | RELUXE Med Spa',
-    url: 'https://www.reluxemedspa.com/privacy-policy',
-    description:
-      'How RELUXE Med Spa collects, uses, and protects your information, including SMS/email marketing, PHI, cookies, and your privacy rights.',
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.reluxemedspa.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Privacy Policy', item: 'https://www.reluxemedspa.com/privacy-policy' },
-      ],
-    },
-    mainEntity: {
-      '@type': 'Organization',
-      name: 'RELUXE Med Spa',
-      url: 'https://www.reluxemedspa.com/',
-      contactPoint: [
-        { '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'hello@reluxemedspa.com' },
-      ],
-      address: [
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '514 E State Road 32',
-          addressLocality: 'Westfield',
-          addressRegion: 'IN',
-          postalCode: '46074',
-          addressCountry: 'US',
-        },
-        {
-          '@type': 'PostalAddress',
-          streetAddress: '10485 N Pennsylvania St',
-          addressLocality: 'Carmel',
-          addressRegion: 'IN',
-          postalCode: '46032',
-          addressCountry: 'US',
-        },
-      ],
-    },
-  }
-
   return (
-    <>
-      <Head>
-        <title>Privacy Policy | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Learn how RELUXE Med Spa collects, uses, and protects your information, including PHI, cookies, SMS/email marketing, and your privacy rights."
-        />
-        <link rel="canonical" href="https://www.reluxemedspa.com/privacy-policy" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      </Head>
-
-      {/* Page Header */}
-      <HeaderTwo />
+    <BetaLayout
+      title="Privacy Policy"
+      description="Learn how RELUXE Med Spa collects, uses, and protects your information, including PHI, cookies, SMS/email marketing, and your privacy rights."
+      canonical="https://reluxemedspa.com/privacy-policy"
+      structuredData={{
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'Privacy Policy | RELUXE Med Spa',
+        url: 'https://www.reluxemedspa.com/privacy-policy',
+        description: 'How RELUXE Med Spa collects, uses, and protects your information.',
+        mainEntity: {
+          '@type': 'Organization',
+          name: 'RELUXE Med Spa',
+          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'hello@reluxemedspa.com' }],
+          address: [
+            { '@type': 'PostalAddress', streetAddress: '514 E State Road 32', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074', addressCountry: 'US' },
+            { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+          ],
+        },
+      }}
+    >
       <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
           <p className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Legal</p>
@@ -248,6 +212,8 @@ export default function PrivacyPolicyPage() {
           </section>
         </div>
       </main>
-    </>
+    </BetaLayout>
   )
 }
+
+PrivacyPolicyPage.getLayout = (page) => page

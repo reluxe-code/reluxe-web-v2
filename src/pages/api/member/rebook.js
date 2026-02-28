@@ -5,6 +5,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem } from '@/server/blvd'
+import { rateLimiters, applyRateLimit } from '@/lib/rateLimit'
 
 export const config = { maxDuration: 30 }
 
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
   )
   const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
   if (authError || !user) return res.status(401).json({ error: 'Invalid or expired session' })
+  if (applyRateLimit(req, res, rateLimiters.tight, user.id)) return
 
   const db = getServiceClient()
 
@@ -61,11 +63,15 @@ export default async function handler(req, res) {
 
   try {
     // 1. Create cart + add service
-    const { cart: cartWithItem, item } = await createCartWithItem(
+    const { cart: cartWithItem, item, staffMismatch } = await createCartWithItem(
       locationKey,
       serviceItemId,
       staff.boulevard_provider_id
     )
+
+    if (!cartWithItem || staffMismatch) {
+      return res.status(409).json({ error: 'This provider does not offer the selected service at this location.' })
+    }
 
     // Verify the resolved service matches expectations
     const actualServiceName = item?.name || null

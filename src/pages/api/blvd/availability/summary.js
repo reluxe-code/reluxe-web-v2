@@ -3,7 +3,9 @@
 // available dates this week and next week per service.
 import { createCartWithItem } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { recordSuccess, recordFailure, getCircuitState } from '@/server/circuitBreaker'
 import { getServiceClient } from '@/lib/supabase'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // High-demand services to check for scarcity signals
 const SCARCITY_SERVICES = ['tox', 'filler', 'facials', 'massage']
@@ -41,6 +43,7 @@ function getWeekBounds() {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { locationKey, staffProviderId } = req.query
 
@@ -49,9 +52,15 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = `summary:v2:${locationKey}:${staffProviderId || 'any'}`
-  const cached = getCached(cacheKey, 300_000) // 5 min TTL
+  const cached = getCached(cacheKey, 600_000) // 10 min TTL
   if (cached && !cached.stale) {
     return res.json(cached.data)
+  }
+
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    if (cached) return res.json(cached.data)
+    return res.status(503).json({ error: 'SERVICE_DEGRADED', degraded: true })
   }
 
   try {
@@ -90,7 +99,8 @@ export default async function handler(req, res) {
         }
         if (!serviceItemId) return
 
-        const { cart } = await createCartWithItem(locationKey, serviceItemId, staffProviderId)
+        const { cart, staffMismatch } = await createCartWithItem(locationKey, serviceItemId, staffProviderId)
+        if (!cart || staffMismatch) return
 
         // Get today's TIME slots (for exact count)
         try {
@@ -124,11 +134,14 @@ export default async function handler(req, res) {
     result.today.total = Object.entries(result.today)
       .reduce((a, [k, v]) => a + (typeof v === 'number' ? v : 0), 0)
 
+    recordSuccess()
     setCache(cacheKey, result)
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
     res.json(result)
   } catch (err) {
+    recordFailure()
     console.error('[blvd/availability/summary]', err.message)
     if (cached) return res.json(cached.data)
-    res.status(200).json({ today: {}, thisWeek: {}, nextWeek: {}, updatedAt: new Date().toISOString() })
+    res.status(503).json({ today: {}, thisWeek: {}, nextWeek: {}, updatedAt: new Date().toISOString(), degraded: true })
   }
 }
