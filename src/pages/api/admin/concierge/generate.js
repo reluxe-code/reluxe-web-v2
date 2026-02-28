@@ -115,33 +115,44 @@ export default async function handler(req, res) {
 
     // 7. For each candidate, build SMS + link and insert into queue
     const smsOpts = creditReminderThreshold > 0 ? { creditReminderThreshold } : {}
+    const unavailableProviders = new Set(engineConfig.unavailable_providers || [])
     const queueInserts = []
 
     for (const candidate of allForSms) {
       const campaign = campaignMap[candidate.campaign_slug]
       if (!campaign) continue
 
-      // Pick A/B variant
-      const { variant, template } = pickVariant(campaign)
+      // Check if provider is unavailable — use generic template + strip provider from link
+      const providerUnavailable = candidate.provider_slug && unavailableProviders.has(candidate.provider_slug)
 
-      // Generate booking link (if provider is known)
+      let variant, template
+      if (providerUnavailable && campaign.unavailable_template) {
+        variant = 'U'
+        template = campaign.unavailable_template
+        candidate.logic_trace = [...(candidate.logic_trace || []), `PROVIDER_UNAVAILABLE: ${candidate.provider_name} (${candidate.provider_slug})`]
+        candidate.provider_slug = null
+        candidate.provider_name = null
+        candidate.provider_staff_id = null
+      } else {
+        ;({ variant, template } = pickVariant(campaign))
+      }
+
+      // Generate booking link (provider cleared above if unavailable → generic link)
       let linkToken = null
       let bookingUrl = null
 
-      if (candidate.provider_slug) {
-        try {
-          const link = await generateConciergeLink(db, {
-            clientId: candidate.client_id,
-            providerSlug: candidate.provider_slug,
-            campaignSlug: candidate.campaign_slug,
-            serviceSlug: candidate.service_slug || null,
-            locationKey: candidate.location_key,
-          })
-          linkToken = link.token
-          bookingUrl = link.url
-        } catch (err) {
-          console.error('[concierge/generate] Link generation failed:', err.message)
-        }
+      try {
+        const link = await generateConciergeLink(db, {
+          clientId: candidate.client_id,
+          providerSlug: candidate.provider_slug,
+          campaignSlug: candidate.campaign_slug,
+          serviceSlug: candidate.service_slug || null,
+          locationKey: candidate.location_key,
+        })
+        linkToken = link.token
+        bookingUrl = link.url
+      } catch (err) {
+        console.error('[concierge/generate] Link generation failed:', err.message)
       }
 
       // Build SMS body

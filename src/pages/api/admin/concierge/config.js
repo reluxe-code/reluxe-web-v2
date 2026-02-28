@@ -8,14 +8,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const [configRes, campaignsRes] = await Promise.all([
+      const [configRes, campaignsRes, staffRes] = await Promise.all([
         db.from('site_config').select('value').eq('key', 'concierge_engine').single(),
         db.from('concierge_campaigns').select('*').order('priority'),
+        db.from('staff').select('slug, name').eq('status', 'published').order('name'),
       ])
 
       return res.json({
         engine: configRes.data?.value || {},
         campaigns: campaignsRes.data || [],
+        staff: staffRes.data || [],
       })
     } catch (err) {
       console.error('[concierge/config] GET error:', err)
@@ -40,15 +42,19 @@ export default async function handler(req, res) {
       // Upsert campaign templates
       if (campaigns && Array.isArray(campaigns)) {
         for (const campaign of campaigns) {
-          const { error } = await db
-            .from('concierge_campaigns')
-            .update({
+          const updateFields = {
               variant_a_template: campaign.variant_a_template,
               variant_b_template: campaign.variant_b_template || null,
               ab_split: campaign.ab_split ?? 0.5,
               active: campaign.active ?? true,
               updated_at: new Date().toISOString(),
-            })
+            }
+          if ('unavailable_template' in campaign) {
+            updateFields.unavailable_template = campaign.unavailable_template || null
+          }
+          const { error } = await db
+            .from('concierge_campaigns')
+            .update(updateFields)
             .eq('campaign_slug', campaign.campaign_slug)
 
           if (error) throw error

@@ -120,6 +120,10 @@ export default function DailyConcierge() {
   // Credit threshold (in dollars, stored in engine config as cents)
   const [creditThreshold, setCreditThreshold] = useState(0)
 
+  // Unavailable providers
+  const [unavailableProviders, setUnavailableProviders] = useState([])
+  const [staffList, setStaffList] = useState([])
+
   // Projections
   const [projectionOffset, setProjectionOffset] = useState(0)
   const [projection, setProjection] = useState(null)
@@ -144,6 +148,8 @@ export default function DailyConcierge() {
       const data = await res.json()
       setEngineEnabled(!!data.engine?.enabled)
       setCreditThreshold(Math.round(Number(data.engine?.credit_reminder_threshold || 0) / 100))
+      setUnavailableProviders(data.engine?.unavailable_providers || [])
+      setStaffList(data.staff || [])
       if (data.campaigns?.length) {
         setCampaigns(data.campaigns)
         const drafts = {}
@@ -151,6 +157,7 @@ export default function DailyConcierge() {
           drafts[c.campaign_slug] = {
             variant_a_template: c.variant_a_template || '',
             variant_b_template: c.variant_b_template || '',
+            unavailable_template: c.unavailable_template || '',
             ab_split: c.ab_split ?? 0.5,
             active: c.active ?? true,
           }
@@ -411,14 +418,16 @@ export default function DailyConcierge() {
 
       const campaignUpdates = Object.entries(templateDrafts).map(([slug, d]) => ({
         campaign_slug: slug, variant_a_template: d.variant_a_template,
-        variant_b_template: d.variant_b_template || null, ab_split: d.ab_split, active: d.active,
+        variant_b_template: d.variant_b_template || null,
+        unavailable_template: d.unavailable_template || null,
+        ab_split: d.ab_split, active: d.active,
       }))
       const res = await fetch('/api/admin/concierge/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           campaigns: campaignUpdates,
-          engine: { ...(cfgData.engine || {}), credit_reminder_threshold: creditThreshold * 100 },
+          engine: { ...(cfgData.engine || {}), credit_reminder_threshold: creditThreshold * 100, unavailable_providers: unavailableProviders },
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error)
@@ -429,7 +438,7 @@ export default function DailyConcierge() {
     } finally {
       setTemplateSaving(false)
     }
-  }, [templateDrafts, creditThreshold])
+  }, [templateDrafts, creditThreshold, unavailableProviders])
 
   // ── Projection Actions ────────────────────────────────────
 
@@ -714,6 +723,34 @@ export default function DailyConcierge() {
             </div>
           </div>
 
+          {/* Unavailable providers */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <p className="text-sm font-semibold text-amber-800 mb-1">Unavailable Providers</p>
+            <p className="text-xs text-amber-600 mb-3">
+              Patients whose last provider is checked below will receive a generic message (no provider name) and a booking link without provider pre-selection.
+            </p>
+            {staffList.length === 0 ? (
+              <p className="text-xs text-amber-500 italic">Loading providers...</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {staffList.map((s) => (
+                  <label key={s.slug} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm cursor-pointer transition-colors ${unavailableProviders.includes(s.slug) ? 'bg-amber-200 border-amber-400 text-amber-900 font-medium' : 'bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50'}`}>
+                    <input
+                      type="checkbox"
+                      checked={unavailableProviders.includes(s.slug)}
+                      onChange={(e) => {
+                        setUnavailableProviders((prev) => e.target.checked ? [...prev, s.slug] : prev.filter((p) => p !== s.slug))
+                        setTemplateDirty(true)
+                      }}
+                      className="rounded text-amber-600"
+                    />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-6">
             {CAMPAIGNS.map((slug) => {
               const draft = templateDrafts[slug]
@@ -749,34 +786,50 @@ export default function DailyConcierge() {
                       <span className="text-xs text-neutral-600 font-mono">A: {Math.round(draft.ab_split * 100)}% / B: {Math.round((1 - draft.ab_split) * 100)}%</span>
                     </div>
                   )}
-                  {/* Preview */}
+                  {/* Unavailable provider template */}
+                  {unavailableProviders.length > 0 && (
+                    <div className="mt-4">
+                      <label className="block text-xs font-semibold text-amber-700 mb-1.5">Provider Unavailable Template</label>
+                      <textarea value={draft.unavailable_template} onChange={(e) => updateDraft(slug, 'unavailable_template', e.target.value)} rows={3} className="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm bg-amber-50 resize-y focus:ring-2 focus:ring-amber-200 focus:border-amber-400 outline-none" placeholder="Generic message when provider is unavailable (no {{provider_name}})..." />
+                      <p className="text-[11px] text-amber-500 mt-1">{draft.unavailable_template ? `${draft.unavailable_template.length} chars` : 'No unavailable template — will fall back to Variant A'}</p>
+                    </div>
+                  )}
+                  {/* Previews */}
                   {(() => {
-                    const previewBody = ((draft.variant_a_template || 'No template set')
-                      .replace(/\{\{first_name\}\}/g, 'Sarah')
-                      .replace(/\{\{provider_name\}\}/g, 'Dr. Smith')
-                      .replace(/\{\{service_name\}\}/g, 'HydraFacial')
-                      .replace(/\{\{days_overdue\}\}/g, '15')
-                      .replace(/\{\{voucher_service\}\}/g, 'Monthly Facial')
-                      .replace(/\{\{location_name\}\}/g, 'Westfield')
-                      .replace(/\{\{booking_link\}\}/g, 'reluxe.com/c/abc123')
-                      .replace(/\{\{credit_reminder\}\}/g, creditThreshold > 0 ? 'Remember, you have $150 in account credit available! ' : '')
-                      .replace(/\n{3,}/g, '\n\n').trim()) + SMS_FOOTER
-                    const est = estimateSegments(previewBody)
-                    return (
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <p className="text-xs font-semibold text-neutral-600">Preview (Variant A)</p>
-                          <span className={`text-xs font-mono ${est.segments <= 2 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {est.length} chars / {est.segments} SMS segment{est.segments !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                        <div className="bg-neutral-900 text-white rounded-2xl p-4 text-sm leading-relaxed max-w-md">
-                          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-neutral-700">
-                            <div className="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-[10px] font-bold">R</div>
-                            <span className="text-xs text-neutral-400">RELUXE Med Spa</span>
+                    const renderPreview = (label, tpl) => {
+                      const body = ((tpl || 'No template set')
+                        .replace(/\{\{first_name\}\}/g, 'Sarah')
+                        .replace(/\{\{provider_name\}\}/g, 'Dr. Smith')
+                        .replace(/\{\{service_name\}\}/g, 'HydraFacial')
+                        .replace(/\{\{days_overdue\}\}/g, '15')
+                        .replace(/\{\{voucher_service\}\}/g, 'Monthly Facial')
+                        .replace(/\{\{location_name\}\}/g, 'Westfield')
+                        .replace(/\{\{booking_link\}\}/g, 'reluxe.com/c/abc123')
+                        .replace(/\{\{credit_reminder\}\}/g, creditThreshold > 0 ? 'Remember, you have $150 in account credit available! ' : '')
+                        .replace(/\n{3,}/g, '\n\n').trim()) + SMS_FOOTER
+                      const est = estimateSegments(body)
+                      return (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className="text-xs font-semibold text-neutral-600">{label}</p>
+                            <span className={`text-xs font-mono ${est.segments <= 2 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {est.length} chars / {est.segments} SMS segment{est.segments !== 1 ? 's' : ''}
+                            </span>
                           </div>
-                          <p className="whitespace-pre-wrap text-xs">{previewBody}</p>
+                          <div className="bg-neutral-900 text-white rounded-2xl p-4 text-sm leading-relaxed max-w-md">
+                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-neutral-700">
+                              <div className="w-7 h-7 bg-violet-600 rounded-full flex items-center justify-center text-[10px] font-bold">R</div>
+                              <span className="text-xs text-neutral-400">RELUXE Med Spa</span>
+                            </div>
+                            <p className="whitespace-pre-wrap text-xs">{body}</p>
+                          </div>
                         </div>
+                      )
+                    }
+                    return (
+                      <div className={`mt-4 grid gap-4 ${unavailableProviders.length > 0 && draft.unavailable_template ? 'grid-cols-1 lg:grid-cols-2' : ''}`}>
+                        {renderPreview('Preview (Variant A)', draft.variant_a_template)}
+                        {unavailableProviders.length > 0 && draft.unavailable_template && renderPreview('Preview (Unavailable)', draft.unavailable_template)}
                       </div>
                     )
                   })()}
