@@ -16,6 +16,6 @@ locations:
     address: '514 E State Road 32, Westfield, IN 46074'
     directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=514%20E%20State%20Road%2032%2C%20Westfield%2C%20IN%2046074'
   - name: 'RELUXE Med Spa — Carmel'
-    address: '10485 N Pennsylvania Street, Carmel, IN 46280'
+    address: '10485 N Pennsylvania St, Suite 150reet, Carmel, IN 46280'
     directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=10485%20N%20Pennsylvania%20Street%2C%20Carmel%2C%20IN%2046280'
 ---

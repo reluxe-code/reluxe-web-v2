@@ -27,7 +27,7 @@ import { cachedFetch } from '@/lib/apiCache'
 
 const LOCATION_INFO = {
   westfield: { name: 'RELUXE Westfield', label: 'Westfield', address: '514 E State Road 32' },
-  carmel: { name: 'RELUXE Carmel', label: 'Carmel', address: '10485 N Pennsylvania St' },
+  carmel: { name: 'RELUXE Carmel', label: 'Carmel', address: '10485 N Pennsylvania St, Suite 150' },
 }
 
 // ─── Reducer ───

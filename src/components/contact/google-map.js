@@ -55,7 +55,7 @@ const LOCATIONS = [
   },
   {
     name: 'RELUXE Med Spa Carmel',
-    address: '10485 N Pennsylvania Street, Carmel, IN 46280',
+    address: '10485 N Pennsylvania St, Suite 150, Carmel, IN 46280',
     lat: 39.9409,
     lng: -86.1539,
     logo: '/images/map/reluxe-pin.svg',

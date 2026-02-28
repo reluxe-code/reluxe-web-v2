@@ -1,6 +1,7 @@
 // pages/events/beauty-bash.js
 import Head from 'next/head'
 import HeaderTwo from '../../components/header/header-2'
+import EventInquiryForm from '@/components/events/EventInquiryForm'
 
 const BOOK_URL = '/book/'
 
@@ -83,6 +84,17 @@ export default function BeautyBashPage() {
                 <img src="/images/events/beauty-bash/hero.jpg" alt="Beauty Bash at RELUXE" className="h-full w-full object-cover" />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Event Inquiry */}
+      <section className="bg-gradient-to-b from-black to-neutral-950 py-16">
+        <div className="mx-auto max-w-2xl px-4 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Interested in Hosting an Event?</h2>
+          <p className="mt-3 text-neutral-400">Tell us about your event and we&apos;ll help you plan something amazing.</p>
+          <div className="mt-8">
+            <EventInquiryForm defaultEventType="Other" />
           </div>
         </div>
       </section>

@@ -23,7 +23,7 @@ export default function PackageVoucherPolicyPage() {
           contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer service', telephone: '+1-317-763-1142', email: 'hello@reluxemedspa.com' }],
           address: [
             { '@type': 'PostalAddress', streetAddress: '514 E State Road 32', addressLocality: 'Westfield', addressRegion: 'IN', postalCode: '46074', addressCountry: 'US' },
-            { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+            { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St, Suite 150', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
           ],
         },
       }}
@@ -214,7 +214,7 @@ export default function PackageVoucherPolicyPage() {
                   <strong>RELUXE Med Spa</strong>
                 </div>
                 <div>514 E State Road 32, Westfield, IN 46074</div>
-                <div>10485 N Pennsylvania St, Carmel, IN 46280</div>
+                <div>10485 N Pennsylvania St, Suite 150, Carmel, IN 46280</div>
                 <div>
                   <a href="mailto:hello@reluxemedspa.com" className="underline">
                     hello@reluxemedspa.com

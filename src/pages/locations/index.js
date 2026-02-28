@@ -345,7 +345,7 @@ export default function BetaLocationsIndex({ locationData, staffByLocation, test
         url: 'https://reluxemedspa.com/locations/carmel',
         telephone: '+1-317-763-1142',
         priceRange: '$$',
-        address: { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+        address: { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St, Suite 150', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
         geo: { '@type': 'GeoCoordinates', latitude: 39.94054, longitude: -86.16063 },
         areaServed: ['Carmel IN', 'Fishers IN', 'Westfield IN', 'North Indianapolis IN'],
       },

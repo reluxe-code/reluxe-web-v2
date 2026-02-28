@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import HeaderTwo from '../../components/header/header-2'
+import EventInquiryForm from '@/components/events/EventInquiryForm'
 
 const BOOK_URL = '/book/'
 
@@ -33,6 +34,17 @@ export default function RedCarpetGalasPage() {
           <div className="mt-6 flex gap-3">
             <a href={BOOK_URL} className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-black font-semibold">Book Gala Glow</a>
             <a href="#timing" className="px-6 py-3 rounded-2xl ring-1 ring-white/20">See Timing Guide</a>
+          </div>
+        </div>
+      </section>
+
+      {/* Event Inquiry */}
+      <section className="bg-gradient-to-b from-black to-neutral-950 py-16">
+        <div className="mx-auto max-w-2xl px-4 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Interested in Gala Prep?</h2>
+          <p className="mt-3 text-neutral-400">Tell us about your event and we&apos;ll create a custom plan.</p>
+          <div className="mt-8">
+            <EventInquiryForm defaultEventType="Red Carpet / Gala" />
           </div>
         </div>
       </section>

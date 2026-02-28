@@ -22,7 +22,6 @@ const navLinks = [
   ]},
   { label: 'Inspiration', href: '/inspiration', children: [
     { label: 'Inspiration', href: '/inspiration' },
-    { label: 'Blog', href: '/blog' },
     { label: 'Events', href: '/events' },
     { label: 'Results', href: '/results' },
   ]},

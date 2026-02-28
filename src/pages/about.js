@@ -204,7 +204,7 @@ export default function BetaAbout({ staff }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   { name: 'Westfield', tagline: 'The Original', address: '514 E State Road 32, Westfield, IN 46074', gradient: 'linear-gradient(135deg, #7C3AED, #5B21B6, #1E1B4B)' },
-                  { name: 'Carmel', tagline: 'The Expansion', address: '10485 N Pennsylvania St, Carmel, IN 46280', gradient: 'linear-gradient(135deg, #C026D3, #9333EA, #5B21B6)' },
+                  { name: 'Carmel', tagline: 'The Expansion', address: '10485 N Pennsylvania St, Suite 150, Carmel, IN 46280', gradient: 'linear-gradient(135deg, #C026D3, #9333EA, #5B21B6)' },
                 ].map((loc, i) => (
                   <motion.a key={loc.name} href={`/locations/${loc.name.toLowerCase()}`} className="group relative rounded-2xl overflow-hidden block" style={{ minHeight: 260, textDecoration: 'none' }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
                     <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105" style={{ background: loc.gradient }} />

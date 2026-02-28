@@ -8,7 +8,7 @@ const OTHER = {
     key: 'carmel',
     name: 'RELUXE Med Spa Carmel',
     badge: 'Newest Location',
-    address: '10485 N Pennsylvania St, Carmel, IN 46280',
+    address: '10485 N Pennsylvania St, Suite 150, Carmel, IN 46280',
     phone: '(317) 763-1142',
     note: 'Aesthetics + Wellness with House of Health',
     href: '/locations/carmel',

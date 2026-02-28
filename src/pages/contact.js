@@ -16,7 +16,7 @@ const locations = LOCATIONS.map((loc) => ({
   key: loc.key,
   name: loc.city,
   address: loc.address.split(',')[0],
-  city: `${loc.city}, ${loc.state} ${loc.address.match(/\d{5}$/)?.[0] || ''}`.trim(),
+  city: `${loc.city}, ${loc.state} ${loc.zip || ''}`.trim(),
   phone: loc.phone,
   hours: loc.hoursNote || 'Mon\u2013Fri 9am\u20135pm',
   mapUrl: loc.mapUrl,

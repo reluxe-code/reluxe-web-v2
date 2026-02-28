@@ -89,6 +89,8 @@ module.exports = {
     '/beta', '/beta/**',
     '/preview', '/preview/**',
     '/shop', '/shop/**', '/shop',
+    // Blog (removed from site)
+    '/blog', '/blog/**',
     // Utility
     '/sitemap',
   ],

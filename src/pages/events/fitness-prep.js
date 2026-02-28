@@ -2,6 +2,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import HeaderTwo from '../../components/header/header-2'
+import EventInquiryForm from '@/components/events/EventInquiryForm'
 
 const BOOK_URL = '/book/'
 
@@ -56,6 +57,17 @@ export default function FitnessPrepPage() {
           {/* Local SEO */}
           <div className="mt-6 text-sm text-neutral-400">
             Serving <strong>Carmel</strong>, <strong>Westfield</strong>, Zionsville, and North Indianapolis.
+          </div>
+        </div>
+      </section>
+
+      {/* Event Inquiry */}
+      <section className="bg-gradient-to-b from-black to-neutral-950 py-16">
+        <div className="mx-auto max-w-2xl px-4 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Interested in Fitness Prep?</h2>
+          <p className="mt-3 text-neutral-400">Tell us about your competition and we&apos;ll create a custom plan.</p>
+          <div className="mt-8">
+            <EventInquiryForm defaultEventType="Fitness / Competition" />
           </div>
         </div>
       </section>

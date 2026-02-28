@@ -161,7 +161,7 @@ export default function TermsOfServicePage() {
           <address className="not-italic mt-2 space-y-1">
             <div><strong>RELUXE Med Spa</strong></div>
             <div>514 E State Road 32, Westfield, IN 46074</div>
-            <div>10485 N Pennsylvania St, Carmel, IN 46280</div>
+            <div>10485 N Pennsylvania St, Suite 150, Carmel, IN 46280</div>
             <div><a href="mailto:hello@reluxemedspa.com" className="underline">hello@reluxemedspa.com</a></div>
             <div><a href="tel:+13177631142" className="underline">(317) 763-1142</a></div>
           </address>

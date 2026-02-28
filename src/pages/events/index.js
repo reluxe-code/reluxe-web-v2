@@ -2,6 +2,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import HeaderTwo from '../../components/header/header-2'
+import EventInquiryForm from '@/components/events/EventInquiryForm'
 
 export default function EventsHubPage() {
   const updated = 'August 26, 2025'
@@ -107,15 +108,40 @@ export default function EventsHubPage() {
 
       <HeaderTwo />
 
-      {/* Header */}
-      <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 text-center">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">Event & Wedding Prep</h1>
-          <p className="mt-3 text-neutral-700 max-w-3xl mx-auto">
-            Look your best for Carmel & Westfield’s most memorable events—weddings, prom, Zoobilation, galas, holidays, graduations, and more.
-          </p>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
+        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.25),transparent_60%)]" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-white">
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-7">
+              <p className="text-xs tracking-widest uppercase text-neutral-400">
+                RELUXE &bull; Events
+              </p>
+              <h1 className="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight">
+                Event &amp; Special Occasion Prep
+              </h1>
+              <p className="mt-4 text-neutral-300 text-lg leading-relaxed max-w-xl">
+                Look your best for Carmel &amp; Westfield&apos;s most memorable events&mdash;weddings, prom, galas, holidays, graduations, and more.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2 text-xs text-neutral-400">
+                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Weddings</span>
+                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Prom</span>
+                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Galas</span>
+                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Holidays</span>
+                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Graduations</span>
+                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Photoshoots</span>
+              </div>
+              <div className="mt-6 text-sm text-neutral-400">
+                Serving <strong className="text-neutral-300">Carmel</strong>, <strong className="text-neutral-300">Westfield</strong>, Zionsville, and North Indianapolis.
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <EventInquiryForm />
+            </div>
+          </div>
         </div>
-      </header>
+      </section>
 
       {/* Grid */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">

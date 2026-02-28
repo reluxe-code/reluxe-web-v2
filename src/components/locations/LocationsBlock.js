@@ -21,8 +21,8 @@ const locations = [
   },
   {
     name: 'Carmel · House of Health',
-    addressLines: ['10485 N Pennsylvania St', 'Carmel, IN 46280'], // keep ZIP consistent site-wide
-    streetAddress: '10485 N Pennsylvania St',
+    addressLines: ['10485 N Pennsylvania St, Suite 150', 'Carmel, IN 46280'], // keep ZIP consistent site-wide
+    streetAddress: '10485 N Pennsylvania St, Suite 150',
     city: 'Carmel',
     region: 'IN',
     postalCode: '46280',

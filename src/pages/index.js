@@ -42,7 +42,7 @@ const cutoutStyles = [
 
 const locations = [
   { name: 'Westfield', tagline: 'The Original', vibe: 'Where it all started. Full treatment menu, salt room, infrared sauna, and the team that built RELUXE from the ground up.', address: '514 E State Road 32', city: 'Westfield, IN 46074', phone: '(317) 763-1142', hours: 'Mon\u2013Wed, Fri 9am\u20135pm \u00b7 Thu 9am\u20137pm \u00b7 Sat 9am\u20133pm', amenities: ['Salt Room', 'Infrared Sauna', 'Full Treatment Menu', 'Free Parking'], gradient: 'linear-gradient(135deg, #7C3AED, #5B21B6, #1E1B4B)' },
-  { name: 'Carmel', tagline: 'The Expansion', vibe: 'Same obsessive standards. New energy. Partnered with House of Health for a next-level wellness experience.', address: '10485 N Pennsylvania St', city: 'Carmel, IN 46280', phone: '(317) 763-1142', hours: 'Mon\u2013Fri 9am\u20135pm', amenities: ['House of Health Partnership', 'IV Therapy', 'Full Treatment Menu', 'Free Parking'], gradient: 'linear-gradient(135deg, #C026D3, #9333EA, #5B21B6)' },
+  { name: 'Carmel', tagline: 'The Expansion', vibe: 'Same obsessive standards. New energy. Partnered with House of Health for a next-level wellness experience.', address: '10485 N Pennsylvania St, Suite 150', city: 'Carmel, IN 46280', phone: '(317) 763-1142', hours: 'Mon\u2013Fri 9am\u20135pm', amenities: ['House of Health Partnership', 'IV Therapy', 'Full Treatment Menu', 'Free Parking'], gradient: 'linear-gradient(135deg, #C026D3, #9333EA, #5B21B6)' },
 ];
 
 const trustBadges = [
@@ -336,7 +336,7 @@ const homepageStructuredData = {
       telephone: '+1-317-763-1142',
       priceRange: '$$',
       parentOrganization: { '@id': 'https://reluxemedspa.com#org' },
-      address: { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
+      address: { '@type': 'PostalAddress', streetAddress: '10485 N Pennsylvania St, Suite 150', addressLocality: 'Carmel', addressRegion: 'IN', postalCode: '46280', addressCountry: 'US' },
       geo: { '@type': 'GeoCoordinates', latitude: 39.94054, longitude: -86.16063 },
       areaServed: ['Carmel IN', 'Zionsville IN', 'Westfield IN', 'North Indianapolis IN', 'Fishers IN'],
       hasOfferCatalog: {

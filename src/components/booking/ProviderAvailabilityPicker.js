@@ -26,7 +26,7 @@ const SHOW_MORE_THRESHOLD = 4;
 
 const LOCATION_INFO = {
   westfield: { name: 'RELUXE Westfield', address: '514 E State Road 32, Westfield, IN', phone: '317.763.1142' },
-  carmel: { name: 'RELUXE Carmel', address: '10485 N Pennsylvania St, Carmel, IN', phone: '317.763.1142' },
+  carmel: { name: 'RELUXE Carmel', address: '10485 N Pennsylvania St, Suite 150, Carmel, IN', phone: '317.763.1142' },
 };
 
 function normalizeServiceId(value) {

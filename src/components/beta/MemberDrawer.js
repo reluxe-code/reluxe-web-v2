@@ -562,7 +562,7 @@ function AccountSection({ member, stats, accountCredit, membership, fonts, onNav
 // ─── Section: Locations ───
 const LOCATION_META = {
   westfield: { city: 'Westfield', address: '514 E State Road 32, Westfield, IN 46074', phone: '(317) 763-1142', mapUrl: 'https://maps.google.com/?q=RELUXE+Med+Spa+Westfield' },
-  carmel: { city: 'Carmel', address: '10485 N Pennsylvania St, Carmel, IN 46280', phone: '(317) 763-1142', mapUrl: 'https://maps.google.com/?q=RELUXE+Med+Spa+Carmel' },
+  carmel: { city: 'Carmel', address: '10485 N Pennsylvania St, Suite 150, Carmel, IN 46280', phone: '(317) 763-1142', mapUrl: 'https://maps.google.com/?q=RELUXE+Med+Spa+Carmel' },
 }
 
 function LocationsSection({ locationSplit, member, fonts }) {

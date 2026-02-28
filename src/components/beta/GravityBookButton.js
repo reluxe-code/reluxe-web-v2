@@ -88,9 +88,9 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
             animate={{ opacity: 1, width: 'auto' }}
             className="flex items-center gap-1 rounded-full"
             style={{
-              background: 'rgba(250,248,245,0.1)',
-              border: '1px solid rgba(250,248,245,0.15)',
-              color: 'rgba(250,248,245,0.8)',
+              background: isNav ? 'rgba(250,248,245,0.1)' : `${colors.violet}10`,
+              border: isNav ? '1px solid rgba(250,248,245,0.15)' : `1px solid ${colors.violet}25`,
+              color: isNav ? 'rgba(250,248,245,0.8)' : colors.violet,
               padding: `${py} 0.75rem`,
               fontSize: isNav ? '0.6875rem' : '0.8125rem',
               fontFamily: fonts.body,
@@ -101,8 +101,8 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
               whiteSpace: 'nowrap',
             }}
             whileHover={{
-              background: 'rgba(250,248,245,0.18)',
-              color: '#fff',
+              background: isNav ? 'rgba(250,248,245,0.18)' : `${colors.violet}18`,
+              color: isNav ? '#fff' : colors.violet,
             }}
             onClick={handleBadgeClick}
             title="Switch location"
@@ -295,7 +295,7 @@ export default function GravityBookButton({ fontKey = 'bold', size = 'nav' }) {
                         <span style={{ fontSize: '0.6875rem', color: colors.fuchsia, marginLeft: 6, fontFamily: fonts.body, fontWeight: 500 }}>Current</span>
                       )}
                     </p>
-                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>10485 N Pennsylvania St</p>
+                    <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>10485 N Pennsylvania St, Suite 150</p>
                   </div>
                   <svg className="ml-auto flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(250,248,245,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6" />

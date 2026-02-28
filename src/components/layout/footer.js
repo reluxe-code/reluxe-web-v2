@@ -166,7 +166,6 @@ function Footer() {
                     <li><Link href="/about">About RELUXE</Link></li>
                     <li><Link href="/team">Our Providers</Link></li>
                     <li><Link href="/reluxe-way">The RELUXE Way</Link></li>
-                    <li><Link href="/blog">Blog</Link></li>
                     <li><Link href="/skincare">Skincare Lines</Link></li>
                     <li><Link href="/events">Events</Link></li>
                   </ul>

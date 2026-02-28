@@ -245,7 +245,7 @@ function QuickLinks() {
     { href: '/events', label: 'Wedding & Event Prep' },
     { href: '/men', label: 'For Men' },
     { href: '/locations', label: 'Locations' },
-    { href: '/blog', label: 'Beauty Notes' },
+    { href: '/inspiration', label: 'Inspiration' },
   ]
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">

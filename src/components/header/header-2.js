@@ -422,7 +422,6 @@ function HeaderTwo({ sticky = true }) {
               const resultsResources = [
                 { href: '/results', label: 'Before & After' },
                 { href: '/reviews', label: 'Reviews' },
-                { href: '/blog', label: 'Blog' },
                 { href: '/faqs', label: 'FAQs' },
                 { href: '/pricing', label: 'Pricing' },
               ];

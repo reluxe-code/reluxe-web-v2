@@ -22,7 +22,7 @@ const LOCATIONS = [
     name: 'RELUXE Med Spa — Carmel',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: '10485 N Pennsylvania St',
+      streetAddress: '10485 N Pennsylvania St, Suite 150',
       addressLocality: 'Carmel',
       addressRegion: 'IN',
       postalCode: '46280',

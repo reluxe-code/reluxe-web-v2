@@ -28,7 +28,7 @@ const TILE = {
 
 const COORDS = {
   westfield: { lat: 40.0423, lng: -86.1279, name: 'RELUXE Med Spa Westfield', address: '514 E State Road 32, Westfield, IN 46074' },
-  carmel:    { lat: 39.9409, lng: -86.1539, name: 'RELUXE Med Spa Carmel',    address: '10485 N Pennsylvania St, Carmel, IN 46280' },
+  carmel:    { lat: 39.9409, lng: -86.1539, name: 'RELUXE Med Spa Carmel',    address: '10485 N Pennsylvania St, Suite 150, Carmel, IN 46280' },
 }
 
 export default function LocationMap({ locationSlug = 'westfield', pinSize = 56 }) {
