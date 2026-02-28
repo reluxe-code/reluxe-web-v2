@@ -11,34 +11,59 @@ const NAV_ITEMS = [
     href: '/admin/intelligence',
     children: [
       { href: '/admin/intelligence', label: 'Overview' },
+      { href: '/admin/intelligence/daily-snapshot', label: 'Daily Snapshot' },
       { href: '/admin/intelligence/tox', label: 'Tox Engine' },
       { href: '/admin/intelligence/providers', label: 'Providers' },
       { href: '/admin/intelligence/patients', label: 'Patients' },
       { href: '/admin/intelligence/customers', label: 'Customers' },
-      { href: '/admin/intelligence/rebooking', label: 'Rebooking' },
-      { href: '/admin/intelligence/actions', label: 'Actions' },
-      { href: '/admin/intelligence/products', label: 'Products' },
-      { href: '/admin/intelligence/daily-snapshot', label: 'Daily Snapshot' },
-      { href: '/admin/intelligence/form-submissions', label: 'Form Submissions' },
-      { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
       { href: '/admin/intelligence/bookings', label: 'Bookings' },
+      { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
+      { href: '/admin/intelligence/rebooking', label: 'Rebooking' },
+      { href: '/admin/intelligence/products', label: 'Products' },
       { href: '/admin/intelligence/referrals', label: 'Referrals' },
       { href: '/admin/intelligence/leads', label: 'Leads' },
+    ],
+  },
+  {
+    label: 'Marketing',
+    href: '/admin/marketing',
+    children: [
+      { href: '/admin/intelligence/concierge', label: 'Daily Concierge' },
+    ],
+  },
+  {
+    label: 'Content',
+    href: '/admin/content',
+    children: [
+      { href: '/admin/blog', label: 'Blog Posts' },
+      { href: '/admin/deals', label: 'Deals' },
+      { href: '/admin/treatment-bundles', label: 'Treatment Bundles' },
+      { href: '/admin/testimonials', label: 'Testimonials' },
+      { href: '/admin/locations', label: 'Locations' },
+    ],
+  },
+  {
+    label: 'Programs',
+    href: '/admin/programs',
+    children: [
+      { href: '/admin/memberships', label: 'Memberships & Credits' },
+      { href: '/admin/velocity', label: 'Velocity Rewards' },
+      { href: '/admin/gift-cards', label: 'Gift Cards' },
+    ],
+  },
+  {
+    label: 'Operations',
+    href: '/admin/operations',
+    children: [
+      { href: '/admin/staff', label: 'Staff' },
+      { href: '/admin/products', label: 'Products' },
+      { href: '/admin/provider-routing', label: 'Provider Routing' },
+      { href: '/admin/boulevard-sync', label: 'Boulevard Sync' },
+      { href: '/admin/intelligence/form-submissions', label: 'Form Submissions' },
+      { href: '/admin/intelligence/actions', label: 'Actions' },
       { href: '/admin/intelligence/audit', label: 'Site Audit' },
     ],
   },
-  { href: '/admin/blog', label: 'Blog Posts' },
-  { href: '/admin/deals', label: 'Deals' },
-  { href: '/admin/products', label: 'Products' },
-  { href: '/admin/staff', label: 'Staff' },
-  { href: '/admin/treatment-bundles', label: 'Treatment Bundles' },
-  { href: '/admin/provider-routing', label: 'Provider Routing' },
-  { href: '/admin/testimonials', label: 'Testimonials' },
-  { href: '/admin/locations', label: 'Locations' },
-  { href: '/admin/memberships', label: 'Memberships & Credits' },
-  { href: '/admin/velocity', label: 'Velocity Rewards' },
-  { href: '/admin/gift-cards', label: 'Gift Cards' },
-  { href: '/admin/boulevard-sync', label: 'Boulevard Sync' },
 ]
 
 export default function AdminLayout({ children }) {
@@ -91,7 +116,8 @@ export default function AdminLayout({ children }) {
         <nav className="flex-1 p-4 space-y-1">
           {NAV_ITEMS.map((item) => {
             if (item.children) {
-              const isExpanded = router.pathname.startsWith(item.href)
+              const childPaths = item.children.map((c) => c.href)
+              const isExpanded = router.pathname.startsWith(item.href) || childPaths.some((p) => router.pathname === p)
               return (
                 <div key={item.label}>
                   <Link

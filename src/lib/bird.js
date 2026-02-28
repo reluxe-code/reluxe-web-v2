@@ -18,6 +18,10 @@ export async function sendSMS(to, text) {
     return { ok: false, error: 'SMS not configured' }
   }
 
+  // Normalize to E.164 format
+  const digits = to.replace(/\D/g, '')
+  const phone = digits.length === 10 ? `+1${digits}` : digits.length === 11 && digits.startsWith('1') ? `+${digits}` : to.startsWith('+') ? to : `+${digits}`
+
   try {
     const res = await fetch(
       `https://api.bird.com/workspaces/${WORKSPACE_ID}/channels/${CHANNEL_ID}/messages`,
@@ -29,7 +33,7 @@ export async function sendSMS(to, text) {
         },
         body: JSON.stringify({
           receiver: {
-            contacts: [{ identifierValue: to }],
+            contacts: [{ identifierValue: phone }],
           },
           body: {
             type: 'text',

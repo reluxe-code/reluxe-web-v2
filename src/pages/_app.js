@@ -11,6 +11,7 @@ import { useGAUX } from '@/hooks/useGAUX'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { captureTrackingToken } from '@/lib/trackingToken'
+import { captureConciergeToken } from '@/lib/concierge/conciergeToken'
 import { useAuditTracker } from '@/hooks/useAuditTracker'
 
 // Extracted script components
@@ -105,8 +106,8 @@ function MyApp({ Component, pageProps }) {
     }
   }, [router.events])
 
-  // Capture Bird tracking token from ?t= on any page
-  useEffect(() => { captureTrackingToken() }, [])
+  // Capture Bird tracking token from ?t= and concierge token from ?cg_token= on any page
+  useEffect(() => { captureTrackingToken(); captureConciergeToken() }, [])
 
   // Per-page layout: if a page exports getLayout, use it (e.g. preview pages bypass the default Layout)
   const getLayout = Component.getLayout

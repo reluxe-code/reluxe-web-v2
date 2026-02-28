@@ -4,6 +4,7 @@
 // and persists sessions + events to Supabase.
 import { useRef, useEffect, useCallback } from 'react'
 import { getTrackingToken } from '@/lib/trackingToken'
+import { getConciergeToken } from '@/lib/concierge/conciergeToken'
 
 // Step ordinal maps for funnel position
 const MODAL_STEPS = ['HOME', 'CATEGORIES', 'CATEGORY_ITEMS', 'BUNDLE_ITEMS', 'PROVIDER_SERVICES', 'OPTIONS', 'DATE_TIME', 'CHECKOUT', 'BOOKED']
@@ -192,6 +193,7 @@ export function useBookingAnalytics({
         page_path: typeof window !== 'undefined' ? window.location.pathname : null,
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
         tracking_token: getTrackingToken(),
+        cg_token: getConciergeToken(),
         ...getUTMParams(),
       })
 
