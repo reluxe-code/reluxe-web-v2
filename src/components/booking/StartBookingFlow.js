@@ -59,10 +59,13 @@ function normalizeName(v) {
   return normalizeToken(v).replace(/[^a-z0-9]/g, '');
 }
 
+const FIRST_AVAILABLE_TOKENS = new Set(['any', 'all', 'firstavailable', 'first-available', 'nopreference', 'no-preference']);
+
 function findProviderByToken(providers, token) {
   if (!token) return null;
   const t = normalizeName(token);
   if (!t) return null;
+  if (FIRST_AVAILABLE_TOKENS.has(t)) return FIRST_AVAILABLE_SLUG;
   return (
     providers.find((p) => normalizeName(p?.slug) === t) ||
     providers.find((p) => normalizeName(p?.name || p?.title) === t) ||
@@ -113,28 +116,33 @@ function SelectionBreadcrumbs({ items, fonts, onClear }) {
   if (!items.length) return null;
   return (
     <div className="flex flex-wrap gap-1.5 mb-3">
-      {items.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onClear(item.key)}
-          className="rounded-full px-3 py-1 flex items-center gap-1.5 transition-all duration-200"
-          style={{
-            fontFamily: fonts?.body,
-            fontSize: '0.7rem',
-            fontWeight: 600,
-            color: colors.violet,
-            backgroundColor: `${colors.violet}08`,
-            border: `1px solid ${colors.violet}20`,
-            cursor: 'pointer',
-          }}
-        >
-          <span style={{ fontSize: '0.6rem', color: colors.muted, fontWeight: 400 }}>{item.label}:</span>
-          <span>{item.value}</span>
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.5, flexShrink: 0 }}>
-            <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
-      ))}
+      {items.map((item) => {
+        const Tag = item.readOnly ? 'span' : 'button';
+        return (
+          <Tag
+            key={item.key}
+            {...(!item.readOnly && { onClick: () => onClear(item.key) })}
+            className="rounded-full px-3 py-1 flex items-center gap-1.5 transition-all duration-200"
+            style={{
+              fontFamily: fonts?.body,
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              color: colors.violet,
+              backgroundColor: `${colors.violet}08`,
+              border: `1px solid ${colors.violet}20`,
+              cursor: item.readOnly ? 'default' : 'pointer',
+            }}
+          >
+            <span style={{ fontSize: '0.6rem', color: colors.muted, fontWeight: 400 }}>{item.label}:</span>
+            <span>{item.value}</span>
+            {!item.readOnly && (
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.5, flexShrink: 0 }}>
+                <path d="M9 3L3 9M3 3L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            )}
+          </Tag>
+        );
+      })}
     </div>
   );
 }
@@ -152,6 +160,13 @@ function ProviderAvailabilityPickerHandoff({
   locationLocked,
   onExitPicker,
 }) {
+  // Propagate skipOptions flag to the global Boulevard widget observer
+  useEffect(() => {
+    if (prefill?.skipOptions && typeof window !== 'undefined') {
+      window.__blvdSkipOptions = true;
+    }
+  }, [prefill?.skipOptions]);
+
   const providerLocs = providerLocationKeys(activeProvider);
   const providerLocationOptions = useMemo(() => {
     // Don't include 'any' here — ProviderAvailabilityPicker renders its own "No Preference" button
@@ -456,10 +471,12 @@ export default function StartBookingFlow({
   useEffect(() => {
     if (!entryPath || !providers.length) return;
     const p = findProviderByToken(providers, prefill.provider);
-    if (entryPath === 'provider' && p && !providerChoiceSlug) setProviderChoiceSlug(p.slug);
-    if (entryPath === 'concern' && p && concernService && !concernProviderSlug) setConcernProviderSlug(p.slug);
-    if (entryPath === 'not-sure' && p && startChoice && !startProviderSlug) setStartProviderSlug(p.slug);
-    if (entryPath === 'all-options' && p && allOptionsService && !allOptionsProviderSlug) setAllOptionsProviderSlug(p.slug);
+    const slug = p === FIRST_AVAILABLE_SLUG ? FIRST_AVAILABLE_SLUG : p?.slug;
+    if (!slug) return;
+    if (entryPath === 'provider' && !providerChoiceSlug) setProviderChoiceSlug(slug);
+    if (entryPath === 'concern' && concernService && !concernProviderSlug) setConcernProviderSlug(slug);
+    if (entryPath === 'not-sure' && startChoice && !startProviderSlug) setStartProviderSlug(slug);
+    if (entryPath === 'all-options' && allOptionsService && !allOptionsProviderSlug) setAllOptionsProviderSlug(slug);
   }, [
     entryPath, providers, prefill.provider,
     concernService, startChoice, allOptionsService,
@@ -488,7 +505,7 @@ export default function StartBookingFlow({
   // ─── Breadcrumb items ───
   const breadcrumbItems = useMemo(() => {
     const items = [];
-    if (selectedLocation && showLocationStep && entryPath !== 'provider') {
+    if (selectedLocation && showLocationStep) {
       items.push({
         key: 'location',
         label: 'Location',
@@ -500,9 +517,17 @@ export default function StartBookingFlow({
       if (concernShowAllCategories && !concernBundle) items.push({ key: 'allCategories', label: 'Browse', value: 'All Categories' });
       if (concernService) items.push({ key: 'service', label: 'Service', value: concernService.label });
     }
-    if (entryPath === 'provider' && providerChoiceSlug) {
-      const p = providers.find((pr) => pr.slug === providerChoiceSlug);
-      items.push({ key: 'provider', label: 'Provider', value: p?.name || providerChoiceSlug });
+    if (entryPath === 'provider') {
+      // Show pre-filled service/category as a breadcrumb before provider is chosen
+      const prefillServiceToken = prefill.service || prefill.serviceCategory;
+      if (prefillServiceToken && !providerChoiceSlug) {
+        const svc = SPECIALTY_MAP.find((m) => normalizeName(m.slug) === normalizeName(prefillServiceToken));
+        if (svc) items.push({ key: 'prefill-service', label: 'Service', value: svc.title, readOnly: true });
+      }
+      if (providerChoiceSlug) {
+        const p = providers.find((pr) => pr.slug === providerChoiceSlug);
+        items.push({ key: 'provider', label: 'Provider', value: p?.name || providerChoiceSlug });
+      }
     }
     if (entryPath === 'all-options') {
       if (allOptionsService) items.push({ key: 'service', label: 'Service', value: allOptionsService.title });
@@ -520,7 +545,7 @@ export default function StartBookingFlow({
     }
     return items;
   }, [
-    selectedLocation, showLocationStep, entryPath, providers,
+    selectedLocation, showLocationStep, entryPath, providers, prefill,
     concernBundle, concernShowAllCategories, concernService,
     providerChoiceSlug, allOptionsService, allOptionsProviderSlug,
     startChoice, startProviderSlug,

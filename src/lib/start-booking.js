@@ -83,6 +83,7 @@ export function buildLocationOptions(scope) {
 }
 
 export function parseStartPrefill(query = {}) {
+  const optionsRaw = normalizeToken(query.options || query.o)
   return {
     locationKey: resolveLocation(query.location || query.l),
     provider: String(query.provider || query.p || '').trim() || null,
@@ -90,6 +91,7 @@ export function parseStartPrefill(query = {}) {
     service: String(query.service || query.s || '').trim() || null,
     date: parseFlexibleDate(query.date || query.d),
     dateEnd: parseFlexibleDate(query.date_end || query.d2),
+    skipOptions: optionsRaw === 'n' || optionsRaw === 'no' || optionsRaw === 'skip',
   }
 }
 

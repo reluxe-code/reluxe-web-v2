@@ -380,6 +380,45 @@ export default function BoulevardScripts() {
         `}
       </Script>
 
+      {/* Auto-skip options step when __blvdSkipOptions flag is set */}
+      <Script id="blvd-skip-options" strategy="afterInteractive">
+        {`
+          (function(){
+            // Read from URL on first load (works for direct links with ?o=n)
+            try {
+              var p = new URLSearchParams(location.search);
+              var oVal = (p.get('o') || p.get('options') || '').toLowerCase();
+              if (oVal === 'n' || oVal === 'no' || oVal === 'skip') {
+                window.__blvdSkipOptions = true;
+              }
+            } catch(e){}
+
+            var skipped = false;
+            var mo = new MutationObserver(function(){
+              if (!window.__blvdSkipOptions || skipped) return;
+
+              // Look for the Boulevard overlay
+              var overlay = document.querySelector('[class*="blvd-overlay"], [id*="blvd"], .blvd-modal');
+              if (!overlay) return;
+
+              // Find a "Skip" button inside it
+              var buttons = overlay.querySelectorAll('button, [role="button"]');
+              for (var i = 0; i < buttons.length; i++) {
+                var txt = (buttons[i].textContent || '').trim().toLowerCase();
+                if (txt === 'skip') {
+                  skipped = true;
+                  window.__blvdSkipOptions = false;
+                  buttons[i].click();
+                  return;
+                }
+              }
+            });
+
+            mo.observe(document.documentElement, { childList: true, subtree: true });
+          })();
+        `}
+      </Script>
+
       {/* Detect submit (confirmation UI) */}
       <Script id="blvd-submit-detect" strategy="afterInteractive">
         {`
