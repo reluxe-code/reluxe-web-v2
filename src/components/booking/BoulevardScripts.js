@@ -393,28 +393,62 @@ export default function BoulevardScripts() {
               }
             } catch(e){}
 
-            var skipped = false;
-            var mo = new MutationObserver(function(){
-              if (!window.__blvdSkipOptions || skipped) return;
+            function findSkipButton() {
+              // Search entire document for any Skip button
+              var all = document.querySelectorAll('button, [role="button"], a, span[tabindex], div[tabindex]');
+              for (var i = 0; i < all.length; i++) {
+                var txt = (all[i].textContent || '').trim();
+                if (txt === 'Skip' || txt === 'skip' || txt === 'SKIP') return all[i];
+              }
 
-              // Look for the Boulevard overlay
-              var overlay = document.querySelector('[class*="blvd-overlay"], [id*="blvd"], .blvd-modal');
-              if (!overlay) return;
-
-              // Find a "Skip" button inside it
-              var buttons = overlay.querySelectorAll('button, [role="button"]');
-              for (var i = 0; i < buttons.length; i++) {
-                var txt = (buttons[i].textContent || '').trim().toLowerCase();
-                if (txt === 'skip') {
-                  skipped = true;
-                  window.__blvdSkipOptions = false;
-                  buttons[i].click();
-                  return;
+              // Search inside iframes (same-origin only)
+              try {
+                var iframes = document.querySelectorAll('iframe');
+                for (var f = 0; f < iframes.length; f++) {
+                  try {
+                    var doc = iframes[f].contentDocument || iframes[f].contentWindow.document;
+                    if (!doc) continue;
+                    var btns = doc.querySelectorAll('button, [role="button"], a, span[tabindex], div[tabindex]');
+                    for (var j = 0; j < btns.length; j++) {
+                      var t = (btns[j].textContent || '').trim();
+                      if (t === 'Skip' || t === 'skip' || t === 'SKIP') return btns[j];
+                    }
+                  } catch(e) { /* cross-origin */ }
                 }
+              } catch(e) {}
+
+              return null;
+            }
+
+            var skipDone = false;
+            var attempts = 0;
+            var maxAttempts = 60; // 30 seconds max
+
+            var mo = new MutationObserver(function(){
+              if (!window.__blvdSkipOptions || skipDone) return;
+              var btn = findSkipButton();
+              if (btn) {
+                skipDone = true;
+                window.__blvdSkipOptions = false;
+                btn.click();
               }
             });
-
             mo.observe(document.documentElement, { childList: true, subtree: true });
+
+            // Also poll as a fallback (MutationObserver may not fire for iframe content)
+            var poller = setInterval(function(){
+              if (!window.__blvdSkipOptions || skipDone || ++attempts > maxAttempts) {
+                clearInterval(poller);
+                return;
+              }
+              var btn = findSkipButton();
+              if (btn) {
+                skipDone = true;
+                window.__blvdSkipOptions = false;
+                clearInterval(poller);
+                btn.click();
+              }
+            }, 500);
           })();
         `}
       </Script>
