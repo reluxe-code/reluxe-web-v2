@@ -360,12 +360,15 @@ export default function StartBookingFlow({
   // Determine eligible providers for the current path (used for weighted selection)
   const firstAvailableEligible = useMemo(() => {
     if (!isFirstAvailable) return [];
-    if (entryPath === 'provider') return locationFilteredProviders;
+    if (entryPath === 'provider') {
+      const svcSlug = prefill.service || prefill.serviceCategory || null;
+      return svcSlug ? filteredProvidersForService(svcSlug) : locationFilteredProviders;
+    }
     if (entryPath === 'concern') return concernProviders;
     if (entryPath === 'all-options') return filteredProvidersForService(allOptionsService?.slug);
     if (entryPath === 'not-sure') return filteredProvidersForItem(startChoice);
     return [];
-  }, [isFirstAvailable, entryPath, locationFilteredProviders, concernProviders, filteredProvidersForService, allOptionsService, filteredProvidersForItem, startChoice]);
+  }, [isFirstAvailable, entryPath, locationFilteredProviders, prefill, concernProviders, filteredProvidersForService, allOptionsService, filteredProvidersForItem, startChoice]);
 
   // Determine service slug for routing context
   const prefillServiceSlug = prefill.service || prefill.serviceCategory || null;
