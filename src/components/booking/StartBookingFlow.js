@@ -360,15 +360,18 @@ export default function StartBookingFlow({
   // Determine eligible providers for the current path (used for weighted selection)
   const firstAvailableEligible = useMemo(() => {
     if (!isFirstAvailable) return [];
+    if (entryPath === 'provider') return locationFilteredProviders;
     if (entryPath === 'concern') return concernProviders;
     if (entryPath === 'all-options') return filteredProvidersForService(allOptionsService?.slug);
     if (entryPath === 'not-sure') return filteredProvidersForItem(startChoice);
     return [];
-  }, [isFirstAvailable, entryPath, concernProviders, filteredProvidersForService, allOptionsService, filteredProvidersForItem, startChoice]);
+  }, [isFirstAvailable, entryPath, locationFilteredProviders, concernProviders, filteredProvidersForService, allOptionsService, filteredProvidersForItem, startChoice]);
 
   // Determine service slug for routing context
+  const prefillServiceSlug = prefill.service || prefill.serviceCategory || null;
   const firstAvailableServiceSlug = isFirstAvailable
-    ? (entryPath === 'concern' && concernService?.slug) ||
+    ? (entryPath === 'provider' && prefillServiceSlug) ||
+      (entryPath === 'concern' && concernService?.slug) ||
       (entryPath === 'all-options' && allOptionsService?.slug) ||
       (entryPath === 'not-sure' && startChoice?.slug) ||
       null
@@ -442,7 +445,7 @@ export default function StartBookingFlow({
       }
     }
     if (entryPath === 'provider') {
-      if (providerChoiceSlug && !locationFilteredProviders.find((p) => p.slug === providerChoiceSlug)) {
+      if (providerChoiceSlug && providerChoiceSlug !== FIRST_AVAILABLE_SLUG && !locationFilteredProviders.find((p) => p.slug === providerChoiceSlug)) {
         setProviderChoiceSlug(null);
       }
     }
@@ -525,8 +528,12 @@ export default function StartBookingFlow({
         if (svc) items.push({ key: 'prefill-service', label: 'Service', value: svc.title, readOnly: true });
       }
       if (providerChoiceSlug) {
-        const p = providers.find((pr) => pr.slug === providerChoiceSlug);
-        items.push({ key: 'provider', label: 'Provider', value: p?.name || providerChoiceSlug });
+        if (providerChoiceSlug === FIRST_AVAILABLE_SLUG) {
+          items.push({ key: 'provider', label: 'Provider', value: 'First Available', readOnly: true });
+        } else {
+          const p = providers.find((pr) => pr.slug === providerChoiceSlug);
+          items.push({ key: 'provider', label: 'Provider', value: p?.name || providerChoiceSlug });
+        }
       }
     }
     if (entryPath === 'all-options') {
