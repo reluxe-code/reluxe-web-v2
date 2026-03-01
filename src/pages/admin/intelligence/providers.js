@@ -1,6 +1,7 @@
 // src/pages/admin/intelligence/providers.js
 // Provider Performance — revenue, rebooking, cancellations, service mix.
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
 
 function StatCard({ label, value, sub }) {
@@ -112,6 +113,7 @@ export default function ProvidersReport() {
                   <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Rebook %</th>
                   <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Cancel %</th>
                   <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Top Services</th>
+                  <th className="text-center px-4 py-2 text-xs font-medium text-neutral-600">Scorecard</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,11 +147,19 @@ export default function ProvidersReport() {
                         ))}
                       </div>
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <Link
+                        href={`/admin/intelligence/provider-scorecard?id=${p.staff_id}`}
+                        className="px-2 py-1 bg-violet-100 text-violet-700 rounded text-[10px] font-medium hover:bg-violet-200"
+                      >
+                        Scorecard
+                      </Link>
+                    </td>
                   </tr>
                 ))}
                 {providers.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-neutral-400">No provider data found.</td>
+                    <td colSpan={10} className="px-4 py-8 text-center text-neutral-400">No provider data found.</td>
                   </tr>
                 )}
               </tbody>

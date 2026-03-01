@@ -20,6 +20,11 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
       { href: '/admin/intelligence/rebooking', label: 'Rebooking' },
       { href: '/admin/intelligence/products', label: 'Products' },
+      { href: '/admin/intelligence/core4', label: 'Core 4 Regimen' },
+      { href: '/admin/intelligence/replenishment', label: 'Replenishment Radar' },
+      { href: '/admin/intelligence/sales-dna', label: 'Sales DNA' },
+      { href: '/admin/intelligence/sku-mapping', label: 'SKU Mapping' },
+      { href: '/admin/intelligence/product-portfolio', label: 'Product Portfolio' },
       { href: '/admin/intelligence/referrals', label: 'Referrals' },
       { href: '/admin/intelligence/leads', label: 'Leads' },
       { href: '/admin/intelligence/content-engagement', label: 'Content Engagement' },
@@ -30,6 +35,7 @@ const NAV_ITEMS = [
     label: 'Marketing',
     children: [
       { href: '/admin/intelligence/concierge', label: 'Daily Concierge' },
+      { href: '/admin/intelligence/social-engine', label: 'Social Engine' },
     ],
   },
   {

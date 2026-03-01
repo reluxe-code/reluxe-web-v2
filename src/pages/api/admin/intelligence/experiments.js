@@ -181,6 +181,27 @@ export default async function handler(req, res) {
         }
       : null
 
+    // 12. Booked patients (all, not limited to 50)
+    const bookedPatients = booked.map(s => {
+      const pse = perSessionEvents[s.session_id]
+      return {
+        session_id: s.session_id,
+        started_at: s.started_at,
+        client_name: s.client_name || null,
+        client_email: s.client_email || null,
+        contact_phone: s.contact_phone || null,
+        booking_service: s.booking_service || null,
+        booking_location: s.booking_location || null,
+        booking_provider: s.booking_provider || null,
+        appointment_id: s.appointment_id || null,
+        persona_name: s.persona_name || null,
+        duration_ms: s.duration_ms,
+        utm_source: s.utm_source || null,
+        utm_campaign: s.utm_campaign || null,
+        event_count: pse?.count || 0,
+      }
+    })
+
     res.json({
       dateFrom,
       dateTo,
@@ -209,6 +230,7 @@ export default async function handler(req, res) {
       abandonPhases,
       utmSources,
       recent,
+      bookedPatients,
       revealExtras,
     })
   } catch (err) {

@@ -77,6 +77,8 @@ export default async function handler(req, res) {
       membershipsRes,
       clientCreditRes,
       memberRes,
+      core4Res,
+      skuMapRes,
     ] = await Promise.all([
       db
         .from('client_visit_summary')
@@ -115,6 +117,17 @@ export default async function handler(req, res) {
         .select('id, first_name, last_name, phone, email, created_at')
         .eq('blvd_client_id', client_id)
         .maybeSingle(),
+      // Core 4 score
+      db
+        .from('client_core4_score')
+        .select('core4_score, has_cleanser, has_vitamin_c, has_retinol, has_moisturizer, has_spf, categories_detail')
+        .eq('client_id', client_id)
+        .maybeSingle(),
+      // SKU category + depletion mapping
+      db
+        .from('rie_sku_core4_map')
+        .select('sku_key, core4_category, depletion_days')
+        .limit(5000),
     ])
 
     if (clientSummaryRes.error) throw clientSummaryRes.error
@@ -213,9 +226,18 @@ export default async function handler(req, res) {
       }))
       .sort((a, b) => b.revenue - a.revenue)
 
+    // Build SKU → category/depletion lookup
+    const skuMap = new Map()
+    for (const m of (skuMapRes.data || [])) {
+      skuMap.set(m.sku_key, { core4_category: m.core4_category, depletion_days: m.depletion_days })
+    }
+
     const productsByKey = new Map()
     let totalProductSpend = 0
     let totalProductUnits = 0
+
+    // Build chronological timeline from raw rows
+    const productTimeline = []
 
     for (const row of productRows) {
       const key = row.sku || row.product_name || 'unknown'
@@ -223,6 +245,17 @@ export default async function handler(req, res) {
       const sales = Number(row.net_sales || 0)
       totalProductSpend += sales
       totalProductUnits += qty
+
+      const skuInfo = skuMap.get(key)
+
+      // Timeline entry (raw, unsummarized)
+      productTimeline.push({
+        date: row.sold_at,
+        product_name: row.product_name,
+        sku_key: key,
+        net_sales: Math.round(sales),
+        core4_category: skuInfo?.core4_category || 'secondary',
+      })
 
       if (!productsByKey.has(key)) {
         productsByKey.set(key, {
@@ -233,6 +266,8 @@ export default async function handler(req, res) {
           spend: 0,
           purchase_count: 0,
           last_purchased_at: row.sold_at,
+          core4_category: skuInfo?.core4_category || 'secondary',
+          depletion_days: skuInfo?.depletion_days || 90,
         })
       }
 
@@ -244,6 +279,9 @@ export default async function handler(req, res) {
         product.last_purchased_at = row.sold_at
       }
     }
+
+    // Sort timeline newest first
+    productTimeline.sort((a, b) => new Date(b.date) - new Date(a.date))
 
     const productsPurchased = Array.from(productsByKey.values())
       .map((p) => ({
@@ -340,9 +378,19 @@ export default async function handler(req, res) {
       appointment_history: appointmentHistory,
       providers_seen: providersSeen,
       products_purchased: productsPurchased,
+      product_timeline: productTimeline,
       memberships,
       activeMembership,
       referralStats,
+      core4: core4Res.data ? {
+        score: core4Res.data.core4_score || 0,
+        has_cleanser: core4Res.data.has_cleanser || false,
+        has_vitamin_c: core4Res.data.has_vitamin_c || false,
+        has_retinol: core4Res.data.has_retinol || false,
+        has_moisturizer: core4Res.data.has_moisturizer || false,
+        has_spf: core4Res.data.has_spf || false,
+        detail: core4Res.data.categories_detail || [],
+      } : null,
       member: member ? {
         id: member.id,
         name: `${member.first_name || ''} ${member.last_name || ''}`.trim(),

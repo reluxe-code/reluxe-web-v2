@@ -29,11 +29,22 @@ function ContactForm({ contactItems = [] }) {
     if (v) { setStatus({ state: 'error', message: v }); return; }
 
     try {
+      // Generate event_id for Meta CAPI deduplication
+      const eventId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
+
       const payload = {
         ...form,
         location: active.slug || active.title || '',
-        // recaptcha fields removed
+        event_id: eventId,
       };
+
+      // Attach Meta cookies for server-side CAPI
+      try {
+        payload._fbp = document.cookie.match(/(?:^|; )_fbp=([^;]*)/)?.[1] || undefined;
+        payload._fbc = document.cookie.match(/(?:^|; )_fbc=([^;]*)/)?.[1] || undefined;
+      } catch {}
 
       const res = await fetch('/api/contact', {
         method: 'POST',
@@ -47,7 +58,7 @@ function ContactForm({ contactItems = [] }) {
       setStatus({ state: 'success', message: 'Thanks! We received your message and will reply shortly.' });
       setForm({ name: '', email: '', phone: '', message: '' });
       if (typeof window !== 'undefined' && window.reluxeTrack) {
-        window.reluxeTrack('contact_form_submit', { form: 'contact', location: active.slug || active.title || '' });
+        window.reluxeTrack('contact_form_submit', { event_id: eventId, form: 'contact', location: active.slug || active.title || '' });
       }
     } catch (err) {
       setStatus({ state: 'error', message: err.message || 'Something went wrong. Please try again.' });

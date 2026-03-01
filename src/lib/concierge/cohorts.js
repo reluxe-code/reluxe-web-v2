@@ -709,6 +709,78 @@ function classifySeriesService(name) {
 }
 
 // ============================================================
+// Cohort 6: Massage Journey (Priority 6)
+// ============================================================
+const MASSAGE_MILESTONES = [
+  { days: 25, tier: 'gentle' },
+  { days: 40, tier: 'reminder' },
+  { days: 55, tier: 'winback' },
+  { days: 70, tier: 'urgent' },
+  { days: 85, tier: 'last_call' },
+]
+
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient} db
+ * @returns {Promise<Array>} candidates
+ */
+export async function computeMassageJourney(db) {
+  const massageClients = await fetchAllRows(() =>
+    db
+      .from('client_massage_summary')
+      .select('client_id, first_name, last_name, name, phone, email, massage_visits, days_since_last_massage, avg_massage_interval_days, last_provider_staff_id, last_location_key, massage_tier')
+      .not('massage_tier', 'is', null)
+      .not('phone', 'is', null)
+  )
+
+  if (!massageClients.length) return []
+
+  const clientIds = massageClients.map((c) => c.client_id)
+  const bookedSet = await getUpcomingBookedClients(db, clientIds)
+
+  const providerIds = [...new Set(massageClients.map((c) => c.last_provider_staff_id).filter(Boolean))]
+  const staffLookup = await getStaffLookup(db, providerIds)
+
+  const candidates = []
+
+  for (const client of massageClients) {
+    if (bookedSet.has(client.client_id)) continue
+
+    const milestone = MASSAGE_MILESTONES.find((m) => m.tier === client.massage_tier)
+    const staff = staffLookup[client.last_provider_staff_id]
+    const providerName = staff?.name || null
+    const providerSlug = staff?.slug || null
+
+    const logicTrace = [
+      `Massage client`,
+      `Last visit: ${client.days_since_last_massage}d ago`,
+      `Tier: ${client.massage_tier}`,
+      milestone ? `Milestone: Day ${milestone.days}` : 'Unknown milestone',
+      `Total massage visits: ${client.massage_visits}`,
+      providerName ? `Last provider: ${providerName}` : 'No provider on record',
+    ]
+
+    candidates.push({
+      client_id: client.client_id,
+      phone: client.phone,
+      first_name: client.first_name || client.name?.split(' ')[0] || null,
+      campaign_slug: 'massage_journey',
+      cohort: 'P6',
+      priority: 6,
+      provider_staff_id: client.last_provider_staff_id,
+      provider_name: providerName,
+      provider_slug: providerSlug,
+      service_name: 'Massage',
+      location_key: client.last_location_key,
+      days_overdue: client.days_since_last_massage,
+      avg_interval: client.avg_massage_interval_days,
+      logic_trace: logicTrace,
+    })
+  }
+
+  return candidates
+}
+
+// ============================================================
 // Shared helpers
 // ============================================================
 

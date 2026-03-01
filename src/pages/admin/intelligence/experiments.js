@@ -429,6 +429,62 @@ export default function ExperimentsDashboard() {
             )}
           </div>
 
+          {/* Booked Patients */}
+          {(data.bookedPatients || []).length > 0 && (
+            <div className="bg-white rounded-lg border p-5 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-neutral-700">Booked Patients</h2>
+                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-1 rounded-full">
+                  {data.bookedPatients.length} booking{data.bookedPatients.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-neutral-500">
+                      <th className="text-left py-2 pr-4">Patient</th>
+                      <th className="text-left py-2 pr-4">Contact</th>
+                      <th className="text-left py-2 pr-4">Service</th>
+                      <th className="text-left py-2 pr-4">Location</th>
+                      <th className="text-left py-2 pr-4">Provider</th>
+                      {!data.isReveal && <th className="text-left py-2 pr-4">Persona</th>}
+                      <th className="text-left py-2 pr-4">Source</th>
+                      <th className="text-right py-2">Booked At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.bookedPatients.map(p => (
+                      <tr
+                        key={p.session_id}
+                        className="border-b border-neutral-50 hover:bg-emerald-50/50 cursor-pointer transition-colors"
+                        onClick={() => setDrawerSessionId(p.session_id)}
+                      >
+                        <td className="py-2.5 pr-4">
+                          <p className="font-medium text-neutral-800">{p.client_name || '—'}</p>
+                        </td>
+                        <td className="py-2.5 pr-4">
+                          {p.client_email && <p className="text-xs text-neutral-600">{p.client_email}</p>}
+                          {p.contact_phone && <p className="text-xs text-neutral-400">{p.contact_phone}</p>}
+                          {!p.client_email && !p.contact_phone && <span className="text-neutral-300">—</span>}
+                        </td>
+                        <td className="py-2.5 pr-4 text-neutral-700 capitalize">{p.booking_service || '—'}</td>
+                        <td className="py-2.5 pr-4 text-neutral-600 capitalize">{p.booking_location || '—'}</td>
+                        <td className="py-2.5 pr-4 text-neutral-600">{p.booking_provider || '—'}</td>
+                        {!data.isReveal && <td className="py-2.5 pr-4 text-neutral-500">{p.persona_name || '—'}</td>}
+                        <td className="py-2.5 pr-4 text-xs text-neutral-500">{p.utm_source || 'direct'}{p.utm_campaign ? ` / ${p.utm_campaign}` : ''}</td>
+                        <td className="py-2.5 text-right text-xs text-neutral-500 whitespace-nowrap">
+                          {new Date(p.started_at).toLocaleString('en-US', {
+                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div className={`grid grid-cols-1 ${data.isReveal ? '' : 'lg:grid-cols-2'} gap-8 mb-8`}>
             {/* Persona distribution (This or That only) */}
             {!data.isReveal && (

@@ -553,6 +553,39 @@ export default function PatientsReport() {
                     </div>
                   </section>
 
+                  {/* ── Core 4 Regimen ── */}
+                  {drawerData.core4 && (
+                    <section>
+                      <h3 className="text-sm font-semibold mb-2">
+                        Core 4 Regimen
+                        <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          drawerData.core4.score === 4 ? 'bg-emerald-100 text-emerald-700' :
+                          drawerData.core4.score >= 2 ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {drawerData.core4.score} of 4
+                        </span>
+                      </h3>
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          { key: 'has_cleanser', label: 'Cleanser', color: 'blue' },
+                          { key: 'has_vitamin_c', label: 'Vitamin C', color: 'orange' },
+                          { key: 'has_retinol', label: 'Retinol', color: 'purple' },
+                          { key: 'has_moisturizer', label: 'Moisturizer', color: 'emerald' },
+                          { key: 'has_spf', label: 'SPF', color: 'yellow' },
+                        ].map(({ key, label, color }) => {
+                          const active = drawerData.core4[key]
+                          return (
+                            <div key={key} className={`border rounded-lg p-2 text-center ${active ? `bg-${color}-50 border-${color}-200` : 'bg-neutral-50 border-neutral-200'}`}>
+                              <div className={`w-3 h-3 rounded-full mx-auto mb-1 ${active ? `bg-${color}-500` : 'bg-neutral-300'}`} />
+                              <p className={`text-[10px] font-medium ${active ? `text-${color}-700` : 'text-neutral-400'}`}>{label}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </section>
+                  )}
+
                   {/* ── Products ── */}
                   <section>
                     <h3 className="text-sm font-semibold mb-2">Products Purchased</h3>

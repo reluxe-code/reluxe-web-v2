@@ -154,9 +154,15 @@ function NavLoginPopover({ fonts, onClose, inline }) {
         });
       }
       refreshProfile();
-      // Track conversion + identify contact in Bird
+      // Track conversion + identify contact in Bird + Meta Advanced Matching
       if (window.reluxeTrack) {
         window.reluxeTrack('member_signup', { method, is_returning: !!data.isReturning });
+      }
+      if (window.reluxeIdentify) {
+        const identifyData = isEmail ? { email: identifier } : { phone: identifier };
+        if (data.member?.first_name) identifyData.firstName = data.member.first_name;
+        if (data.member?.last_name) identifyData.lastName = data.member.last_name;
+        window.reluxeIdentify(identifyData);
       }
       if (typeof window.Bird !== 'undefined' && window.Bird.contact) {
         const birdKey = isEmail ? 'emailaddress' : 'phonenumber';

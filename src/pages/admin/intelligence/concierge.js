@@ -6,9 +6,9 @@ import AdminLayout from '@/components/admin/AdminLayout'
 
 // ── Shared constants ──────────────────────────────────────────
 
-const CAMPAIGNS = ['tox_journey', 'membership_voucher', 'aesthetic_winback', 'last_minute_gap', 'package_voucher']
-const COHORT_CODES = { tox_journey: 'P1', membership_voucher: 'P2', aesthetic_winback: 'P3', last_minute_gap: 'P4', package_voucher: 'P5' }
-const SLUG_FROM_COHORT = { P1: 'tox_journey', P2: 'membership_voucher', P3: 'aesthetic_winback', P4: 'last_minute_gap', P5: 'package_voucher' }
+const CAMPAIGNS = ['tox_journey', 'membership_voucher', 'aesthetic_winback', 'last_minute_gap', 'package_voucher', 'massage_journey']
+const COHORT_CODES = { tox_journey: 'P1', membership_voucher: 'P2', aesthetic_winback: 'P3', last_minute_gap: 'P4', package_voucher: 'P5', massage_journey: 'P6' }
+const SLUG_FROM_COHORT = { P1: 'tox_journey', P2: 'membership_voucher', P3: 'aesthetic_winback', P4: 'last_minute_gap', P5: 'package_voucher', P6: 'massage_journey' }
 
 const CAMPAIGN_LABELS = {
   tox_journey: 'Tox Journey',
@@ -16,9 +16,10 @@ const CAMPAIGN_LABELS = {
   aesthetic_winback: 'Aesthetic Winback',
   last_minute_gap: 'Last-Minute Gap',
   package_voucher: 'Package Voucher',
+  massage_journey: 'Massage Journey',
 }
 const CAMPAIGN_COLORS = {
-  tox_journey: 'violet', membership_voucher: 'blue', aesthetic_winback: 'fuchsia', last_minute_gap: 'amber', package_voucher: 'teal',
+  tox_journey: 'violet', membership_voucher: 'blue', aesthetic_winback: 'fuchsia', last_minute_gap: 'amber', package_voucher: 'teal', massage_journey: 'emerald',
 }
 const CAMPAIGN_BG = {
   tox_journey: 'bg-violet-50 border-violet-200',
@@ -26,9 +27,10 @@ const CAMPAIGN_BG = {
   aesthetic_winback: 'bg-fuchsia-50 border-fuchsia-200',
   last_minute_gap: 'bg-amber-50 border-amber-200',
   package_voucher: 'bg-teal-50 border-teal-200',
+  massage_journey: 'bg-emerald-50 border-emerald-200',
 }
 const CAMPAIGN_RING = {
-  tox_journey: 'ring-violet-500', membership_voucher: 'ring-blue-500', aesthetic_winback: 'ring-fuchsia-500', last_minute_gap: 'ring-amber-500', package_voucher: 'ring-teal-500',
+  tox_journey: 'ring-violet-500', membership_voucher: 'ring-blue-500', aesthetic_winback: 'ring-fuchsia-500', last_minute_gap: 'ring-amber-500', package_voucher: 'ring-teal-500', massage_journey: 'ring-emerald-500',
 }
 const PLACEHOLDER_HELP = [
   { key: '{{first_name}}', desc: 'Patient first name' },
@@ -61,8 +63,8 @@ const TABS = [
 // ── Badge components ──────────────────────────────────────────
 
 function CohortBadge({ cohort }) {
-  const s = { P1: 'bg-violet-100 text-violet-700', P2: 'bg-blue-100 text-blue-700', P3: 'bg-fuchsia-100 text-fuchsia-700', P4: 'bg-amber-100 text-amber-700' }
-  const l = { P1: 'P1 · Tox', P2: 'P2 · Voucher', P3: 'P3 · Winback', P4: 'P4 · Gap' }
+  const s = { P1: 'bg-violet-100 text-violet-700', P2: 'bg-blue-100 text-blue-700', P3: 'bg-fuchsia-100 text-fuchsia-700', P4: 'bg-amber-100 text-amber-700', P5: 'bg-teal-100 text-teal-700', P6: 'bg-emerald-100 text-emerald-700' }
+  const l = { P1: 'P1 · Tox', P2: 'P2 · Voucher', P3: 'P3 · Winback', P4: 'P4 · Gap', P5: 'P5 · Package', P6: 'P6 · Massage' }
   return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s[cohort] || 'bg-neutral-100 text-neutral-600'}`}>{l[cohort] || cohort}</span>
 }
 

@@ -4,6 +4,7 @@
 // ✅ Adds attribution capture to email (UTMs, click IDs, first landing URL, referrer, device, duration, UA)
 
 import { getSmtpConfig, parseToList, escHtml, safeJson } from '@/lib/email'
+import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 function maybeLink(url) {
@@ -272,6 +273,30 @@ ${safeJson(answers)}
       html: htmlBody,
       replyTo: payloadLead?.email || undefined,
     })
+
+    // Fire-and-forget: Meta CAPI Lead event (only if lead was captured)
+    if (payloadLead?.captured && (payloadLead?.email || payloadLead?.phone)) {
+      fireCAPIEvent({
+        eventName: 'Lead',
+        eventId: body.event_id || undefined,
+        eventSourceUrl: a?.url || req.headers.referer || 'https://reluxemedspa.com',
+        actionSource: 'website',
+        userData: buildUserData({
+          email: payloadLead.email,
+          phone: payloadLead.phone,
+          firstName: payloadLead.name?.split(' ')[0],
+          lastName: payloadLead.name?.split(' ').slice(1).join(' ') || undefined,
+          fbp: cookies?.fbp,
+          fbc: cookies?.fbc,
+          clientIp: getClientIp(req),
+          userAgent: userAgent || req.headers['user-agent'],
+        }),
+        customData: {
+          content_name: `Quiz: ${personaName}`,
+          content_category: recommendedServiceKey || recommendedService || undefined,
+        },
+      })
+    }
 
     return res.status(200).json({ ok: true })
   } catch (err) {

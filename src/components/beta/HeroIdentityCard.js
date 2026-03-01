@@ -605,10 +605,18 @@ export default function HeroIdentityCard({ fonts }) {
     }
     refreshProfile()
 
-    // Track conversion + identify contact in Bird
+    // Track conversion + identify contact in Bird + Meta Advanced Matching
     if (typeof window !== 'undefined') {
       if (window.reluxeTrack) {
         window.reluxeTrack('member_signup', { method: authMethod, is_returning: !!data.isReturning })
+      }
+      if (window.reluxeIdentify) {
+        const identifyData = authMethod === 'email'
+          ? { email: authIdentifier }
+          : { phone: authIdentifier }
+        if (data.member?.first_name) identifyData.firstName = data.member.first_name
+        if (data.member?.last_name) identifyData.lastName = data.member.last_name
+        window.reluxeIdentify(identifyData)
       }
       if (typeof window.Bird !== 'undefined' && window.Bird.contact) {
         const birdKey = authMethod === 'email' ? 'emailaddress' : 'phonenumber'

@@ -2,7 +2,7 @@
 // POST: compute all cohort candidates, apply anti-spam, insert into concierge_queue.
 import crypto from 'crypto'
 import { getServiceClient } from '@/lib/supabase'
-import { computeToxJourney, computeVoucherRecovery, computeAestheticWinback, computeLastMinuteGap, computePackageVoucherRecovery } from '@/lib/concierge/cohorts'
+import { computeToxJourney, computeVoucherRecovery, computeAestheticWinback, computeLastMinuteGap, computePackageVoucherRecovery, computeMassageJourney } from '@/lib/concierge/cohorts'
 import { applyAntiSpam } from '@/lib/concierge/antiSpam'
 import { buildSmsBody, pickVariant } from '@/lib/concierge/smsBuilder'
 import { generateConciergeLink } from '@/lib/concierge/linkService'
@@ -15,6 +15,7 @@ const COHORT_FUNCTIONS = {
   aesthetic_winback: computeAestheticWinback,
   last_minute_gap: computeLastMinuteGap,
   package_voucher: computePackageVoucherRecovery,
+  massage_journey: computeMassageJourney,
 }
 
 export default async function handler(req, res) {
@@ -207,12 +208,13 @@ export default async function handler(req, res) {
         aesthetic_winback: { cohort: 'P3', priority: 3 },
         last_minute_gap: { cohort: 'P4', priority: 4 },
         package_voucher: { cohort: 'P5', priority: 5 },
+        massage_journey: { cohort: 'P6', priority: 6 },
       }[cohortKey] || { cohort: 'P0', priority: 0 }
 
       const testCandidate = {
         first_name: 'Kyle',
         provider_name: testProvider.name,
-        service_name: cohortKey === 'aesthetic_winback' ? 'HydraFacial' : cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : 'Tox Treatment',
+        service_name: cohortKey === 'aesthetic_winback' ? 'HydraFacial' : cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : cohortKey === 'massage_journey' ? 'Massage' : 'Tox Treatment',
         days_overdue: 30,
         voucher_service: cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : 'Monthly Facial',
         sessions_remaining: cohortKey === 'package_voucher' ? 2 : undefined,

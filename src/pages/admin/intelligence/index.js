@@ -113,6 +113,24 @@ export default function IntelligenceOverview() {
           badge="New"
         />
         <QuickLink
+          href="/admin/intelligence/core4"
+          title="Core 4 Regimen"
+          description="Cleanser, Vitamin C, Retinol, Moisturizer — track patient protocol adoption gaps and coach providers."
+          badge="New"
+        />
+        <QuickLink
+          href="/admin/intelligence/replenishment"
+          title="Replenishment Radar"
+          description="Per-product depletion tracking. Identify patients overdue for refills before they churn."
+          badge="New"
+        />
+        <QuickLink
+          href="/admin/intelligence/sales-dna"
+          title="Provider Sales DNA"
+          description="Attachment rate, protocol adherence, and portfolio variety leaderboard for every provider."
+          badge="New"
+        />
+        <QuickLink
           href="/admin/intelligence/daily-snapshot"
           title="Daily Snapshot"
           description="Westfield/Carmel/Total daily scorecard for service revenue, deferred revenue, product sales, bookings, cancellations, and 2-week reschedules."

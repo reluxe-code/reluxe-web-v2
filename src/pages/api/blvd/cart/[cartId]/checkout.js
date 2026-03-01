@@ -9,6 +9,7 @@
 import { blvd } from '@/server/blvd'
 import { adminQuery } from '@/server/blvdAdmin'
 import { upsertBirdContact } from '@/lib/birdContacts'
+import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { getServiceClient } from '@/lib/supabase'
 import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
 
@@ -174,6 +175,29 @@ export default async function handler(req, res) {
         source: 'checkout',
       }).catch((err) => console.warn('[checkout] Bird sync failed:', err.message))
     }
+
+    // Fire-and-forget: Meta CAPI Schedule event (deduped with browser via event_id)
+    fireCAPIEvent({
+      eventName: 'Schedule',
+      eventId: req.body.event_id || undefined,
+      eventSourceUrl: req.headers.referer || 'https://reluxemedspa.com',
+      actionSource: 'website',
+      userData: buildUserData({
+        email: email || ci.email,
+        phone: contactPhone,
+        firstName: firstName || ci.firstName,
+        lastName: lastName || ci.lastName,
+        fbp: req.cookies?._fbp || req.body._fbp,
+        fbc: req.cookies?._fbc || req.body._fbc,
+        clientIp: getClientIp(req),
+        userAgent: req.headers['user-agent'],
+      }),
+      customData: {
+        content_name: req.body.serviceName || 'Appointment',
+        content_type: 'product',
+        currency: 'USD',
+      },
+    })
 
     res.json({
       success: true,

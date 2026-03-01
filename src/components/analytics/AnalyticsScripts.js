@@ -14,20 +14,74 @@ export default function AnalyticsScripts() {
         {`
           (function(){
             if (window.reluxeTrack) return;
+
+            function genEventId() {
+              try { return crypto.randomUUID(); }
+              catch(e) { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+            }
+
+            function readCookie(name) {
+              var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+              return m ? decodeURIComponent(m[1]) : null;
+            }
+
+            var META_STANDARD_MAP = {
+              booking_flow_start:     'InitiateCheckout',
+              booking_service_select: 'AddToCart',
+              booking_complete:       'Schedule',
+              booking_checkout_start: 'InitiateCheckout',
+              contact_form_submit:    'Lead',
+              quiz_complete:          'Lead',
+              gift_card_purchase:     'Purchase'
+            };
+
             window.reluxeTrack = function(eventName, params){
               try {
                 params = params || {};
                 params.page_path = params.page_path || window.location.pathname;
                 params.page_location = params.page_location || window.location.href;
+
+                var eventId = params.event_id || genEventId();
+                params.event_id = eventId;
+
+                params._fbp = params._fbp || readCookie('_fbp') || undefined;
+                params._fbc = params._fbc || readCookie('_fbc') || undefined;
+
                 if (typeof window.gtag === 'function') {
                   window.gtag('event', eventName, params);
                 }
+
                 if (typeof window.fbq === 'function') {
-                  window.fbq('trackCustom', eventName, params);
+                  var stdEvent = META_STANDARD_MAP[eventName];
+                  if (stdEvent) {
+                    window.fbq('track', stdEvent, {
+                      content_name: params.service_name || params.content_name || undefined,
+                      content_type: 'product',
+                      value: params.value || (params.amount_cents ? params.amount_cents / 100 : undefined),
+                      currency: params.currency || 'USD',
+                      content_category: params.category_name || undefined
+                    }, { eventID: eventId });
+                  } else {
+                    window.fbq('trackCustom', eventName, params, { eventID: eventId });
+                  }
                 }
+
                 if (typeof window.Bird !== 'undefined' && window.Bird.tracker) {
                   try { window.Bird.tracker.custom.trackEvent(eventName, params); } catch(e){}
                 }
+              } catch(e){}
+            };
+
+            window.reluxeIdentify = function(userData) {
+              if (typeof window.fbq !== 'function') return;
+              try {
+                window.fbq('init', '${FB_PIXEL_ID}', {
+                  em: userData.email ? userData.email.toLowerCase().trim() : undefined,
+                  ph: userData.phone ? userData.phone.replace(/\\\\D/g, '') : undefined,
+                  fn: userData.firstName ? userData.firstName.toLowerCase().trim() : undefined,
+                  ln: userData.lastName ? userData.lastName.toLowerCase().trim() : undefined,
+                  external_id: userData.externalId || undefined
+                });
               } catch(e){}
             };
           })();

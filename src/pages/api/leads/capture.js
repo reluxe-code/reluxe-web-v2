@@ -3,6 +3,7 @@
 // Stores lead in Supabase and syncs to Bird CRM.
 import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
+import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
 
 const limiter = createRateLimiter('leads-capture', 10, 60_000) // 10/min per IP
@@ -66,6 +67,28 @@ export default async function handler(req, res) {
         leadId: lead?.id || undefined,
       }).catch((err) => console.error('[leads/capture] Bird sync error:', err.message))
     }
+
+    // Fire-and-forget: Meta CAPI Lead event
+    fireCAPIEvent({
+      eventName: 'Lead',
+      eventId: req.body.event_id || undefined,
+      eventSourceUrl: req.headers.referer || 'https://reluxemedspa.com',
+      actionSource: 'website',
+      userData: buildUserData({
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        firstName,
+        lastName,
+        fbp: req.cookies?._fbp || req.body._fbp,
+        fbc: req.cookies?._fbc || req.body._fbc,
+        clientIp: getClientIp(req),
+        userAgent: req.headers['user-agent'],
+      }),
+      customData: {
+        content_name: `Lead: ${leadSource}`,
+        content_category: leadTags.length ? leadTags.join(', ') : undefined,
+      },
+    })
 
     return res.status(200).json({
       ok: true,

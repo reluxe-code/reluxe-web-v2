@@ -75,7 +75,45 @@ export default async function handler(req, res) {
 
     if (clientErr) throw clientErr
 
-    // 4. Get last appointment info for these clients
+    // 4. Check which clients are already in the concierge pipeline
+    const allClientIdSet = new Set(clientIds)
+    let conciergeMap = {} // client_id → { status, campaign_slug, cohort, sent_at }
+    let conciergeSummary = { queued: 0, sent: 0, total_in_pipeline: 0 }
+
+    if (allClientIdSet.size > 0) {
+      // Fetch active concierge_queue entries for these clients
+      const conciergeRows = await fetchAllRows(() =>
+        db
+          .from('concierge_queue')
+          .select('client_id, status, campaign_slug, cohort, sent_at')
+          .in('client_id', [...allClientIdSet])
+          .in('status', ['ready', 'approved', 'sent', 'flagged'])
+      )
+
+      for (const row of conciergeRows || []) {
+        // Keep the most relevant status per client (sent > approved > ready > flagged)
+        const priority = { sent: 4, approved: 3, ready: 2, flagged: 1 }
+        const existing = conciergeMap[row.client_id]
+        if (!existing || (priority[row.status] || 0) > (priority[existing.status] || 0)) {
+          conciergeMap[row.client_id] = {
+            status: row.status,
+            campaign_slug: row.campaign_slug,
+            cohort: row.cohort,
+            sent_at: row.sent_at,
+          }
+        }
+      }
+
+      const uniqueInPipeline = Object.keys(conciergeMap).length
+      const sentCount = Object.values(conciergeMap).filter((c) => c.status === 'sent').length
+      conciergeSummary = {
+        queued: uniqueInPipeline - sentCount,
+        sent: sentCount,
+        total_in_pipeline: uniqueInPipeline,
+      }
+    }
+
+    // 5. Get last appointment info for these clients
     const pageClientIds = (clients || []).map((c) => c.id)
     let lastApptMap = {}
     if (pageClientIds.length > 0) {
@@ -94,7 +132,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 5. Get last service for context
+    // 6. Get last service for context
     let lastServiceMap = {}
     if (pageClientIds.length > 0) {
       const { data: svcRows } = await db
@@ -131,10 +169,12 @@ export default async function handler(req, res) {
       location: lastApptMap[c.id]?.location || null,
       last_service: lastServiceMap[c.id]?.service_name || null,
       last_service_slug: lastServiceMap[c.id]?.service_slug || null,
+      concierge: conciergeMap[c.id] || null,
     }))
 
     return res.json({
       summary,
+      concierge_summary: conciergeSummary,
       patients: {
         data: patient_list,
         total: count || 0,

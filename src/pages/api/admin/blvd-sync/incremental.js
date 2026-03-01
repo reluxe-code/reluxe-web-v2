@@ -5,6 +5,7 @@ import { adminQuery } from '@/server/blvdAdmin'
 import { getServiceClient } from '@/lib/supabase'
 import { LOCATION_IDS } from '@/server/blvd'
 import { ensureReferralCode } from '@/lib/referralCodes'
+import { sendCAPIEvents, buildUserData } from '@/lib/metaCAPI'
 
 export const config = { maxDuration: 60 }
 
@@ -80,17 +81,18 @@ const MEMBERSHIPS_QUERY = `
   }
 `
 
-const PACKAGES_QUERY = `
-  query GetPackages($first: Int!, $after: String) {
+// NOTE: Boulevard's `packages` query returns catalog TEMPLATES, not client purchases.
+// Client-level package purchase data must be imported separately (see /api/admin/packages/import).
+const PACKAGE_CATALOG_QUERY = `
+  query GetPackageCatalog($first: Int!, $after: String) {
     packages(first: $first, after: $after) {
       edges {
         node {
           id
           name
-          status
-          startOn
-          clientId
-          locationId
+          description
+          active
+          unitPrice
           vouchers {
             quantity
             services { id name }
@@ -339,12 +341,14 @@ export default async function handler(req, res) {
       console.error('Membership sync error (non-fatal):', mErr.message)
     }
 
-    // ── Sync packages (paginate all, upsert) ──
+    // ── Sync package catalog (templates only — Boulevard doesn't expose purchased packages via API) ──
+    // Client-level package purchases must be imported via /api/admin/packages/import
     let packagesSynced = 0
+    let packageSyncError = null
     try {
       let pCursor = null
       for (let pPage = 0; pPage < 20; pPage++) {
-        const pData = await adminQuery(PACKAGES_QUERY, {
+        const pData = await adminQuery(PACKAGE_CATALOG_QUERY, {
           first: 100,
           after: pCursor,
         })
@@ -355,45 +359,14 @@ export default async function handler(req, res) {
           const p = edge.node
           if (!p?.id) continue
 
-          // Resolve client internal ID
-          let pClientId = null
-          if (p.clientId) {
-            const { data: clientRow } = await db
-              .from('blvd_clients')
-              .select('id')
-              .eq('boulevard_id', p.clientId)
-              .maybeSingle()
-            pClientId = clientRow?.id || null
-          }
-
-          // Compute expiry based on policy:
-          // Purchased on/after 2026-01-01 → 18 months from purchase
-          // Purchased before 2026-01-01 → expires 2027-06-30
-          let expiresAt = null
-          const purchasedAt = p.startOn ? new Date(p.startOn) : null
-          if (purchasedAt) {
-            const cutoff = new Date('2026-01-01')
-            if (purchasedAt >= cutoff) {
-              expiresAt = new Date(purchasedAt)
-              expiresAt.setMonth(expiresAt.getMonth() + 18)
-            } else {
-              expiresAt = new Date('2027-06-30')
-            }
-          }
-
-          await db.from('blvd_packages').upsert({
+          await db.from('blvd_package_catalog').upsert({
             boulevard_id: p.id,
-            client_id: pClientId,
-            client_boulevard_id: p.clientId,
             name: p.name,
-            status: p.status,
-            purchased_at: p.startOn || null,
-            expires_at: expiresAt ? expiresAt.toISOString() : null,
-            location_boulevard_id: p.locationId || null,
-            location_key: LOCATION_URN_MAP[p.locationId] || null,
+            description: p.description || null,
+            active: p.active ?? true,
+            unit_price: p.unitPrice || 0,
             vouchers: p.vouchers || [],
             synced_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
           }, { onConflict: 'boulevard_id' })
 
           packagesSynced++
@@ -403,7 +376,8 @@ export default async function handler(req, res) {
         pCursor = pPageInfo.endCursor
       }
     } catch (pkgErr) {
-      console.error('Package sync error (non-fatal):', pkgErr.message)
+      console.error('Package catalog sync error (non-fatal):', pkgErr.message)
+      packageSyncError = pkgErr.message
     }
 
     // ── Sync account credit for clients with memberships or recent activity ──
@@ -522,6 +496,86 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Send offline conversions to Meta CAPI ──
+    let metaCapiSent = 0
+    try {
+      const { data: unsentAppts } = await db
+        .from('blvd_appointments')
+        .select(`
+          id, boulevard_id, client_id, status, start_at, location_key,
+          blvd_clients!inner(email, phone, first_name, last_name, boulevard_id)
+        `)
+        .eq('status', 'completed')
+        .is('meta_capi_sent_at', null)
+        .limit(100)
+
+      if (unsentAppts?.length) {
+        // Fetch service totals per appointment
+        const apptIds = unsentAppts.map(a => a.id)
+        const { data: svcRows } = await db
+          .from('blvd_appointment_services')
+          .select('appointment_id, price, service_name')
+          .in('appointment_id', apptIds)
+
+        const svcByAppt = {}
+        for (const svc of (svcRows || [])) {
+          if (!svcByAppt[svc.appointment_id]) svcByAppt[svc.appointment_id] = []
+          svcByAppt[svc.appointment_id].push(svc)
+        }
+
+        const capiEvents = []
+        const sentApptIds = []
+        for (const appt of unsentAppts) {
+          const client = appt.blvd_clients
+          if (!client?.email && !client?.phone) continue
+
+          const services = svcByAppt[appt.id] || []
+          const totalValue = services.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0)
+          const serviceNames = services.map(s => s.service_name).filter(Boolean).join(', ')
+
+          capiEvents.push({
+            event_name: 'Schedule',
+            event_time: Math.floor(new Date(appt.start_at).getTime() / 1000),
+            event_id: `offline_${appt.boulevard_id}`,
+            action_source: 'system_generated',
+            user_data: buildUserData({
+              email: client.email,
+              phone: client.phone,
+              firstName: client.first_name,
+              lastName: client.last_name,
+              externalId: client.boulevard_id,
+            }),
+            custom_data: {
+              value: totalValue,
+              currency: 'USD',
+              content_name: serviceNames || 'Appointment',
+              content_type: 'product',
+              content_category: appt.location_key || undefined,
+            },
+          })
+          sentApptIds.push(appt.id)
+        }
+
+        // Send in batches of 100
+        for (let i = 0; i < capiEvents.length; i += 100) {
+          const batch = capiEvents.slice(i, i + 100)
+          const batchIds = sentApptIds.slice(i, i + 100)
+          const result = await sendCAPIEvents(batch)
+          if (result.ok) {
+            await db
+              .from('blvd_appointments')
+              .update({ meta_capi_sent_at: new Date().toISOString() })
+              .in('id', batchIds)
+            metaCapiSent += batchIds.length
+          } else {
+            console.error('[blvd-sync] Meta CAPI batch failed:', result.error)
+          }
+        }
+      }
+    } catch (metaErr) {
+      console.error('Meta CAPI sync error (non-fatal):', metaErr.message)
+    }
+
     // Update sync log
     if (logId) {
       await db
@@ -531,12 +585,12 @@ export default async function handler(req, res) {
           completed_at: new Date().toISOString(),
           records_processed: processed,
           records_created: created,
-          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, packages_synced: packagesSynced, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled },
+          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, packages_synced: packagesSynced, packages_error: packageSyncError || null, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled, meta_capi_sent: metaCapiSent },
         })
         .eq('id', logId)
     }
 
-    return res.json({ ok: true, processed, created, lifecycleUpdated, membershipsSynced, packagesSynced, creditsUpdated, referralEnrolled })
+    return res.json({ ok: true, processed, created, lifecycleUpdated, membershipsSynced, packagesSynced, creditsUpdated, referralEnrolled, metaCapiSent })
   } catch (err) {
     console.error('Incremental sync error:', err)
 

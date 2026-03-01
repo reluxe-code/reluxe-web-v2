@@ -121,6 +121,12 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
       const refCode = getReferralCode();
       if (refCode) body.referralCode = refCode;
 
+      // Pass Meta dedup params for CAPI
+      try {
+        body._fbp = document.cookie.match(/(?:^|; )_fbp=([^;]*)/)?.[1] || undefined;
+        body._fbc = document.cookie.match(/(?:^|; )_fbc=([^;]*)/)?.[1] || undefined;
+      } catch {}
+
       const res = await fetch(`/api/blvd/cart/${cartId}/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,6 +148,17 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
       setConfirmEmail(email || data.confirmation?.email || '');
       setConfirmation(data);
       clearReferralCode();
+
+      // Advanced Matching: identify user to Meta Pixel
+      if (typeof window !== 'undefined' && window.reluxeIdentify) {
+        window.reluxeIdentify({
+          email: email || data.confirmation?.email,
+          phone: toE164(phone),
+          firstName: firstName || data.confirmation?.firstName,
+          lastName: lastName || data.confirmation?.lastName,
+        });
+      }
+
       if (onSuccess) onSuccess({ ...data, phone: toE164(phone) });
       return { success: true };
     } catch (err) {

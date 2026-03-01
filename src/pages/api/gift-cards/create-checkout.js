@@ -13,6 +13,7 @@ import {
 } from '@/lib/giftCards'
 import { syncOneGiftCard } from '@/lib/blvdGiftCards'
 import { trackBirdEvent } from '@/lib/birdTracking'
+import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 const isSandbox = (process.env.SQUARE_APPLICATION_ID || '').startsWith('sandbox-')
@@ -298,6 +299,31 @@ export default async function handler(req, res) {
         { key: 'emailaddress', value: senderEmail.trim().toLowerCase() },
         { order_id: order.id, amount_cents: chargeAmountCents, num_cards: items.length, currency: 'USD' }
       ).catch(() => {})
+
+      // Fire-and-forget: Meta CAPI Purchase event
+      fireCAPIEvent({
+        eventName: 'Purchase',
+        eventId: req.body.event_id || undefined,
+        eventSourceUrl: req.headers.referer || 'https://reluxemedspa.com/gift-cards',
+        actionSource: 'website',
+        userData: buildUserData({
+          email: senderEmail,
+          firstName: senderName.split(' ')[0],
+          lastName: senderName.split(' ').slice(1).join(' ') || undefined,
+          fbp: req.cookies?._fbp || req.body._fbp,
+          fbc: req.cookies?._fbc || req.body._fbc,
+          clientIp: getClientIp(req),
+          userAgent: req.headers['user-agent'],
+        }),
+        customData: {
+          value: chargeAmountCents / 100,
+          currency: 'USD',
+          content_name: 'Gift Card',
+          content_type: 'product',
+          num_items: items.length,
+          order_id: order.id,
+        },
+      })
 
       return res.json({
         ok: true,

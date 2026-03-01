@@ -1,6 +1,7 @@
 // src/pages/api/contact.js
 import { z } from 'zod';
 import { getSmtpConfig, escHtml } from '@/lib/email';
+import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 // -------- Validation (no captcha) --------
@@ -114,6 +115,28 @@ export default async function handler(req, res) {
 
     // Then email (best effort):
     await sendEmail({ name, email, phone, message, location, meta }).catch(() => {});
+
+    // Fire-and-forget: Meta CAPI Lead event
+    fireCAPIEvent({
+      eventName: 'Lead',
+      eventId: json.event_id || undefined,
+      eventSourceUrl: req.headers.referer || 'https://reluxemedspa.com/contact',
+      actionSource: 'website',
+      userData: buildUserData({
+        email,
+        phone,
+        firstName: name.split(' ')[0],
+        lastName: name.split(' ').slice(1).join(' ') || undefined,
+        fbp: req.cookies?._fbp || json._fbp,
+        fbc: req.cookies?._fbc || json._fbc,
+        clientIp: getClientIp(req),
+        userAgent: req.headers['user-agent'],
+      }),
+      customData: {
+        content_name: 'Contact Form',
+        content_category: location || 'general',
+      },
+    })
 
     return res.status(200).json({ ok: true });
   } catch (err) {

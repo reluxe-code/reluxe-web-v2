@@ -261,10 +261,11 @@ export function useBookingAnalytics({
       })
     }
 
-    // Booking complete
+    // Booking complete — generate shared event_id for Meta CAPI dedup
     if (step === 'BOOKED') {
       finalizeSession('completed', null)
       fireExternal('booking_complete', {
+        event_id: safeUUID(),
         flow_type: flowType,
         location_key: locationKey,
         service_name: selectedService?.name,

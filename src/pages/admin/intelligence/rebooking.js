@@ -1,6 +1,7 @@
 // src/pages/admin/intelligence/rebooking.js
 // Rebooking Gaps — clients who completed recently but have no future appointment.
 import { useState, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
 
 function TimeframeBadge({ detail }) {
@@ -14,6 +15,28 @@ function TimeframeBadge({ detail }) {
   return (
     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[detail] || 'bg-neutral-100 text-neutral-600'}`}>
       {labels[detail] || detail}
+    </span>
+  )
+}
+
+function ConciergeBadge({ concierge }) {
+  if (!concierge) return <span className="text-neutral-300">—</span>
+  const styles = {
+    sent: 'bg-emerald-100 text-emerald-700',
+    approved: 'bg-blue-100 text-blue-700',
+    ready: 'bg-violet-100 text-violet-700',
+    flagged: 'bg-amber-100 text-amber-700',
+  }
+  const labels = {
+    sent: 'Sent',
+    approved: 'Approved',
+    ready: 'Queued',
+    flagged: 'Flagged',
+  }
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${styles[concierge.status] || 'bg-neutral-100 text-neutral-600'}`}>
+      {labels[concierge.status] || concierge.status}
+      {concierge.cohort ? ` · ${concierge.cohort}` : ''}
     </span>
   )
 }
@@ -81,11 +104,12 @@ export default function RebookingReport() {
       const res = await fetch(`/api/admin/intelligence/rebooking?${params}`)
       const json = await res.json()
       const patients = json.patients?.data || []
-      const headers = ['Name', 'Email', 'Phone', 'Timeframe', 'Days Since', 'Last Visit', 'Last Service', 'Location']
+      const headers = ['Name', 'Email', 'Phone', 'Timeframe', 'Days Since', 'Last Visit', 'Last Service', 'Location', 'Concierge Status', 'Concierge Campaign']
       const rows = patients.map((p) => [
         p.name, p.email || '', p.phone || '', p.timeframe || '',
         p.days_since ?? '', p.last_visit ? new Date(p.last_visit).toLocaleDateString() : '',
         p.last_service || '', p.location || '',
+        p.concierge?.status || '', p.concierge?.campaign_slug || '',
       ])
       const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
       const blob = new Blob([csv], { type: 'text/csv' })
@@ -131,6 +155,30 @@ export default function RebookingReport() {
         </div>
       )}
 
+      {/* Concierge Coverage Banner */}
+      {summary && data?.concierge_summary && data.concierge_summary.total_in_pipeline > 0 && (
+        <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-violet-900">
+              {data.concierge_summary.total_in_pipeline} of {summary.total} gap clients are in the Concierge pipeline
+            </p>
+            <p className="text-xs text-violet-600 mt-0.5">
+              {data.concierge_summary.sent > 0 && `${data.concierge_summary.sent} already contacted`}
+              {data.concierge_summary.sent > 0 && data.concierge_summary.queued > 0 && ' · '}
+              {data.concierge_summary.queued > 0 && `${data.concierge_summary.queued} queued/approved`}
+              {' · '}
+              {summary.total - data.concierge_summary.total_in_pipeline} not yet reached
+            </p>
+          </div>
+          <Link
+            href="/admin/intelligence/concierge"
+            className="px-4 py-2 bg-violet-600 text-white rounded-lg text-xs font-medium hover:bg-violet-700 transition shrink-0"
+          >
+            Open Concierge
+          </Link>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <input
@@ -172,6 +220,7 @@ export default function RebookingReport() {
                     <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Last Visit</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Last Service</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Location</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Concierge</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -194,10 +243,11 @@ export default function RebookingReport() {
                         {p.last_service || '—'}
                       </td>
                       <td className="px-4 py-2 text-neutral-600 capitalize">{p.location || '—'}</td>
+                      <td className="px-4 py-2"><ConciergeBadge concierge={p.concierge} /></td>
                     </tr>
                   ))}
                   {(!patients?.data || patients.data.length === 0) && (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-neutral-400">No rebooking gaps found.</td></tr>
+                    <tr><td colSpan={7} className="px-4 py-8 text-center text-neutral-400">No rebooking gaps found.</td></tr>
                   )}
                 </tbody>
               </table>

@@ -692,6 +692,16 @@ function PaymentStep({ fonts, items, sender, delivery, autoPromos, bonusChoices,
       const result = await cardRef.current.tokenize()
       if (result.status !== 'OK') throw new Error(result.errors?.[0]?.message || 'Card verification failed')
 
+      // Meta CAPI dedup params
+      const eventId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
+      let _fbp, _fbc;
+      try {
+        _fbp = document.cookie.match(/(?:^|; )_fbp=([^;]*)/)?.[1] || undefined;
+        _fbc = document.cookie.match(/(?:^|; )_fbc=([^;]*)/)?.[1] || undefined;
+      } catch {}
+
       const res = await fetch('/api/gift-cards/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -709,6 +719,9 @@ function PaymentStep({ fonts, items, sender, delivery, autoPromos, bonusChoices,
           senderEmail: sender.email,
           deliverAt: delivery.type === 'scheduled' ? delivery.date : null,
           bonusChoices,
+          event_id: eventId,
+          _fbp,
+          _fbc,
         }),
       })
       const text = await res.text()
