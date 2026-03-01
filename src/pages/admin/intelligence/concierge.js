@@ -6,9 +6,9 @@ import AdminLayout from '@/components/admin/AdminLayout'
 
 // ── Shared constants ──────────────────────────────────────────
 
-const CAMPAIGNS = ['tox_journey', 'membership_voucher', 'aesthetic_winback', 'last_minute_gap', 'package_voucher', 'massage_journey']
-const COHORT_CODES = { tox_journey: 'P1', membership_voucher: 'P2', aesthetic_winback: 'P3', last_minute_gap: 'P4', package_voucher: 'P5', massage_journey: 'P6' }
-const SLUG_FROM_COHORT = { P1: 'tox_journey', P2: 'membership_voucher', P3: 'aesthetic_winback', P4: 'last_minute_gap', P5: 'package_voucher', P6: 'massage_journey' }
+const CAMPAIGNS = ['tox_journey', 'massage_journey', 'membership_voucher', 'aesthetic_winback', 'last_minute_gap', 'package_voucher']
+const COHORT_CODES = { tox_journey: 'P1', massage_journey: 'P2', membership_voucher: 'P3', aesthetic_winback: 'P4', last_minute_gap: 'P5', package_voucher: 'P6' }
+const SLUG_FROM_COHORT = { P1: 'tox_journey', P2: 'massage_journey', P3: 'membership_voucher', P4: 'aesthetic_winback', P5: 'last_minute_gap', P6: 'package_voucher' }
 
 const CAMPAIGN_LABELS = {
   tox_journey: 'Tox Journey',
@@ -63,8 +63,8 @@ const TABS = [
 // ── Badge components ──────────────────────────────────────────
 
 function CohortBadge({ cohort }) {
-  const s = { P1: 'bg-violet-100 text-violet-700', P2: 'bg-blue-100 text-blue-700', P3: 'bg-fuchsia-100 text-fuchsia-700', P4: 'bg-amber-100 text-amber-700', P5: 'bg-teal-100 text-teal-700', P6: 'bg-emerald-100 text-emerald-700' }
-  const l = { P1: 'P1 · Tox', P2: 'P2 · Voucher', P3: 'P3 · Winback', P4: 'P4 · Gap', P5: 'P5 · Package', P6: 'P6 · Massage' }
+  const s = { P1: 'bg-violet-100 text-violet-700', P2: 'bg-emerald-100 text-emerald-700', P3: 'bg-blue-100 text-blue-700', P4: 'bg-fuchsia-100 text-fuchsia-700', P5: 'bg-amber-100 text-amber-700', P6: 'bg-teal-100 text-teal-700' }
+  const l = { P1: 'P1 · Tox', P2: 'P2 · Massage', P3: 'P3 · Voucher', P4: 'P4 · Winback', P5: 'P5 · Gap', P6: 'P6 · Package' }
   return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s[cohort] || 'bg-neutral-100 text-neutral-600'}`}>{l[cohort] || cohort}</span>
 }
 

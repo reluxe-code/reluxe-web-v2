@@ -204,11 +204,11 @@ export default async function handler(req, res) {
 
       const cohortMeta = {
         tox_journey: { cohort: 'P1', priority: 1 },
-        membership_voucher: { cohort: 'P2', priority: 2 },
-        aesthetic_winback: { cohort: 'P3', priority: 3 },
-        last_minute_gap: { cohort: 'P4', priority: 4 },
-        package_voucher: { cohort: 'P5', priority: 5 },
-        massage_journey: { cohort: 'P6', priority: 6 },
+        massage_journey: { cohort: 'P2', priority: 2 },
+        membership_voucher: { cohort: 'P3', priority: 3 },
+        aesthetic_winback: { cohort: 'P4', priority: 4 },
+        last_minute_gap: { cohort: 'P5', priority: 5 },
+        package_voucher: { cohort: 'P6', priority: 6 },
       }[cohortKey] || { cohort: 'P0', priority: 0 }
 
       const testCandidate = {

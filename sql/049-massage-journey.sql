@@ -95,7 +95,7 @@ JOIN massage_stats ms ON ms.client_id = c.id;
 -- ============================================================
 INSERT INTO concierge_campaigns (campaign_slug, cohort, priority, variant_a_template, variant_b_template, ab_split, active)
 VALUES (
-  'massage_journey', 'P6', 6,
+  'massage_journey', 'P2', 2,
   'Hi {{first_name}}, it''s been {{days_overdue}} days since your last massage with {{provider_name}}. Your body will thank you! {{credit_reminder}}Book here: {{booking_link}}',
   '{{first_name}}, {{provider_name}} has openings for your next massage. Time to unwind! {{credit_reminder}}Book now: {{booking_link}}',
   0.50, true
