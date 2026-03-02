@@ -117,7 +117,6 @@ async function handler(req, res) {
             status: 'sent',
             sent_at: new Date().toISOString(),
             phone_encrypted: null,
-            phone: null, // also clear raw phone (dual-write cleanup)
           })
           .eq('id', entry.id)
 
@@ -125,7 +124,7 @@ async function handler(req, res) {
         const touchPhoneHash = capKey || hashPhone(sendPhone)
         await db.from('marketing_touches').insert({
           client_id: entry.client_id,
-          phone: sendPhone, // dual-write: raw phone (remove after migration)
+          // phone column dropped — hash only
           phone_hash_v1: touchPhoneHash,
           campaign_slug: entry.campaign_slug,
           cohort: entry.cohort,

@@ -13,7 +13,7 @@
 //   created     → FB Created Time  (ISO timestamp)
 import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
-import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { hashPhone, hashEmail, encryptPhone } from '@/lib/piiHash'
 import { safeWarn } from '@/lib/logSanitizer'
 
 function normalizePhone(raw) {
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       continue
     }
 
-    // Dedup check — use hash-based lookup (primary) with raw fallback
+    // Dedup check — hash-only lookup (raw columns dropped)
     const phoneHash = hashPhone(phone)
     const emailHash = hashEmail(email)
     let existing = null
@@ -84,16 +84,8 @@ export default async function handler(req, res) {
       const { data } = await db.from('leads').select('id').eq('phone_hash_v1', phoneHash).limit(1)
       existing = data?.[0]
     }
-    if (!existing && phone) {
-      const { data } = await db.from('leads').select('id').eq('phone', phone).limit(1)
-      existing = data?.[0]
-    }
     if (!existing && emailHash) {
       const { data } = await db.from('leads').select('id').eq('email_hash_v1', emailHash).limit(1)
-      existing = data?.[0]
-    }
-    if (!existing && email) {
-      const { data } = await db.from('leads').select('id').eq('email', email).limit(1)
       existing = data?.[0]
     }
 
@@ -122,9 +114,8 @@ export default async function handler(req, res) {
 
     const { data: newLead, error } = await db.from('leads').insert({
       first_name: (lead.first_name || '').trim() || null,
-      last_name: (lead.last_name || '').trim() || null,
-      email,
-      phone,
+      // last_name, email, phone dropped — hash + encrypted only
+      phone_encrypted: encryptPhone(phone),
       phone_hash_v1: phoneHash,
       email_hash_v1: emailHash,
       source,

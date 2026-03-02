@@ -5,7 +5,7 @@ import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
 import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
-import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { hashPhone, hashEmail, encryptPhone } from '@/lib/piiHash'
 import { safeWarn, safeError } from '@/lib/logSanitizer'
 
 const limiter = createRateLimiter('leads-capture', 10, 60_000) // 10/min per IP
@@ -35,29 +35,40 @@ export default async function handler(req, res) {
   const leadTags = Array.isArray(tags) ? tags : tags ? [tags] : []
 
   try {
-    // 1. Upsert lead into Supabase
-    const { data: lead, error: leadErr } = await db
-      .from('leads')
-      .upsert(
-        {
-          email: normalizedEmail,
-          phone: normalizedPhone,
-          phone_hash_v1: hashPhone(normalizedPhone),
-          email_hash_v1: hashEmail(normalizedEmail),
+    // 1. Dedup by hash, then insert (raw PII columns dropped)
+    const phoneHash = hashPhone(normalizedPhone)
+    const emailHash = hashEmail(normalizedEmail)
+
+    let existing = null
+    if (phoneHash) {
+      const { data } = await db.from('leads').select('id').eq('phone_hash_v1', phoneHash).limit(1)
+      existing = data?.[0]
+    }
+    if (!existing && emailHash) {
+      const { data } = await db.from('leads').select('id').eq('email_hash_v1', emailHash).limit(1)
+      existing = data?.[0]
+    }
+
+    let lead = existing
+    if (!existing) {
+      const { data: newLead, error: leadErr } = await db
+        .from('leads')
+        .insert({
+          phone_encrypted: encryptPhone(normalizedPhone),
+          phone_hash_v1: phoneHash,
+          email_hash_v1: emailHash,
           first_name: firstName || null,
-          last_name: lastName || null,
           source: leadSource,
           tags: leadTags,
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: normalizedEmail ? 'email' : 'phone' }
-      )
-      .select('id')
-      .single()
+        })
+        .select('id')
+        .single()
 
-    if (leadErr) {
-      // If upsert conflict fails, try insert without conflict resolution
-      safeWarn('[leads/capture] Upsert warning:', leadErr.message)
+      if (leadErr) {
+        safeWarn('[leads/capture] Insert warning:', leadErr.message)
+      }
+      lead = newLead
     }
 
     // 2. Sync to Bird CRM (fire-and-forget)

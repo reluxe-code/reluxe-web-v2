@@ -157,7 +157,7 @@ export default function DailySnapshotPage() {
   }, [load])
 
   const current = data?.metrics?.[location]
-  const windowLabels = { today: 'Today', week: 'This Week', month: 'This Month' }
+  const windowLabels = { today: 'Today', week: 'This Week', month: 'This Month', lastMonth: 'Last Month' }
   const currentDetails = current?.details?.[activeWindow]
   if (!Layout || !RenderSnapshotBlock || !RenderDetailTable || !RenderWindowButton) return null
 
@@ -213,7 +213,7 @@ export default function DailySnapshotPage() {
 
       {current && (
         <>
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
             <button onClick={() => setActiveWindow('today')} className="text-left">
               <RenderSnapshotBlock title="Today" row={current.today} />
             </button>
@@ -223,6 +223,9 @@ export default function DailySnapshotPage() {
             <button onClick={() => setActiveWindow('month')} className="text-left">
               <RenderSnapshotBlock title="This Month" row={current.month} />
             </button>
+            <button onClick={() => setActiveWindow('lastMonth')} className="text-left">
+              <RenderSnapshotBlock title="Last Month" row={current.lastMonth} />
+            </button>
           </div>
 
           <div className="mb-6 flex items-center gap-2">
@@ -230,6 +233,7 @@ export default function DailySnapshotPage() {
             <RenderWindowButton label="Today" active={activeWindow === 'today'} onClick={() => setActiveWindow('today')} />
             <RenderWindowButton label="This Week" active={activeWindow === 'week'} onClick={() => setActiveWindow('week')} />
             <RenderWindowButton label="This Month" active={activeWindow === 'month'} onClick={() => setActiveWindow('month')} />
+            <RenderWindowButton label="Last Month" active={activeWindow === 'lastMonth'} onClick={() => setActiveWindow('lastMonth')} />
             <span className="text-xs text-neutral-500 ml-2">{windowLabels[activeWindow]}</span>
           </div>
 

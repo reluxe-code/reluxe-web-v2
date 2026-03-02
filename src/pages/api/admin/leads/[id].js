@@ -13,7 +13,7 @@ async function handler(req, res) {
 
   // ── GET: Full lead detail for drawer ──
   if (req.method === 'GET') {
-    const { data: lead, error } = await db.from('leads').select('*').eq('id', id).single()
+    const { data: lead, error } = await db.from('leads').select('id, first_name, source, campaign, service_interest, status, notes, blvd_client_id, days_to_convert, converted_at, source_created_at, created_at').eq('id', id).single()
     if (error || !lead) return res.status(404).json({ error: 'Lead not found' })
 
     let client = null
@@ -78,7 +78,7 @@ async function handler(req, res) {
 
   const { data: lead, error: fetchErr } = await db
     .from('leads')
-    .select('*')
+    .select('id, status, notes, blvd_client_id, converted_at, created_at')
     .eq('id', id)
     .single()
 
@@ -115,7 +115,7 @@ async function handler(req, res) {
     .from('leads')
     .update(updates)
     .eq('id', id)
-    .select('*')
+    .select('id, status, notes, blvd_client_id, converted_at, days_to_convert, created_at, updated_at')
     .single()
 
   if (updateErr) return res.status(500).json({ error: updateErr.message })

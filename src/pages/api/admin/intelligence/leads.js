@@ -116,7 +116,7 @@ async function handler(req, res) {
       .sort((a, b) => b.leads - a.leads)
 
     // ── Paginated lead list ──
-    let query = db.from('leads').select('*', { count: 'exact' })
+    let query = db.from('leads').select('id, first_name, source, campaign, service_interest, status, notes, blvd_client_id, days_to_convert, converted_at, source_created_at, created_at, phone_hash_v1, email_hash_v1', { count: 'exact' })
 
     if (sinceIso) query = query.gte('created_at', sinceIso)
     if (source) query = query.eq('source', source)
@@ -162,6 +162,7 @@ async function handler(req, res) {
 
     const leads_data = (leadList || []).map(l => ({
       id: l.id,
+      first_name: l.first_name || null,
       source: l.source,
       campaign: l.campaign,
       service_interest: l.service_interest,

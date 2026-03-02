@@ -3,7 +3,7 @@
 // POST { leads: [...] } — inserts + auto-matches against blvd_clients.
 import { getServiceClient } from '@/lib/supabase'
 import { withAdminAuth } from '@/lib/adminAuth'
-import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { hashPhone, hashEmail, encryptPhone } from '@/lib/piiHash'
 
 export const config = { maxDuration: 120 }
 
@@ -69,11 +69,17 @@ async function handler(req, res) {
 
     const serviceInterest = lead.service_interest || parseServiceInterest(lead.campaign)
 
+    // Sanitize raw_payload — strip PII before storing
+    const sanitizedPayload = { ...lead }
+    delete sanitizedPayload.first_name
+    delete sanitizedPayload.last_name
+    delete sanitizedPayload.email
+    delete sanitizedPayload.phone
+
     const { error } = await db.from('leads').insert({
       first_name: (lead.first_name || '').trim() || null,
-      last_name: (lead.last_name || '').trim() || null,
-      email,
-      phone,
+      // last_name, email, phone dropped — hash + encrypted only
+      phone_encrypted: encryptPhone(phone),
       phone_hash_v1: phoneHash,
       email_hash_v1: emailHash,
       source: (lead.source || 'facebook').toLowerCase(),
@@ -85,7 +91,7 @@ async function handler(req, res) {
       status: 'new',
       source_created_at: lead.created || lead.source_created_at || null,
       created_at: lead.created || lead.source_created_at || new Date().toISOString(),
-      raw_payload: lead,
+      raw_payload: sanitizedPayload,
     })
 
     if (error) {
@@ -103,7 +109,7 @@ async function handler(req, res) {
   while (true) {
     const { data: batch } = await db
       .from('leads')
-      .select('id, phone, email, status, created_at')
+      .select('id, phone_hash_v1, email_hash_v1, status, created_at')
       .in('status', ['new', 'contacted', 'booked'])
       .is('blvd_client_id', null)
       .order('created_at', { ascending: true })
@@ -117,26 +123,20 @@ async function handler(req, res) {
   for (const lead of unmatchedLeads) {
     let client = null
 
-    if (lead.phone) {
-      const ph = hashPhone(lead.phone)
-      if (ph) {
-        const { data } = await db.from('blvd_clients')
-          .select('id, visit_count, first_visit_at')
-          .eq('phone_hash_v1', ph)
-          .limit(1)
-        client = data?.[0]
-      }
+    if (lead.phone_hash_v1) {
+      const { data } = await db.from('blvd_clients')
+        .select('id, visit_count, first_visit_at')
+        .eq('phone_hash_v1', lead.phone_hash_v1)
+        .limit(1)
+      client = data?.[0]
     }
 
-    if (!client && lead.email) {
-      const eh = hashEmail(lead.email)
-      if (eh) {
-        const { data } = await db.from('blvd_clients')
-          .select('id, visit_count, first_visit_at')
-          .eq('email_hash_v1', eh)
-          .limit(1)
-        client = data?.[0]
-      }
+    if (!client && lead.email_hash_v1) {
+      const { data } = await db.from('blvd_clients')
+        .select('id, visit_count, first_visit_at')
+        .eq('email_hash_v1', lead.email_hash_v1)
+        .limit(1)
+      client = data?.[0]
     }
 
     if (!client) continue
@@ -169,7 +169,7 @@ async function handler(req, res) {
       event_type: 'matched',
       old_value: lead.status,
       new_value: updates.status,
-      metadata: { blvd_client_id: client.id, match_type: lead.phone ? 'phone' : 'email' },
+      metadata: { blvd_client_id: client.id, match_type: lead.phone_hash_v1 ? 'phone_hash' : 'email_hash' },
     })
     matched++
   }

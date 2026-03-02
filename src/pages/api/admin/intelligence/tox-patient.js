@@ -114,9 +114,7 @@ async function handler(req, res) {
     return res.json({
       client: {
         client_id: summary.client_id,
-        name: summary.name || [summary.first_name, summary.last_name].filter(Boolean).join(' ') || 'Unknown',
-        email: summary.email,
-        phone: summary.phone,
+        boulevard_id: summary.boulevard_id || null,
         tox_visits: summary.tox_visits,
         total_tox_spend: Number(summary.total_tox_spend || 0),
         primary_tox_type: summary.primary_tox_type,

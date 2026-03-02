@@ -294,6 +294,94 @@ async function handler(req, res) {
       if (isNearDeadline()) break
     }
 
+    // ── Refresh stale appointment statuses ──
+    // Appointments that are still booked/confirmed but start_at is in the past
+    // should have been completed/cancelled in Boulevard — re-check them.
+    let statusRefreshed = 0
+    if (!isNearDeadline()) {
+      try {
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+
+        const { data: staleAppts } = await db
+          .from('blvd_appointments')
+          .select('id, boulevard_id, client_id, location_key')
+          .in('status', ['booked', 'confirmed', 'arrived', 'active'])
+          .lt('start_at', twoHoursAgo)
+          .order('start_at', { ascending: false })
+          .limit(50)
+
+        if (staleAppts?.length) {
+          // Batch query Boulevard for current appointment state (10 at a time)
+          for (let i = 0; i < staleAppts.length && !isNearDeadline(); i += 10) {
+            const batch = staleAppts.slice(i, i + 10)
+            const fragments = batch.map((appt, j) =>
+              `a${j}: node(id: "${appt.boulevard_id}") { ... on Appointment { id state cancelled cancellation { cancelledAt } appointmentServices { duration price service { id name category { name } } staff { id } } } }`
+            )
+
+            try {
+              const batchData = await adminQuery(`query { ${fragments.join('\n')} }`)
+
+              for (let j = 0; j < batch.length; j++) {
+                const appt = batch[j]
+                const node = batchData?.[`a${j}`]
+                if (!node?.id) continue
+
+                const newStatus = (node.state || 'unknown').toLowerCase()
+                // Only update if status actually changed
+                const { data: existing } = await db
+                  .from('blvd_appointments')
+                  .select('status')
+                  .eq('id', appt.id)
+                  .single()
+
+                if (existing?.status === newStatus) continue
+
+                await db
+                  .from('blvd_appointments')
+                  .update({
+                    status: newStatus,
+                    cancelled_at: node.cancellation?.cancelledAt || null,
+                    synced_at: new Date().toISOString(),
+                  })
+                  .eq('id', appt.id)
+
+                // Re-sync services (prices may finalize on completion)
+                const services = node.appointmentServices || []
+                if (services.length > 0) {
+                  await db.from('blvd_appointment_services').delete().eq('appointment_id', appt.id)
+
+                  for (const svc of services) {
+                    const providerBlvdId = svc.staff?.id || null
+                    const serviceName = svc.service?.name || 'Unknown'
+                    const categoryName = svc.service?.category?.name || null
+
+                    await db.from('blvd_appointment_services').insert({
+                      appointment_id: appt.id,
+                      boulevard_service_id: svc.service?.id || null,
+                      service_name: serviceName,
+                      service_category: categoryName,
+                      service_slug: guessServiceSlug(serviceName, categoryName),
+                      provider_boulevard_id: providerBlvdId,
+                      provider_staff_id: providerBlvdId ? staffMap.get(providerBlvdId) || null : null,
+                      price: svc.price ? svc.price / 100 : null,
+                      duration_minutes: svc.duration || null,
+                    })
+                  }
+                }
+
+                if (appt.client_id) touchedClientIds.add(appt.client_id)
+                statusRefreshed++
+              }
+            } catch (batchErr) {
+              console.error('Status refresh batch error (non-fatal):', batchErr.message)
+            }
+          }
+        }
+      } catch (refreshErr) {
+        console.error('Status refresh error (non-fatal):', refreshErr.message)
+      }
+    }
+
     // ── Sync memberships + packages in parallel ──
     let membershipsSynced = 0
     let packagesSynced = 0
@@ -625,12 +713,12 @@ async function handler(req, res) {
           completed_at: new Date().toISOString(),
           records_processed: processed,
           records_created: created,
-          metadata: { locations: LOCATIONS.map((l) => l.key), lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, packages_synced: packagesSynced, packages_error: packageSyncError || null, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled, meta_capi_sent: metaCapiSent },
+          metadata: { locations: LOCATIONS.map((l) => l.key), status_refreshed: statusRefreshed, lifecycle_updated: lifecycleUpdated, memberships_synced: membershipsSynced, packages_synced: packagesSynced, packages_error: packageSyncError || null, credits_updated: creditsUpdated, referral_enrolled: referralEnrolled, meta_capi_sent: metaCapiSent },
         })
         .eq('id', logId)
     }
 
-    return res.json({ ok: true, processed, created, lifecycleUpdated, membershipsSynced, packagesSynced, creditsUpdated, referralEnrolled, metaCapiSent })
+    return res.json({ ok: true, processed, created, statusRefreshed, lifecycleUpdated, membershipsSynced, packagesSynced, creditsUpdated, referralEnrolled, metaCapiSent })
   } catch (err) {
     console.error('Incremental sync error:', err)
 

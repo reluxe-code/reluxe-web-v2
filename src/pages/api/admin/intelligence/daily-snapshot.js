@@ -422,6 +422,7 @@ async function handler(req, res) {
 
     const dayOfMonth = now.getDate()
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const prevMonthEnd = endOfDay(new Date(now.getFullYear(), now.getMonth(), 0)) // last day of prev month
     const prevMonthComparableEnd = endOfDay(new Date(now.getFullYear(), now.getMonth() - 1, dayOfMonth))
 
     const clientFutureStarts = new Map()
@@ -492,6 +493,16 @@ async function handler(req, res) {
         clientFutureStarts,
       })
 
+      const lastMonth = computeWindowMetrics({
+        appointments,
+        appointmentServices,
+        productSales,
+        scope,
+        start: prevMonthStart,
+        end: prevMonthEnd,
+        clientFutureStarts,
+      })
+
       const details = {
         today: computeWindowDetails({
           appointments,
@@ -523,6 +534,16 @@ async function handler(req, res) {
           staffById,
           clientById,
         }),
+        lastMonth: computeWindowDetails({
+          appointments,
+          appointmentServices,
+          productSales,
+          scope,
+          start: prevMonthStart,
+          end: prevMonthEnd,
+          staffById,
+          clientById,
+        }),
       }
 
       const weekVsLastWeekPct = previousWeek.service_revenue > 0
@@ -537,6 +558,7 @@ async function handler(req, res) {
         today,
         week,
         month,
+        lastMonth,
         pace: {
           week_vs_last_week_pct: weekVsLastWeekPct,
           month_vs_last_month_to_date_pct: monthVsLastMonthToDatePct,
@@ -553,10 +575,7 @@ async function handler(req, res) {
       generated_at: new Date().toISOString(),
       selected_location: selectedLocation,
       metrics: metricsByScope,
-      notes: {
-        deferred_revenue_mode: 'heuristic_from_names',
-        deferred_revenue_note: 'Gift cards/packages/membership deferred revenue is approximated via name matching until a dedicated liability ledger is synced.',
-      },
+      notes: {},
     })
   } catch (err) {
     console.error('[intelligence/daily-snapshot]', err)

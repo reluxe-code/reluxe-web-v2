@@ -4,6 +4,7 @@
 import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
 import { withAdminAuth } from '@/lib/adminAuth'
+import { decryptPhone } from '@/lib/piiHash'
 
 async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -12,9 +13,9 @@ async function handler(req, res) {
 
   const { data: unsynced, error: qErr } = await db
     .from('leads')
-    .select('id, first_name, last_name, email, phone, source, campaign, service_interest, status')
+    .select('id, first_name, phone_encrypted')
     .eq('synced_to_bird', false)
-    .not('phone', 'is', null)
+    .not('phone_encrypted', 'is', null)
     .order('created_at', { ascending: true })
     .limit(100)
 
@@ -25,11 +26,12 @@ async function handler(req, res) {
   const errors = []
 
   for (const lead of unsynced) {
+    const phone = decryptPhone(lead.phone_encrypted)
+    if (!phone) { errors.push({ lead_id: lead.id, error: 'decrypt_failed' }); continue }
+
     const result = await upsertBirdContact({
-      phone: lead.phone,
-      email: lead.email || undefined,
+      phone,
       firstName: lead.first_name || undefined,
-      lastName: lead.last_name || undefined,
     })
 
     if (result.ok) {

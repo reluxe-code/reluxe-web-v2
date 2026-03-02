@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/deliver-gift-cards",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/data-retention",
+      "schedule": "0 4 * * 0"
     }
   ]
 }

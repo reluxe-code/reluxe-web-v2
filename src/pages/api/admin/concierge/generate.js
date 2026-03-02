@@ -8,7 +8,7 @@ import { buildSmsBody, pickVariant } from '@/lib/concierge/smsBuilder'
 import { generateConciergeLink } from '@/lib/concierge/linkService'
 import { withAdminAuth } from '@/lib/adminAuth'
 import { resolveClientBatch } from '@/services/phiProxy'
-import { encryptPhone } from '@/lib/piiHash'
+import { encryptPhone, decryptPhone } from '@/lib/piiHash'
 import { safeError } from '@/lib/logSanitizer'
 
 export const config = { maxDuration: 60 }
@@ -147,6 +147,7 @@ async function handler(req, res) {
     }
 
     // 6d. Resolve phone for prospects (leads without boulevard_id)
+    // Phone is AES-256-GCM encrypted in leads table — decrypt transiently
     const prospectCandidates = allForSms.filter((c) => c.sub_audience === 'prospect' && c.lead_id)
     if (prospectCandidates.length) {
       const leadMap = {}
@@ -155,15 +156,15 @@ async function handler(req, res) {
         const chunk = leadIds.slice(i, i + 100)
         const { data: leadRows } = await db
           .from('leads')
-          .select('id, phone, first_name')
+          .select('id, phone_encrypted, first_name')
           .in('id', chunk)
-          .not('phone', 'is', null)
+          .not('phone_encrypted', 'is', null)
         for (const l of leadRows || []) leadMap[l.id] = l
       }
       for (const candidate of prospectCandidates) {
         const lead = leadMap[candidate.lead_id]
         if (lead) {
-          candidate._resolved_phone = lead.phone
+          candidate._resolved_phone = decryptPhone(lead.phone_encrypted)
           candidate.first_name = candidate.first_name || lead.first_name || null
         }
       }
@@ -222,7 +223,6 @@ async function handler(req, res) {
         batch_id: batchId,
         client_id: candidate.client_id,
         boulevard_id: candidate.boulevard_id || null,
-        phone: rawPhone || null, // dual-write: raw phone (remove after migration)
         phone_encrypted: phoneEncrypted,
         phone_hash_v1: candidate.phone_hash_v1 || null,
         campaign_slug: candidate.campaign_slug,
@@ -317,7 +317,6 @@ async function handler(req, res) {
           batch_id: batchId,
           client_id: null,
           boulevard_id: null,
-          phone: TEST_PHONE, // test records use raw phone directly
           phone_encrypted: encryptPhone(TEST_PHONE),
           phone_hash_v1: null,
           campaign_slug: cohortKey,

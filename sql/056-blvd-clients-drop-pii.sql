@@ -20,3 +20,7 @@ ALTER TABLE members
   DROP COLUMN IF EXISTS last_name,
   DROP COLUMN IF EXISTS email,
   DROP COLUMN IF EXISTS phone;
+
+-- Drop raw phone from concierge pipeline tables (dual-write removed in code)
+ALTER TABLE concierge_queue DROP COLUMN IF EXISTS phone;
+ALTER TABLE marketing_touches DROP COLUMN IF EXISTS phone;

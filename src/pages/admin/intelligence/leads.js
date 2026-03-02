@@ -218,9 +218,9 @@ export default function LeadsDashboard() {
       const rows = json.leads?.data || []
       if (!rows.length) return
 
-      const headers = ['Name', 'Phone', 'Email', 'Source', 'Campaign', 'Service', 'Status', 'Lead Date', 'Booked', 'Appointment']
+      const headers = ['Source', 'Campaign', 'Service', 'Status', 'Lead Date', 'Booked', 'Appointment']
       const csvRows = rows.map(l => [
-        `"${l.name}"`, l.phone || '', l.email || '', l.source,
+        l.source,
         `"${l.campaign || ''}"`, l.service_interest || '', STATUS_LABELS[l.status] || l.status,
         l.source_created_at ? new Date(l.source_created_at).toLocaleDateString() : (l.created_at ? new Date(l.created_at).toLocaleDateString() : ''),
         l.booked_at ? new Date(l.booked_at).toLocaleDateString() : '',
@@ -444,8 +444,7 @@ export default function LeadsDashboard() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-neutral-100 text-neutral-500">
-                    <SortHeader label="Name" sortKey="name" currentSort={leadSort} onSort={(k, d) => setLeadSort({ key: k, dir: d })} />
-                    <SortHeader label="Phone" sortKey="phone" currentSort={leadSort} onSort={(k, d) => setLeadSort({ key: k, dir: d })} />
+                    <SortHeader label="Name" sortKey="first_name" currentSort={leadSort} onSort={(k, d) => setLeadSort({ key: k, dir: d })} />
                     <SortHeader label="Source" sortKey="source" currentSort={leadSort} onSort={(k, d) => setLeadSort({ key: k, dir: d })} />
                     <SortHeader label="Campaign" sortKey="campaign" currentSort={leadSort} onSort={(k, d) => setLeadSort({ key: k, dir: d })} />
                     <SortHeader label="Service" sortKey="service_interest" currentSort={leadSort} onSort={(k, d) => setLeadSort({ key: k, dir: d })} />
@@ -462,8 +461,7 @@ export default function LeadsDashboard() {
                       className={`border-b border-neutral-50 cursor-pointer ${lead.status === 'converted' ? 'bg-emerald-50/60 hover:bg-emerald-50' : lead.status === 'cancelled' ? 'bg-red-50/40 hover:bg-red-50/60' : lead.status === 'booked' ? 'bg-violet-50/40 hover:bg-violet-50/60' : 'hover:bg-neutral-50'}`}
                       onClick={() => setDrawerLeadId(lead.id)}
                     >
-                      <td className="py-2 font-medium text-neutral-800">{lead.name}</td>
-                      <td className="py-2 text-neutral-600">{lead.phone || '—'}</td>
+                      <td className="py-2 font-medium text-neutral-800">{lead.first_name || '—'}</td>
                       <td className="py-2">
                         <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${SOURCE_COLORS[lead.source] || SOURCE_COLORS.other}`}>
                           {lead.source.replace(/_/g, ' ')}
@@ -585,7 +583,7 @@ export default function LeadsDashboard() {
             <div className="sticky top-0 bg-white border-b border-neutral-200 px-5 py-4 flex items-center justify-between z-10">
               <div>
                 <h3 className="text-base font-semibold text-neutral-900">
-                  {drawerData?.lead?.name || 'Loading...'}
+                  {drawerData?.lead?.first_name || 'Lead Details'}
                 </h3>
                 {drawerData?.lead && (
                   <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_COLORS[drawerData.lead.status]}`}>
@@ -609,16 +607,10 @@ export default function LeadsDashboard() {
                 <div>
                   <h4 className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">Contact</h4>
                   <div className="space-y-1.5 text-sm">
-                    {drawerData.lead.phone && (
+                    {drawerData.lead.first_name && (
                       <p className="text-neutral-700">
-                        <span className="inline-block w-14 text-neutral-400 text-xs">Phone</span>
-                        <a href={`tel:${drawerData.lead.phone}`} className="text-violet-600 hover:underline">{drawerData.lead.phone}</a>
-                      </p>
-                    )}
-                    {drawerData.lead.email && (
-                      <p className="text-neutral-700">
-                        <span className="inline-block w-14 text-neutral-400 text-xs">Email</span>
-                        <a href={`mailto:${drawerData.lead.email}`} className="text-violet-600 hover:underline">{drawerData.lead.email}</a>
+                        <span className="inline-block w-14 text-neutral-400 text-xs">Name</span>
+                        {drawerData.lead.first_name}
                       </p>
                     )}
                   </div>
