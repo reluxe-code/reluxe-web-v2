@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     children: [
       { href: '/admin/intelligence', label: 'Overview' },
       { href: '/admin/intelligence/daily-snapshot', label: 'Daily Snapshot' },
+      { href: '/admin/intelligence/monthly-snapshot', label: 'Monthly Snapshot' },
       { href: '/admin/intelligence/tox', label: 'Tox Engine' },
       { href: '/admin/intelligence/providers', label: 'Providers' },
       { href: '/admin/intelligence/provider-scorecard', label: 'Provider Scorecard' },
@@ -58,6 +59,7 @@ const NAV_ITEMS = [
       { href: '/admin/memberships', label: 'Memberships & Credits' },
       { href: '/admin/velocity', label: 'Velocity Rewards' },
       { href: '/admin/gift-cards', label: 'Gift Cards' },
+      { href: '/admin/packages', label: 'Packages' },
     ],
   },
   {

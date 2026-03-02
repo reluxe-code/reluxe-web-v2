@@ -19,6 +19,13 @@ function SnapshotBlock({ title, row }) {
       <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
         <p className="text-neutral-500">Service Revenue</p><p className="text-right font-medium">{money(row.service_revenue)}</p>
         <p className="text-neutral-500">Deferred Revenue</p><p className="text-right font-medium">{money(row.deferred_revenue)}</p>
+        {row.deferred_revenue > 0 && (
+          <>
+            <p className="text-neutral-400 pl-3 text-xs">Gift Cards</p><p className="text-right text-xs text-neutral-400">{money(row.deferred_gift_cards)}</p>
+            <p className="text-neutral-400 pl-3 text-xs">Memberships</p><p className="text-right text-xs text-neutral-400">{money(row.deferred_memberships)}</p>
+            <p className="text-neutral-400 pl-3 text-xs">Packages</p><p className="text-right text-xs text-neutral-400">{money(row.deferred_packages)}</p>
+          </>
+        )}
         <p className="text-neutral-500">Product Sales</p><p className="text-right font-medium">{money(row.product_sales)}</p>
         <p className="text-neutral-500">Bookings</p><p className="text-right font-medium">{row.bookings.toLocaleString()}</p>
         <p className="text-neutral-500">Cancellations</p><p className="text-right font-medium">{row.cancellations.toLocaleString()}</p>

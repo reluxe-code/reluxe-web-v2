@@ -82,9 +82,16 @@ function computeWindowMetrics({
   start,
   end,
   clientFutureStarts,
+  giftCardOrders,
+  memberships,
+  packages,
+  packagePriceMap,
 }) {
   let serviceRevenue = 0
   let deferredRevenue = 0
+  let deferredGiftCards = 0
+  let deferredMemberships = 0
+  let deferredPackages = 0
   let bookings = 0
   let cancellations = 0
   let cancellationsRescheduled2w = 0
@@ -122,6 +129,34 @@ function computeWindowMetrics({
     return sum + Number(row.net_sales || 0)
   }, 0)
 
+  // Gift card orders (no location field — only include for 'total' scope)
+  for (const gc of (giftCardOrders || [])) {
+    const ts = toTs(gc.created_at)
+    if (!inRange(ts, start, end)) continue
+    if (scope !== 'total') continue
+    const amount = (Number(gc.amount_cents || 0) - Number(gc.discount_cents || 0)) / 100
+    deferredGiftCards += amount
+  }
+
+  // Membership signups
+  for (const m of (memberships || [])) {
+    if (!matchesLocation(m.location_key, scope)) continue
+    const ts = toTs(m.start_on)
+    if (!inRange(ts, start, end)) continue
+    deferredMemberships += Number(m.unit_price || 0) / 100
+  }
+
+  // Package purchases
+  for (const p of (packages || [])) {
+    if (!matchesLocation(p.location_key, scope)) continue
+    const ts = toTs(p.purchased_at)
+    if (!inRange(ts, start, end)) continue
+    const price = (packagePriceMap || {})[p.name.toLowerCase().trim()] || 0
+    deferredPackages += price / 100
+  }
+
+  deferredRevenue += deferredGiftCards + deferredMemberships + deferredPackages
+
   for (const appt of appointments) {
     if (!matchesLocation(appt.location_key, scope)) continue
     const status = (appt.status || '').toLowerCase()
@@ -153,6 +188,9 @@ function computeWindowMetrics({
   return {
     service_revenue: Math.round(serviceRevenue),
     deferred_revenue: Math.round(deferredRevenue),
+    deferred_gift_cards: Math.round(deferredGiftCards),
+    deferred_memberships: Math.round(deferredMemberships),
+    deferred_packages: Math.round(deferredPackages),
     product_sales: Math.round(productSalesAmount),
     bookings,
     cancellations,
@@ -378,7 +416,7 @@ async function handler(req, res) {
   try {
     const since = addDays(new Date(), -450).toISOString()
 
-    const [appointments, appointmentServices, productSales, staffRows, clientRows] = await Promise.all([
+    const [appointments, appointmentServices, productSales, staffRows, clientRows, giftCardOrders, memberships, packages, packageCatalog] = await Promise.all([
       fetchAllRows(() =>
         db
           .from('blvd_appointments')
@@ -406,7 +444,37 @@ async function handler(req, res) {
           .from('blvd_clients')
           .select('id, boulevard_id')
       ),
+      // Deferred revenue sources
+      fetchAllRows(() =>
+        db
+          .from('gift_card_orders')
+          .select('id, amount_cents, discount_cents, payment_status, created_at')
+          .eq('payment_status', 'paid')
+          .gte('created_at', since)
+      ),
+      fetchAllRows(() =>
+        db
+          .from('blvd_memberships')
+          .select('id, name, status, start_on, unit_price, location_key')
+          .gte('start_on', since.slice(0, 10))
+      ),
+      fetchAllRows(() =>
+        db
+          .from('blvd_packages')
+          .select('id, name, status, purchased_at, location_key')
+          .gte('purchased_at', since)
+      ),
+      fetchAllRows(() =>
+        db
+          .from('blvd_package_catalog')
+          .select('name, unit_price')
+      ),
     ])
+
+    // Build package catalog price lookup
+    const packagePriceMap = Object.fromEntries(
+      (packageCatalog || []).map((c) => [c.name.toLowerCase().trim(), c.unit_price || 0])
+    )
 
     const staffById = new Map((staffRows || []).map((s) => [s.id, s]))
     const clientById = new Map((clientRows || []).map((c) => [c.id, c]))
@@ -442,65 +510,37 @@ async function handler(req, res) {
     const scopes = ['total', 'westfield', 'carmel']
     const metricsByScope = {}
 
+    const deferredArgs = { giftCardOrders, memberships, packages, packagePriceMap }
+
     for (const scope of scopes) {
       const today = computeWindowMetrics({
-        appointments,
-        appointmentServices,
-        productSales,
-        scope,
-        start: todayStart,
-        end: todayEnd,
-        clientFutureStarts,
+        appointments, appointmentServices, productSales, scope,
+        start: todayStart, end: todayEnd, clientFutureStarts, ...deferredArgs,
       })
 
       const week = computeWindowMetrics({
-        appointments,
-        appointmentServices,
-        productSales,
-        scope,
-        start: weekStart,
-        end: todayEnd,
-        clientFutureStarts,
+        appointments, appointmentServices, productSales, scope,
+        start: weekStart, end: todayEnd, clientFutureStarts, ...deferredArgs,
       })
 
       const month = computeWindowMetrics({
-        appointments,
-        appointmentServices,
-        productSales,
-        scope,
-        start: monthStart,
-        end: todayEnd,
-        clientFutureStarts,
+        appointments, appointmentServices, productSales, scope,
+        start: monthStart, end: todayEnd, clientFutureStarts, ...deferredArgs,
       })
 
       const previousWeek = computeWindowMetrics({
-        appointments,
-        appointmentServices,
-        productSales,
-        scope,
-        start: prevWeekStart,
-        end: prevWeekEnd,
-        clientFutureStarts,
+        appointments, appointmentServices, productSales, scope,
+        start: prevWeekStart, end: prevWeekEnd, clientFutureStarts, ...deferredArgs,
       })
 
       const previousMonthToDate = computeWindowMetrics({
-        appointments,
-        appointmentServices,
-        productSales,
-        scope,
-        start: prevMonthStart,
-        end: prevMonthComparableEnd,
-        clientFutureStarts,
+        appointments, appointmentServices, productSales, scope,
+        start: prevMonthStart, end: prevMonthComparableEnd, clientFutureStarts, ...deferredArgs,
       })
 
       const lastMonth = computeWindowMetrics({
-        appointments,
-        appointmentServices,
-        productSales,
-        scope,
-        start: prevMonthStart,
-        end: prevMonthEnd,
-        clientFutureStarts,
+        appointments, appointmentServices, productSales, scope,
+        start: prevMonthStart, end: prevMonthEnd, clientFutureStarts, ...deferredArgs,
       })
 
       const details = {
