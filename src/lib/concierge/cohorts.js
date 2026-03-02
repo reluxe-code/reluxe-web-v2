@@ -374,120 +374,248 @@ export async function computeAestheticWinback(db) {
 }
 
 // ============================================================
-// Cohort 4: Last-Minute Gaps "The Closer" (Priority 4)
+// Cohort 4: Last-Minute Fill (Priority 5)
+// Proactive outreach to fill openings — two sub-audiences:
+//   A) Prospects: leads who never visited → consultation offers
+//   B) Catch-all: existing clients not covered by P1–P4/P6 → return visit offers
 // ============================================================
-export async function computeLastMinuteGap(db) {
-  const now = new Date()
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
-  const tomorrowEnd = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString()
+export async function computeLastMinuteGap(db, engineConfig = {}) {
+  const candidates = []
 
-  // Find same-day/next-day cancellations
-  const { data: cancellations } = await db
-    .from('blvd_appointments')
-    .select(`
-      id, client_id, location_key, start_at, cancelled_at,
-      blvd_appointment_services (service_name, service_slug, provider_staff_id)
-    `)
-    .in('status', ['cancelled'])
-    .gte('cancelled_at', twentyFourHoursAgo)
-    .gte('start_at', now.toISOString())
-    .lte('start_at', tomorrowEnd)
+  // Sub-audience A: Prospects (never visited) → consultation offers
+  const prospects = await computeProspects(db, engineConfig)
+  candidates.push(...prospects)
 
-  if (!cancellations?.length) return []
+  // Sub-audience B: Catch-all returning clients → return visit offers
+  const returning = await computeCatchAll(db, engineConfig)
+  candidates.push(...returning)
 
-  // Build the "available slots" from cancellations
-  const slots = cancellations.map((appt) => {
-    const svc = Array.isArray(appt.blvd_appointment_services)
-      ? appt.blvd_appointment_services[0]
-      : appt.blvd_appointment_services
-    return {
-      location_key: appt.location_key,
-      start_at: appt.start_at,
-      service_name: svc?.service_name || 'Treatment',
-      service_slug: svc?.service_slug || null,
-      provider_staff_id: svc?.provider_staff_id || null,
+  return candidates
+}
+
+/**
+ * Sub-audience A: Prospects — leads who have never visited.
+ * Offers consultations to recent leads with no client record (or zero visits).
+ */
+async function computeProspects(db, engineConfig) {
+  const prospectLimit = Number(engineConfig.last_minute_prospect_limit || 50)
+  const dayMs = 24 * 60 * 60 * 1000
+  const sixMonthsAgo = new Date(Date.now() - 180 * dayMs).toISOString()
+
+  // 1. Leads with phone_hash that are new/contacted and have no linked client
+  const newLeads = await fetchAllRows(() =>
+    db
+      .from('leads')
+      .select('id, first_name, phone_hash_v1, service_interest, status, blvd_client_id, created_at')
+      .not('phone_hash_v1', 'is', null)
+      .in('status', ['new', 'contacted'])
+      .is('blvd_client_id', null)
+      .gte('created_at', sixMonthsAgo)
+  )
+
+  // 2. Leads that booked but whose linked client has visit_count = 0 (no-showed)
+  const bookedLeads = await fetchAllRows(() =>
+    db
+      .from('leads')
+      .select('id, first_name, phone_hash_v1, service_interest, status, blvd_client_id, created_at')
+      .not('phone_hash_v1', 'is', null)
+      .eq('status', 'booked')
+      .not('blvd_client_id', 'is', null)
+      .gte('created_at', sixMonthsAgo)
+  )
+
+  let zeroVisitLeads = []
+  if (bookedLeads.length) {
+    const linkedClientIds = [...new Set(bookedLeads.map((l) => l.blvd_client_id).filter(Boolean))]
+    const zeroVisitClientIds = new Set()
+    for (let i = 0; i < linkedClientIds.length; i += 100) {
+      const chunk = linkedClientIds.slice(i, i + 100)
+      const { data } = await db
+        .from('blvd_clients')
+        .select('id')
+        .in('id', chunk)
+        .eq('visit_count', 0)
+      for (const c of data || []) zeroVisitClientIds.add(c.id)
     }
+    zeroVisitLeads = bookedLeads.filter((l) => zeroVisitClientIds.has(l.blvd_client_id))
+  }
+
+  // 3. Dedup by phone_hash_v1
+  const seen = new Set()
+  const allProspects = [...newLeads, ...zeroVisitLeads].filter((l) => {
+    if (seen.has(l.phone_hash_v1)) return false
+    seen.add(l.phone_hash_v1)
+    return true
   })
 
-  // Find eligible patients: 0 marketing touches in 14 days + no upcoming appointments
-  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()
+  if (!allProspects.length) return []
 
-  // Get phone hashes that received touches in last 14 days (Zero-PHI)
-  const { data: recentTouches } = await db
-    .from('marketing_touches')
-    .select('phone_hash_v1')
-    .gte('sent_at', fourteenDaysAgo)
-    .not('phone_hash_v1', 'is', null)
+  // 4. Cross-check: exclude phone hashes that match a client with visits > 0
+  const prospectHashes = allProspects.map((l) => l.phone_hash_v1)
+  const visitedHashSet = new Set()
+  const hashToClientId = {}
+  for (let i = 0; i < prospectHashes.length; i += 100) {
+    const chunk = prospectHashes.slice(i, i + 100)
+    const { data } = await db
+      .from('blvd_clients')
+      .select('id, phone_hash_v1, visit_count')
+      .in('phone_hash_v1', chunk)
+    for (const c of data || []) {
+      hashToClientId[c.phone_hash_v1] = c.id
+      if (c.visit_count > 0) visitedHashSet.add(c.phone_hash_v1)
+    }
+  }
 
-  const touchedHashes = new Set((recentTouches || []).map((r) => r.phone_hash_v1))
+  const filteredProspects = allProspects.filter((l) => !visitedHashSet.has(l.phone_hash_v1))
+  if (!filteredProspects.length) return []
 
-  // Get all clients with phone hashes who visited in last 180 days (active patients)
-  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString()
+  // 5. Exclude those with upcoming appointments
+  const matchedClientIds = [...new Set(
+    filteredProspects.map((l) => hashToClientId[l.phone_hash_v1]).filter(Boolean)
+  )]
+  const bookedSet = matchedClientIds.length
+    ? await getUpcomingBookedClients(db, matchedClientIds)
+    : new Set()
+
+  // 6. Build candidates (capped)
+  const candidates = []
+
+  for (const lead of filteredProspects) {
+    if (candidates.length >= prospectLimit) break
+
+    const linkedClientId = hashToClientId[lead.phone_hash_v1] || lead.blvd_client_id
+    if (linkedClientId && bookedSet.has(linkedClientId)) continue
+
+    const daysSinceSubmission = Math.round(
+      (Date.now() - new Date(lead.created_at).getTime()) / dayMs
+    )
+
+    candidates.push({
+      client_id: linkedClientId || null,
+      lead_id: lead.id,
+      boulevard_id: null,
+      phone_hash_v1: lead.phone_hash_v1,
+      campaign_slug: 'last_minute_gap',
+      cohort: 'P5',
+      priority: 5,
+      sub_audience: 'prospect',
+      provider_staff_id: null,
+      provider_name: null,
+      provider_slug: null,
+      service_name: 'Consultation',
+      service_slug: 'consult',
+      location_key: null,
+      days_overdue: daysSinceSubmission,
+      avg_interval: null,
+      first_name: lead.first_name || null,
+      logic_trace: [
+        'Sub-audience: Prospect (never visited)',
+        `Lead source: ${lead.status === 'booked' ? 'booked-no-show' : 'new/contacted'}`,
+        lead.service_interest ? `Service interest: ${lead.service_interest}` : 'No specific service interest',
+        `Lead submitted ${daysSinceSubmission} days ago`,
+        'Offering: Consultation',
+      ],
+    })
+  }
+
+  return candidates
+}
+
+/**
+ * Sub-audience B: Catch-all returning clients.
+ * Targets clients inactive for 45–365 days who are NOT covered by any other cohort
+ * (not tox, massage, facial, membership-voucher, or package-voucher candidates).
+ */
+async function computeCatchAll(db, engineConfig) {
+  const minInactiveDays = Number(engineConfig.last_minute_min_inactive_days || 45)
+  const maxInactiveDays = Number(engineConfig.last_minute_max_inactive_days || 365)
+  const dayMs = 24 * 60 * 60 * 1000
+
+  // 1. Build exclusion sets — clients covered by other cohorts
+  const [toxIds, massageIds, facialIds, membershipIds, packageIds] = await Promise.all([
+    getToxClientIds(db),
+    getMassageClientIds(db),
+    getFacialClientIds(db),
+    getMembershipClientIds(db),
+    getPackageClientIds(db),
+  ])
+
+  const excludedIds = new Set([...toxIds, ...massageIds, ...facialIds, ...membershipIds, ...packageIds])
+
+  // 2. Get clients inactive for the configured window
+  const inactiveStart = new Date(Date.now() - maxInactiveDays * dayMs).toISOString()
+  const inactiveEnd = new Date(Date.now() - minInactiveDays * dayMs).toISOString()
+
   const eligibleClients = await fetchAllRows(() =>
     db
       .from('blvd_clients')
-      .select('id, boulevard_id, phone_hash_v1, last_visit_at')
+      .select('id, boulevard_id, phone_hash_v1, last_visit_at, visit_count, total_spend')
       .not('phone_hash_v1', 'is', null)
-      .gte('last_visit_at', sixMonthsAgo)
+      .gte('last_visit_at', inactiveStart)
+      .lte('last_visit_at', inactiveEnd)
+      .gt('visit_count', 0)
   )
 
-  // Exclude clients with 14-day touches and those with upcoming appointments
-  const clientIds = eligibleClients.map((c) => c.id)
+  if (!eligibleClients.length) return []
+
+  // 3. Filter out clients in other cohorts
+  const filtered = eligibleClients.filter((c) => !excludedIds.has(c.id))
+  if (!filtered.length) return []
+
+  // 4. Exclude those with upcoming appointments
+  const clientIds = filtered.map((c) => c.id)
   const bookedSet = await getUpcomingBookedClients(db, clientIds)
 
-  const providerIds = [...new Set(slots.map((s) => s.provider_staff_id).filter(Boolean))]
-  const staffLookup = await getStaffLookup(db, providerIds)
+  // 5. Resolve last provider + last service for personalization
+  const [clientProviderMap, clientLastService] = await Promise.all([
+    getLastProviderMap(db, clientIds),
+    getLastServiceMap(db, clientIds),
+  ])
 
+  const allProviderIds = [...new Set(Object.values(clientProviderMap).filter(Boolean))]
+  const staffLookup = await getStaffLookup(db, allProviderIds)
+
+  // 6. Build candidates
   const candidates = []
 
-  // For each slot, find matching patients (same location preference, not touched, not booked)
-  for (const slot of slots) {
-    const staff = slot.provider_staff_id ? staffLookup[slot.provider_staff_id] : null
+  for (const client of filtered) {
+    if (bookedSet.has(client.id)) continue
 
-    for (const client of eligibleClients) {
-      if (touchedHashes.has(client.phone_hash_v1)) continue
-      if (bookedSet.has(client.id)) continue
+    const daysSinceVisit = client.last_visit_at
+      ? Math.round((Date.now() - new Date(client.last_visit_at).getTime()) / dayMs)
+      : null
+    if (daysSinceVisit == null) continue
 
-      // Avoid duplicating same client for multiple slots
-      if (candidates.some((c) => c.client_id === client.id)) continue
+    const providerId = clientProviderMap[client.id]
+    const staff = providerId ? staffLookup[providerId] : null
+    const lastService = clientLastService[client.id]
 
-      const daysSinceVisit = client.last_visit_at
-        ? Math.round((Date.now() - new Date(client.last_visit_at).getTime()) / (1000 * 60 * 60 * 24))
-        : null
-
-      const slotTime = new Date(slot.start_at)
-      const isToday = slotTime.toDateString() === now.toDateString()
-
-      const logicTrace = [
-        `${isToday ? 'Same-day' : 'Next-day'} cancellation at ${slotTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`,
-        daysSinceVisit != null ? `Patient last visited ${daysSinceVisit}d ago` : 'Visit history unknown',
-        'Zero marketing touches in 14 days',
-        'No upcoming appointment',
-        staff ? `Available provider: ${staff.name}` : 'Provider TBD',
-        `Location: ${slot.location_key || 'unknown'}`,
-      ]
-
-      candidates.push({
-        client_id: client.id,
-        boulevard_id: client.boulevard_id,
-        phone_hash_v1: client.phone_hash_v1,
-        campaign_slug: 'last_minute_gap',
-        cohort: 'P5',
-        priority: 5,
-        provider_staff_id: slot.provider_staff_id,
-        provider_name: staff?.name || null,
-        provider_slug: staff?.slug || null,
-        service_name: slot.service_name,
-        service_slug: slot.service_slug,
-        location_key: slot.location_key,
-        days_overdue: daysSinceVisit,
-        avg_interval: null,
-        logic_trace: logicTrace,
-      })
-
-      // Limit to top 20 candidates per slot to avoid spam
-      if (candidates.filter((c) => c.campaign_slug === 'last_minute_gap').length >= 20) break
-    }
+    candidates.push({
+      client_id: client.id,
+      boulevard_id: client.boulevard_id,
+      phone_hash_v1: client.phone_hash_v1,
+      campaign_slug: 'last_minute_gap',
+      cohort: 'P5',
+      priority: 5,
+      sub_audience: 'returning',
+      provider_staff_id: providerId || null,
+      provider_name: staff?.name || null,
+      provider_slug: staff?.slug || null,
+      service_name: lastService?.service_name || 'Treatment',
+      service_slug: lastService?.service_slug || null,
+      location_key: lastService?.location_key || null,
+      days_overdue: daysSinceVisit,
+      avg_interval: null,
+      logic_trace: [
+        'Sub-audience: Returning client (catch-all)',
+        `Last visit: ${daysSinceVisit} days ago`,
+        `Total visits: ${client.visit_count}`,
+        `Total spend: $${Math.round((client.total_spend || 0) / 100)}`,
+        lastService ? `Last service: ${lastService.service_name}` : 'Last service unknown',
+        staff ? `Last provider: ${staff.name}` : 'No provider on record',
+        'Not in tox/massage/facial/membership/package cohorts',
+      ],
+    })
   }
 
   return candidates
@@ -850,4 +978,137 @@ async function getStaffLookup(db, staffIds) {
     .in('id', staffIds)
 
   return Object.fromEntries((data || []).map((s) => [s.id, s]))
+}
+
+// ── P5 catch-all exclusion helpers ──
+
+/**
+ * Get all client IDs from client_tox_summary (anyone who's ever had tox).
+ */
+async function getToxClientIds(db) {
+  const ids = new Set()
+  const rows = await fetchAllRows(() =>
+    db.from('client_tox_summary').select('client_id')
+  )
+  for (const r of rows) if (r.client_id) ids.add(r.client_id)
+  return ids
+}
+
+/**
+ * Get all client IDs from client_massage_summary (anyone who's ever had massage).
+ */
+async function getMassageClientIds(db) {
+  const ids = new Set()
+  const rows = await fetchAllRows(() =>
+    db.from('client_massage_summary').select('client_id')
+  )
+  for (const r of rows) if (r.client_id) ids.add(r.client_id)
+  return ids
+}
+
+/**
+ * Get all client IDs who have ever had a facial service (completed/final).
+ */
+async function getFacialClientIds(db) {
+  const ids = new Set()
+  const rows = await fetchAllRows(() =>
+    db
+      .from('blvd_appointment_services')
+      .select('blvd_appointments!inner(client_id)')
+      .in('service_slug', FACIAL_SLUGS)
+      .in('blvd_appointments.status', ['completed', 'final'])
+  )
+  for (const r of rows) {
+    const cid = r.blvd_appointments?.client_id
+    if (cid) ids.add(cid)
+  }
+  return ids
+}
+
+/**
+ * Get all client IDs with active memberships that have vouchers.
+ */
+async function getMembershipClientIds(db) {
+  const ids = new Set()
+  const rows = await fetchAllRows(() =>
+    db
+      .from('blvd_memberships')
+      .select('client_id')
+      .eq('status', 'ACTIVE')
+      .not('vouchers', 'is', null)
+  )
+  for (const r of rows) if (r.client_id) ids.add(r.client_id)
+  return ids
+}
+
+/**
+ * Get all client IDs with active packages that have vouchers.
+ */
+async function getPackageClientIds(db) {
+  const ids = new Set()
+  const rows = await fetchAllRows(() =>
+    db
+      .from('blvd_packages')
+      .select('client_id')
+      .in('status', ['ACTIVE'])
+      .not('vouchers', 'is', null)
+  )
+  for (const r of rows) if (r.client_id) ids.add(r.client_id)
+  return ids
+}
+
+/**
+ * Get the most recent provider_staff_id per client from completed appointments.
+ * Returns { [client_id]: provider_staff_id }.
+ */
+async function getLastProviderMap(db, clientIds) {
+  if (!clientIds.length) return {}
+
+  const map = {}
+  for (let i = 0; i < clientIds.length; i += 100) {
+    const chunk = clientIds.slice(i, i + 100)
+    const { data } = await db
+      .from('blvd_appointment_services')
+      .select('provider_staff_id, blvd_appointments!inner(client_id, start_at, status)')
+      .in('blvd_appointments.client_id', chunk)
+      .in('blvd_appointments.status', ['completed', 'final'])
+      .order('blvd_appointments(start_at)', { ascending: false })
+
+    for (const row of data || []) {
+      const cid = row.blvd_appointments?.client_id
+      if (!cid || map[cid]) continue
+      if (row.provider_staff_id) map[cid] = row.provider_staff_id
+    }
+  }
+  return map
+}
+
+/**
+ * Get the last service name/slug/location for each client from completed appointments.
+ * Returns { [client_id]: { service_name, service_slug, location_key } }.
+ */
+async function getLastServiceMap(db, clientIds) {
+  if (!clientIds.length) return {}
+
+  const map = {}
+  for (let i = 0; i < clientIds.length; i += 100) {
+    const chunk = clientIds.slice(i, i + 100)
+    const { data } = await db
+      .from('blvd_appointment_services')
+      .select('service_name, service_slug, blvd_appointments!inner(client_id, start_at, location_key, status)')
+      .in('blvd_appointments.client_id', chunk)
+      .in('blvd_appointments.status', ['completed', 'final'])
+      .order('blvd_appointments(start_at)', { ascending: false })
+
+    for (const row of data || []) {
+      const cid = row.blvd_appointments?.client_id
+      if (!cid || map[cid]) continue
+      map[cid] = {
+        service_name: row.service_name,
+        service_slug: row.service_slug,
+        location_key: row.blvd_appointments.location_key,
+      }
+    }
+  }
+  return map
 }

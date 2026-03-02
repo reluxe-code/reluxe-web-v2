@@ -139,9 +139,33 @@ async function handler(req, res) {
       if (pii) {
         candidate.first_name = pii.firstName || null
         candidate._resolved_phone = pii.mobilePhone || null
-      } else {
+      } else if (!candidate.first_name) {
+        // Prospects may already carry first_name from leads table
         candidate.first_name = null
         candidate._resolved_phone = null
+      }
+    }
+
+    // 6d. Resolve phone for prospects (leads without boulevard_id)
+    const prospectCandidates = allForSms.filter((c) => c.sub_audience === 'prospect' && c.lead_id)
+    if (prospectCandidates.length) {
+      const leadMap = {}
+      const leadIds = prospectCandidates.map((c) => c.lead_id)
+      for (let i = 0; i < leadIds.length; i += 100) {
+        const chunk = leadIds.slice(i, i + 100)
+        const { data: leadRows } = await db
+          .from('leads')
+          .select('id, phone, first_name')
+          .in('id', chunk)
+          .not('phone', 'is', null)
+        for (const l of leadRows || []) leadMap[l.id] = l
+      }
+      for (const candidate of prospectCandidates) {
+        const lead = leadMap[candidate.lead_id]
+        if (lead) {
+          candidate._resolved_phone = lead.phone
+          candidate.first_name = candidate.first_name || lead.first_name || null
+        }
       }
     }
 
@@ -215,6 +239,8 @@ async function handler(req, res) {
         location_key: candidate.location_key,
         days_overdue: candidate.days_overdue,
         avg_interval: candidate.avg_interval,
+        lead_id: candidate.lead_id || null,
+        sub_audience: candidate.sub_audience || null,
         status: candidate.status || 'ready',
         flag_reason: candidate.flag_reason || null,
       })
@@ -251,7 +277,7 @@ async function handler(req, res) {
       const testCandidate = {
         first_name: 'Kyle',
         provider_name: testProvider.name,
-        service_name: cohortKey === 'aesthetic_winback' ? 'HydraFacial' : cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : cohortKey === 'massage_journey' ? 'Massage' : 'Tox Treatment',
+        service_name: cohortKey === 'aesthetic_winback' ? 'HydraFacial' : cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : cohortKey === 'massage_journey' ? 'Massage' : cohortKey === 'last_minute_gap' ? 'Consultation' : 'Tox Treatment',
         days_overdue: 30,
         voucher_service: cohortKey === 'package_voucher' ? 'Morpheus8 Treatment' : 'Monthly Facial',
         sessions_remaining: cohortKey === 'package_voucher' ? 2 : undefined,

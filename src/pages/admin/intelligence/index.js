@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { supabase } from '@/lib/supabase'
+import { adminFetch } from '@/lib/adminFetch'
 
 function QuickLink({ href, title, description, stat, badge }) {
   return (
@@ -35,16 +35,13 @@ export default function IntelligenceOverview() {
   }, [])
 
   async function loadStats() {
-    const [clients, appts, toxAppts] = await Promise.all([
-      supabase.from('blvd_clients').select('id', { count: 'exact', head: true }),
-      supabase.from('blvd_appointments').select('id', { count: 'exact', head: true }).in('status', ['completed', 'final']),
-      supabase.from('blvd_appointment_services').select('id', { count: 'exact', head: true }).eq('service_slug', 'tox'),
-    ])
-    setStats({
-      clients: clients.count || 0,
-      completedAppts: appts.count || 0,
-      toxServices: toxAppts.count || 0,
-    })
+    try {
+      const res = await adminFetch('/api/admin/intelligence/overview-stats')
+      const json = await res.json()
+      if (res.ok) setStats(json)
+    } catch {
+      // stats are non-critical, fail silently
+    }
   }
 
   return (
