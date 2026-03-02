@@ -3,8 +3,9 @@
 // POST — processes up to 100 unsynced leads per call.
 import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
       synced++
     } else {
       console.error(`[sync-contacts] Failed for lead ${lead.id}:`, result.error, result.detail)
-      errors.push({ lead_id: lead.id, phone: lead.phone, error: result.error, detail: result.detail })
+      errors.push({ lead_id: lead.id, error: result.error, detail: result.detail })
     }
   }
 
@@ -53,3 +54,5 @@ export default async function handler(req, res) {
     errors: errors.length > 0 ? errors : undefined,
   })
 }
+
+export default withAdminAuth(handler)

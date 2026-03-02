@@ -902,9 +902,9 @@ export default function TodayPage() {
       booking_provider: result.opening?.provider?.name,
       duration_ms: getDuration(),
       completed_at: new Date().toISOString(),
-      contact_phone: result.phone || null,
-      client_name: [conf.firstName, conf.lastName].filter(Boolean).join(' ') || null,
-      client_email: conf.email || null,
+      contact_phone: result.phone || null,      // hashed server-side
+      client_name: [conf.firstName, conf.lastName].filter(Boolean).join(' ') || null, // stored as initial only
+      client_email: conf.email || null,       // hashed server-side
       blvd_client_id: result.clientId || null,
     })
 

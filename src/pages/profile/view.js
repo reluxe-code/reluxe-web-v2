@@ -2,6 +2,22 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 
+const ALLOWED_ORIGINS = [
+  'https://reluxemedspa.com',
+  'https://www.reluxemedspa.com',
+  'https://reluxe-web-v2.vercel.app',
+]
+
+function isAllowedUrl(url) {
+  try {
+    const parsed = new URL(url)
+    return ALLOWED_ORIGINS.some(origin => parsed.origin === origin) || parsed.origin === window.location.origin
+  } catch {
+    // Relative paths are OK
+    return url.startsWith('/')
+  }
+}
+
 export default function ProfileMobileView() {
   const router = useRouter()
   const [url, setUrl] = useState('')
@@ -9,7 +25,10 @@ export default function ProfileMobileView() {
   useEffect(() => {
     const link = router.query.url
     if (link) {
-      setUrl(decodeURIComponent(link))
+      const decoded = decodeURIComponent(link)
+      if (isAllowedUrl(decoded)) {
+        setUrl(decoded)
+      }
     }
   }, [router.query.url])
 
@@ -24,12 +43,17 @@ export default function ProfileMobileView() {
         </button>
         <h1 className="text-lg font-semibold">Your RELUXE Hub</h1>
       </div>
-      {url && (
+      {url ? (
         <iframe
           src={url}
           className="w-full h-full border-none"
           title="RELUXE View"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
         />
+      ) : (
+        <div className="flex-1 flex items-center justify-center text-neutral-500">
+          Invalid or unauthorized URL
+        </div>
       )}
     </div>
   )

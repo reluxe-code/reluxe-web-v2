@@ -43,18 +43,21 @@ async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 50000) {
  */
 export async function computeToxJourney(db) {
   // Get all tox patients who are due, overdue, or probably lost
+  // Select boulevard_id + phone_hash_v1 instead of raw PII (Zero-PHI)
   const toxClients = await fetchAllRows(() =>
     db
       .from('client_tox_summary')
-      .select('client_id, first_name, last_name, name, phone, email, tox_visits, days_since_last_tox, avg_tox_interval_days, last_provider_staff_id, last_location_key, tox_segment')
+      .select('client_id, boulevard_id, tox_visits, days_since_last_tox, avg_tox_interval_days, last_provider_staff_id, last_location_key, tox_segment')
       .in('tox_segment', ['due', 'overdue', 'probably_lost'])
-      .not('phone', 'is', null)
   )
 
   if (!toxClients.length) return []
 
-  // Get upcoming appointments to exclude patients who already booked
+  // Get boulevard_id + phone_hash_v1 for anti-spam dedup (views don't carry hashes)
   const clientIds = toxClients.map((c) => c.client_id)
+  const hashLookup = await getClientHashLookup(db, clientIds)
+
+  // Get upcoming appointments to exclude patients who already booked
   const bookedSet = await getUpcomingBookedClients(db, clientIds)
 
   // Resolve provider names
@@ -100,10 +103,13 @@ export async function computeToxJourney(db) {
       providerName ? `Last provider: ${providerName}` : 'No provider on record',
     ]
 
+    const clientHash = hashLookup[client.client_id]
+    if (!clientHash) continue // no phone hash = can't send SMS
+
     candidates.push({
       client_id: client.client_id,
-      phone: client.phone,
-      first_name: client.first_name || client.name?.split(' ')[0] || null,
+      boulevard_id: client.boulevard_id || clientHash.boulevard_id,
+      phone_hash_v1: clientHash.phone_hash_v1,
       campaign_slug: 'tox_journey',
       cohort: 'P1',
       priority: 1,
@@ -149,13 +155,13 @@ export async function computeVoucherRecovery(db) {
 
   if (!withVouchers.length) return []
 
-  // Get client details
+  // Get client details (Zero-PHI: boulevard_id + phone_hash_v1 only)
   const clientIds = [...new Set(withVouchers.map((m) => m.client_id).filter(Boolean))]
   const { data: clients } = await db
     .from('blvd_clients')
-    .select('id, first_name, last_name, name, phone, email, last_visit_at')
+    .select('id, boulevard_id, phone_hash_v1, last_visit_at')
     .in('id', clientIds)
-    .not('phone', 'is', null)
+    .not('phone_hash_v1', 'is', null)
 
   const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]))
 
@@ -219,8 +225,8 @@ export async function computeVoucherRecovery(db) {
 
     candidates.push({
       client_id: client.id,
-      phone: client.phone,
-      first_name: client.first_name || client.name?.split(' ')[0] || null,
+      boulevard_id: client.boulevard_id,
+      phone_hash_v1: client.phone_hash_v1,
       campaign_slug: 'membership_voucher',
       cohort: 'P3',
       priority: 3,
@@ -293,12 +299,12 @@ export async function computeAestheticWinback(db) {
   const clientIds = Object.keys(clientFacials)
   if (!clientIds.length) return []
 
-  // Get client details
+  // Get client details (Zero-PHI: boulevard_id + phone_hash_v1 only)
   const { data: clients } = await db
     .from('blvd_clients')
-    .select('id, first_name, last_name, name, phone, email')
+    .select('id, boulevard_id, phone_hash_v1')
     .in('id', clientIds)
-    .not('phone', 'is', null)
+    .not('phone_hash_v1', 'is', null)
 
   const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]))
 
@@ -347,8 +353,8 @@ export async function computeAestheticWinback(db) {
 
     candidates.push({
       client_id: clientId,
-      phone: client.phone,
-      first_name: client.first_name || client.name?.split(' ')[0] || null,
+      boulevard_id: client.boulevard_id,
+      phone_hash_v1: client.phone_hash_v1,
       campaign_slug: 'aesthetic_winback',
       cohort: 'P4',
       priority: 4,
@@ -406,21 +412,22 @@ export async function computeLastMinuteGap(db) {
   // Find eligible patients: 0 marketing touches in 14 days + no upcoming appointments
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Get phones that received touches in last 14 days
+  // Get phone hashes that received touches in last 14 days (Zero-PHI)
   const { data: recentTouches } = await db
     .from('marketing_touches')
-    .select('phone')
+    .select('phone_hash_v1')
     .gte('sent_at', fourteenDaysAgo)
+    .not('phone_hash_v1', 'is', null)
 
-  const touchedPhones = new Set((recentTouches || []).map((r) => r.phone))
+  const touchedHashes = new Set((recentTouches || []).map((r) => r.phone_hash_v1))
 
-  // Get all clients with phone numbers who visited in last 180 days (active patients)
+  // Get all clients with phone hashes who visited in last 180 days (active patients)
   const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString()
   const eligibleClients = await fetchAllRows(() =>
     db
       .from('blvd_clients')
-      .select('id, first_name, last_name, name, phone, email, last_visit_at')
-      .not('phone', 'is', null)
+      .select('id, boulevard_id, phone_hash_v1, last_visit_at')
+      .not('phone_hash_v1', 'is', null)
       .gte('last_visit_at', sixMonthsAgo)
   )
 
@@ -438,7 +445,7 @@ export async function computeLastMinuteGap(db) {
     const staff = slot.provider_staff_id ? staffLookup[slot.provider_staff_id] : null
 
     for (const client of eligibleClients) {
-      if (touchedPhones.has(client.phone)) continue
+      if (touchedHashes.has(client.phone_hash_v1)) continue
       if (bookedSet.has(client.id)) continue
 
       // Avoid duplicating same client for multiple slots
@@ -462,8 +469,8 @@ export async function computeLastMinuteGap(db) {
 
       candidates.push({
         client_id: client.id,
-        phone: client.phone,
-        first_name: client.first_name || client.name?.split(' ')[0] || null,
+        boulevard_id: client.boulevard_id,
+        phone_hash_v1: client.phone_hash_v1,
         campaign_slug: 'last_minute_gap',
         cohort: 'P5',
         priority: 5,
@@ -527,13 +534,13 @@ export async function computePackageVoucherRecovery(db, engineConfig = {}) {
 
   if (!withVouchers.length) return []
 
-  // Get client details
+  // Get client details (Zero-PHI: boulevard_id + phone_hash_v1 only)
   const clientIds = [...new Set(withVouchers.map((p) => p.client_id).filter(Boolean))]
   const { data: clients } = await db
     .from('blvd_clients')
-    .select('id, first_name, last_name, name, phone, email, last_visit_at')
+    .select('id, boulevard_id, phone_hash_v1, last_visit_at')
     .in('id', clientIds)
-    .not('phone', 'is', null)
+    .not('phone_hash_v1', 'is', null)
 
   const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]))
 
@@ -673,8 +680,8 @@ export async function computePackageVoucherRecovery(db, engineConfig = {}) {
 
       candidates.push({
         client_id: client.id,
-        phone: client.phone,
-        first_name: client.first_name || client.name?.split(' ')[0] || null,
+        boulevard_id: client.boulevard_id,
+        phone_hash_v1: client.phone_hash_v1,
         campaign_slug: 'package_voucher',
         cohort: 'P6',
         priority: priorityBoost,
@@ -724,17 +731,20 @@ const MASSAGE_MILESTONES = [
  * @returns {Promise<Array>} candidates
  */
 export async function computeMassageJourney(db) {
+  // Select boulevard_id + behavioral data (no PII) from rebuilt view
   const massageClients = await fetchAllRows(() =>
     db
       .from('client_massage_summary')
-      .select('client_id, first_name, last_name, name, phone, email, massage_visits, days_since_last_massage, avg_massage_interval_days, last_provider_staff_id, last_location_key, massage_tier')
+      .select('client_id, boulevard_id, massage_visits, days_since_last_massage, avg_massage_interval_days, last_provider_staff_id, last_location_key, massage_tier')
       .not('massage_tier', 'is', null)
-      .not('phone', 'is', null)
   )
 
   if (!massageClients.length) return []
 
+  // Get phone_hash_v1 for anti-spam dedup (views don't carry hashes)
   const clientIds = massageClients.map((c) => c.client_id)
+  const hashLookup = await getClientHashLookup(db, clientIds)
+
   const bookedSet = await getUpcomingBookedClients(db, clientIds)
 
   const providerIds = [...new Set(massageClients.map((c) => c.last_provider_staff_id).filter(Boolean))]
@@ -759,10 +769,13 @@ export async function computeMassageJourney(db) {
       providerName ? `Last provider: ${providerName}` : 'No provider on record',
     ]
 
+    const clientHash = hashLookup[client.client_id]
+    if (!clientHash) continue // no phone hash = can't send SMS
+
     candidates.push({
       client_id: client.client_id,
-      phone: client.phone,
-      first_name: client.first_name || client.name?.split(' ')[0] || null,
+      boulevard_id: client.boulevard_id || clientHash.boulevard_id,
+      phone_hash_v1: clientHash.phone_hash_v1,
       campaign_slug: 'massage_journey',
       cohort: 'P2',
       priority: 2,
@@ -783,6 +796,28 @@ export async function computeMassageJourney(db) {
 // ============================================================
 // Shared helpers
 // ============================================================
+
+/**
+ * Batch-fetch boulevard_id + phone_hash_v1 from blvd_clients for a list of client IDs.
+ * Used by view-based cohorts (tox, massage) that don't have phone_hash_v1 in the view.
+ * Returns { [client_id]: { id, boulevard_id, phone_hash_v1 } }.
+ */
+async function getClientHashLookup(db, clientIds) {
+  if (!clientIds.length) return {}
+  const lookup = {}
+  for (let i = 0; i < clientIds.length; i += 100) {
+    const chunk = clientIds.slice(i, i + 100)
+    const { data } = await db
+      .from('blvd_clients')
+      .select('id, boulevard_id, phone_hash_v1')
+      .in('id', chunk)
+      .not('phone_hash_v1', 'is', null)
+    for (const row of data || []) {
+      lookup[row.id] = row
+    }
+  }
+  return lookup
+}
 
 async function getUpcomingBookedClients(db, clientIds) {
   if (!clientIds.length) return new Set()

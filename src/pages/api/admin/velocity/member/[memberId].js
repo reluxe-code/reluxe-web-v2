@@ -1,8 +1,9 @@
 // Admin API: Velocity member detail + admin actions (reactivate, clawback, manual_adjust)
 import { getServiceClient } from '@/lib/supabase'
 import { getCurrentBalance, updateBalanceCache, pushCreditToBlvd, clawbackFromBlvd, formatCents } from '@/lib/velocity'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const { memberId } = req.query
   if (!memberId) return res.status(400).json({ error: 'memberId required' })
 
@@ -12,7 +13,7 @@ export default async function handler(req, res) {
     const [{ data: ledger }, { data: balance }, { data: member }] = await Promise.all([
       db.from('velocity_ledger').select('*').eq('member_id', memberId).order('created_at', { ascending: false }).limit(100),
       db.from('velocity_balances').select('*').eq('member_id', memberId).maybeSingle(),
-      db.from('members').select('first_name, last_name, phone, email, blvd_client_id').eq('id', memberId).maybeSingle(),
+      db.from('members').select('id, blvd_client_id').eq('id', memberId).maybeSingle(),
     ])
     return res.json({ ledger: ledger || [], balance, member })
   }
@@ -130,3 +131,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' })
 }
+
+export default withAdminAuth(handler)

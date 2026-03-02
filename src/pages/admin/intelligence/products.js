@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ label, value, sub }) {
   return (
@@ -41,7 +42,7 @@ export default function ProductIntelligencePage() {
       const params = new URLSearchParams({ provider, months })
       if (journeySku) params.set('sku', journeySku)
 
-      const res = await fetch(`/api/admin/intelligence/products?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/products?${params}`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to load product intelligence')
 
@@ -65,7 +66,7 @@ export default function ProductIntelligencePage() {
     setError(null)
     setSyncResult(null)
     try {
-      const res = await fetch('/api/admin/blvd-sync/product-sales', {
+      const res = await adminFetch('/api/admin/blvd-sync/product-sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode, fullRefresh }),

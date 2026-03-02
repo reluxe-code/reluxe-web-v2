@@ -2,6 +2,7 @@
 // Site Audit dashboard — errors, 404s, login failures, booking fallbacks.
 import { useState, useEffect, useCallback, useRef } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 const EVENT_TYPES = [
   { value: 'all', label: 'All Events' },
@@ -69,7 +70,7 @@ export default function AuditDashboard() {
       if (typeFilter !== 'all') params.set('type', typeFilter)
       if (search.trim()) params.set('search', search.trim())
 
-      const res = await fetch(`/api/admin/audit/events?${params}`)
+      const res = await adminFetch(`/api/admin/audit/events?${params}`)
       if (!res.ok) {
         const text = await res.text()
         let msg = 'Failed to load'
@@ -107,7 +108,7 @@ export default function AuditDashboard() {
   const handleToggle = async () => {
     setToggling(true)
     try {
-      const res = await fetch('/api/admin/audit/events', {
+      const res = await adminFetch('/api/admin/audit/events', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: !enabled }),

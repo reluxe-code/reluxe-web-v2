@@ -1,10 +1,11 @@
 // src/pages/api/admin/leads/[id].js
 // Update lead status, notes, or manual blvd_client link.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 const VALID_STATUSES = ['new', 'contacted', 'booked', 'cancelled', 'converted', 'lost']
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const { id } = req.query
   if (!id) return res.status(400).json({ error: 'Lead ID required' })
 
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
 
     if (lead.blvd_client_id) {
       const { data: c } = await db.from('blvd_clients')
-        .select('id, name, first_name, last_name, email, phone, visit_count, total_spend, first_visit_at, last_visit_at, tags')
+        .select('id, boulevard_id, visit_count, total_spend, first_visit_at, last_visit_at, tags')
         .eq('id', lead.blvd_client_id)
         .single()
       client = c
@@ -53,7 +54,19 @@ export default async function handler(req, res) {
       .order('created_at', { ascending: false }).limit(20)
 
     return res.json({
-      lead: { ...lead, name: [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unknown' },
+      lead: {
+        id: lead.id,
+        source: lead.source,
+        campaign: lead.campaign,
+        service_interest: lead.service_interest,
+        status: lead.status,
+        notes: lead.notes,
+        blvd_client_id: lead.blvd_client_id,
+        days_to_convert: lead.days_to_convert,
+        converted_at: lead.converted_at,
+        source_created_at: lead.source_created_at,
+        created_at: lead.created_at,
+      },
       client,
       appointments,
       events: events || [],
@@ -113,3 +126,5 @@ export default async function handler(req, res) {
 
   return res.json({ ok: true, lead: updated })
 }
+
+export default withAdminAuth(handler)

@@ -1,6 +1,8 @@
 // src/pages/api/admin/intelligence/actions.js
 // Actionable segments — all computed patient segments with export support.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   const rows = []
@@ -26,7 +28,7 @@ const SEGMENT_META = {
   no_rebook: { label: 'No Rebook', color: 'amber', description: 'Completed recently but no future appointment scheduled.' },
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { segment: segmentFilter, search, page = '1', limit = '50' } = req.query
@@ -78,14 +80,35 @@ export default async function handler(req, res) {
       })
     }
 
-    let query = db
-      .from('blvd_clients')
-      .select('id, name, first_name, last_name, email, phone, total_spend, visit_count, last_visit_at', { count: 'exact' })
-      .in('id', clientIds)
-
+    // Search: use hash-based phone/email matching
+    let searchClientIds = null
     if (search) {
       const q = `%${search}%`
-      query = query.or(`name.ilike.${q},email.ilike.${q},phone.ilike.${q},first_name.ilike.${q},last_name.ilike.${q}`)
+      const conditions = [`name.ilike.${q}`]
+      const phoneHash = hashPhone(search)
+      const emailHash = hashEmail(search)
+      if (phoneHash) conditions.push(`phone_hash_v1.eq.${phoneHash}`)
+      if (emailHash) conditions.push(`email_hash_v1.eq.${emailHash}`)
+      const { data: matchingClients } = await db
+        .from('blvd_clients')
+        .select('id')
+        .or(conditions.join(','))
+        .in('id', clientIds)
+      searchClientIds = (matchingClients || []).map(c => c.id)
+    }
+
+    let query = db
+      .from('blvd_clients')
+      .select('id, boulevard_id, total_spend, visit_count, last_visit_at', { count: 'exact' })
+
+    if (search) {
+      if (searchClientIds && searchClientIds.length > 0) {
+        query = query.in('id', searchClientIds)
+      } else {
+        query = query.eq('id', '00000000-0000-0000-0000-000000000000')
+      }
+    } else {
+      query = query.in('id', clientIds)
     }
 
     query = query.order('total_spend', { ascending: false })
@@ -97,9 +120,7 @@ export default async function handler(req, res) {
 
     const patient_list = (clients || []).map((c) => ({
       client_id: c.id,
-      name: c.name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown',
-      email: c.email,
-      phone: c.phone,
+      boulevard_id: c.boulevard_id || null,
       total_spend: Math.round(Number(c.total_spend || 0)),
       visit_count: c.visit_count || 0,
       last_visit: c.last_visit_at,
@@ -121,3 +142,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

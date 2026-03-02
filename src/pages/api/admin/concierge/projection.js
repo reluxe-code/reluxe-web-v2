@@ -2,12 +2,13 @@
 // GET ?offset=3  — project cohort volumes for N days from now.
 // Returns candidate counts + patient lists per cohort for that future date.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 const DEFAULT_TOX_CYCLE = 90
 const MIN_VISITS_FOR_PERSONALIZED_INTERVAL = 3
 const FACIAL_SLUGS = ['facials', 'glo2facial', 'hydrafacial']
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -47,8 +48,7 @@ export default async function handler(req, res) {
 async function projectToxJourney(db, offset) {
   const { data: toxClients, error } = await db
     .from('client_tox_summary')
-    .select('client_id, first_name, last_name, name, phone, tox_visits, days_since_last_tox, avg_tox_interval_days, last_provider_staff_id, tox_segment')
-    .not('phone', 'is', null)
+    .select('client_id, tox_visits, days_since_last_tox, avg_tox_interval_days, last_provider_staff_id, tox_segment')
     .not('days_since_last_tox', 'is', null)
 
   if (error) throw error
@@ -84,8 +84,6 @@ async function projectToxJourney(db, offset) {
 
     patients.push({
       client_id: client.client_id,
-      name: client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim(),
-      phone: client.phone,
       days_overdue: projectedOverdue,
       cycle,
       segment: client.tox_segment,
@@ -121,9 +119,8 @@ async function projectVoucherRecovery(db, offset) {
   const clientIds = [...new Set(withVouchers.map((m) => m.client_id).filter(Boolean))]
   const { data: clients } = await db
     .from('blvd_clients')
-    .select('id, first_name, last_name, name, phone, last_visit_at')
+    .select('id, boulevard_id, last_visit_at')
     .in('id', clientIds)
-    .not('phone', 'is', null)
 
   const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]))
   const bookedSet = await getBookedClients(db, clientIds)
@@ -152,8 +149,7 @@ async function projectVoucherRecovery(db, offset) {
     seenClients.add(client.id)
     patients.push({
       client_id: client.id,
-      name: client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim(),
-      phone: client.phone,
+      boulevard_id: client.boulevard_id || null,
       days_since_visit: daysSince,
       voucher_name: unusedVoucher.services?.[0]?.name || membership.name,
       membership: membership.name,
@@ -214,9 +210,8 @@ async function projectAestheticWinback(db, offset, targetDate) {
 
   const { data: clients } = await db
     .from('blvd_clients')
-    .select('id, first_name, last_name, name, phone')
+    .select('id, boulevard_id')
     .in('id', clientIds)
-    .not('phone', 'is', null)
 
   const clientMap = Object.fromEntries((clients || []).map((c) => [c.id, c]))
 
@@ -250,8 +245,7 @@ async function projectAestheticWinback(db, offset, targetDate) {
 
     patients.push({
       client_id: clientId,
-      name: client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim(),
-      phone: client.phone,
+      boulevard_id: client.boulevard_id || null,
       days_since_facial: daysSinceToday + offset,
       service_name: facial.service_name,
       provider_name: staff?.name || null,
@@ -286,3 +280,5 @@ async function getStaffLookup(db, staffIds) {
   const { data } = await db.from('staff').select('id, name, slug, title').in('id', staffIds)
   return Object.fromEntries((data || []).map((s) => [s.id, s]))
 }
+
+export default withAdminAuth(handler)

@@ -1,10 +1,11 @@
 // src/pages/api/admin/blvd-sync/discover.js
 // Tests Admin API connection and discovers available queries via introspection.
 import { adminQuery, ADMIN_URL } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const results = { url: ADMIN_URL, steps: [] }
@@ -284,3 +285,5 @@ export default async function handler(req, res) {
 
   return res.json({ connected: true, ...results })
 }
+
+export default withAdminAuth(handler)

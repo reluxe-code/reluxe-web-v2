@@ -1,8 +1,10 @@
 // src/pages/api/admin/intelligence/experiments.js
 // Dashboard API for experiment analytics — aggregates sessions + events.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { maskPhone, maskEmail, nameInitial } from '@/lib/piiHash'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -120,9 +122,9 @@ export default async function handler(req, res) {
         is_heavy_responder: s.is_heavy_responder,
         utm_source: s.utm_source,
         utm_campaign: s.utm_campaign,
-        contact_phone: s.contact_phone || null,
-        client_name: s.client_name || null,
-        client_email: s.client_email || null,
+        contact_phone: maskPhone(s.contact_phone),
+        client_name: s.client_name_initial || nameInitial(s.client_name) || null,
+        client_email: maskEmail(s.client_email),
         blvd_client_id: s.blvd_client_id || null,
         appointment_id: s.appointment_id || null,
         event_count: pse?.count || 0,
@@ -187,9 +189,9 @@ export default async function handler(req, res) {
       return {
         session_id: s.session_id,
         started_at: s.started_at,
-        client_name: s.client_name || null,
-        client_email: s.client_email || null,
-        contact_phone: s.contact_phone || null,
+        client_name: s.client_name_initial || nameInitial(s.client_name) || null,
+        client_email: maskEmail(s.client_email),
+        contact_phone: maskPhone(s.contact_phone),
         booking_service: s.booking_service || null,
         booking_location: s.booking_location || null,
         booking_provider: s.booking_provider || null,
@@ -238,3 +240,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message || 'Unknown error' })
   }
 }
+
+export default withAdminAuth(handler)

@@ -916,9 +916,9 @@ export default function RevealBoard() {
       booking_provider: data.tile?.providerSlug,
       duration_ms: getDuration(),
       completed_at: new Date().toISOString(),
-      contact_phone: data.phone || null,
-      client_name: [conf.firstName, conf.lastName].filter(Boolean).join(' ') || null,
-      client_email: conf.email || null,
+      contact_phone: data.phone || null,      // hashed server-side
+      client_name: [conf.firstName, conf.lastName].filter(Boolean).join(' ') || null, // stored as initial only
+      client_email: conf.email || null,       // hashed server-side
       blvd_client_id: data.clientId || null,
     })
 

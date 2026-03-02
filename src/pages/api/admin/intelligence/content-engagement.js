@@ -1,8 +1,9 @@
 // src/pages/api/admin/intelligence/content-engagement.js
 // Dashboard API for inspiration article & widget engagement analytics.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { days = '30', start_date, end_date } = req.query
@@ -131,3 +132,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

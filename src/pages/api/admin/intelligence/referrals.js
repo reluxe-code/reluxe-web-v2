@@ -1,8 +1,9 @@
 // src/pages/api/admin/intelligence/referrals.js
 // Admin API: referral program summary, funnel, top referrers, channel breakdown, referral list.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -82,29 +83,16 @@ export default async function handler(req, res) {
       .sort((a, b) => b.total_completed - a.total_completed || Number(b.total_earned) - Number(a.total_earned))
       .slice(0, 20)
 
-    // Get member names for top referrers
-    const memberIds = topReferrers.map(c => c.member_id)
-    const { data: members } = memberIds.length
-      ? await db.from('members').select('id, first_name, last_name, email').in('id', memberIds)
-      : { data: [] }
-
-    const memberMap = {}
-    members?.forEach(m => { memberMap[m.id] = m })
-
-    const topReferrersFormatted = topReferrers.map(c => {
-      const m = memberMap[c.member_id]
-      return {
-        code: c.code,
-        name: m ? `${m.first_name || ''} ${m.last_name || ''}`.trim() : 'Unknown',
-        email: m?.email || '',
-        tier: c.tier,
-        shares: c.total_shares,
-        clicks: c.total_clicks,
-        booked: c.total_signups,
-        completed: c.total_completed,
-        earned: Number(c.total_earned),
-      }
-    })
+    const topReferrersFormatted = topReferrers.map(c => ({
+      code: c.code,
+      member_id: c.member_id,
+      tier: c.tier,
+      shares: c.total_shares,
+      clicks: c.total_clicks,
+      booked: c.total_signups,
+      completed: c.total_completed,
+      earned: Number(c.total_earned),
+    }))
 
     // ── Pending credits (booked but not yet credited) ──
     const { data: pending } = await db
@@ -178,3 +166,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

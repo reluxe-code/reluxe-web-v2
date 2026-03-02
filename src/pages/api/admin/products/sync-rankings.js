@@ -1,8 +1,9 @@
 // src/pages/api/admin/products/sync-rankings.js
 // Sync product sales rankings from Boulevard POS velocity data
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -82,3 +83,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

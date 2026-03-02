@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { isValidPhone, toE164 } from '@/lib/phoneUtils'
 import { isValidEmail, normalizeEmail } from '@/lib/emailUtils'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
+import { safeError, safeLog } from '@/lib/logSanitizer'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -43,15 +44,15 @@ export default async function handler(req, res) {
       email: normalized,
       email_confirm: true,
     }).catch((e) => {
-      console.error('[member/send-otp] createUser (email) exception:', e.message)
+      safeError('[member/send-otp] createUser (email) exception:', e.message)
       return { error: null }
     })
 
-    console.log('[member/send-otp] Sending email OTP to:', normalized)
+    safeLog('[member/send-otp] Sending email OTP')
     const { data: otpData, error: otpError } = await anonClient.auth.signInWithOtp({ email: normalized })
 
     if (otpError) {
-      console.error('[member/send-otp] Email OTP error:', JSON.stringify({
+      safeError('[member/send-otp] Email OTP error:', JSON.stringify({
         message: otpError.message,
         status: otpError.status,
         code: otpError.code,
@@ -59,10 +60,10 @@ export default async function handler(req, res) {
       if (otpError.status === 429 || otpError.code === 'over_email_send_rate_limit' || otpError.message?.includes('rate') || otpError.message?.includes('seconds')) {
         return res.status(429).json({ error: 'Please wait a moment before requesting another code.' })
       }
-      return res.status(500).json({ error: 'Failed to send verification code', debug: otpError.message })
+      return res.status(500).json({ error: 'Failed to send verification code' })
     }
 
-    console.log('[member/send-otp] Email OTP success:', JSON.stringify(otpData))
+    safeLog('[member/send-otp] Email OTP sent successfully')
     return res.json({ success: true, method: 'email' })
   }
 
@@ -78,18 +79,18 @@ export default async function handler(req, res) {
     phone: e164,
     phone_confirm: false,
   }).catch((e) => {
-    console.error('[member/send-otp] createUser exception:', e.message)
+    safeError('[member/send-otp] createUser exception:', e.message)
     return { error: null }
   })
   if (error) {
-    console.log('[member/send-otp] createUser error (may be expected):', error.message)
+    safeLog('[member/send-otp] createUser error (may be expected):', error.message)
   }
 
-  console.log('[member/send-otp] Sending SMS OTP to:', e164)
+  safeLog('[member/send-otp] Sending SMS OTP')
   const { data: otpData, error: otpError } = await anonClient.auth.signInWithOtp({ phone: e164 })
 
   if (otpError) {
-    console.error('[member/send-otp] SMS OTP error:', JSON.stringify({
+    safeError('[member/send-otp] SMS OTP error:', JSON.stringify({
       message: otpError.message,
       status: otpError.status,
       code: otpError.code,
@@ -97,9 +98,9 @@ export default async function handler(req, res) {
     if (otpError.message?.includes('rate')) {
       return res.status(429).json({ error: 'Too many requests. Please wait a moment.' })
     }
-    return res.status(500).json({ error: 'Failed to send verification code', debug: otpError.message })
+    return res.status(500).json({ error: 'Failed to send verification code' })
   }
 
-  console.log('[member/send-otp] SMS OTP success:', JSON.stringify(otpData))
+  safeLog('[member/send-otp] SMS OTP sent successfully')
   res.json({ success: true, method: 'sms' })
 }

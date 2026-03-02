@@ -1,7 +1,8 @@
 // Admin API: Velocity service multipliers CRUD
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const db = getServiceClient()
 
   if (req.method === 'GET') {
@@ -40,3 +41,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' })
 }
+
+export default withAdminAuth(handler)

@@ -6,6 +6,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { sendSMS } from '@/lib/bird'
+import { hashPhone } from '@/lib/piiHash'
+import { resolveClient } from '@/services/phiProxy'
 
 const MAX_PENDING_INVITES = 20
 const INVITE_EXPIRY_DAYS = 15
@@ -31,7 +33,7 @@ async function authenticateMember(req) {
   const db = getServiceClient()
   const { data: member } = await db
     .from('members')
-    .select('id, first_name, last_name, phone, email')
+    .select('id, phone_hash_v1, blvd_client_id')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
@@ -96,10 +98,10 @@ async function handlePost(req, res) {
     return res.status(400).json({ error: 'Invalid phone number' })
   }
 
-  // Self-referral check
-  const memberPhone = (member.phone || '').replace(/\D/g, '').slice(-10)
-  const inviteePhone = normalized.replace(/\D/g, '').slice(-10)
-  if (memberPhone && inviteePhone && memberPhone === inviteePhone) {
+  // Self-referral check (hash-based — no raw phone needed)
+  const inviteeDigits = normalized.replace(/\D/g, '').slice(-10)
+  const inviteeHash = hashPhone(normalized)
+  if (member.phone_hash_v1 && inviteeHash && member.phone_hash_v1 === inviteeHash) {
     return res.status(400).json({ error: "You can't refer yourself" })
   }
 
@@ -119,7 +121,7 @@ async function handlePost(req, res) {
     .from('referrals')
     .select('id')
     .eq('referrer_member_id', member.id)
-    .ilike('referee_phone', `%${inviteePhone}`)
+    .ilike('referee_phone', `%${inviteeDigits}`)
     .in('status', ['invited', 'booked', 'completed', 'credited'])
     .limit(1)
 
@@ -177,10 +179,19 @@ async function handlePost(req, res) {
     .eq('id', rc.id)
     .catch(() => {})
 
+  // Resolve member's first name from PHI Proxy for SMS personalization
+  let memberName = 'Your friend'
+  if (member.blvd_client_id) {
+    const { data: bc } = await db.from('blvd_clients').select('boulevard_id').eq('id', member.blvd_client_id).maybeSingle()
+    if (bc?.boulevard_id) {
+      const resolved = await resolveClient(bc.boulevard_id, { masked: false })
+      if (resolved?.firstName) memberName = resolved.firstName
+    }
+  }
+
   // Send SMS if requested
   let smsSent = false
   if (shouldSendSMS) {
-    const memberName = member.first_name || 'Your friend'
     const defaultMsg = `${memberName} thinks you'd love RELUXE Med Spa! Get $25 off your first treatment`
     const msgBody = customMessage ? `${customMessage}\n${referralUrl}` : `${defaultMsg}: ${referralUrl}`
     const result = await sendSMS(normalized, msgBody)
@@ -189,7 +200,7 @@ async function handlePost(req, res) {
 
   // Build sms: link for manual sending
   const smsBody = encodeURIComponent(
-    `${member.first_name || 'Hey'} thinks you'd love RELUXE Med Spa! Get $25 off your first treatment: ${referralUrl}`
+    `${memberName} thinks you'd love RELUXE Med Spa! Get $25 off your first treatment: ${referralUrl}`
   )
   const smsLink = `sms:${normalized}?body=${smsBody}`
 

@@ -1,8 +1,9 @@
 // src/pages/api/admin/concierge/dashboard.js
 // GET: executive dashboard — ready counts per cohort + RPM stats.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -114,3 +115,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

@@ -1,5 +1,6 @@
 // src/lib/concierge/antiSpam.js
-// Anti-spam shield: frequency capping, quiet hours, priority dedup, booking checks.
+// Anti-spam shield: opt-out enforcement, frequency capping, quiet hours,
+// priority dedup, booking checks, score-aware negative signal suppression.
 
 /**
  * Apply all anti-spam logic gates to a flat list of candidates.
@@ -13,37 +14,60 @@
 export async function applyAntiSpam(db, candidates, config) {
   if (!candidates.length) return { ready: [], flagged: [] }
 
-  // 1. Priority dedup — if same phone in multiple cohorts, keep highest priority
+  // 1. Priority dedup — if same phone_hash in multiple cohorts, keep highest priority
   const deduped = deduplicateByPriority(candidates)
 
-  // 2. Batch-load frequency cap data
-  const phones = [...new Set(deduped.map((c) => c.phone))]
-  const capCounts = await getFrequencyCapCounts(db, phones)
+  // 2. Batch-load opt-out status (hard gate — checked first)
+  const phoneHashes = [...new Set(deduped.map((c) => c.phone_hash_v1).filter(Boolean))]
+  const optedOutHashes = await getOptedOutHashes(db, phoneHashes)
 
-  // 3. Batch-load upcoming appointments
+  // 3. Batch-load frequency cap data
+  const capCounts = await getFrequencyCapCounts(db, phoneHashes)
+
+  // 3b. Batch-load per-campaign cooldown (same campaign within 7 days = skip)
+  const campaignSlugs = [...new Set(deduped.map((c) => c.campaign_slug).filter(Boolean))]
+  const campaignCooldowns = await getCampaignCooldowns(db, phoneHashes, campaignSlugs)
+
+  // 4. Batch-load upcoming appointments
   const clientIds = [...new Set(deduped.map((c) => c.client_id).filter(Boolean))]
   const bookedClients = await getBookedClients(db, clientIds)
 
-  // 4. Batch-load negative signal data (clicks without booking)
-  const negativeSignalClients = await getNegativeSignalClients(db, phones)
+  // 5. Batch-load engagement scores for enhanced negative signal thresholds
+  const scoreMap = await getClientEngagementScores(db, clientIds)
 
-  // 5. Check quiet hours
+  // 6. Batch-load negative signal data (score-aware thresholds)
+  const negativeSignalClients = await getNegativeSignalClients(db, phoneHashes, scoreMap, deduped)
+
+  // 7. Check quiet hours
   const inQuietHours = isQuietHours(config)
 
   const ready = []
   const flagged = []
 
   for (const candidate of deduped) {
+    // Opt-out check (hard gate — first check, no override)
+    if (optedOutHashes.has(candidate.phone_hash_v1)) {
+      flagged.push({ ...candidate, status: 'flagged', flag_reason: 'OPTED_OUT' })
+      continue
+    }
+
     // Quiet hours check
     if (inQuietHours) {
       flagged.push({ ...candidate, status: 'flagged', flag_reason: 'QUIET_HOURS' })
       continue
     }
 
-    // Frequency cap check
-    const touchCount = capCounts[candidate.phone] || 0
+    // Frequency cap check (global — any campaign)
+    const touchCount = capCounts[candidate.phone_hash_v1] || 0
     if (touchCount >= (config.max_touches_per_week || 2)) {
       flagged.push({ ...candidate, status: 'flagged', flag_reason: 'CAP_REACHED' })
+      continue
+    }
+
+    // Per-campaign cooldown — same campaign within 7 days
+    const cooldownKey = `${candidate.phone_hash_v1}:${candidate.campaign_slug}`
+    if (campaignCooldowns.has(cooldownKey)) {
+      flagged.push({ ...candidate, status: 'flagged', flag_reason: 'CAMPAIGN_COOLDOWN' })
       continue
     }
 
@@ -53,10 +77,35 @@ export async function applyAntiSpam(db, candidates, config) {
       continue
     }
 
-    // Negative signal suppression (3+ clicks without booking)
-    if (negativeSignalClients.has(candidate.phone)) {
+    // Negative signal suppression (score-aware thresholds)
+    if (negativeSignalClients.has(candidate.phone_hash_v1)) {
       flagged.push({ ...candidate, status: 'flagged', flag_reason: 'NEGATIVE_SIGNAL_SUPPRESSION' })
       continue
+    }
+
+    // Attach engagement data to candidate for downstream use (logic_trace, priority boost)
+    if (candidate.client_id && scoreMap[candidate.client_id]) {
+      const scores = scoreMap[candidate.client_id]
+      candidate.engagement_score = scores.score_overall
+      candidate.customer_type = scores.customer_type
+
+      // Priority boost: champions and loyal get priority - 1 (higher)
+      if (scores.customer_type === 'champion' || scores.customer_type === 'loyal') {
+        candidate.priority = Math.max(1, candidate.priority - 1)
+        candidate.logic_trace = [
+          ...(candidate.logic_trace || []),
+          `PRIORITY_BOOST: ${scores.customer_type} (score: ${scores.score_overall})`,
+        ]
+      }
+
+      // Priority demotion: low engagement or hibernating get +1
+      if (scores.score_overall < 20 || scores.customer_type === 'hibernating') {
+        candidate.priority = candidate.priority + 1
+        candidate.logic_trace = [
+          ...(candidate.logic_trace || []),
+          `PRIORITY_DEMOTE: low engagement (score: ${scores.score_overall}, type: ${scores.customer_type})`,
+        ]
+      }
     }
 
     ready.push({ ...candidate, status: 'ready' })
@@ -66,39 +115,94 @@ export async function applyAntiSpam(db, candidates, config) {
 }
 
 /**
- * If a phone appears in multiple cohorts, keep only the highest priority (lowest number).
+ * If a phone_hash appears in multiple cohorts, keep only the highest priority (lowest number).
  */
 function deduplicateByPriority(candidates) {
-  const byPhone = new Map()
+  const byHash = new Map()
   for (const c of candidates) {
-    const existing = byPhone.get(c.phone)
+    const key = c.phone_hash_v1
+    if (!key) continue
+    const existing = byHash.get(key)
     if (!existing || c.priority < existing.priority) {
-      byPhone.set(c.phone, c)
+      byHash.set(key, c)
     }
   }
-  return Array.from(byPhone.values())
+  return Array.from(byHash.values())
 }
 
 /**
- * Count marketing touches in the last 7 days per phone.
+ * Get set of phone hashes that have opted out of SMS.
  */
-async function getFrequencyCapCounts(db, phones) {
-  if (!phones.length) return {}
+async function getOptedOutHashes(db, phoneHashes) {
+  if (!phoneHashes.length) return new Set()
+
+  const opted = new Set()
+
+  for (let i = 0; i < phoneHashes.length; i += 100) {
+    const chunk = phoneHashes.slice(i, i + 100)
+    const { data } = await db
+      .from('client_channel_status')
+      .select('phone_hash_v1')
+      .in('phone_hash_v1', chunk)
+      .eq('channel', 'sms')
+      .eq('status', 'unsubscribed')
+
+    for (const row of data || []) {
+      opted.add(row.phone_hash_v1)
+    }
+  }
+
+  return opted
+}
+
+/**
+ * Get set of "phoneHash:campaignSlug" keys where the client was already
+ * sent the same campaign within the last 7 days. Prevents repeat triggers.
+ */
+async function getCampaignCooldowns(db, phoneHashes, campaignSlugs) {
+  if (!phoneHashes.length || !campaignSlugs.length) return new Set()
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const cooldowns = new Set()
+
+  for (let i = 0; i < phoneHashes.length; i += 100) {
+    const chunk = phoneHashes.slice(i, i + 100)
+    const { data } = await db
+      .from('marketing_touches')
+      .select('phone_hash_v1, campaign_slug')
+      .in('phone_hash_v1', chunk)
+      .in('campaign_slug', campaignSlugs)
+      .gte('sent_at', sevenDaysAgo)
+
+    for (const row of data || []) {
+      if (row.phone_hash_v1 && row.campaign_slug) {
+        cooldowns.add(`${row.phone_hash_v1}:${row.campaign_slug}`)
+      }
+    }
+  }
+
+  return cooldowns
+}
+
+/**
+ * Count marketing touches in the last 7 days per phone hash.
+ */
+async function getFrequencyCapCounts(db, phoneHashes) {
+  if (!phoneHashes.length) return {}
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const counts = {}
 
-  // Batch query in chunks of 100 phones
-  for (let i = 0; i < phones.length; i += 100) {
-    const chunk = phones.slice(i, i + 100)
+  for (let i = 0; i < phoneHashes.length; i += 100) {
+    const chunk = phoneHashes.slice(i, i + 100)
     const { data } = await db
       .from('marketing_touches')
-      .select('phone')
-      .in('phone', chunk)
+      .select('phone_hash_v1')
+      .in('phone_hash_v1', chunk)
       .gte('sent_at', sevenDaysAgo)
 
     for (const row of data || []) {
-      counts[row.phone] = (counts[row.phone] || 0) + 1
+      counts[row.phone_hash_v1] = (counts[row.phone_hash_v1] || 0) + 1
     }
   }
 
@@ -122,32 +226,68 @@ async function getBookedClients(db, clientIds) {
 }
 
 /**
- * Get set of phones with 3+ clicked marketing touches in the last 90 days
- * but no booked status — indicating disinterest.
+ * Load engagement scores for candidate client IDs.
  */
-async function getNegativeSignalClients(db, phones) {
-  if (!phones.length) return new Set()
+async function getClientEngagementScores(db, clientIds) {
+  if (!clientIds.length) return {}
+
+  const map = {}
+
+  for (let i = 0; i < clientIds.length; i += 100) {
+    const chunk = clientIds.slice(i, i + 100)
+    const { data } = await db
+      .from('client_engagement_scores')
+      .select('client_id, score_overall, customer_type')
+      .in('client_id', chunk)
+
+    for (const row of data || []) {
+      map[row.client_id] = row
+    }
+  }
+
+  return map
+}
+
+/**
+ * Get set of phone hashes with clicks without booking — score-aware thresholds.
+ * High engagers (score >= 60): 5 clicks before suppression
+ * Low engagers: 3 clicks before suppression (original behavior)
+ */
+async function getNegativeSignalClients(db, phoneHashes, scoreMap, candidates) {
+  if (!phoneHashes.length) return new Set()
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
   const { data } = await db
     .from('marketing_touches')
-    .select('phone, status')
-    .in('phone', phones)
+    .select('phone_hash_v1, status')
+    .in('phone_hash_v1', phoneHashes)
     .gte('sent_at', ninetyDaysAgo)
 
-  // Group by phone: count clicks vs bookings
-  const phoneStats = {}
+  // Group by phone hash: count clicks vs bookings
+  const hashStats = {}
   for (const row of data || []) {
-    if (!phoneStats[row.phone]) phoneStats[row.phone] = { clicks: 0, bookings: 0 }
-    if (row.status === 'clicked') phoneStats[row.phone].clicks++
-    if (row.status === 'booked') phoneStats[row.phone].bookings++
+    if (!row.phone_hash_v1) continue
+    if (!hashStats[row.phone_hash_v1]) hashStats[row.phone_hash_v1] = { clicks: 0, bookings: 0 }
+    if (row.status === 'clicked') hashStats[row.phone_hash_v1].clicks++
+    if (row.status === 'booked') hashStats[row.phone_hash_v1].bookings++
+  }
+
+  // Build phone_hash → client_id map for score lookup
+  const hashToClient = {}
+  for (const c of candidates) {
+    if (c.phone_hash_v1 && c.client_id) hashToClient[c.phone_hash_v1] = c.client_id
   }
 
   const suppressed = new Set()
-  for (const [phone, stats] of Object.entries(phoneStats)) {
-    if (stats.clicks >= 3 && stats.bookings === 0) {
-      suppressed.add(phone)
+  for (const [hash, stats] of Object.entries(hashStats)) {
+    const clientId = hashToClient[hash]
+    const clientScore = clientId ? scoreMap[clientId]?.score_overall : null
+
+    const threshold = (clientScore != null && clientScore >= 60) ? 5 : 3
+
+    if (stats.clicks >= threshold && stats.bookings === 0) {
+      suppressed.add(hash)
     }
   }
 

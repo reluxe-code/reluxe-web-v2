@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function money(v) {
   return `$${Math.round(Number(v || 0)).toLocaleString()}`
@@ -91,7 +92,7 @@ export default function DailySnapshotPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/daily-snapshot?location=${location}`)
+      const res = await adminFetch(`/api/admin/intelligence/daily-snapshot?location=${location}`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to load daily snapshot')
       setData(json)
@@ -117,7 +118,7 @@ export default function DailySnapshotPage() {
     let productsErr = null
 
     try {
-      const res = await fetch('/api/admin/blvd-sync/incremental', { method: 'POST' })
+      const res = await adminFetch('/api/admin/blvd-sync/incremental', { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Appointment sync failed')
       incremental = json
@@ -126,7 +127,7 @@ export default function DailySnapshotPage() {
     }
 
     try {
-      const res = await fetch('/api/admin/blvd-sync/product-sales', {
+      const res = await adminFetch('/api/admin/blvd-sync/product-sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: 'latest' }),

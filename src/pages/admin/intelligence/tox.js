@@ -1,7 +1,9 @@
 // src/pages/admin/intelligence/tox.js
 // Tox Intelligence Engine — segment health, provider retention, patient list.
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 function SegmentBadge({ segment }) {
   const colors = {
@@ -76,7 +78,7 @@ export default function ToxEngine() {
     setDrawerLoading(true)
     setDrawerData(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/tox-patient?client_id=${clientId}`)
+      const res = await adminFetch(`/api/admin/intelligence/tox-patient?client_id=${clientId}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setDrawerData(await res.json())
     } catch (e) {
@@ -104,7 +106,7 @@ export default function ToxEngine() {
       if (search) params.set('search', search)
       if (toxType) params.set('tox_type', toxType)
       if (minVisits) params.set('min_visits', minVisits)
-      const res = await fetch(`/api/admin/intelligence/tox?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/tox?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -130,7 +132,7 @@ export default function ToxEngine() {
       if (search) params.set('search', search)
       if (toxType) params.set('tox_type', toxType)
       if (minVisits) params.set('min_visits', minVisits)
-      const res = await fetch(`/api/admin/intelligence/tox?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/tox?${params}`)
       const json = await res.json()
       const patients = json.patients?.data || []
 
@@ -166,6 +168,10 @@ export default function ToxEngine() {
 
   const summary = data?.summary
   const patients = data?.patients
+
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => (patients?.data || []).map(p => p.boulevard_id).filter(Boolean), [patients?.data])
+  const { clients: jitClients } = useClientJit(boulevardIds)
 
   return (
     <AdminLayout>
@@ -282,7 +288,6 @@ export default function ToxEngine() {
           <option value="days_asc">Most Recent First</option>
           <option value="spend_desc">Highest Spend</option>
           <option value="visits_desc">Most Visits</option>
-          <option value="name_asc">Name A-Z</option>
         </select>
 
         {(search || toxType || minVisits || segmentFilter || providerFilter) && (
@@ -438,8 +443,8 @@ export default function ToxEngine() {
                   {(patients?.data || []).map((p) => (
                     <tr key={p.client_id} onClick={() => openDrawer(p.client_id)} className="border-b last:border-b-0 hover:bg-neutral-50 cursor-pointer">
                       <td className="px-4 py-2">
-                        <p className="font-medium">{p.name}</p>
-                        <p className="text-xs text-neutral-400">{p.email || p.phone || ''}</p>
+                        <p className="font-medium">{jitDisplayName(jitClients[p.boulevard_id], p.name)}</p>
+                        <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[p.boulevard_id], p.email, p.phone)}</p>
                       </td>
                       <td className="px-4 py-2"><SegmentBadge segment={p.tox_segment} /></td>
                       <td className="px-4 py-2 text-right">

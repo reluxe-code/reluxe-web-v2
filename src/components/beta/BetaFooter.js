@@ -28,6 +28,7 @@ const footerLinks = {
     { label: 'FAQs', href: '/faqs' },
     { label: 'Results', href: '/results' },
     { label: 'Inspiration', href: '/inspiration' },
+    { label: 'Stories', href: '/stories' },
   ],
 };
 

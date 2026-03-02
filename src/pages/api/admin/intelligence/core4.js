@@ -2,6 +2,7 @@
 // Core 4 Regimen Gap Taxonomy — score distribution, category adoption, gap opportunities.
 // GET ?provider=<uuid> (optional)
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
@@ -17,7 +18,7 @@ async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 50000) {
   return rows
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { provider } = req.query
@@ -117,3 +118,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

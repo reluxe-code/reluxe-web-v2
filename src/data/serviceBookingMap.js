@@ -38,4 +38,25 @@ export const SERVICE_BOOKING_MAP = {
   massage:           { type: 'category', match: 'massage', name: 'Massage' },
   'salt-sauna':      { type: 'category', match: 'sauna', name: 'IR Sauna & Salt Booth' },
   evolvex:           { type: 'service', blvdId: 's_f132103a-ff13-465c-8e26-6ee2370cb909', name: 'EvolveX Body Contouring' },
+
+  // ── Consultations ──
+  consult:           { type: 'category', match: 'not sure where to start', name: 'Not Sure Where to Start' },
+  'tox-consult':     { type: 'service', blvdId: 's_2f718b9d-27b3-48a6-8877-f29e45ed37d4', name: 'Consultation for Botox, Dysport, Jeuveau, Daxxify' },
+  'getting-started': { type: 'service', blvdId: 's_0b53c178-1c07-4620-bf6e-505c5f76a24a', name: 'GET STARTED by RELUXE' },
+  refine:            { type: 'service', blvdId: 's_f776cf0e-0e44-4a3f-bcad-8e0125d004a0', name: 'REFINE by RELUXE' },
+  remodel:           { type: 'service', blvdId: 's_38732a5c-cb23-49e0-abb0-b4efa3985e95', name: 'REMODEL by RELUXE' },
+}
+
+// Maps a service slug to the right consultation slug for "Free Consult" buttons.
+// Services not listed here fall back to generic 'consult' (Not Sure Where to Start).
+export const SERVICE_CONSULT_MAP = {
+  tox: 'tox-consult',
+  botox: 'tox-consult',
+  dysport: 'tox-consult',
+  jeuveau: 'tox-consult',
+  daxxify: 'tox-consult',
+  filler: 'facial-balancing',
+  rha: 'facial-balancing',
+  sculptra: 'facial-balancing',
+  'facial-balancing': 'facial-balancing',
 }

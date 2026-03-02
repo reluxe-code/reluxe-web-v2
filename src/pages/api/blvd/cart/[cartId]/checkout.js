@@ -12,6 +12,7 @@ import { upsertBirdContact } from '@/lib/birdContacts'
 import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { getServiceClient } from '@/lib/supabase'
 import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 const limiter = createRateLimiter('checkout', 5, 60_000) // 5/min per IP
 
@@ -37,17 +38,20 @@ export default async function handler(req, res) {
       const since = new Date(Date.now() - 48 * 3600_000).toISOString()
       let dupeQuery = db
         .from('booking_sessions')
-        .select('session_id, service_name, provider_name, location_key, completed_at, contact_phone, contact_email')
+        .select('session_id, service_name, provider_name, location_key, completed_at')
         .eq('outcome', 'completed')
         .gte('completed_at', since)
 
-      // Match by phone or email
+      // Match by phone/email hash
       const conditions = []
       if (phone) {
-        const cleanPhone = phone.replace(/\D/g, '').slice(-10)
-        if (cleanPhone) conditions.push(`contact_phone.like.%${cleanPhone}`)
+        const phoneHash = hashPhone(phone)
+        if (phoneHash) conditions.push(`contact_phone_hash_v1.eq.${phoneHash}`)
       }
-      if (email) conditions.push(`contact_email.eq.${email.toLowerCase()}`)
+      if (email) {
+        const emailHash = hashEmail(email)
+        if (emailHash) conditions.push(`contact_email_hash_v1.eq.${emailHash}`)
+      }
       if (conditions.length) dupeQuery = dupeQuery.or(conditions.join(','))
 
       // Optionally narrow to same location

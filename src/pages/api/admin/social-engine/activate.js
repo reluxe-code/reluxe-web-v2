@@ -2,8 +2,9 @@
 // Pushes the booking URL to ManyChat and activates the campaign.
 import { getServiceClient } from '@/lib/supabase'
 import { setCustomField } from '@/lib/social-engine/manychat'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { campaignId } = req.body
@@ -65,3 +66,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message || 'Activation failed' })
   }
 }
+
+export default withAdminAuth(handler)

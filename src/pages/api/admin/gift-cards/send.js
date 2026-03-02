@@ -8,8 +8,9 @@ import {
   resolveRecipientByEmail,
 } from '@/lib/giftCards'
 import { syncOneGiftCard } from '@/lib/blvdGiftCards'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const {
@@ -122,3 +123,5 @@ export default async function handler(req, res) {
     blvdSynced,
   })
 }
+
+export default withAdminAuth(handler)

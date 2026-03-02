@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     })
   }
 
-  const to = (toEmail && String(toEmail).trim()) || 'hello@reluxemedspa.com'
+  const to = 'hello@reluxemedspa.com'
   const subject = `RELUXE Skinbetter Quiz • ${eventType || 'event'} • ${persona.name} • ${sessionId || ''}`
 
   const recLines = Array.isArray(recommendations)

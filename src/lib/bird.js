@@ -2,6 +2,8 @@
 // Bird (formerly MessageBird) SMS helper.
 // Sends SMS via Bird's REST API. Gracefully returns false if env vars not set.
 
+import { safeError } from '@/lib/logSanitizer'
+
 const WORKSPACE_ID = process.env.BIRD_WORKSPACE_ID
 const CHANNEL_ID = process.env.BIRD_CHANNEL_ID
 const ACCESS_KEY = process.env.BIRD_ACCESS_KEY
@@ -45,13 +47,15 @@ export async function sendSMS(to, text) {
 
     if (!res.ok) {
       const body = await res.text()
-      console.error('[bird] SMS send failed:', res.status, body)
+      safeError('[bird] SMS send failed:', res.status, body)
       return { ok: false, error: `Bird API error: ${res.status}` }
     }
 
-    return { ok: true }
+    // Extract Bird message ID for webhook correlation
+    const data = await res.json().catch(() => ({}))
+    return { ok: true, messageId: data.id || data.messageId || null }
   } catch (err) {
-    console.error('[bird] SMS send error:', err.message)
+    safeError('[bird] SMS send error:', err.message)
     return { ok: false, error: err.message }
   }
 }

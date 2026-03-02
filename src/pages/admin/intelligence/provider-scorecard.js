@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 const SCORE_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#059669']
 const SCORE_BG = ['bg-red-100 text-red-700', 'bg-orange-100 text-orange-700', 'bg-yellow-100 text-yellow-700', 'bg-green-100 text-green-700', 'bg-emerald-100 text-emerald-700']
@@ -35,7 +36,7 @@ export default function ProviderScorecardPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/provider-scorecard?provider_id=${id}`)
+      const res = await adminFetch(`/api/admin/intelligence/provider-scorecard?provider_id=${id}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {

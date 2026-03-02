@@ -2,6 +2,7 @@
 // SKU → Core 4 Mapping — classify products for regimen gap analysis.
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 const CATEGORIES = [
   { value: 'cleanser', label: 'Cleanser', color: 'bg-blue-100 text-blue-700' },
@@ -85,7 +86,7 @@ export default function SkuMappingPage() {
   async function saveRow(skuKey, category, secondary, depletionDays) {
     setSaving(skuKey)
     try {
-      const res = await fetch('/api/admin/intelligence/sku-mapping', {
+      const res = await adminFetch('/api/admin/intelligence/sku-mapping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sku_key: skuKey, core4_category: category, core4_secondary: secondary || null, depletion_days: depletionDays }),

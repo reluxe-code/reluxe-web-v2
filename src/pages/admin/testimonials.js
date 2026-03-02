@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import Papa from 'papaparse'
 import { parseCSVRow } from '@/lib/testimonialParser'
+import { adminFetch } from '@/lib/adminFetch'
 
 const SERVICE_OPTIONS = [
   { value: '', label: '(none)' },
@@ -80,7 +81,7 @@ export default function AdminTestimonials() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/testimonials?action=list')
+      const res = await adminFetch('/api/admin/testimonials?action=list')
       const json = await res.json()
       const data = json.data || []
       setItems(data)
@@ -106,7 +107,7 @@ export default function AdminTestimonials() {
     setSaving(true)
     setMessage('')
     try {
-      const res = await fetch('/api/admin/testimonials?action=save', {
+      const res = await adminFetch('/api/admin/testimonials?action=save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editing),
@@ -123,7 +124,7 @@ export default function AdminTestimonials() {
 
   async function handleDelete(id) {
     if (!confirm('Delete this testimonial?')) return
-    await fetch('/api/admin/testimonials?action=delete', {
+    await adminFetch('/api/admin/testimonials?action=delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
@@ -156,7 +157,7 @@ export default function AdminTestimonials() {
       if (!confirm(`Delete ${ids.length} testimonial(s)?`)) return
       setBulkBusy(true)
       setBulkMsg('')
-      const res = await fetch('/api/admin/testimonials?action=bulk-delete', {
+      const res = await adminFetch('/api/admin/testimonials?action=bulk-delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
@@ -188,7 +189,7 @@ export default function AdminTestimonials() {
 
     setBulkBusy(true)
     setBulkMsg('')
-    const res = await fetch('/api/admin/testimonials?action=bulk-update', {
+    const res = await adminFetch('/api/admin/testimonials?action=bulk-update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids, field: bulkAction, value }),
@@ -224,7 +225,7 @@ export default function AdminTestimonials() {
     setImportResult(null)
 
     try {
-      const res = await fetch('/api/admin/testimonials?action=import', {
+      const res = await adminFetch('/api/admin/testimonials?action=import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows: csvRows }),
@@ -253,7 +254,7 @@ export default function AdminTestimonials() {
   // ─── Provider management ────────────────────────────────────
   async function toggleProvider(name, activate) {
     setProviderAction(name)
-    await fetch('/api/admin/testimonials?action=toggle-provider', {
+    await adminFetch('/api/admin/testimonials?action=toggle-provider', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, activate }),

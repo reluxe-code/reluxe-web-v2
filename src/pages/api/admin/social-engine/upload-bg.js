@@ -3,10 +3,11 @@
 import { getServiceClient } from '@/lib/supabase'
 import formidable from 'formidable'
 import fs from 'fs'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { api: { bodyParser: false } }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const form = formidable({ maxFileSize: 10 * 1024 * 1024 })
@@ -44,3 +45,5 @@ export default async function handler(req, res) {
   const { data } = db.storage.from('media').getPublicUrl(fileName)
   res.json({ url: data?.publicUrl || '', path: fileName })
 }
+
+export default withAdminAuth(handler)

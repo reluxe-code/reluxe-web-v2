@@ -1,8 +1,10 @@
 // src/pages/api/admin/concierge/queue.js
 // GET: paginated, filterable queue list for the audit table.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { safeError } from '@/lib/logSanitizer'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const {
@@ -31,7 +33,7 @@ export default async function handler(req, res) {
     if (campaign) query = query.eq('campaign_slug', campaign)
     if (search) {
       const q = `%${search}%`
-      query = query.or(`provider_name.ilike.${q},phone.ilike.${q},service_name.ilike.${q}`)
+      query = query.or(`provider_name.ilike.${q},service_name.ilike.${q}`)
     }
 
     // Sort
@@ -55,7 +57,7 @@ export default async function handler(req, res) {
     if (clientIds.length > 0) {
       const { data: clients } = await db
         .from('blvd_clients')
-        .select('id, name, first_name, last_name, email, phone')
+        .select('id, boulevard_id')
         .in('id', clientIds)
       clientLookup = Object.fromEntries((clients || []).map((c) => [c.id, c]))
     }
@@ -65,8 +67,7 @@ export default async function handler(req, res) {
       const client = clientLookup[entry.client_id]
       return {
         ...entry,
-        client_name: isTest ? 'TEST RECORD' : (client?.name || client?.first_name || 'Unknown'),
-        client_email: isTest ? null : (client?.email || null),
+        boulevard_id: client?.boulevard_id || null,
         is_test: isTest,
       }
     })
@@ -78,7 +79,9 @@ export default async function handler(req, res) {
       page_size: pageSize,
     })
   } catch (err) {
-    console.error('[concierge/queue]', err)
+    safeError('[concierge/queue]', err.message)
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

@@ -1,8 +1,10 @@
 // src/pages/api/admin/intelligence/leads.js
 // Dashboard API: summary stats, campaign breakdown, and paginated lead list.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const {
@@ -123,7 +125,12 @@ export default async function handler(req, res) {
     if (service) query = query.eq('service_interest', service)
     if (search) {
       const q = `%${search}%`
-      query = query.or(`first_name.ilike.${q},last_name.ilike.${q},email.ilike.${q},phone.ilike.${q},campaign.ilike.${q}`)
+      const conditions = [`campaign.ilike.${q}`]
+      const phoneHash = hashPhone(search)
+      const emailHash = hashEmail(search)
+      if (phoneHash) conditions.push(`phone_hash_v1.eq.${phoneHash}`)
+      if (emailHash) conditions.push(`email_hash_v1.eq.${emailHash}`)
+      query = query.or(conditions.join(','))
     }
 
     query = query.order('created_at', { ascending: false })
@@ -155,11 +162,6 @@ export default async function handler(req, res) {
 
     const leads_data = (leadList || []).map(l => ({
       id: l.id,
-      name: [l.first_name, l.last_name].filter(Boolean).join(' ') || 'Unknown',
-      first_name: l.first_name,
-      last_name: l.last_name,
-      email: l.email,
-      phone: l.phone,
       source: l.source,
       campaign: l.campaign,
       service_interest: l.service_interest,
@@ -190,3 +192,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

@@ -1,4 +1,5 @@
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 const CANCELLED_STATES = new Set(['cancelled', 'no_show'])
 const ACTIVE_BOOKING_STATES = new Set(['booked', 'confirmed', 'arrived', 'started', 'completed', 'final'])
@@ -289,18 +290,16 @@ function computeWindowDetails({
       provider_staff_id: providerIds[0] || null,
       provider_name: providerName,
     })
-    const clientName = appt.client_id
-      ? (clientById.get(appt.client_id)?.name
-        || [clientById.get(appt.client_id)?.first_name, clientById.get(appt.client_id)?.last_name].filter(Boolean).join(' ')
-        || 'Unknown')
-      : 'Unknown'
+    const clientBlvdId = appt.client_id
+      ? (clientById.get(appt.client_id)?.boulevard_id || null)
+      : null
 
-    if (appt.client_id) upsertCount(cancelByClient, appt.client_id, { client_id: appt.client_id, client_name: clientName })
+    if (appt.client_id) upsertCount(cancelByClient, appt.client_id, { client_id: appt.client_id, boulevard_id: clientBlvdId })
 
     cancellationEvents.push({
       appointment_id: appt.id,
       client_id: appt.client_id || null,
-      client_name: clientName,
+      boulevard_id: clientBlvdId,
       cancelled_at: new Date(cancelRef).toISOString(),
       location_key: appt.location_key || null,
       status,
@@ -361,7 +360,7 @@ function computeWindowDetails({
         .slice(0, 25)
         .map((r) => ({
           client_id: r.client_id,
-          client_name: r.client_name || 'Unknown',
+          boulevard_id: r.boulevard_id || null,
           cancellations: r.count,
         })),
       recent_events: cancellationEvents.slice(0, 50),
@@ -369,7 +368,7 @@ function computeWindowDetails({
   }
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { location = 'total' } = req.query
@@ -405,7 +404,7 @@ export default async function handler(req, res) {
       fetchAllRows(() =>
         db
           .from('blvd_clients')
-          .select('id, name, first_name, last_name')
+          .select('id, boulevard_id')
       ),
     ])
 
@@ -564,3 +563,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

@@ -4,6 +4,7 @@
 // service categories, and recommendations.
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 import { adminQuery } from '@/server/blvdAdmin'
 
 export const config = { maxDuration: 15 }
@@ -23,31 +24,40 @@ export default async function handler(req, res) {
 
   const db = getServiceClient()
 
+  const memberSelect = 'id, phone_hash_v1, email_hash_v1, interests, preferred_location, blvd_client_id, onboarded_at, preferences'
+
   let { data: member } = await db
     .from('members')
-    .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
+    .select(memberSelect)
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
   // If no member record yet (e.g. upsert failed during verify), auto-create from auth user
   if (!member) {
     const insertData = { auth_user_id: user.id, updated_at: new Date().toISOString() }
-    if (user.email) insertData.email = user.email
-    if (user.phone) insertData.phone = user.phone
+    if (user.email) {
+      insertData.email = user.email
+      insertData.email_hash_v1 = hashEmail(user.email)
+    }
+    if (user.phone) {
+      insertData.phone = user.phone
+      insertData.phone_hash_v1 = hashPhone(user.phone)
+    }
     const { data: created, error: createErr } = await db
       .from('members')
       .upsert(insertData, { onConflict: 'auth_user_id' })
-      .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
+      .select(memberSelect)
       .single()
     if (createErr) {
       console.error('[member/profile] auto-create failed:', createErr.message)
       // Retry without phone if NOT NULL constraint
       if (createErr.code === '23502' || createErr.message?.includes('null')) {
         delete insertData.phone
+        delete insertData.phone_hash_v1
         const { data: retried } = await db
           .from('members')
           .upsert(insertData, { onConflict: 'auth_user_id' })
-          .select('id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at, preferences')
+          .select(memberSelect)
           .single()
         member = retried
       }
@@ -79,32 +89,28 @@ export default async function handler(req, res) {
     locationSplit: null,
   }
 
-  // Late-link: if no blvd_client_id, try to find the Boulevard client by phone or email
+  // Late-link: if no blvd_client_id, try to find the Boulevard client by phone or email hash
   if (!member.blvd_client_id) {
     let foundClient = null
 
-    // Try phone-based lookup first (most reliable)
-    if (!foundClient && member.phone) {
-      const digits = (member.phone || '').replace(/\D/g, '')
-      const last10 = digits.slice(-10)
-      if (last10.length === 10) {
-        const { data } = await db
-          .from('blvd_clients')
-          .select('id')
-          .or(`phone.ilike.%${last10}%,phone.ilike.%${last10.slice(0,3)}%${last10.slice(3,6)}%${last10.slice(6)}%`)
-          .order('visit_count', { ascending: false, nullsFirst: false })
-          .limit(1)
-          .maybeSingle()
-        foundClient = data
-      }
-    }
-
-    // Try email-based lookup
-    if (!foundClient && member.email) {
+    // Try phone hash lookup first (most reliable)
+    if (!foundClient && member.phone_hash_v1) {
       const { data } = await db
         .from('blvd_clients')
         .select('id')
-        .ilike('email', member.email)
+        .eq('phone_hash_v1', member.phone_hash_v1)
+        .order('visit_count', { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle()
+      foundClient = data
+    }
+
+    // Try email hash lookup
+    if (!foundClient && member.email_hash_v1) {
+      const { data } = await db
+        .from('blvd_clients')
+        .select('id')
+        .eq('email_hash_v1', member.email_hash_v1)
         .order('visit_count', { ascending: false, nullsFirst: false })
         .limit(1)
         .maybeSingle()
@@ -122,29 +128,29 @@ export default async function handler(req, res) {
 
   const clientId = member.blvd_client_id
 
-  // Resolve all Boulevard client IDs linked to this phone (handles duplicate BLVD profiles)
+  // Resolve all Boulevard client IDs linked to this phone/email hash (handles duplicate BLVD profiles)
   const allClientIds = [clientId]
   const allBlvdUrns = []
   // Get primary client URN first
   const { data: primaryClient } = await db.from('blvd_clients').select('boulevard_id').eq('id', clientId).maybeSingle()
   if (primaryClient?.boulevard_id) allBlvdUrns.push(primaryClient.boulevard_id)
-  // Add all phone-matched clients
-  if (member.phone) {
+  // Add all phone-hash-matched clients
+  if (member.phone_hash_v1) {
     const { data: phoneClients } = await db
       .from('blvd_clients')
       .select('id, boulevard_id')
-      .eq('phone', member.phone)
+      .eq('phone_hash_v1', member.phone_hash_v1)
     for (const c of (phoneClients || [])) {
       if (!allClientIds.includes(c.id)) allClientIds.push(c.id)
       if (c.boulevard_id && !allBlvdUrns.includes(c.boulevard_id)) allBlvdUrns.push(c.boulevard_id)
     }
   }
-  // Add all email-matched clients
-  if (member.email) {
+  // Add all email-hash-matched clients
+  if (member.email_hash_v1) {
     const { data: emailClients } = await db
       .from('blvd_clients')
       .select('id, boulevard_id')
-      .ilike('email', member.email)
+      .eq('email_hash_v1', member.email_hash_v1)
     for (const c of (emailClients || [])) {
       if (!allClientIds.includes(c.id)) allClientIds.push(c.id)
       if (c.boulevard_id && !allBlvdUrns.includes(c.boulevard_id)) allBlvdUrns.push(c.boulevard_id)

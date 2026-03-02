@@ -3,12 +3,14 @@
 // POST { contacts: [{ phone, email, bird_contact_id }] }
 import crypto from 'crypto'
 import { getServiceClient } from '@/lib/supabase'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 function generateToken() {
   return 'rlx_' + crypto.randomBytes(9).toString('base64url')
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { contacts } = req.body
@@ -20,10 +22,13 @@ export default async function handler(req, res) {
   const results = []
 
   for (const c of contacts.slice(0, 500)) {
-    // Check if token already exists for this phone or bird_contact_id
+    const phoneHash = c.phone ? hashPhone(c.phone) : null
+    const emailHash = c.email ? hashEmail(c.email) : null
+
+    // Check if token already exists for this phone hash or bird_contact_id
     let existing = null
-    if (c.phone) {
-      const { data } = await db.from('tracking_tokens').select('token').eq('phone', c.phone).maybeSingle()
+    if (phoneHash) {
+      const { data } = await db.from('tracking_tokens').select('token').eq('phone_hash_v1', phoneHash).maybeSingle()
       existing = data
     }
     if (!existing && c.bird_contact_id) {
@@ -31,7 +36,7 @@ export default async function handler(req, res) {
       existing = data
     }
     if (existing) {
-      results.push({ phone: c.phone, token: existing.token, existed: true })
+      results.push({ token: existing.token, existed: true })
       continue
     }
 
@@ -41,16 +46,20 @@ export default async function handler(req, res) {
       bird_contact_id: c.bird_contact_id || null,
       phone: c.phone || null,
       email: c.email || null,
+      phone_hash_v1: phoneHash,
+      email_hash_v1: emailHash,
     })
 
     if (error) {
       console.error('[tracking-tokens/generate]', error.message)
-      results.push({ phone: c.phone, error: error.message })
+      results.push({ error: error.message })
       continue
     }
-    results.push({ phone: c.phone, token, existed: false })
+    results.push({ token, existed: false })
   }
 
   const created = results.filter(r => !r.existed && !r.error).length
   res.json({ ok: true, created, total: results.length, tokens: results })
 }
+
+export default withAdminAuth(handler)

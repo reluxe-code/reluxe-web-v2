@@ -5,6 +5,8 @@ import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
 import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { createRateLimiter, getClientIp, applyRateLimit } from '@/lib/rateLimit'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { safeWarn, safeError } from '@/lib/logSanitizer'
 
 const limiter = createRateLimiter('leads-capture', 10, 60_000) // 10/min per IP
 
@@ -40,6 +42,8 @@ export default async function handler(req, res) {
         {
           email: normalizedEmail,
           phone: normalizedPhone,
+          phone_hash_v1: hashPhone(normalizedPhone),
+          email_hash_v1: hashEmail(normalizedEmail),
           first_name: firstName || null,
           last_name: lastName || null,
           source: leadSource,
@@ -53,7 +57,7 @@ export default async function handler(req, res) {
 
     if (leadErr) {
       // If upsert conflict fails, try insert without conflict resolution
-      console.warn('[leads/capture] Upsert warning:', leadErr.message)
+      safeWarn('[leads/capture] Upsert warning:', leadErr.message)
     }
 
     // 2. Sync to Bird CRM (fire-and-forget)
@@ -65,7 +69,7 @@ export default async function handler(req, res) {
         lastName: lastName || undefined,
         source: 'leads_capture',
         leadId: lead?.id || undefined,
-      }).catch((err) => console.error('[leads/capture] Bird sync error:', err.message))
+      }).catch((err) => safeError('[leads/capture] Bird sync error:', err.message))
     }
 
     // Fire-and-forget: Meta CAPI Lead event
@@ -95,7 +99,7 @@ export default async function handler(req, res) {
       leadId: lead?.id || null,
     })
   } catch (err) {
-    console.error('[leads/capture]', err.message)
+    safeError('[leads/capture]', err.message)
     return res.status(500).json({ error: 'Internal error' })
   }
 }

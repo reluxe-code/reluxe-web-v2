@@ -4,10 +4,11 @@
 import { getServiceClient } from '@/lib/supabase'
 import { generateStoryImage } from '@/lib/social-engine/imageGenerator'
 import { generateSocialLink } from '@/lib/social-engine/bookingLink'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const {
@@ -92,3 +93,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message || 'Generation failed' })
   }
 }
+
+export default withAdminAuth(handler)

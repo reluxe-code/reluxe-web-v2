@@ -1,8 +1,10 @@
 // src/pages/admin/intelligence/rebooking.js
 // Rebooking Gaps — clients who completed recently but have no future appointment.
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 function TimeframeBadge({ detail }) {
   const colors = {
@@ -82,7 +84,7 @@ export default function RebookingReport() {
       const params = new URLSearchParams({ page: String(page), limit: '50' })
       if (timeframe !== 'all') params.set('timeframe', timeframe)
       if (search) params.set('search', search)
-      const res = await fetch(`/api/admin/intelligence/rebooking?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/rebooking?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -101,7 +103,7 @@ export default function RebookingReport() {
       const params = new URLSearchParams({ limit: '10000' })
       if (timeframe !== 'all') params.set('timeframe', timeframe)
       if (search) params.set('search', search)
-      const res = await fetch(`/api/admin/intelligence/rebooking?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/rebooking?${params}`)
       const json = await res.json()
       const patients = json.patients?.data || []
       const headers = ['Name', 'Email', 'Phone', 'Timeframe', 'Days Since', 'Last Visit', 'Last Service', 'Location', 'Concierge Status', 'Concierge Campaign']
@@ -128,6 +130,10 @@ export default function RebookingReport() {
 
   const summary = data?.summary
   const patients = data?.patients
+
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => (patients?.data || []).map(p => p.boulevard_id).filter(Boolean), [patients?.data])
+  const { clients: jitClients } = useClientJit(boulevardIds)
 
   return (
     <AdminLayout>
@@ -227,8 +233,8 @@ export default function RebookingReport() {
                   {(patients?.data || []).map((p) => (
                     <tr key={p.client_id} className="border-b last:border-b-0 hover:bg-neutral-50">
                       <td className="px-4 py-2">
-                        <p className="font-medium">{p.name}</p>
-                        <p className="text-xs text-neutral-400">{p.email || p.phone || ''}</p>
+                        <p className="font-medium">{jitDisplayName(jitClients[p.boulevard_id], p.name)}</p>
+                        <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[p.boulevard_id], p.email, p.phone)}</p>
                       </td>
                       <td className="px-4 py-2"><TimeframeBadge detail={p.timeframe} /></td>
                       <td className="px-4 py-2 text-right">

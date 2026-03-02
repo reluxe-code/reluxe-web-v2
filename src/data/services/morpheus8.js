@@ -159,17 +159,8 @@ s.testimonials = [
   },
 ];
 
-// 👩‍⚕️ Providers (added: Krista & Hannah; ready for Alexis)
+// 👩‍⚕️ Providers
 s.providers = [
-  {
-    name: 'Krista Spalding, NP',
-    title: 'Nurse Practitioner Injector',
-    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/krista.png',
-    bio: 'Amazing results. Lots of successfult Morpheus8 success stories.',
-    href: '/book/m8', // provider-specific link if available
-    instagram: 'https://instagram.com/injector.krista',
-    specialties: ['Morpheus8'],
-  },
   {
     name: 'Hannah, RN',
     title: 'Nurse Injector',

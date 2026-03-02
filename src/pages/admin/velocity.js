@@ -2,6 +2,7 @@
 // Velocity Rewards admin dashboard
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ label, value, sub, color }) {
   const borderColors = {
@@ -69,7 +70,7 @@ export default function VelocityAdmin() {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(`/api/admin/velocity/dashboard?days=${days}`)
+    const res = await adminFetch(`/api/admin/velocity/dashboard?days=${days}`)
     const json = await res.json()
     setData(json)
     if (json.config?.[0]) {
@@ -83,12 +84,12 @@ export default function VelocityAdmin() {
 
   const fetchMemberDetail = async (memberId) => {
     setSelectedMember(memberId)
-    const res = await fetch(`/api/admin/velocity/member/${memberId}`)
+    const res = await adminFetch(`/api/admin/velocity/member/${memberId}`)
     setMemberDetail(await res.json())
   }
 
   const saveConfig = async () => {
-    await fetch('/api/admin/velocity/config', {
+    await adminFetch('/api/admin/velocity/config', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -102,7 +103,7 @@ export default function VelocityAdmin() {
 
   const toggleProgram = async () => {
     const currentConfig = data?.config?.find((c) => !c.location_key)
-    await fetch('/api/admin/velocity/config', {
+    await adminFetch('/api/admin/velocity/config', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !currentConfig?.is_active }),
@@ -118,7 +119,7 @@ export default function VelocityAdmin() {
   }
 
   const createPromo = async () => {
-    await fetch('/api/admin/velocity/promotions', {
+    await adminFetch('/api/admin/velocity/promotions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(promoForm),
@@ -128,7 +129,7 @@ export default function VelocityAdmin() {
   }
 
   const runPromo = async (promoId, dryRun = true) => {
-    const res = await fetch('/api/admin/velocity/promotions/run', {
+    const res = await adminFetch('/api/admin/velocity/promotions/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ promotionId: promoId, targetFilter: 'non_loyalty', dryRun, pushActive: false }),
@@ -143,7 +144,7 @@ export default function VelocityAdmin() {
   }
 
   const createMultiplier = async () => {
-    await fetch('/api/admin/velocity/multipliers', {
+    await adminFetch('/api/admin/velocity/multipliers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...multForm, ends_at: multForm.ends_at || null }),
@@ -153,7 +154,7 @@ export default function VelocityAdmin() {
   }
 
   const deleteMultiplier = async (id) => {
-    await fetch('/api/admin/velocity/multipliers', {
+    await adminFetch('/api/admin/velocity/multipliers', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
@@ -162,7 +163,7 @@ export default function VelocityAdmin() {
   }
 
   const handleImport = async (csvText, dryRun = true) => {
-    const res = await fetch('/api/admin/velocity/import', {
+    const res = await adminFetch('/api/admin/velocity/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ csvData: csvText, dryRun, pushActive: false }),
@@ -172,7 +173,7 @@ export default function VelocityAdmin() {
 
   const adminAction = async () => {
     if (!selectedMember || !actionForm.action) return
-    await fetch(`/api/admin/velocity/member/${selectedMember}`, {
+    await adminFetch(`/api/admin/velocity/member/${selectedMember}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

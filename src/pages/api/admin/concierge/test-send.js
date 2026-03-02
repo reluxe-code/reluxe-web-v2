@@ -3,8 +3,9 @@
 // Does NOT log to marketing_touches or update queue status.
 import { getServiceClient } from '@/lib/supabase'
 import { sendSMS } from '@/lib/bird'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { queue_id, phone } = req.body || {}
@@ -50,3 +51,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

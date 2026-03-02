@@ -1,10 +1,12 @@
 // src/pages/api/admin/memberships.js
 // Admin API: list memberships with client data, account credits, and summary stats.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 export const config = { maxDuration: 15 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -56,10 +58,16 @@ export default async function handler(req, res) {
   // If searching, first find matching client IDs, then filter memberships
   let clientIdFilter = null
   if (search) {
+    const q = `%${search}%`
+    const conditions = [`name.ilike.${q}`]
+    const phoneHash = hashPhone(search)
+    const emailHash = hashEmail(search)
+    if (phoneHash) conditions.push(`phone_hash_v1.eq.${phoneHash}`)
+    if (emailHash) conditions.push(`email_hash_v1.eq.${emailHash}`)
     const { data: matchingClients } = await db
       .from('blvd_clients')
       .select('id')
-      .or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`)
+      .or(conditions.join(','))
     clientIdFilter = (matchingClients || []).map(c => c.id)
   }
 
@@ -69,7 +77,7 @@ export default async function handler(req, res) {
       id, boulevard_id, name, status, start_on, end_on, next_charge_date,
       cancel_on, unpause_on, interval, unit_price, term_number, location_key,
       vouchers, synced_at,
-      blvd_clients(id, first_name, last_name, name, email, phone, account_credit)
+      blvd_clients(id, boulevard_id, account_credit)
     `, { count: 'exact' })
     .order('start_on', { ascending: false })
 
@@ -92,12 +100,12 @@ export default async function handler(req, res) {
   // ── Clients with credit (for credits tab) ──
   let creditQuery = db
     .from('blvd_clients')
-    .select('id, boulevard_id, first_name, last_name, name, email, phone, account_credit, account_credit_updated_at, visit_count, total_spend')
+    .select('id, boulevard_id, account_credit, account_credit_updated_at, visit_count, total_spend')
     .gt('account_credit', 0)
     .order('account_credit', { ascending: false })
 
-  if (search) {
-    creditQuery = creditQuery.or(`name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`)
+  if (search && clientIdFilter && clientIdFilter.length > 0) {
+    creditQuery = creditQuery.in('id', clientIdFilter)
   }
 
   const { data: clientsWithCredit } = await creditQuery.limit(100)
@@ -118,3 +126,5 @@ export default async function handler(req, res) {
     })),
   })
 }
+
+export default withAdminAuth(handler)

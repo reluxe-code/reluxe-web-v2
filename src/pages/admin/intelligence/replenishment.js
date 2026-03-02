@@ -2,6 +2,7 @@
 // Replenishment Radar — product depletion hot list.
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 const STATUS_COLORS = {
   active: 'bg-emerald-50 text-emerald-700 border-l-emerald-500',
@@ -63,7 +64,7 @@ export default function ReplenishmentRadar() {
     setError(null)
     try {
       const params = new URLSearchParams({ status, category, page: String(page), limit: '25' })
-      const res = await fetch(`/api/admin/intelligence/replenishment?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/replenishment?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {

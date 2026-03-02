@@ -1,12 +1,13 @@
 // src/pages/api/admin/blvd-sync/report-discover-2.js
 // Deep introspection of report export types + test run.
 import { adminQuery } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 60 }
 
 const TOX_REPORT_ID = '0bb8e07b-8405-4335-a8cc-b7b736ef7b7b'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const results = { steps: [] }
@@ -187,3 +188,5 @@ export default async function handler(req, res) {
 
   return res.json(results)
 }
+
+export default withAdminAuth(handler)

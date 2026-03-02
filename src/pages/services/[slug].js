@@ -5,6 +5,8 @@ import { colors, gradients, typeScale } from '@/components/preview/tokens';
 import ServiceProviderPicker from '@/components/booking/ServiceProviderPicker';
 import ScarcityBadge from '@/components/booking/ScarcityBadge';
 import { useMember } from '@/context/MemberContext';
+import { useLocationPref } from '@/context/LocationContext';
+import { SERVICE_CONSULT_MAP } from '@/data/serviceBookingMap';
 import { getServicesList } from '@/data/servicesList';
 import { getServiceClient } from '@/lib/supabase';
 
@@ -69,7 +71,7 @@ const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http:
 
 /* ─── block components ─── */
 
-function HeroBlock({ s, fonts, onBook }) {
+function HeroBlock({ s, fonts, onBook, onConsult }) {
   return (
     <section className="relative" style={{ backgroundColor: colors.ink, paddingTop: 80, paddingBottom: 0 }}>
       <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
@@ -98,7 +100,7 @@ function HeroBlock({ s, fonts, onBook }) {
               <button onClick={onBook} className="rounded-full transition-shadow duration-200 hover:shadow-[0_0_24px_rgba(124,58,237,0.3)]" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
                 Book Now
               </button>
-              <button className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', color: 'rgba(250,248,245,0.55)', background: 'transparent', border: '1.5px solid rgba(250,248,245,0.12)', cursor: 'pointer' }}>
+              <button onClick={onConsult} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', color: 'rgba(250,248,245,0.55)', background: 'transparent', border: '1.5px solid rgba(250,248,245,0.12)', cursor: 'pointer' }}>
                 Free Consult
               </button>
             </div>
@@ -307,7 +309,7 @@ function CandidatesBlock({ candidates, fonts }) {
   );
 }
 
-function PricingMatrixBlock({ matrix, s, fonts }) {
+function PricingMatrixBlock({ matrix, s, fonts, onBook }) {
   if (!matrix?.sections?.length) return null;
 
   return (
@@ -393,7 +395,7 @@ function PricingMatrixBlock({ matrix, s, fonts }) {
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-5" style={{ borderTop: `1px solid ${colors.stone}`, backgroundColor: colors.cream }}>
                     {sec.promo && <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.body }}>{sec.promo}</p>}
                     {sec.ctaText && (
-                      <button className="rounded-full flex-shrink-0" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
+                      <button onClick={onBook} className="rounded-full flex-shrink-0" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
                         {sec.ctaText}
                       </button>
                     )}
@@ -668,7 +670,11 @@ function PrepAftercareBlock({ prepAftercare, fonts }) {
 function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
   const s = service || {};
   const { openBookingModal } = useMember()
-  const handleBook = () => openBookingModal('westfield', s.slug)
+  const { locationKey: prefLoc } = useLocationPref()
+  const loc = prefLoc || 'all'
+  const handleBook = () => openBookingModal(loc, s.slug)
+  const consultSlug = SERVICE_CONSULT_MAP[s.slug] || 'consult'
+  const handleConsult = () => openBookingModal(loc, consultSlug)
   const results = Array.isArray(s.resultsGallery) ? s.resultsGallery : [];
   const faq = Array.isArray(s.faq) ? s.faq : [];
   const providers = Array.isArray(s.providers) ? s.providers : [];
@@ -678,13 +684,13 @@ function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
 
   return (
     <>
-      <HeroBlock s={s} fonts={fonts} onBook={handleBook} />
+      <HeroBlock s={s} fonts={fonts} onBook={handleBook} onConsult={handleConsult} />
       <QuickFactsBlock facts={s.quickFacts} fonts={fonts} />
       <OverviewBlock s={s} fonts={fonts} />
       <ResultsBlock results={results} s={s} fonts={fonts} />
       <HowItWorksBlock steps={s.howItWorks} fonts={fonts} />
       <CandidatesBlock candidates={s.candidates} fonts={fonts} />
-      <PricingMatrixBlock matrix={s.pricingMatrix} s={s} fonts={fonts} />
+      <PricingMatrixBlock matrix={s.pricingMatrix} s={s} fonts={fonts} onBook={handleBook} />
       {s.comparison && <ComparisonBlock comparison={s.comparison} fonts={fonts} />}
       <TestimonialsBlock testimonials={allTestimonials} s={s} fonts={fonts} />
       <ProvidersBlock providers={providers} s={s} fonts={fonts} />
@@ -692,7 +698,7 @@ function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
       {/* Real-time Provider Availability (requires Boulevard IDs) */}
       <ServiceProviderPicker
         serviceSlug={s.slug}
-        locationKey="westfield"
+        locationKey={prefLoc || 'westfield'}
         fonts={fonts}
         label="Book by Provider"
         heading={`Available ${s.name} Providers`}
@@ -715,12 +721,12 @@ function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
             <button onClick={handleBook} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2.25rem', backgroundColor: '#fff', color: colors.ink, border: 'none', cursor: 'pointer' }}>
               Book Now
             </button>
-            <button className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2.25rem', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'pointer' }}>
+            <button onClick={handleConsult} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2.25rem', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'pointer' }}>
               Free Consult
             </button>
           </div>
           <div className="flex justify-center mt-4">
-            <ScarcityBadge locationKey="westfield" variant="inline" fonts={fonts} />
+            <ScarcityBadge locationKey={prefLoc || 'westfield'} variant="inline" fonts={fonts} />
           </div>
         </div>
       </section>

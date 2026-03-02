@@ -1,11 +1,14 @@
 // src/pages/api/member/verify-otp.js
 // Verifies OTP (email or SMS), links to blvd_clients, upserts members row.
 import { createClient } from '@supabase/supabase-js'
-import { isValidPhone, toE164, stripPhone } from '@/lib/phoneUtils'
+import { isValidPhone, toE164 } from '@/lib/phoneUtils'
 import { isValidEmail, normalizeEmail } from '@/lib/emailUtils'
 import { getServiceClient } from '@/lib/supabase'
 import { ensureReferralCode } from '@/lib/referralCodes'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { resolveClient } from '@/services/phiProxy'
+import { safeError, safeWarn } from '@/lib/logSanitizer'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
@@ -49,7 +52,7 @@ export default async function handler(req, res) {
   const { data: verifyData, error: verifyError } = await anonClient.auth.verifyOtp(verifyPayload)
 
   if (verifyError) {
-    console.error('[member/verify-otp]', verifyError.message)
+    safeError('[member/verify-otp]', verifyError.message)
     return res.status(400).json({ error: verifyError.message || 'Invalid code' })
   }
 
@@ -60,96 +63,84 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Verification succeeded but no session returned' })
   }
 
-  // Look up blvd_clients
+  // Look up blvd_clients — hash-based lookup only (no raw PII columns)
   const db = getServiceClient()
+  const blvdSelect = 'id, boulevard_id, phone_hash_v1, email_hash_v1, visit_count, total_spend, last_visit_at'
   let blvdClient = null
 
   if (usePhone) {
-    // Phone-based lookup (existing fuzzy match)
-    const digits = stripPhone(phone)
-    const last10 = digits.slice(-10)
-    try {
-      const { data } = await db
-        .from('blvd_clients')
-        .select('id, first_name, last_name, name, email, phone, visit_count, total_spend, last_visit_at')
-        .or(`phone.ilike.%${last10}%,phone.ilike.%${last10.slice(0,3)}%${last10.slice(3,6)}%${last10.slice(6)}%`)
-        .order('visit_count', { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle()
-      blvdClient = data
-    } catch (e) {
-      console.warn('[member/verify-otp] blvd_clients phone lookup failed:', e.message)
-    }
-  } else {
-    // Email-based lookup
-    const normalized = normalizeEmail(email)
-    try {
-      const { data } = await db
-        .from('blvd_clients')
-        .select('id, first_name, last_name, name, email, phone, visit_count, total_spend, last_visit_at')
-        .ilike('email', normalized)
-        .order('visit_count', { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle()
-      blvdClient = data
-    } catch (e) {
-      console.warn('[member/verify-otp] blvd_clients email lookup failed:', e.message)
-    }
-
-    // Fallback: if email didn't match a Boulevard client, check if an existing
-    // member with this email already has a blvd_client_id or phone we can use
-    if (!blvdClient) {
+    // Hash-based phone lookup (primary)
+    const phoneHash = hashPhone(toE164(phone))
+    if (phoneHash) {
       try {
-        const { data: existingMember } = await db
-          .from('members')
-          .select('blvd_client_id, phone')
-          .ilike('email', normalized)
-          .not('blvd_client_id', 'is', null)
+        const { data } = await db
+          .from('blvd_clients')
+          .select(blvdSelect)
+          .eq('phone_hash_v1', phoneHash)
+          .order('visit_count', { ascending: false, nullsFirst: false })
           .limit(1)
           .maybeSingle()
-
-        if (existingMember?.blvd_client_id) {
-          // Re-use the already-linked Boulevard client
-          const { data } = await db
-            .from('blvd_clients')
-            .select('id, first_name, last_name, name, email, phone, visit_count, total_spend, last_visit_at')
-            .eq('id', existingMember.blvd_client_id)
-            .maybeSingle()
-          blvdClient = data
-        } else {
-          // Check if any member with this email has a phone we can cross-reference
-          const { data: memberWithPhone } = await db
-            .from('members')
-            .select('phone')
-            .ilike('email', normalized)
-            .not('phone', 'is', null)
-            .limit(1)
-            .maybeSingle()
-
-          if (memberWithPhone?.phone) {
-            const digits = stripPhone(memberWithPhone.phone)
-            const last10 = digits.slice(-10)
-            const { data } = await db
-              .from('blvd_clients')
-              .select('id, first_name, last_name, name, email, phone, visit_count, total_spend, last_visit_at')
-              .or(`phone.ilike.%${last10}%,phone.ilike.%${last10.slice(0,3)}%${last10.slice(3,6)}%${last10.slice(6)}%`)
-              .order('visit_count', { ascending: false, nullsFirst: false })
-              .limit(1)
-              .maybeSingle()
-            blvdClient = data
-          }
-        }
+        blvdClient = data
       } catch (e) {
-        console.warn('[member/verify-otp] fallback blvd lookup failed:', e.message)
+        safeWarn('[member/verify-otp] blvd_clients hash lookup failed:', e.message)
       }
     }
+  } else {
+    // Hash-based email lookup (primary)
+    const normalized = normalizeEmail(email)
+    const emailHash = hashEmail(normalized)
+    if (emailHash) {
+      try {
+        const { data } = await db
+          .from('blvd_clients')
+          .select(blvdSelect)
+          .eq('email_hash_v1', emailHash)
+          .order('visit_count', { ascending: false, nullsFirst: false })
+          .limit(1)
+          .maybeSingle()
+        blvdClient = data
+      } catch (e) {
+        safeWarn('[member/verify-otp] blvd_clients hash email lookup failed:', e.message)
+      }
+    }
+    // Fallback: check existing member by email hash for blvd_client_id or phone hash cross-ref
+    if (!blvdClient) {
+      try {
+        const memberEmailHash = hashEmail(normalized)
+        let existingMember = null
+        if (memberEmailHash) {
+          const { data } = await db.from('members').select('blvd_client_id, phone_hash_v1')
+            .eq('email_hash_v1', memberEmailHash).not('blvd_client_id', 'is', null).limit(1).maybeSingle()
+          existingMember = data
+        }
+
+        if (existingMember?.blvd_client_id) {
+          const { data } = await db.from('blvd_clients').select(blvdSelect)
+            .eq('id', existingMember.blvd_client_id).maybeSingle()
+          blvdClient = data
+        } else if (existingMember?.phone_hash_v1) {
+          const { data } = await db.from('blvd_clients').select(blvdSelect)
+            .eq('phone_hash_v1', existingMember.phone_hash_v1)
+            .order('visit_count', { ascending: false, nullsFirst: false }).limit(1).maybeSingle()
+          blvdClient = data
+        }
+      } catch (e) {
+        safeWarn('[member/verify-otp] fallback blvd lookup failed:', e.message)
+      }
+    }
+  }
+
+  // Resolve PII transiently via PHI Proxy for member record population
+  let resolvedPii = null
+  if (blvdClient?.boulevard_id) {
+    resolvedPii = await resolveClient(blvdClient.boulevard_id, { masked: false })
   }
 
   // ─── Resolve or create member row ───
   // A person may have logged in via SMS before (different auth_user_id).
   // We need to find any existing member by blvd_client or contact info
   // and re-link rather than creating a duplicate.
-  const selectCols = 'id, phone, first_name, last_name, email, interests, preferred_location, blvd_client_id, onboarded_at'
+  const selectCols = 'id, phone_hash_v1, email_hash_v1, interests, preferred_location, blvd_client_id, onboarded_at'
   let member = null
 
   // 1. Check if a member already exists for this auth_user_id (returning via same method)
@@ -160,13 +151,11 @@ export default async function handler(req, res) {
     .maybeSingle()
 
   if (existingByAuth) {
-    // Update with latest info
+    // Update with latest info (hash-only — no raw PII persisted)
     const updates = { updated_at: new Date().toISOString() }
     if (blvdClient?.id && !existingByAuth.blvd_client_id) updates.blvd_client_id = blvdClient.id
-    if (blvdClient?.first_name && !existingByAuth.first_name) updates.first_name = blvdClient.first_name
-    if (blvdClient?.last_name && !existingByAuth.last_name) updates.last_name = blvdClient.last_name
-    if (useEmail) updates.email = normalizeEmail(email)
-    if (usePhone) updates.phone = toE164(phone)
+    if (useEmail) updates.email_hash_v1 = hashEmail(normalizeEmail(email))
+    if (usePhone) updates.phone_hash_v1 = hashPhone(toE164(phone))
 
     const { data: updated } = await db
       .from('members')
@@ -183,25 +172,27 @@ export default async function handler(req, res) {
         .eq('blvd_client_id', blvdClient.id).maybeSingle()
       existingMember = data
     }
-    // 3. Or by email/phone match
+    // 3. Or by email/phone hash match
     if (!existingMember && useEmail) {
-      const { data } = await db.from('members').select(selectCols)
-        .ilike('email', normalizeEmail(email)).maybeSingle()
-      existingMember = data
+      const eHash = hashEmail(normalizeEmail(email))
+      if (eHash) {
+        const { data } = await db.from('members').select(selectCols).eq('email_hash_v1', eHash).maybeSingle()
+        existingMember = data
+      }
     }
     if (!existingMember && usePhone) {
-      const { data } = await db.from('members').select(selectCols)
-        .eq('phone', toE164(phone)).maybeSingle()
-      existingMember = data
+      const pHash = hashPhone(toE164(phone))
+      if (pHash) {
+        const { data } = await db.from('members').select(selectCols).eq('phone_hash_v1', pHash).maybeSingle()
+        existingMember = data
+      }
     }
 
     if (existingMember) {
-      // Re-link existing member to new auth_user_id
+      // Re-link existing member to new auth_user_id (hash-only)
       const updates = { auth_user_id: authUser.id, updated_at: new Date().toISOString() }
-      if (useEmail) updates.email = normalizeEmail(email)
-      if (usePhone) updates.phone = toE164(phone)
-      if (blvdClient?.first_name && !existingMember.first_name) updates.first_name = blvdClient.first_name
-      if (blvdClient?.last_name && !existingMember.last_name) updates.last_name = blvdClient.last_name
+      if (useEmail) updates.email_hash_v1 = hashEmail(normalizeEmail(email))
+      if (usePhone) updates.phone_hash_v1 = hashPhone(toE164(phone))
 
       const { data: updated, error: updateErr } = await db
         .from('members')
@@ -210,24 +201,21 @@ export default async function handler(req, res) {
         .select(selectCols)
         .single()
 
-      if (updateErr) console.error('[member/verify-otp] re-link error:', updateErr.message)
+      if (updateErr) safeError('[member/verify-otp] re-link error:', updateErr.message)
       member = updated || existingMember
     } else {
-      // 4. Brand-new member — insert
+      // 4. Brand-new member — insert (hash-only — no raw PII persisted)
       const memberData = {
         auth_user_id: authUser.id,
         blvd_client_id: blvdClient?.id || null,
-        first_name: blvdClient?.first_name || null,
-        last_name: blvdClient?.last_name || null,
         updated_at: new Date().toISOString(),
       }
       if (usePhone) {
-        memberData.phone = toE164(phone)
-        memberData.email = blvdClient?.email || null
+        memberData.phone_hash_v1 = hashPhone(toE164(phone))
+        if (resolvedPii?.email) memberData.email_hash_v1 = hashEmail(resolvedPii.email)
       } else {
-        memberData.email = normalizeEmail(email)
-        if (blvdClient?.phone) memberData.phone = blvdClient.phone
-        // Omit phone entirely if null — let DB default handle it
+        memberData.email_hash_v1 = hashEmail(normalizeEmail(email))
+        if (resolvedPii?.mobilePhone) memberData.phone_hash_v1 = hashPhone(resolvedPii.mobilePhone)
       }
 
       const { data: inserted, error: insertErr } = await db
@@ -237,18 +225,7 @@ export default async function handler(req, res) {
         .single()
 
       if (insertErr) {
-        console.error('[member/verify-otp] insert error:', insertErr.message)
-        // Retry without phone if it was a NOT NULL constraint failure
-        if (insertErr.message?.includes('null') || insertErr.code === '23502') {
-          const fallbackData = { ...memberData }
-          delete fallbackData.phone
-          const { data: retried } = await db
-            .from('members')
-            .insert(fallbackData)
-            .select(selectCols)
-            .single()
-          member = retried
-        }
+        safeError('[member/verify-otp] insert error:', insertErr.message)
       }
       if (!member) member = inserted
     }
@@ -257,9 +234,9 @@ export default async function handler(req, res) {
   // Auto-enroll in referral program
   if (member?.id) {
     try {
-      await ensureReferralCode(db, member.id, member.first_name)
+      await ensureReferralCode(db, member.id, resolvedPii?.firstName || null)
     } catch (e) {
-      console.warn('[member/verify-otp] referral auto-enroll failed:', e.message)
+      safeWarn('[member/verify-otp] referral auto-enroll failed:', e.message)
     }
   }
 
@@ -270,11 +247,19 @@ export default async function handler(req, res) {
       access_token: session.access_token,
       refresh_token: session.refresh_token,
     },
-    member: member || { auth_user_id: authUser.id, email: useEmail ? normalizeEmail(email) : null, phone: usePhone ? toE164(phone) : null },
+    member: member ? {
+      id: member.id,
+      interests: member.interests,
+      preferred_location: member.preferred_location,
+      blvd_client_id: member.blvd_client_id,
+      onboarded_at: member.onboarded_at,
+      // Transient PII from PHI Proxy (not persisted)
+      first_name: resolvedPii?.firstName || null,
+    } : { auth_user_id: authUser.id },
     isReturning,
     blvdClient: blvdClient
       ? {
-          name: blvdClient.name || `${blvdClient.first_name || ''} ${blvdClient.last_name || ''}`.trim(),
+          name: resolvedPii ? `${resolvedPii.firstName || ''} ${resolvedPii.lastName || ''}`.trim() : null,
           visit_count: blvdClient.visit_count || 0,
           total_spend: blvdClient.total_spend || 0,
           last_visit_at: blvdClient.last_visit_at,

@@ -2,6 +2,7 @@
 // Admin referral program intelligence dashboard.
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
   const active = currentSort.key === sortKey
@@ -80,7 +81,7 @@ export default function ReferralsDashboard() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/referrals?days=${days}&page=${page}`)
+      const res = await adminFetch(`/api/admin/intelligence/referrals?days=${days}&page=${page}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setData(json)

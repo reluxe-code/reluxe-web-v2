@@ -1,7 +1,8 @@
 // Admin API: Velocity dashboard stats + ledger + top earners
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
   const db = getServiceClient()
@@ -40,12 +41,12 @@ export default async function handler(req, res) {
         .gt('expires_at', new Date().toISOString()),
       // Recent ledger
       db.from('velocity_ledger')
-        .select('id, member_id, event_type, amount_cents, balance_after_cents, service_name, location_key, admin_note, promotion_id, created_at, blvd_pushed, members!inner(first_name, last_name, phone)', { count: 'exact' })
+        .select('id, member_id, event_type, amount_cents, balance_after_cents, service_name, location_key, admin_note, promotion_id, created_at, blvd_pushed, members!inner(id, blvd_client_id)', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + parseInt(limit) - 1),
       // Top earners
       db.from('velocity_balances')
-        .select('member_id, active_balance_cents, total_earned_cents, total_expired_cents, next_expiry_at, has_active_booking, last_earn_at, members!inner(first_name, last_name, phone, email)')
+        .select('member_id, active_balance_cents, total_earned_cents, total_expired_cents, next_expiry_at, has_active_booking, last_earn_at, members!inner(id, blvd_client_id)')
         .gt('active_balance_cents', 0)
         .order('active_balance_cents', { ascending: false })
         .limit(20),
@@ -87,3 +88,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

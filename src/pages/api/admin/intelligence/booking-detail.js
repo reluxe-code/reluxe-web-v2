@@ -1,6 +1,8 @@
 // src/pages/api/admin/intelligence/booking-detail.js
 // Detail drawer API: fetches full session + events (online) or appointment + services (in-office).
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { maskPhone, maskEmail } from '@/lib/piiHash'
 
 function deriveSource(pagePath) {
   if (!pagePath) return 'Unknown'
@@ -14,7 +16,7 @@ function deriveSource(pagePath) {
   return 'Other'
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { session_id, appointment_id } = req.query
@@ -76,9 +78,14 @@ async function handleOnline(db, sessionId, res) {
     }
   }
 
+  // Mask PII before sending to client
+  const maskedSession = { ...session }
+  maskedSession.contact_phone = maskPhone(session.contact_phone)
+  maskedSession.contact_email = maskEmail(session.contact_email)
+
   return res.json({
     type: 'online',
-    session,
+    session: maskedSession,
     events: events || [],
     journey,
     source: deriveSource(session.page_path),
@@ -106,12 +113,12 @@ async function handleInOffice(db, appointmentId, res) {
 
   if (sErr) throw sErr
 
-  // Fetch client
+  // Fetch client (limited fields — no raw phone/email)
   let client = null
   if (appointment.client_id) {
     const { data } = await db
       .from('blvd_clients')
-      .select('*')
+      .select('id, boulevard_id, visit_count, total_spend, last_visit_at')
       .eq('id', appointment.client_id)
       .single()
     client = data
@@ -137,3 +144,5 @@ async function handleInOffice(db, appointmentId, res) {
     total_price: (services || []).reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0),
   })
 }
+
+export default withAdminAuth(handler)

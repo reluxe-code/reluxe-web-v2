@@ -4,10 +4,12 @@
 // POST — admin only, run once from admin UI or curl.
 import { getServiceClient } from '@/lib/supabase'
 import { ensureReferralCode } from '@/lib/referralCodes'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 120 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -17,52 +19,45 @@ export default async function handler(req, res) {
   let errors = 0
 
   try {
-    // 1. Get all blvd_clients with a phone number
+    // 1. Get all blvd_clients with a phone hash
     const { data: allClients, error: clientErr } = await db
       .from('blvd_clients')
-      .select('id, first_name, last_name, email, phone')
-      .not('phone', 'is', null)
+      .select('id, boulevard_id, phone_hash_v1, email_hash_v1')
+      .not('phone_hash_v1', 'is', null)
       .order('created_at', { ascending: true })
 
     if (clientErr) throw clientErr
     const clients = allClients || []
 
-    // 2. Get all existing members by blvd_client_id
+    // 2. Get all existing members by blvd_client_id or phone hash
     const { data: existingMembers } = await db
       .from('members')
-      .select('id, blvd_client_id, first_name, phone')
+      .select('id, blvd_client_id, phone_hash_v1')
 
     const memberByClientId = new Map()
-    const memberByPhone = new Map()
+    const memberByPhoneHash = new Map()
     for (const m of (existingMembers || [])) {
       if (m.blvd_client_id) memberByClientId.set(m.blvd_client_id, m)
-      if (m.phone) memberByPhone.set(m.phone.replace(/\D/g, '').slice(-10), m)
+      if (m.phone_hash_v1) memberByPhoneHash.set(m.phone_hash_v1, m)
     }
 
     // 3. Process each client
     for (const client of clients) {
-      if (!client.phone) { skipped++; continue }
+      if (!client.phone_hash_v1) { skipped++; continue }
 
-      const digits = client.phone.replace(/\D/g, '').slice(-10)
-      if (digits.length < 7) { skipped++; continue }
-
-      // Check if member already exists (by blvd_client_id or phone)
-      let member = memberByClientId.get(client.id) || memberByPhone.get(digits)
+      // Check if member already exists (by blvd_client_id or phone hash)
+      let member = memberByClientId.get(client.id) || memberByPhoneHash.get(client.phone_hash_v1)
 
       if (!member) {
-        // Normalize phone for storage
-        const normalizedPhone = digits.length === 10 ? `+1${digits}` : `+${digits}`
         try {
           const { data: upserted } = await db
             .from('members')
-            .upsert({
-              phone: normalizedPhone,
+            .insert({
               blvd_client_id: client.id,
-              first_name: client.first_name || null,
-              last_name: client.last_name || null,
-              email: client.email || null,
-            }, { onConflict: 'phone' })
-            .select('id, first_name')
+              phone_hash_v1: client.phone_hash_v1,
+              email_hash_v1: client.email_hash_v1 || null,
+            })
+            .select('id')
             .single()
           member = upserted
           if (member) membersCreated++
@@ -74,9 +69,9 @@ export default async function handler(req, res) {
 
       if (!member?.id) { skipped++; continue }
 
-      // Ensure referral code exists
+      // Ensure referral code exists (no first_name needed — code gen can use fallback)
       try {
-        const code = await ensureReferralCode(db, member.id, member.first_name || client.first_name)
+        const code = await ensureReferralCode(db, member.id, null)
         if (code) codesCreated++ // counts both existing and new
       } catch {
         errors++
@@ -96,3 +91,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

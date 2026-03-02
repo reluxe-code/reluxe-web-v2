@@ -2,10 +2,16 @@
 import { useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function ImageUpload({ value, onChange, folder = 'blog', label = 'Image' }) {
+const VIDEO_EXT = /\.(mp4|mov|webm|avi|mkv|m4v)$/i
+function isVideoUrl(url) {
+  return VIDEO_EXT.test(url || '')
+}
+
+export default function ImageUpload({ value, onChange, folder = 'blog', label = 'Image', accept = 'image/*' }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef(null)
+  const acceptsVideo = accept.includes('video')
 
   async function handleUpload(e) {
     const file = e.target.files?.[0]
@@ -32,13 +38,20 @@ export default function ImageUpload({ value, onChange, folder = 'blog', label = 
     setUploading(false)
   }
 
+  const isVideo = isVideoUrl(value)
+  const buttonLabel = acceptsVideo ? 'Upload' : 'Upload Image'
+
   return (
     <div>
       <label className="block text-sm font-medium text-neutral-700 mb-1">{label}</label>
 
       {value && (
         <div className="mb-2 relative inline-block">
-          <img src={value} alt="Preview" className="h-32 rounded-lg object-cover border" />
+          {isVideo ? (
+            <video src={value} className="h-32 rounded-lg border" controls muted style={{ maxWidth: 240 }} />
+          ) : (
+            <img src={value} alt="Preview" className="h-32 rounded-lg object-cover border" />
+          )}
           <button
             type="button"
             onClick={() => onChange('')}
@@ -53,7 +66,7 @@ export default function ImageUpload({ value, onChange, folder = 'blog', label = 
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={accept}
           onChange={handleUpload}
           className="hidden"
         />
@@ -63,7 +76,7 @@ export default function ImageUpload({ value, onChange, folder = 'blog', label = 
           disabled={uploading}
           className="px-4 py-2 border rounded-lg text-sm font-medium hover:bg-neutral-50 disabled:opacity-50 transition"
         >
-          {uploading ? 'Uploading...' : value ? 'Replace Image' : 'Upload Image'}
+          {uploading ? 'Uploading...' : value ? `Replace` : buttonLabel}
         </button>
         {value && (
           <input
@@ -80,3 +93,5 @@ export default function ImageUpload({ value, onChange, folder = 'blog', label = 
     </div>
   )
 }
+
+export { isVideoUrl }

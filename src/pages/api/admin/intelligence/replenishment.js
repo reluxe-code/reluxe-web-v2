@@ -2,6 +2,7 @@
 // Replenishment Radar — per-client product depletion tracking.
 // GET ?status=overdue&category=retinol&page=1&limit=50
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
@@ -17,7 +18,7 @@ async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   return rows
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { status, category, page = '1', limit = '25' } = req.query
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
   try {
     const allRows = await fetchAllRows(() =>
       db.from('rie_replenishment_radar')
-        .select('client_id, client_name, client_email, client_phone, sku_key, product_name, brand, core4_category, depletion_days, last_purchase_at, predicted_exhaustion_date, days_past_exhaustion, replenishment_status')
+        .select('client_id, sku_key, product_name, brand, core4_category, depletion_days, last_purchase_at, predicted_exhaustion_date, days_past_exhaustion, replenishment_status')
     )
 
     // Filter
@@ -77,3 +78,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

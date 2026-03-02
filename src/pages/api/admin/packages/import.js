@@ -7,8 +7,9 @@
 // Or a single package: { client_phone, package_name, purchased_at, sessions_total, sessions_used, location_key }
 
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -125,3 +126,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

@@ -2,6 +2,7 @@
 // Lead management & campaign attribution dashboard.
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
   const active = currentSort.key === sortKey
@@ -113,7 +114,7 @@ export default function LeadsDashboard() {
       if (serviceFilter) params.set('service', serviceFilter)
       if (search) params.set('search', search)
 
-      const res = await fetch(`/api/admin/intelligence/leads?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/leads?${params}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setData(await res.json())
     } catch (err) {
@@ -130,7 +131,7 @@ export default function LeadsDashboard() {
     if (!drawerLeadId) { setDrawerData(null); return }
     let cancelled = false
     setDrawerLoading(true)
-    fetch(`/api/admin/leads/${drawerLeadId}`)
+    adminFetch(`/api/admin/leads/${drawerLeadId}`)
       .then(r => r.json())
       .then(json => { if (!cancelled) setDrawerData(json) })
       .catch(() => {})
@@ -169,7 +170,7 @@ export default function LeadsDashboard() {
   // Inline status update
   const handleStatusChange = async (leadId, newStatus) => {
     try {
-      const res = await fetch(`/api/admin/leads/${leadId}`, {
+      const res = await adminFetch(`/api/admin/leads/${leadId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -192,7 +193,7 @@ export default function LeadsDashboard() {
     setMatching(true)
     setMatchResult(null)
     try {
-      const res = await fetch('/api/admin/leads/match', { method: 'POST' })
+      const res = await adminFetch('/api/admin/leads/match', { method: 'POST' })
       const json = await res.json()
       setMatchResult(json.summary)
       loadData()
@@ -212,7 +213,7 @@ export default function LeadsDashboard() {
       if (serviceFilter) params.set('service', serviceFilter)
       if (search) params.set('search', search)
 
-      const res = await fetch(`/api/admin/intelligence/leads?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/leads?${params}`)
       const json = await res.json()
       const rows = json.leads?.data || []
       if (!rows.length) return

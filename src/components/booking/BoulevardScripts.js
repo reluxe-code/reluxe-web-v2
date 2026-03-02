@@ -217,6 +217,13 @@ export default function BoulevardScripts() {
             return { slug: slug, locFromPath: locFromPath, locFromQuery: locFromQuery };
           }
 
+          function tryReactModal(slug, locKey){
+            try {
+              var evt = new CustomEvent('reluxe-book', { detail: { slug: slug || '', locationKey: locKey || '' }, cancelable: true });
+              return !window.dispatchEvent(evt); // true if React called preventDefault
+            } catch(e){ return false; }
+          }
+
           function handleBook(urlLike, preventers, attrOverride){
             var parsed = parseBookUrl(urlLike);
             var override = attrOverride || parsed.locFromQuery || null;
@@ -225,9 +232,13 @@ export default function BoulevardScripts() {
 
             if (parsed.locFromPath) setPreferredLocation(parsed.locFromPath);
 
-            whenBlvdReady(function(){
-              openBookingForSlug(parsed.slug, override || parsed.locFromPath || null);
-            });
+            var effectiveLoc = override || parsed.locFromPath || null;
+            // Try React BookingFlowModal first; fall back to Boulevard drawer
+            if (!tryReactModal(parsed.slug, effectiveLoc)) {
+              whenBlvdReady(function(){
+                openBookingForSlug(parsed.slug, effectiveLoc);
+              });
+            }
           }
 
           function captureHandler(e){
@@ -268,16 +279,27 @@ export default function BoulevardScripts() {
           if (location.pathname === '/book' || location.pathname.startsWith('/book/')) {
             var parsed = parseBookUrl(location.href);
             if (parsed.locFromPath) setPreferredLocation(parsed.locFromPath);
-            whenBlvdReady(function(){
-              if (openBookingForSlug(parsed.slug, parsed.locFromQuery || parsed.locFromPath || null)) {
-                var ref, fallback = '/';
-                try {
-                  ref = document.referrer ? new URL(document.referrer) : null;
-                  if (ref && ref.origin === location.origin) fallback = ref.pathname + ref.search + ref.hash;
-                } catch(e){}
-                try { history.replaceState({}, '', fallback); } catch(e){}
-              }
-            });
+            var directLoc = parsed.locFromQuery || parsed.locFromPath || null;
+
+            function replaceUrlAfterOpen(){
+              var ref, fallback = '/';
+              try {
+                ref = document.referrer ? new URL(document.referrer) : null;
+                if (ref && ref.origin === location.origin) fallback = ref.pathname + ref.search + ref.hash;
+              } catch(e){}
+              try { history.replaceState({}, '', fallback); } catch(e){}
+            }
+
+            // Try React modal first; fall back to Boulevard
+            if (tryReactModal(parsed.slug, directLoc)) {
+              replaceUrlAfterOpen();
+            } else {
+              whenBlvdReady(function(){
+                if (openBookingForSlug(parsed.slug, directLoc)) {
+                  replaceUrlAfterOpen();
+                }
+              });
+            }
           }
 
           (function(){
@@ -288,13 +310,22 @@ export default function BoulevardScripts() {
               var slug2 = parts[1].toLowerCase();
               var locOverride = (params.get('loc') || '').toLowerCase();
               if (!(locOverride === 'carmel' || locOverride === 'westfield')) locOverride = null;
-              whenBlvdReady(function(){
-                if (openBookingForSlug(slug2, locOverride)) {
-                  params.delete('book');
-                  var newUrl = location.pathname + (params.toString() ? ('?' + params.toString()) : '') + location.hash;
-                  try { history.replaceState({}, '', newUrl); } catch(e){}
-                }
-              });
+
+              function cleanBookParam(){
+                params.delete('book');
+                var newUrl = location.pathname + (params.toString() ? ('?' + params.toString()) : '') + location.hash;
+                try { history.replaceState({}, '', newUrl); } catch(e){}
+              }
+
+              if (tryReactModal(slug2, locOverride)) {
+                cleanBookParam();
+              } else {
+                whenBlvdReady(function(){
+                  if (openBookingForSlug(slug2, locOverride)) {
+                    cleanBookParam();
+                  }
+                });
+              }
             }
           })();
 

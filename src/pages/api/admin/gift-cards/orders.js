@@ -2,8 +2,9 @@
 // GET: list orders, GET with ?id=: order detail, POST: admin actions (resend, refund)
 import { getServiceClient } from '@/lib/supabase'
 import { sendGiftCardEmail } from '@/lib/giftCards'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const db = getServiceClient()
 
   if (req.method === 'GET') {
@@ -118,3 +119,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' })
 }
+
+export default withAdminAuth(handler)

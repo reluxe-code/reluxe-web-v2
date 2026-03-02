@@ -2,6 +2,7 @@
 // Real-time experiment dashboard for "This or That" campaign.
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ value, label, accent = 'violet' }) {
   const borderColors = {
@@ -117,7 +118,7 @@ function SessionDrawer({ sessionId, onClose, formatDuration }) {
   useEffect(() => {
     if (!sessionId) return
     setLoading(true)
-    fetch(`/api/admin/intelligence/session-events?session_id=${encodeURIComponent(sessionId)}`)
+    adminFetch(`/api/admin/intelligence/session-events?session_id=${encodeURIComponent(sessionId)}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
@@ -261,7 +262,7 @@ export default function ExperimentsDashboard() {
     setError(null)
     try {
       const params = new URLSearchParams({ from: dateFrom, to: dateTo, experiment_id: experimentId })
-      const res = await fetch(`/api/admin/intelligence/experiments?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/experiments?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {

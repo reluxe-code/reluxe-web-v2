@@ -1,13 +1,26 @@
 // src/components/beta/MemberDrawerPortal.js
 // Reads drawer + rebook + booking modal state from MemberContext and renders all portals.
 // Mounted once in BetaLayout so any component can trigger them.
+import { useEffect, useCallback } from 'react'
 import { useMember } from '@/context/MemberContext'
 import MemberDrawer from '@/components/beta/MemberDrawer'
 import RebookModal from '@/components/beta/RebookModal'
 import BookingFlowModal from '@/components/booking/BookingFlowModal'
 
 export default function MemberDrawerPortal({ fonts }) {
-  const { member, profile, isAuthenticated, drawerOpen, drawerTab, closeDrawer, rebookOpen, rebookData, closeRebookModal, refreshProfile, bookingModalOpen, bookingLocationKey, bookingServiceSlug, closeBookingModal } = useMember()
+  const { member, profile, isAuthenticated, drawerOpen, drawerTab, closeDrawer, rebookOpen, rebookData, closeRebookModal, refreshProfile, bookingModalOpen, bookingLocationKey, bookingServiceSlug, closeBookingModal, openBookingModal } = useMember()
+
+  // Listen for 'reluxe-book' events dispatched by BoulevardScripts
+  const handleReluxeBook = useCallback((e) => {
+    e.preventDefault() // tells BoulevardScripts we handled it
+    const { slug, locationKey } = e.detail || {}
+    openBookingModal(locationKey || 'all', slug || '')
+  }, [openBookingModal])
+
+  useEffect(() => {
+    window.addEventListener('reluxe-book', handleReluxeBook)
+    return () => window.removeEventListener('reluxe-book', handleReluxeBook)
+  }, [handleReluxeBook])
 
   return (
     <>

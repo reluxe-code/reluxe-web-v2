@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   // Verify cron secret or allow GET (Vercel cron uses GET with Authorization header)
   const authHeader = req.headers.authorization
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 

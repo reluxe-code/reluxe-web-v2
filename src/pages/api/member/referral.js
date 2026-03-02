@@ -4,6 +4,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { generateReferralCode, generateFallbackCode, TIER_INFO } from '@/lib/referralCodes'
+import { resolveClient } from '@/services/phiProxy'
 
 const MAX_CODES = 5
 
@@ -21,7 +22,7 @@ async function authenticateMember(req) {
   const db = getServiceClient()
   const { data: member } = await db
     .from('members')
-    .select('id, first_name, phone')
+    .select('id, blvd_client_id')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
@@ -48,8 +49,18 @@ async function handleGet(req, res) {
     .order('created_at', { ascending: true })
 
   if (!codes?.length) {
+    // Resolve first name from PHI Proxy for code generation
+    let firstName = null
+    if (member.blvd_client_id) {
+      const { data: bc } = await db.from('blvd_clients').select('boulevard_id').eq('id', member.blvd_client_id).maybeSingle()
+      if (bc?.boulevard_id) {
+        const resolved = await resolveClient(bc.boulevard_id, { masked: false })
+        firstName = resolved?.firstName || null
+      }
+    }
+
     // Auto-create primary code
-    let code = generateReferralCode(member.first_name)
+    let code = generateReferralCode(firstName)
     let attempts = 0
     while (attempts < 10) {
       const { data: existing } = await db
@@ -59,7 +70,7 @@ async function handleGet(req, res) {
         .maybeSingle()
       if (!existing) break
       attempts++
-      code = attempts >= 5 ? generateFallbackCode() : generateReferralCode(member.first_name)
+      code = attempts >= 5 ? generateFallbackCode() : generateReferralCode(firstName)
     }
 
     const { data: newRc, error: insertErr } = await db
@@ -105,11 +116,6 @@ async function handleGet(req, res) {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  // Format phone for display (member can share their phone number too)
-  const phoneDisplay = member.phone
-    ? member.phone.replace(/^\+1/, '').replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
-    : null
-
   return res.json({
     code: primaryCode.custom_code || primaryCode.code,
     codes: codes.map(c => ({
@@ -119,7 +125,6 @@ async function handleGet(req, res) {
       createdAt: c.created_at,
     })),
     canAddCode: codes.length < MAX_CODES,
-    phoneCode: phoneDisplay,
     tier: primaryCode.tier,
     tierLabel: tierInfo.label,
     tierColor: tierInfo.color,
@@ -129,8 +134,8 @@ async function handleGet(req, res) {
     recentReferrals: (referrals || []).map((r) => ({
       id: r.id,
       status: r.status,
-      referee_phone: r.referee_phone,
-      referee_email: r.referee_email,
+      // Mask referee PII — show last 4 of phone only
+      referee_phone: r.referee_phone ? `***-***-${r.referee_phone.slice(-4)}` : null,
       location: r.location_key,
       clicked_at: r.clicked_at,
       bookedAt: r.booked_at,

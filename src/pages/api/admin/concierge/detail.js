@@ -1,8 +1,10 @@
 // src/pages/api/admin/concierge/detail.js
 // GET ?id=<queue-entry-uuid>: full detail for the slide-over drawer.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone } from '@/lib/piiHash'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { id } = req.query
@@ -27,7 +29,7 @@ export default async function handler(req, res) {
     if (entry.client_id) {
       const { data } = await db
         .from('blvd_clients')
-        .select('id, name, first_name, last_name, email, phone, visit_count, total_spend, last_visit_at, tags')
+        .select('id, boulevard_id, visit_count, total_spend, last_visit_at, tags')
         .eq('id', entry.client_id)
         .single()
       client = data
@@ -35,14 +37,25 @@ export default async function handler(req, res) {
 
     // 3. Touch history (last 10 marketing touches for this client)
     let touchHistory = []
-    if (entry.phone) {
+    if (entry.phone_hash_v1) {
       const { data } = await db
         .from('marketing_touches')
         .select('id, campaign_slug, cohort, variant, sms_body, status, revenue, sent_at, clicked_at, booked_at')
-        .eq('phone', entry.phone)
+        .eq('phone_hash_v1', entry.phone_hash_v1)
         .order('sent_at', { ascending: false })
         .limit(10)
       touchHistory = data || []
+    } else if (entry.phone) {
+      const ph = hashPhone(entry.phone)
+      if (ph) {
+        const { data } = await db
+          .from('marketing_touches')
+          .select('id, campaign_slug, cohort, variant, sms_body, status, revenue, sent_at, clicked_at, booked_at')
+          .eq('phone_hash_v1', ph)
+          .order('sent_at', { ascending: false })
+          .limit(10)
+        touchHistory = data || []
+      }
     }
 
     // 4. Upcoming appointments
@@ -85,3 +98,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

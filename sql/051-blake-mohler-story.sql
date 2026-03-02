@@ -1,0 +1,55 @@
+-- 051-blake-mohler-story.sql
+-- Seed Blake Mohler's patient spotlight story
+
+INSERT INTO stories (
+  slug,
+  status,
+  person_name,
+  person_title,
+  title,
+  subtitle,
+  intro,
+  body_html,
+  cta_text,
+  cta_link,
+  meta_description,
+  featured,
+  sort_order,
+  treatments,
+  social_embeds,
+  gallery
+) VALUES (
+  'blake-mohler',
+  'published',
+  'Blake Mohler',
+  'Indy Ignite Volleyball Player',
+  'Blake''s RELUXE Journey: The Pro-Athlete Glow',
+  'How a professional athlete stays camera-ready from the court to the red carpet.',
+  'For Blake Mohler, "game face" isn''t just about intensity—it''s about confidence. Between the sweat of the court and the bright lights of the arena, her skin needs elite-level care. Follow her year-long journey at RELUXE as we use medical-grade treatments to keep her skin healthy, hydrated, and always camera-ready.',
+  '<h3>The Game Plan</h3><p>Blake''s journey started with Tox to soften expression lines while maintaining a natural, rested look. Over the next year, we are tackling skin texture and recovery using a customized rotation of SkinPen microneedling, medical-grade facials, and potentially CO2 laser resurfacing.</p>',
+  'Get the Athlete Glow',
+  '/start/not-sure',
+  'Follow Indy Ignite''s Blake Mohler as she partners with RELUXE Med Spa for a year-long skin transformation. Discover the treatments a pro athlete uses to stay camera-ready.',
+  true,
+  0,
+  '[{"date":"March 2026","treatment":"Daxxify","slug":"tox","description":"Blake''s first visit — Daxxify to soften expression lines while keeping a natural, rested look. Perfect for an athlete who needs zero downtime.","images":[],"embeds":[]}]'::jsonb,
+  '[]'::jsonb,
+  '[]'::jsonb
+)
+ON CONFLICT (slug) DO UPDATE SET
+  status = EXCLUDED.status,
+  person_name = EXCLUDED.person_name,
+  person_title = EXCLUDED.person_title,
+  title = EXCLUDED.title,
+  subtitle = EXCLUDED.subtitle,
+  intro = EXCLUDED.intro,
+  body_html = EXCLUDED.body_html,
+  cta_text = EXCLUDED.cta_text,
+  cta_link = EXCLUDED.cta_link,
+  meta_description = EXCLUDED.meta_description,
+  featured = EXCLUDED.featured,
+  sort_order = EXCLUDED.sort_order,
+  treatments = EXCLUDED.treatments,
+  social_embeds = EXCLUDED.social_embeds,
+  gallery = EXCLUDED.gallery,
+  updated_at = now();

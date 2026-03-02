@@ -2,6 +2,7 @@
 // Customer Product Portfolio — product depth, Core 4, SPF, repurchases, overlaps.
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 const BUCKET_COLORS = {
   '0': '#ef4444', '1': '#f97316', '2': '#eab308', '3': '#a3e635',
@@ -88,7 +89,7 @@ export default function ProductPortfolioPage() {
       const params = new URLSearchParams({ sort, page: String(page), limit: '50' })
       if (bucket !== 'all') params.set('bucket', bucket)
       if (search.trim()) params.set('search', search.trim())
-      const res = await fetch(`/api/admin/intelligence/product-portfolio?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/product-portfolio?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -108,7 +109,7 @@ export default function ProductPortfolioPage() {
     setDrawerLoading(true)
     setDrawerData(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/patient-detail?client_id=${clientId}&window_days=all`)
+      const res = await adminFetch(`/api/admin/intelligence/patient-detail?client_id=${clientId}&window_days=all`)
       const text = await res.text()
       let json
       try { json = JSON.parse(text) } catch { throw new Error('Invalid response') }

@@ -2,6 +2,8 @@
 // Admin Customer Lookup — search, profile drawer, paper referral enrollment.
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
   const active = currentSort.key === sortKey
@@ -91,7 +93,7 @@ export default function CustomersPage() {
     setError(null)
     try {
       const params = new URLSearchParams({ search, page: String(page), limit: '50' })
-      const res = await fetch(`/api/admin/intelligence/customer-lookup?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/customer-lookup?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -109,7 +111,7 @@ export default function CustomersPage() {
     setDrawerLoading(true)
     setDrawerData(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/customer-detail?client_id=${clientId}`)
+      const res = await adminFetch(`/api/admin/intelligence/customer-detail?client_id=${clientId}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setDrawerData(await res.json())
     } catch (e) {
@@ -137,7 +139,7 @@ export default function CustomersPage() {
     setEnrollError(null)
     setEnrollResult(null)
     try {
-      const res = await fetch('/api/admin/referral/enroll', {
+      const res = await adminFetch('/api/admin/referral/enroll', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(enrollForm),
@@ -154,6 +156,10 @@ export default function CustomersPage() {
   }, [enrollForm])
 
   const customers = data?.customers || []
+
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => customers.map(c => c.boulevard_id).filter(Boolean), [customers])
+  const { clients: jitClients } = useClientJit(boulevardIds)
 
   const sortedCustomers = useMemo(() => {
     const rows = [...customers]
@@ -317,8 +323,8 @@ export default function CustomersPage() {
                     onClick={() => openDrawer(c.client_id)}
                   >
                     <td className="px-4 py-2">
-                      <p className="font-medium">{c.name}</p>
-                      <p className="text-xs text-neutral-400">{c.phone || c.email || ''}</p>
+                      <p className="font-medium">{jitDisplayName(jitClients[c.boulevard_id], c.name)}</p>
+                      <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[c.boulevard_id], c.email, c.phone)}</p>
                     </td>
                     <td className="px-4 py-2 text-right text-neutral-600">{c.total_visits}</td>
                     <td className="px-4 py-2 text-right font-medium">${c.total_spend.toLocaleString()}</td>

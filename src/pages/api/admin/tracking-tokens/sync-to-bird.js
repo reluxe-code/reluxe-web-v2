@@ -2,11 +2,12 @@
 // Writes reluxe_token custom attribute back to Bird contacts.
 // POST — processes up to 100 unsynced tokens per call.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 const WORKSPACE_ID = process.env.BIRD_WORKSPACE_ID
 const ACCESS_KEY = process.env.BIRD_ACCESS_KEY
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   if (!WORKSPACE_ID || !ACCESS_KEY) {
@@ -61,3 +62,5 @@ export default async function handler(req, res) {
 
   res.json({ ok: true, synced, attempted: unsynced.length, errors: errors.length > 0 ? errors : undefined })
 }
+
+export default withAdminAuth(handler)

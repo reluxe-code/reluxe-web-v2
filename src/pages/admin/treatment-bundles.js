@@ -5,6 +5,7 @@ import CatalogServicePicker from '@/components/admin/CatalogServicePicker'
 import { supabase } from '@/lib/supabase'
 import { SLUG_TITLES } from '@/data/treatmentBundles'
 import { categorizeProvider, roleMatches } from '@/lib/provider-roles'
+import { adminFetch } from '@/lib/adminFetch'
 
 const ROLE_OPTIONS = ['Injector', 'Aesthetician', 'Massage Therapist']
 
@@ -66,7 +67,7 @@ export default function AdminTreatmentBundles() {
     setSyncing(true)
     setMessage('')
     try {
-      const res = await fetch('/api/admin/blvd-catalog-sync', { method: 'POST' })
+      const res = await adminFetch('/api/admin/blvd-catalog-sync', { method: 'POST' })
       const data = await res.json()
       if (data.ok) {
         setMessage(`Synced ${data.synced} services (Westfield: ${data.locations?.westfield || 0}, Carmel: ${data.locations?.carmel || 0})`)

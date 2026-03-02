@@ -1,8 +1,9 @@
 // src/pages/api/admin/audit/events.js
 // Admin API: query site audit events with filters, pagination, and stats.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   try {
     if (req.method === 'GET') return await handleGet(req, res)
     if (req.method === 'PUT') return await handleToggle(req, res)
@@ -106,3 +107,5 @@ async function handleToggle(req, res) {
 
   return res.status(200).json({ ok: true, enabled })
 }
+
+export default withAdminAuth(handler)

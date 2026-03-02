@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ label, value, sub }) {
   return (
@@ -30,7 +31,7 @@ export default function ProvidersReport() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/intelligence/providers')
+      const res = await adminFetch('/api/admin/intelligence/providers')
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {

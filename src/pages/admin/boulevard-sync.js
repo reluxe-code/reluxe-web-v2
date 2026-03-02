@@ -1,8 +1,9 @@
 // src/pages/admin/boulevard-sync.js
 // Admin page: Boulevard Admin API connection test, backfill controls, sync monitoring.
-import { useState, useCallback, useEffect, useRef, Fragment } from 'react'
+import { useState, useCallback, useEffect, useRef, Fragment, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { supabase } from '@/lib/supabase'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 function StatusBadge({ status }) {
   const colors = {
@@ -43,54 +44,26 @@ export default function BoulevardSync() {
   const [entityFilters, setEntityFilters] = useState({})
   const entitySearchTimer = useRef(null)
 
+  // JIT client name resolution for clients tab
+  const clientBoulevardIds = useMemo(() =>
+    entityTab === 'clients' ? entityData.map(r => r.boulevard_id).filter(Boolean) : [],
+    [entityTab, entityData]
+  )
+  const { clients: jitClients } = useClientJit(clientBoulevardIds)
+
   // Load sync logs + stats on mount
-  useEffect(() => { loadSyncLogs(); loadStats(); loadDateRange() }, [])
+  useEffect(() => { loadDashboard() }, [])
 
-  async function loadSyncLogs() {
-    const { data } = await supabase
-      .from('blvd_sync_log')
-      .select('*')
-      .order('started_at', { ascending: false })
-      .limit(20)
-    setSyncLogs(data || [])
-  }
-
-  async function loadStats() {
-    const [appts, clients, services, memberships, packages] = await Promise.all([
-      supabase.from('blvd_appointments').select('id', { count: 'exact', head: true }),
-      supabase.from('blvd_clients').select('id', { count: 'exact', head: true }),
-      supabase.from('blvd_appointment_services').select('id', { count: 'exact', head: true }),
-      supabase.from('blvd_memberships').select('id', { count: 'exact', head: true }),
-      supabase.from('blvd_packages').select('id', { count: 'exact', head: true }),
-    ])
-    setStats({
-      appointments: appts.count || 0,
-      clients: clients.count || 0,
-      services: services.count || 0,
-      memberships: memberships.count || 0,
-      packages: packages.count || 0,
-    })
-  }
-
-  async function loadDateRange() {
-    const [earliest, latest] = await Promise.all([
-      supabase
-        .from('blvd_appointments')
-        .select('start_at')
-        .order('start_at', { ascending: true })
-        .limit(1)
-        .single(),
-      supabase
-        .from('blvd_appointments')
-        .select('start_at')
-        .order('start_at', { ascending: false })
-        .limit(1)
-        .single(),
-    ])
-    setDateRange({
-      earliest: earliest.data?.start_at || null,
-      latest: latest.data?.start_at || null,
-    })
+  async function loadDashboard() {
+    try {
+      const res = await adminFetch('/api/admin/blvd-sync/stats')
+      const json = await res.json()
+      setStats(json.stats)
+      setDateRange(json.dateRange)
+      setSyncLogs(json.syncLogs || [])
+    } catch (e) {
+      console.error('Failed to load dashboard stats:', e)
+    }
   }
 
   // Entity browser: debounced search
@@ -106,72 +79,20 @@ export default function BoulevardSync() {
 
   const loadEntityData = useCallback(async () => {
     setEntityLoading(true)
-    const from = (entityPage - 1) * ENTITY_PAGE_SIZE
-    const to = from + ENTITY_PAGE_SIZE - 1
-    let query, countQuery
-
-    switch (entityTab) {
-      case 'clients': {
-        query = supabase
-          .from('blvd_clients')
-          .select('id, first_name, last_name, name, email, phone, total_spend, visit_count, last_visit_at, account_credit, synced_at')
-          .order('synced_at', { ascending: false })
-          .range(from, to)
-        countQuery = supabase.from('blvd_clients').select('id', { count: 'exact', head: true })
-        if (entitySearch) {
-          query = query.or(`name.ilike.%${entitySearch}%,email.ilike.%${entitySearch}%,phone.ilike.%${entitySearch}%`)
-          countQuery = countQuery.or(`name.ilike.%${entitySearch}%,email.ilike.%${entitySearch}%,phone.ilike.%${entitySearch}%`)
-        }
-        break
-      }
-      case 'appointments': {
-        query = supabase
-          .from('blvd_appointments')
-          .select('id, start_at, status, location_key, cancelled_at, synced_at, blvd_clients(name)')
-          .order('start_at', { ascending: false })
-          .range(from, to)
-        countQuery = supabase.from('blvd_appointments').select('id', { count: 'exact', head: true })
-        if (entityFilters.status) {
-          query = query.eq('status', entityFilters.status)
-          countQuery = countQuery.eq('status', entityFilters.status)
-        }
-        if (entityFilters.location) {
-          query = query.eq('location_key', entityFilters.location)
-          countQuery = countQuery.eq('location_key', entityFilters.location)
-        }
-        break
-      }
-      case 'memberships': {
-        query = supabase
-          .from('blvd_memberships')
-          .select('id, name, status, start_on, unit_price, location_key, vouchers, synced_at, blvd_clients(name)')
-          .order('synced_at', { ascending: false })
-          .range(from, to)
-        countQuery = supabase.from('blvd_memberships').select('id', { count: 'exact', head: true })
-        if (entityFilters.status) {
-          query = query.eq('status', entityFilters.status)
-          countQuery = countQuery.eq('status', entityFilters.status)
-        }
-        break
-      }
-      case 'packages': {
-        query = supabase
-          .from('blvd_packages')
-          .select('id, name, status, purchased_at, expires_at, location_key, vouchers, synced_at, blvd_clients(name)')
-          .order('synced_at', { ascending: false })
-          .range(from, to)
-        countQuery = supabase.from('blvd_packages').select('id', { count: 'exact', head: true })
-        if (entityFilters.status) {
-          query = query.eq('status', entityFilters.status)
-          countQuery = countQuery.eq('status', entityFilters.status)
-        }
-        break
-      }
+    try {
+      const params = new URLSearchParams({ tab: entityTab, page: String(entityPage) })
+      if (entitySearch) params.set('search', entitySearch)
+      if (entityFilters.status) params.set('status', entityFilters.status)
+      if (entityFilters.location) params.set('location', entityFilters.location)
+      const res = await adminFetch(`/api/admin/blvd-sync/entities?${params}`)
+      const json = await res.json()
+      setEntityData(json.data || [])
+      setEntityCount(json.count || 0)
+    } catch (e) {
+      console.error('Failed to load entities:', e)
+      setEntityData([])
+      setEntityCount(0)
     }
-
-    const [{ data }, { count }] = await Promise.all([query, countQuery])
-    setEntityData(data || [])
-    setEntityCount(count || 0)
     setEntityLoading(false)
   }, [entityTab, entityPage, entitySearch, entityFilters])
 
@@ -182,7 +103,7 @@ export default function BoulevardSync() {
     setTesting(true)
     setConnectionResult(null)
     try {
-      const res = await fetch('/api/admin/blvd-sync/discover')
+      const res = await adminFetch('/api/admin/blvd-sync/discover')
       const json = await res.json()
       setConnectionResult(json)
     } catch (e) {
@@ -218,7 +139,7 @@ export default function BoulevardSync() {
           locationIndex,
         })
 
-        const res = await fetch('/api/admin/blvd-sync/backfill', {
+        const res = await adminFetch('/api/admin/blvd-sync/backfill', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cursor, syncLogId, locationIndex, stopBeforeDate }),
@@ -299,8 +220,16 @@ export default function BoulevardSync() {
     setBackfilling(true)
     setBackfillProgress({ status: 'running incremental sync...' })
     try {
-      const res = await fetch('/api/admin/blvd-sync/incremental', { method: 'POST' })
-      const json = await res.json()
+      const res = await adminFetch('/api/admin/blvd-sync/incremental', { method: 'POST' })
+      const text = await res.text()
+      let json
+      try {
+        json = JSON.parse(text)
+      } catch {
+        // Function likely timed out — Vercel returns HTML
+        setBackfillProgress({ status: 'error', error: 'Sync timed out. Check sync logs — the cron may have completed partially.' })
+        return
+      }
       setBackfillProgress({
         processed: json.processed,
         created: json.created,
@@ -795,9 +724,9 @@ export default function BoulevardSync() {
                 <tbody>
                   {entityTab === 'clients' && entityData.map((row) => (
                     <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                      <td className="px-4 py-2 font-medium">{row.name || `${row.first_name || ''} ${row.last_name || ''}`.trim() || '—'}</td>
-                      <td className="px-4 py-2 text-neutral-500 text-xs">{row.email || '—'}</td>
-                      <td className="px-4 py-2 text-neutral-500 text-xs">{row.phone || '—'}</td>
+                      <td className="px-4 py-2 font-medium">{jitDisplayName(jitClients[row.boulevard_id], null) || row.boulevard_id?.split(':').pop()?.slice(0, 8) || '—'}</td>
+                      <td className="px-4 py-2 text-neutral-500 text-xs">{jitClients[row.boulevard_id]?.emailMasked || '—'}</td>
+                      <td className="px-4 py-2 text-neutral-500 text-xs">{jitClients[row.boulevard_id]?.phoneMasked || '—'}</td>
                       <td className="px-4 py-2 text-right">{row.visit_count || 0}</td>
                       <td className="px-4 py-2 text-right">${Math.round(Number(row.total_spend || 0)).toLocaleString()}</td>
                       <td className="px-4 py-2 text-right">{row.account_credit > 0 ? `$${(row.account_credit / 100).toFixed(0)}` : '—'}</td>
@@ -807,7 +736,7 @@ export default function BoulevardSync() {
                   ))}
                   {entityTab === 'appointments' && entityData.map((row) => (
                     <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                      <td className="px-4 py-2 font-medium">{row.blvd_clients?.name || '—'}</td>
+                      <td className="px-4 py-2 font-medium">{row.blvd_clients?.boulevard_id?.split(':').pop()?.slice(0, 8) || '—'}</td>
                       <td className="px-4 py-2 text-xs">{row.start_at ? new Date(row.start_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}</td>
                       <td className="px-4 py-2">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -826,7 +755,7 @@ export default function BoulevardSync() {
                     const voucherCount = vouchers.reduce((sum, v) => sum + (v.quantity || 0), 0)
                     return (
                       <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                        <td className="px-4 py-2 font-medium">{row.blvd_clients?.name || '—'}</td>
+                        <td className="px-4 py-2 font-medium">{row.blvd_clients?.boulevard_id?.split(':').pop()?.slice(0, 8) || '—'}</td>
                         <td className="px-4 py-2 text-xs">{row.name}</td>
                         <td className="px-4 py-2">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -856,7 +785,7 @@ export default function BoulevardSync() {
                     const isExpired = row.expires_at && new Date(row.expires_at) < new Date()
                     return (
                       <tr key={row.id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                        <td className="px-4 py-2 font-medium">{row.blvd_clients?.name || '—'}</td>
+                        <td className="px-4 py-2 font-medium">{row.blvd_clients?.boulevard_id?.split(':').pop()?.slice(0, 8) || '—'}</td>
                         <td className="px-4 py-2 text-xs">{row.name}</td>
                         <td className="px-4 py-2">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${

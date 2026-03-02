@@ -4,10 +4,11 @@
 // GET ?auto_map=true: run auto-map function first, then return list
 // POST: update a single mapping { sku_key, core4_category, depletion_days }
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const db = getServiceClient()
 
   if (req.method === 'POST') {
@@ -85,3 +86,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

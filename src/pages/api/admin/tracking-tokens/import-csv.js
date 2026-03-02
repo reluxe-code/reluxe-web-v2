@@ -3,6 +3,7 @@
 // POST with raw TSV text in body (Content-Type: text/plain or application/json with { csv: "..." })
 import crypto from 'crypto'
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 function generateToken() {
   return 'rlx_' + crypto.randomBytes(9).toString('base64url')
@@ -39,7 +40,7 @@ function parseTSV(raw) {
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   try {
@@ -93,3 +94,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

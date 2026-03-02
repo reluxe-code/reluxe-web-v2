@@ -2,8 +2,9 @@
 // Search the cached Boulevard service catalog.
 // GET ?q=facial&location=westfield
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { q, location } = req.query
@@ -33,3 +34,5 @@ export default async function handler(req, res) {
 
   res.json(data || [])
 }
+
+export default withAdminAuth(handler)

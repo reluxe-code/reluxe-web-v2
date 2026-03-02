@@ -1,6 +1,8 @@
 // src/pages/api/admin/intelligence/patients.js
 // Patient intelligence — LTV buckets, visit patterns, at-risk detection.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   const rows = []
@@ -14,7 +16,7 @@ async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   return rows
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { ltv, search, sort, page = '1', limit = '50', window_days = '365' } = req.query
@@ -68,6 +70,23 @@ export default async function handler(req, res) {
     }
 
     // 2. Patient list (paginated, filterable — includes all clients)
+    // Search: views no longer have PII columns — search blvd_clients first
+    let searchClientIds = null
+    if (search) {
+      const q = `%${search}%`
+      // Hash-based phone/email search + name fallback
+      const conditions = [`name.ilike.${q}`]
+      const phoneHash = hashPhone(search)
+      const emailHash = hashEmail(search)
+      if (phoneHash) conditions.push(`phone_hash_v1.eq.${phoneHash}`)
+      if (emailHash) conditions.push(`email_hash_v1.eq.${emailHash}`)
+      const { data: matchingClients } = await db
+        .from('blvd_clients')
+        .select('id')
+        .or(conditions.join(','))
+      searchClientIds = (matchingClients || []).map(c => c.id)
+    }
+
     let query = db
       .from('client_visit_summary')
       .select('*', { count: 'exact' })
@@ -80,18 +99,21 @@ export default async function handler(req, res) {
       query = query.eq('ltv_bucket', ltv)
     }
     if (search) {
-      const q = `%${search}%`
-      query = query.or(`name.ilike.${q},email.ilike.${q},phone.ilike.${q},first_name.ilike.${q},last_name.ilike.${q}`)
+      if (searchClientIds && searchClientIds.length > 0) {
+        query = query.in('client_id', searchClientIds)
+      } else {
+        // No matches — force empty result
+        query = query.eq('client_id', '00000000-0000-0000-0000-000000000000')
+      }
     }
 
-    // Sort
+    // Sort (name_asc no longer available in view — default to spend_desc)
     const sortMap = {
       spend_desc: ['total_spend', { ascending: false }],
       spend_asc: ['total_spend', { ascending: true }],
       visits_desc: ['total_visits', { ascending: false }],
       recent: ['last_visit', { ascending: false }],
       oldest: ['days_since_last_visit', { ascending: false }],
-      name_asc: ['name', { ascending: true }],
     }
     const [sortCol, sortOpts] = sortMap[sort] || sortMap.spend_desc
     query = query.order(sortCol, sortOpts)
@@ -101,14 +123,18 @@ export default async function handler(req, res) {
 
     if (patientErr) throw patientErr
 
-    // Enrich with membership + credit data for the patient list
+    // Enrich with client names + membership + credit data
     const patientClientIds = (patients || []).map(p => p.client_id).filter(Boolean)
+    let clientInfoMap = new Map()
     let creditMap = new Map()
     let membershipMap = new Map()
     let memberMap = new Map()
 
     if (patientClientIds.length > 0) {
-      const [creditRes, membershipRes, memberRes] = await Promise.all([
+      const [clientInfoRes, creditRes, membershipRes, memberRes] = await Promise.all([
+        db.from('blvd_clients')
+          .select('id, boulevard_id')
+          .in('id', patientClientIds),
         db.from('blvd_clients')
           .select('id, account_credit')
           .in('id', patientClientIds)
@@ -121,6 +147,7 @@ export default async function handler(req, res) {
           .select('blvd_client_id, id')
           .in('blvd_client_id', patientClientIds),
       ])
+      for (const c of (clientInfoRes.data || [])) clientInfoMap.set(c.id, c)
       for (const c of (creditRes.data || [])) creditMap.set(c.id, c.account_credit)
       for (const m of (membershipRes.data || [])) {
         if (!membershipMap.has(m.client_id)) membershipMap.set(m.client_id, m)
@@ -129,6 +156,7 @@ export default async function handler(req, res) {
     }
 
     const patient_list = (patients || []).map((p) => {
+      const ci = clientInfoMap.get(p.client_id)
       const membership = membershipMap.get(p.client_id)
       const vouchers = membership?.vouchers
         ? (typeof membership.vouchers === 'string' ? JSON.parse(membership.vouchers) : membership.vouchers)
@@ -136,9 +164,7 @@ export default async function handler(req, res) {
       const voucherCount = vouchers.flatMap(v => v.services || []).length
       return {
         client_id: p.client_id,
-        name: p.name || [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown',
-        email: p.email,
-        phone: p.phone,
+        boulevard_id: ci?.boulevard_id || p.boulevard_id || null,
         total_visits: p.total_visits,
         total_spend: Math.round(Number(p.total_spend || 0)),
         first_visit: p.first_visit,
@@ -172,3 +198,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

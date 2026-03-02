@@ -3,6 +3,8 @@
 // POST — run manually or on a daily cron. Ensures every Boulevard client exists locally.
 import { adminQuery } from '@/server/blvdAdmin'
 import { getServiceClient } from '@/lib/supabase'
+import { hashPhone, hashEmail, hashPhonePrefix } from '@/lib/piiHash'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 120 }
 
@@ -24,7 +26,7 @@ const CLIENTS_QUERY = `
   }
 `
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -55,11 +57,9 @@ export default async function handler(req, res) {
         try {
           await db.from('blvd_clients').upsert({
             boulevard_id: c.id,
-            first_name: c.firstName || null,
-            last_name: c.lastName || null,
-            name: c.name || [c.firstName, c.lastName].filter(Boolean).join(' ') || null,
-            email: c.email || null,
-            phone: c.mobilePhone || null,
+            phone_hash_v1: hashPhone(c.mobilePhone),
+            email_hash_v1: hashEmail(c.email),
+            phone_prefix_hash_v1: hashPhonePrefix(c.mobilePhone),
             synced_at: new Date().toISOString(),
           }, { onConflict: 'boulevard_id' })
           upserted++
@@ -93,3 +93,5 @@ export default async function handler(req, res) {
     })
   }
 }
+
+export default withAdminAuth(handler)

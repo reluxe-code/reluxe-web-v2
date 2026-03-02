@@ -6,6 +6,10 @@ import { computeToxJourney, computeVoucherRecovery, computeAestheticWinback, com
 import { applyAntiSpam } from '@/lib/concierge/antiSpam'
 import { buildSmsBody, pickVariant } from '@/lib/concierge/smsBuilder'
 import { generateConciergeLink } from '@/lib/concierge/linkService'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { resolveClientBatch } from '@/services/phiProxy'
+import { encryptPhone } from '@/lib/piiHash'
+import { safeError } from '@/lib/logSanitizer'
 
 export const config = { maxDuration: 60 }
 
@@ -18,7 +22,7 @@ const COHORT_FUNCTIONS = {
   massage_journey: computeMassageJourney,
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -83,7 +87,7 @@ export default async function handler(req, res) {
         cohortCounts[cohortKey] = { computed: candidates.length }
         allCandidates.push(...candidates)
       } catch (err) {
-        console.error(`[concierge/generate] Error computing ${cohortKey}:`, err.message)
+        safeError(`[concierge/generate] Error computing ${cohortKey}:`, err.message)
         cohortCounts[cohortKey] = { computed: 0, error: err.message }
       }
     }
@@ -112,6 +116,32 @@ export default async function handler(req, res) {
         if (candidate.client_id && creditMap[candidate.client_id]) {
           candidate.account_credit = creditMap[candidate.client_id]
         }
+      }
+    }
+
+    // 6c. PHI Proxy: batch-resolve PII for SMS body interpolation + phone encryption
+    // Candidates carry boulevard_id but no raw PII — resolve transiently via Boulevard API
+    const candidateBoulevardIds = [...new Set(allForSms.map((c) => c.boulevard_id).filter(Boolean))]
+    const resolvedPii = {}
+    for (let i = 0; i < candidateBoulevardIds.length; i += 10) {
+      const batch = candidateBoulevardIds.slice(i, i + 10)
+      try {
+        const resolved = await resolveClientBatch(batch, { masked: false })
+        Object.assign(resolvedPii, resolved)
+      } catch (err) {
+        safeError('[concierge/generate] PHI Proxy batch failed:', err.message)
+      }
+    }
+
+    // Attach transient PII to candidates (never persisted to DB in raw form)
+    for (const candidate of allForSms) {
+      const pii = candidate.boulevard_id ? resolvedPii[candidate.boulevard_id] : null
+      if (pii) {
+        candidate.first_name = pii.firstName || null
+        candidate._resolved_phone = pii.mobilePhone || null
+      } else {
+        candidate.first_name = null
+        candidate._resolved_phone = null
       }
     }
 
@@ -154,16 +184,23 @@ export default async function handler(req, res) {
         linkToken = link.token
         bookingUrl = link.url
       } catch (err) {
-        console.error('[concierge/generate] Link generation failed:', err.message)
+        safeError('[concierge/generate] Link generation failed:', err.message)
       }
 
       // Build SMS body
       const smsBody = buildSmsBody(template, candidate, bookingUrl || '', smsOpts)
 
+      // Encrypt phone for transient queue storage (nulled after send)
+      const rawPhone = candidate._resolved_phone
+      const phoneEncrypted = rawPhone ? encryptPhone(rawPhone) : null
+
       queueInserts.push({
         batch_id: batchId,
         client_id: candidate.client_id,
-        phone: candidate.phone,
+        boulevard_id: candidate.boulevard_id || null,
+        phone: rawPhone || null, // dual-write: raw phone (remove after migration)
+        phone_encrypted: phoneEncrypted,
+        phone_hash_v1: candidate.phone_hash_v1 || null,
         campaign_slug: candidate.campaign_slug,
         cohort: candidate.cohort,
         priority: candidate.priority,
@@ -238,7 +275,7 @@ export default async function handler(req, res) {
           testLinkToken = link.token
           testBookingUrl = link.url
         } catch (err) {
-          console.error('[concierge/generate] Test link generation failed:', err.message)
+          safeError('[concierge/generate] Test link generation failed:', err.message)
         }
       }
 
@@ -253,7 +290,10 @@ export default async function handler(req, res) {
         queueInserts.unshift({
           batch_id: batchId,
           client_id: null,
-          phone: TEST_PHONE,
+          boulevard_id: null,
+          phone: TEST_PHONE, // test records use raw phone directly
+          phone_encrypted: encryptPhone(TEST_PHONE),
+          phone_hash_v1: null,
           campaign_slug: cohortKey,
           cohort: cohortMeta.cohort,
           priority: 0,
@@ -279,7 +319,7 @@ export default async function handler(req, res) {
       const chunk = queueInserts.slice(i, i + 50)
       const { error } = await db.from('concierge_queue').insert(chunk)
       if (error) {
-        console.error('[concierge/generate] Insert error:', error.message)
+        safeError('[concierge/generate] Insert error:', error.message)
         throw error
       }
     }
@@ -303,7 +343,9 @@ export default async function handler(req, res) {
       total_flagged: flagged.length,
     })
   } catch (err) {
-    console.error('[concierge/generate]', err)
+    safeError('[concierge/generate]', err.message)
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

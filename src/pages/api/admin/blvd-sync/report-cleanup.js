@@ -1,6 +1,7 @@
 // src/pages/api/admin/blvd-sync/report-cleanup.js
 // Clean up duplicate test exports, keep only the DAILY one.
 import { adminQuery } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
@@ -10,7 +11,7 @@ const DELETE_IDS = [
   'urn:blvd:ReportExport:15144e8b-95e1-4192-81a5-f78a25d7157b', // ONCE with time
 ]
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const results = []
@@ -40,3 +41,5 @@ export default async function handler(req, res) {
     remaining: data.reportExports?.edges?.map((e) => e.node) || [],
   })
 }
+
+export default withAdminAuth(handler)

@@ -6,6 +6,7 @@ import ImageUpload from '@/components/admin/ImageUpload'
 import { supabase } from '@/lib/supabase'
 import { SLUG_TITLES } from '@/data/treatmentBundles'
 import CatalogServicePicker from '@/components/admin/CatalogServicePicker'
+import { adminFetch } from '@/lib/adminFetch'
 
 function slugify(t) { return (t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }
 
@@ -134,7 +135,7 @@ export default function AdminStaffEdit() {
     } else {
       const savedId = isNew ? result.data?.[0]?.id : id
       // Force-save locations through server route (service role) to avoid client-side policy drift.
-      const locRes = await fetch('/api/admin/staff/update-locations', {
+      const locRes = await adminFetch('/api/admin/staff/update-locations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: savedId, locations: normalizedLocations }),

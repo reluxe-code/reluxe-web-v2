@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import Link from 'next/link'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ label, value, sub, color, href }) {
   const borderColors = {
@@ -60,9 +61,9 @@ export default function AdminDashboard() {
     setLoading(true)
     try {
       const [snapRes, toxRes, conciergeRes] = await Promise.allSettled([
-        fetch(`/api/admin/intelligence/daily-snapshot?location=${location}`).then((r) => r.json()),
-        fetch('/api/admin/intelligence/tox?location=all&limit=1').then((r) => r.json()),
-        fetch('/api/admin/concierge/dashboard').then((r) => r.json()),
+        adminFetch(`/api/admin/intelligence/daily-snapshot?location=${location}`).then((r) => r.json()),
+        adminFetch('/api/admin/intelligence/tox?location=all&limit=1').then((r) => r.json()),
+        adminFetch('/api/admin/concierge/dashboard').then((r) => r.json()),
       ])
 
       if (snapRes.status === 'fulfilled') setSnapshot(snapRes.value)

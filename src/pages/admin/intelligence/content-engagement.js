@@ -2,6 +2,7 @@
 // Content & Widget Engagement Dashboard
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ label, value, sub, color }) {
   const borderColors = {
@@ -89,7 +90,7 @@ export default function ContentEngagementDashboard() {
         params.set('days', days)
       }
 
-      const res = await fetch(`/api/admin/intelligence/content-engagement?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/content-engagement?${params}`)
       if (!res.ok) throw new Error(await res.text())
       setData(await res.json())
     } catch (err) {

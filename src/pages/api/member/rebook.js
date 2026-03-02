@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem } from '@/server/blvd'
 import { rateLimiters, applyRateLimit } from '@/lib/rateLimit'
+import { resolveClientFull } from '@/services/phiProxy'
 
 export const config = { maxDuration: 30 }
 
@@ -31,15 +32,23 @@ export default async function handler(req, res) {
 
   const db = getServiceClient()
 
-  // Get member info
+  // Get member info (no raw PII — resolve from Boulevard via PHI Proxy)
   const { data: member } = await db
     .from('members')
-    .select('id, phone, first_name, last_name, email')
+    .select('id, blvd_client_id')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
   if (!member) return res.status(404).json({ error: 'Member not found' })
-  if (!member.first_name || !member.email) {
+
+  // Resolve boulevard_id for PHI Proxy lookup
+  let clientPii = null
+  if (member.blvd_client_id) {
+    const { data: bc } = await db.from('blvd_clients').select('boulevard_id').eq('id', member.blvd_client_id).maybeSingle()
+    if (bc?.boulevard_id) clientPii = await resolveClientFull(bc.boulevard_id)
+  }
+
+  if (!clientPii?.firstName || !clientPii?.email) {
     return res.status(422).json({ error: 'Please update your profile with name and email before rebooking.' })
   }
 
@@ -87,13 +96,13 @@ export default async function handler(req, res) {
     // 3. Reserve the time slot
     let cart = await cartWithItem.reserveBookableItems(match)
 
-    // 4. Set client info (no SMS needed — member is already authenticated)
+    // 4. Set client info (resolved transiently from Boulevard via PHI Proxy)
     cart = await cart.update({
       clientInformation: {
-        firstName: member.first_name,
-        lastName: member.last_name || '',
-        email: member.email,
-        phoneNumber: member.phone,
+        firstName: clientPii.firstName,
+        lastName: clientPii.lastName || '',
+        email: clientPii.email,
+        phoneNumber: clientPii.mobilePhone,
       },
     })
 
@@ -110,7 +119,7 @@ export default async function handler(req, res) {
         location: locationKey,
         date,
         startTime,
-        firstName: member.first_name,
+        firstName: clientPii.firstName,
       },
     })
   } catch (err) {

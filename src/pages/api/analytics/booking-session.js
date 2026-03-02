@@ -2,8 +2,12 @@
 // Create and update booking analytics sessions.
 // POST = create new session, PATCH = update (abandon, complete, heartbeat).
 import { getServiceClient } from '@/lib/supabase'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 export default async function handler(req, res) {
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
+
   if (req.method === 'POST') {
     const {
       session_id, flow_type, location_key, member_id, device_id,
@@ -35,7 +39,7 @@ export default async function handler(req, res) {
       // Duplicate session_id is OK (retry/race condition)
       if (error.code === '23505') return res.status(200).json({ ok: true, duplicate: true })
       console.error('[analytics/booking-session] insert', error.message)
-      return res.status(500).json({ error: error.message })
+      return res.status(500).json({ error: 'Server error' })
     }
     return res.status(201).json({ ok: true })
   }
@@ -48,12 +52,20 @@ export default async function handler(req, res) {
     const allowed = [
       'outcome', 'abandon_step', 'max_step', 'steps_visited', 'step_count',
       'provider_name', 'provider_id', 'service_name', 'service_id',
-      'category_name', 'bundle_title', 'contact_phone', 'contact_email',
+      'category_name', 'bundle_title',
       'duration_ms', 'completed_at', 'last_activity', 'location_key', 'tracking_token', 'cg_token',
     ]
     const updates = {}
     for (const key of allowed) {
       if (fields[key] !== undefined) updates[key] = fields[key]
+    }
+
+    // Hash PII — only store hashes, not raw values
+    if (fields.contact_phone) {
+      updates.contact_phone_hash_v1 = hashPhone(fields.contact_phone)
+    }
+    if (fields.contact_email) {
+      updates.contact_email_hash_v1 = hashEmail(fields.contact_email)
     }
     if (Object.keys(updates).length === 0) {
       return res.status(200).json({ ok: true, noop: true })
@@ -66,7 +78,7 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('[analytics/booking-session] update', error.message)
-      return res.status(500).json({ error: error.message })
+      return res.status(500).json({ error: 'Server error' })
     }
     return res.status(200).json({ ok: true })
   }

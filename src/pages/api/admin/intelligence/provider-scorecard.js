@@ -2,6 +2,7 @@
 // Combined provider scorecard — service + retail + Core 4 metrics.
 // GET ?provider_id=<uuid>
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
@@ -21,7 +22,7 @@ function monthKey(date) {
   return new Date(date).toISOString().slice(0, 7)
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { provider_id } = req.query
@@ -161,3 +162,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

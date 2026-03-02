@@ -2,6 +2,7 @@
 // Social Availability Engine — convert calendar gaps into IG Story campaigns.
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 const TABS = [
   { id: 'create', label: 'Create Campaign' },
@@ -72,7 +73,7 @@ export default function SocialEnginePage() {
 
   // ── Load providers ──
   useEffect(() => {
-    fetch('/api/admin/social-engine/providers')
+    adminFetch('/api/admin/social-engine/providers')
       .then(r => r.json())
       .then(data => { setProviders(Array.isArray(data) ? data : []); setProvidersLoading(false) })
       .catch(() => setProvidersLoading(false))
@@ -81,7 +82,7 @@ export default function SocialEnginePage() {
   // ── Load campaigns ──
   const loadCampaigns = useCallback(() => {
     setCampaignsLoading(true)
-    fetch('/api/admin/social-engine/campaigns?limit=50')
+    adminFetch('/api/admin/social-engine/campaigns?limit=50')
       .then(r => r.json())
       .then(d => { setCampaigns(d.campaigns || []); setCampaignsLoading(false) })
       .catch(() => setCampaignsLoading(false))
@@ -116,7 +117,7 @@ export default function SocialEnginePage() {
         date: selectedDate,
         debug: '1',
       })
-      const res = await fetch(`/api/admin/social-engine/availability?${params}`)
+      const res = await adminFetch(`/api/admin/social-engine/availability?${params}`)
       const data = await res.json()
       setSlots(data.slots || [])
       if (data.slots?.length === 0 && data.reason) {
@@ -149,7 +150,7 @@ export default function SocialEnginePage() {
     setGenError(null)
     setCampaign(null)
     try {
-      const res = await fetch('/api/admin/social-engine/generate', {
+      const res = await adminFetch('/api/admin/social-engine/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -181,7 +182,7 @@ export default function SocialEnginePage() {
     if (!campaign) return
     setActivating(true)
     try {
-      const res = await fetch('/api/admin/social-engine/activate', {
+      const res = await adminFetch('/api/admin/social-engine/activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaignId: campaign.id }),
@@ -202,7 +203,7 @@ export default function SocialEnginePage() {
     if (!campaign || !providerPhone) return
     setNotifying(true)
     try {
-      await fetch('/api/admin/social-engine/notify-provider', {
+      await adminFetch('/api/admin/social-engine/notify-provider', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaignId: campaign.id, phone: providerPhone }),
@@ -214,7 +215,7 @@ export default function SocialEnginePage() {
 
   // ── Update campaign status ──
   async function updateCampaignStatus(id, status) {
-    await fetch('/api/admin/social-engine/campaigns', {
+    await adminFetch('/api/admin/social-engine/campaigns', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status }),
@@ -558,7 +559,7 @@ export default function SocialEnginePage() {
                             const form = new FormData()
                             form.append('file', file)
                             form.append('path', `social-engine/bg-${Date.now()}.${file.name.split('.').pop()}`)
-                            const res = await fetch('/api/admin/social-engine/upload-bg', { method: 'POST', body: form })
+                            const res = await adminFetch('/api/admin/social-engine/upload-bg', { method: 'POST', body: form })
                             const data = await res.json()
                             if (data.url) setBackgroundUrl(data.url)
                           } catch {}

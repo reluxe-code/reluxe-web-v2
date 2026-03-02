@@ -1,7 +1,9 @@
 // src/pages/admin/intelligence/actions.js
 // Actions — all actionable patient segments with drilldown and export.
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 const segmentColors = {
   emerald: 'border-l-emerald-500 bg-emerald-50',
@@ -35,7 +37,7 @@ export default function ActionsReport() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/admin/intelligence/actions')
+      const res = await adminFetch('/api/admin/intelligence/actions')
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -54,7 +56,7 @@ export default function ActionsReport() {
     try {
       const params = new URLSearchParams({ segment: activeSegment, page: String(page), limit: '50' })
       if (search) params.set('search', search)
-      const res = await fetch(`/api/admin/intelligence/actions?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/actions?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       const json = await res.json()
       setDrillData(json.patients)
@@ -74,7 +76,7 @@ export default function ActionsReport() {
     try {
       const params = new URLSearchParams({ segment: activeSegment, limit: '10000' })
       if (search) params.set('search', search)
-      const res = await fetch(`/api/admin/intelligence/actions?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/actions?${params}`)
       const json = await res.json()
       const patients = json.patients?.data || []
       const headers = ['Name', 'Email', 'Phone', 'Total Spend', 'Visits', 'Last Visit', 'Detail', 'Days']
@@ -101,6 +103,10 @@ export default function ActionsReport() {
   const segments = data?.segments || []
   const actionable = segments.filter((s) => s.count > 0 && !s.key.includes('on_schedule'))
   const totalActionable = actionable.reduce((s, seg) => s + seg.count, 0)
+
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => (drillData?.data || []).map(p => p.boulevard_id).filter(Boolean), [drillData?.data])
+  const { clients: jitClients } = useClientJit(boulevardIds)
 
   return (
     <AdminLayout>
@@ -203,8 +209,8 @@ export default function ActionsReport() {
                     {(drillData.data || []).map((p) => (
                       <tr key={p.client_id} className="border-b last:border-b-0 hover:bg-neutral-50">
                         <td className="px-4 py-2">
-                          <p className="font-medium">{p.name}</p>
-                          <p className="text-xs text-neutral-400">{p.email || p.phone || ''}</p>
+                          <p className="font-medium">{jitDisplayName(jitClients[p.boulevard_id], p.name)}</p>
+                          <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[p.boulevard_id], p.email, p.phone)}</p>
                         </td>
                         <td className="px-4 py-2 text-right font-medium">${p.total_spend.toLocaleString()}</td>
                         <td className="px-4 py-2 text-right text-neutral-600">{p.visit_count}</td>

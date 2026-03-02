@@ -1,16 +1,17 @@
 import { colors, fontPairings } from '@/components/preview/tokens';
 import { trackAuditEvent } from '@/hooks/useAuditTracker';
 
-const LOCATIONS = {
-  carmel: '3ce18260-2e1f-4beb-8fcf-341bc85a682c',
-  westfield: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58',
-};
-
 function openBlvdDrawer(locationKey) {
-  if (typeof window !== 'undefined' && window.blvd?.openBookingWidget) {
-    window.blvd.openBookingWidget({
-      urlParams: { locationId: LOCATIONS[locationKey] },
-    });
+  if (typeof window === 'undefined') return;
+  // Primary: open Boulevard native drawer
+  if (window.__openBlvdForSlug) {
+    window.__openBlvdForSlug('', locationKey);
+  } else {
+    // Fallback: open React booking modal
+    window.dispatchEvent(new CustomEvent('reluxe-book', {
+      detail: { slug: '', locationKey },
+      cancelable: true,
+    }));
   }
   trackAuditEvent('booking_fallback', `Fallback CTA: ${locationKey}`, { location: locationKey, source: 'page_footer' });
   if (typeof window !== 'undefined' && window.reluxeTrack) {

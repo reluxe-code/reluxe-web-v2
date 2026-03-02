@@ -379,7 +379,7 @@ const homepageStructuredData = {
   ],
 };
 
-export default function BetaHome({ testimonials, staff }) {
+export default function BetaHome({ testimonials, staff, featuredStories = [] }) {
   const [activeStep, setActiveStep] = useState(0);
   const [openFaq, setOpenFaq] = useState(0);
   const teamRef = useRef(null);
@@ -578,6 +578,59 @@ export default function BetaHome({ testimonials, staff }) {
               </div>
             </div>
           </section>
+
+          {/* ─── Patient Spotlights ─── */}
+          {featuredStories.length > 0 && (
+            <section style={{ backgroundColor: colors.ink }}>
+              <div className="max-w-7xl mx-auto px-6 py-24 lg:py-36">
+                <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+                  <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>Patient Spotlights</p>
+                  <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.white }}>
+                    Real Stories. Real Results.
+                  </h2>
+                </motion.div>
+                <div className={`grid gap-8 ${featuredStories.length === 1 ? 'max-w-lg mx-auto' : featuredStories.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-1 md:grid-cols-3'}`}>
+                  {featuredStories.map((story, i) => (
+                    <motion.a
+                      key={story.id}
+                      href={`/stories/${story.slug}`}
+                      className="block group"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: i * 0.1 }}
+                    >
+                      <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: '3/4', background: 'rgba(250,248,245,0.04)' }}>
+                        {(story.hero_image || story.person_image) ? (
+                          <img
+                            src={story.hero_image || story.person_image}
+                            alt={story.person_name}
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                            className="group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center" style={{ background: gradients.primary }}>
+                            <span style={{ fontFamily: fonts.display, fontSize: '3rem', fontWeight: 700, color: 'rgba(255,255,255,0.2)' }}>{story.person_name?.[0]}</span>
+                          </div>
+                        )}
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)' }} />
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          {story.person_title && (
+                            <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '0.5rem' }}>{story.person_title}</p>
+                          )}
+                          <h3 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.white, marginBottom: '0.25rem' }}>{story.person_name}</h3>
+                          <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.5)' }}>{story.title}</p>
+                          <span style={{ display: 'inline-block', marginTop: '0.75rem', fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.violet }}>
+                            Read Their Story &rarr;
+                          </span>
+                        </div>
+                      </div>
+                    </motion.a>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* ─── Process Steps (Interactive) ─── */}
           <section style={{ backgroundColor: colors.ink, position: 'relative', overflow: 'hidden' }}>
@@ -855,9 +908,10 @@ export default function BetaHome({ testimonials, staff }) {
 export async function getStaticProps() {
   let testimonials = [];
   let staff = [];
+  let featuredStories = [];
   try {
     const sb = getServiceClient();
-    const [testimonialsRes, staffRes] = await Promise.all([
+    const [testimonialsRes, staffRes, storiesRes] = await Promise.all([
       sb
         .from('testimonials')
         .select('id, author_name, quote, rating, service, location, provider')
@@ -872,15 +926,23 @@ export async function getStaticProps() {
         .order('sort_order')
         .order('name')
         .limit(8),
+      sb
+        .from('stories')
+        .select('id, slug, person_name, person_title, title, hero_image, person_image')
+        .eq('status', 'published')
+        .eq('featured', true)
+        .order('sort_order')
+        .limit(3),
     ]);
     testimonials = testimonialsRes.data || [];
     staff = staffRes.data || [];
+    featuredStories = storiesRes.data || [];
   } catch (e) {
     console.warn('Beta homepage: could not fetch data', e.message);
   }
 
   return {
-    props: { testimonials, staff },
+    props: { testimonials, staff, featuredStories },
     revalidate: 3600,
   };
 }

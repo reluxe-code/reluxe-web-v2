@@ -13,6 +13,8 @@
 //   created     → FB Created Time  (ISO timestamp)
 import { getServiceClient } from '@/lib/supabase'
 import { upsertBirdContact } from '@/lib/birdContacts'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { safeWarn } from '@/lib/logSanitizer'
 
 function normalizePhone(raw) {
   const digits = (raw || '').replace(/\D/g, '')
@@ -74,10 +76,20 @@ export default async function handler(req, res) {
       continue
     }
 
-    // Dedup check
+    // Dedup check — use hash-based lookup (primary) with raw fallback
+    const phoneHash = hashPhone(phone)
+    const emailHash = hashEmail(email)
     let existing = null
-    if (phone) {
+    if (phoneHash) {
+      const { data } = await db.from('leads').select('id').eq('phone_hash_v1', phoneHash).limit(1)
+      existing = data?.[0]
+    }
+    if (!existing && phone) {
       const { data } = await db.from('leads').select('id').eq('phone', phone).limit(1)
+      existing = data?.[0]
+    }
+    if (!existing && emailHash) {
+      const { data } = await db.from('leads').select('id').eq('email_hash_v1', emailHash).limit(1)
       existing = data?.[0]
     }
     if (!existing && email) {
@@ -101,11 +113,20 @@ export default async function handler(req, res) {
       || parseServiceInterest(formName)
       || parseServiceInterest(campaign)
 
+    // Strip PII from raw_payload before storing (keep metadata only)
+    const sanitizedPayload = { ...lead }
+    delete sanitizedPayload.first_name
+    delete sanitizedPayload.last_name
+    delete sanitizedPayload.email
+    delete sanitizedPayload.phone
+
     const { data: newLead, error } = await db.from('leads').insert({
       first_name: (lead.first_name || '').trim() || null,
       last_name: (lead.last_name || '').trim() || null,
       email,
       phone,
+      phone_hash_v1: phoneHash,
+      email_hash_v1: emailHash,
       source,
       platform: lead.platform || null,
       campaign,
@@ -114,7 +135,7 @@ export default async function handler(req, res) {
       service_interest: serviceInterest,
       status: 'new',
       source_created_at: lead.created || lead.source_created_at || null,
-      raw_payload: lead,
+      raw_payload: sanitizedPayload,
     }).select('id').single()
 
     if (error) {
@@ -144,7 +165,7 @@ export default async function handler(req, res) {
             .eq('id', newLead.id)
             .then(() => {})
         }
-      }).catch((err) => console.warn('[leads/ingest] Bird sync failed:', err.message))
+      }).catch((err) => safeWarn('[leads/ingest] Bird sync failed:', err.message))
     }
   }
 

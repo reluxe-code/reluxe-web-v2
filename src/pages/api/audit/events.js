@@ -1,9 +1,11 @@
 // src/pages/api/audit/events.js
 // Batch insert audit events. Checks feature flag before writing.
 import { getServiceClient } from '@/lib/supabase'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
 
   const { events } = req.body
   if (!Array.isArray(events) || events.length === 0) {
@@ -38,7 +40,7 @@ export default async function handler(req, res) {
 
   if (error) {
     console.error('[audit/events]', error.message)
-    return res.status(500).json({ error: error.message })
+    return res.status(500).json({ error: 'Failed to insert events' })
   }
 
   return res.status(201).json({ ok: true, inserted: batch.length })

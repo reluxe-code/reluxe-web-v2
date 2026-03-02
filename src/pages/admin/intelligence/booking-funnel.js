@@ -2,6 +2,7 @@
 // Booking funnel analytics dashboard — conversion, abandons, trends.
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function SortHeader({ label, sortKey, currentSort, onSort, align = 'left' }) {
   const active = currentSort.key === sortKey
@@ -103,7 +104,7 @@ export default function BookingFunnelDashboard() {
       }
       if (flowType) params.set('flow_type', flowType)
       if (location) params.set('location', location)
-      const res = await fetch(`/api/admin/intelligence/booking-funnel?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/booking-funnel?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -367,7 +368,7 @@ export default function BookingFunnelDashboard() {
                         <td className="py-2 text-neutral-500">{s.location_key || '—'}</td>
                         <td className="py-2 text-right text-neutral-500">{formatDuration(s.duration_ms)}</td>
                         <td className="py-2">
-                          {(s.contact_phone || s.contact_email) ? (
+                          {s.has_contact ? (
                             <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-medium">Re-engage</span>
                           ) : (
                             <span className="text-neutral-300">—</span>

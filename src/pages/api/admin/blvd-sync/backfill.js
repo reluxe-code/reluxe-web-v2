@@ -11,6 +11,7 @@
 import { adminQuery } from '@/server/blvdAdmin'
 import { getServiceClient } from '@/lib/supabase'
 import { LOCATION_IDS } from '@/server/blvd'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 60 }
 
@@ -90,8 +91,7 @@ const APPOINTMENTS_QUERY = `
           duration
           createdAt
           cancelled
-          cancellation { cancelledAt notes reason }
-          notes
+          cancellation { cancelledAt }
           location { id name }
           client {
             id firstName lastName name email mobilePhone
@@ -112,7 +112,7 @@ const APPOINTMENTS_QUERY = `
   }
 `
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { cursor, syncLogId, locationIndex = 0, stopBeforeDate } = req.body
@@ -231,7 +231,6 @@ export default async function handler(req, res) {
         end_at: node.endAt || null,
         duration_minutes: node.duration || null,
         cancelled_at: node.cancellation?.cancelledAt || null,
-        notes: node.notes || null,
         synced_at: new Date().toISOString(),
       }
 
@@ -337,3 +336,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message, syncLogId: logId, locationIndex })
   }
 }
+
+export default withAdminAuth(handler)

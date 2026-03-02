@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   const { data: member } = await db
     .from('members')
-    .select('id, first_name, last_name, email, blvd_client_id')
+    .select('id, blvd_client_id')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 

@@ -1,7 +1,11 @@
 // POST = create experiment session, PATCH = update
 import { getServiceClient } from '@/lib/supabase'
+import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 export default async function handler(req, res) {
+  if (applyRateLimit(req, res, rateLimiters.loose, getClientIp(req))) return
+
   if (req.method === 'POST') {
     const {
       session_id, experiment_id, device_id,
@@ -29,7 +33,7 @@ export default async function handler(req, res) {
     if (error) {
       if (error.code === '23505') return res.status(200).json({ ok: true, duplicate: true })
       console.error('[analytics/experiment-session] insert', error.message)
-      return res.status(500).json({ error: error.message })
+      return res.status(500).json({ error: 'Server error' })
     }
     return res.status(201).json({ ok: true })
   }
@@ -44,7 +48,7 @@ export default async function handler(req, res) {
       'booking_started', 'booking_service', 'booking_location', 'booking_provider',
       'booking_completed', 'appointment_id',
       'membership_shown', 'membership_clicked',
-      'contact_phone', 'client_name', 'client_email', 'blvd_client_id',
+      'blvd_client_id',
       'completed_at', 'duration_ms', 'last_activity',
       // Reveal Board fields (stored in existing JSONB columns)
       'filter_locations', 'filter_services', 'filter_when', 'filter_time_of_day',
@@ -54,6 +58,19 @@ export default async function handler(req, res) {
     for (const key of allowed) {
       if (fields[key] !== undefined) updates[key] = fields[key]
     }
+
+    // Hash PII — only store hashes/initials, not raw values
+    if (fields.contact_phone) {
+      updates.contact_phone_hash_v1 = hashPhone(fields.contact_phone)
+    }
+    if (fields.client_email) {
+      updates.client_email_hash_v1 = hashEmail(fields.client_email)
+    }
+    if (fields.client_name) {
+      updates.client_name_initial = (fields.client_name || '')[0]
+        ? fields.client_name[0] + '.'
+        : null
+    }
     if (!Object.keys(updates).length) return res.status(200).json({ ok: true, noop: true })
 
     const db = getServiceClient()
@@ -61,7 +78,7 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('[analytics/experiment-session] update', error.message)
-      return res.status(500).json({ error: error.message })
+      return res.status(500).json({ error: 'Server error' })
     }
     return res.status(200).json({ ok: true })
   }

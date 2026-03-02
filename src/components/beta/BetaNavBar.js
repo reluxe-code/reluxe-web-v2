@@ -22,6 +22,7 @@ const navLinks = [
   ]},
   { label: 'Inspiration', href: '/inspiration', children: [
     { label: 'Inspiration', href: '/inspiration' },
+    { label: 'Stories', href: '/stories' },
     { label: 'Events', href: '/events' },
     { label: 'Results', href: '/results' },
   ]},

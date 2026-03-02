@@ -1,10 +1,11 @@
 // Admin API: Import historical loyalty data from Boulevard CSV
 import { getServiceClient } from '@/lib/supabase'
 import { getCurrentBalance, updateBalanceCache, pushCreditToBlvd } from '@/lib/velocity'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const db = getServiceClient()
@@ -196,3 +197,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

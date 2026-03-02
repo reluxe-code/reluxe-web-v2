@@ -2,6 +2,7 @@
 // Gift Cards admin: dashboard stats, promotions CRUD, orders list
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 function StatCard({ label, value, sub, color }) {
   const borderColors = {
@@ -70,7 +71,7 @@ export default function GiftCardsAdmin() {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(`/api/admin/gift-cards/dashboard?days=${days}`)
+    const res = await adminFetch(`/api/admin/gift-cards/dashboard?days=${days}`)
     const json = await res.json()
     setData(json)
     setLoading(false)
@@ -122,7 +123,7 @@ export default function GiftCardsAdmin() {
     if (editingPromo) payload.id = editingPromo.id
 
     try {
-      const res = await fetch('/api/admin/gift-cards/promotions', {
+      const res = await adminFetch('/api/admin/gift-cards/promotions', {
         method: editingPromo ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -143,7 +144,7 @@ export default function GiftCardsAdmin() {
 
   const togglePromo = async (promo) => {
     try {
-      const res = await fetch('/api/admin/gift-cards/promotions', {
+      const res = await adminFetch('/api/admin/gift-cards/promotions', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: promo.id, is_active: !promo.is_active }),
@@ -178,13 +179,13 @@ export default function GiftCardsAdmin() {
   const loadOrderDetail = async (orderId) => {
     if (expandedOrder === orderId) { setExpandedOrder(null); return }
     setExpandedOrder(orderId)
-    const res = await fetch(`/api/admin/gift-cards/orders?id=${orderId}`)
+    const res = await adminFetch(`/api/admin/gift-cards/orders?id=${orderId}`)
     const json = await res.json()
     setOrderDetail(json)
   }
 
   const adminAction = async (action, orderId, cardId, extra = {}) => {
-    await fetch('/api/admin/gift-cards/orders', {
+    await adminFetch('/api/admin/gift-cards/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, orderId, cardId, ...extra }),
@@ -195,7 +196,7 @@ export default function GiftCardsAdmin() {
 
   const retryBlvdSync = async (orderId) => {
     try {
-      const res = await fetch('/api/admin/gift-cards/retry-sync', {
+      const res = await adminFetch('/api/admin/gift-cards/retry-sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId }),
@@ -225,7 +226,7 @@ export default function GiftCardsAdmin() {
     setSendLoading(true)
     setSendResult(null)
     try {
-      const res = await fetch('/api/admin/gift-cards/send', {
+      const res = await adminFetch('/api/admin/gift-cards/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -3,10 +3,11 @@
 // first_visit_at, last_visit_at) for ALL clients from existing appointment data.
 // No Boulevard API calls — works entirely from Supabase data.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 60 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' })
   }
@@ -46,3 +47,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

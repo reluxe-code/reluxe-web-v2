@@ -1,11 +1,12 @@
 // src/pages/api/admin/intelligence/booking-funnel.js
 // Dashboard API for booking funnel analytics.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 const MODAL_STEPS = ['HOME', 'CATEGORIES', 'CATEGORY_ITEMS', 'BUNDLE_ITEMS', 'PROVIDER_SERVICES', 'OPTIONS', 'DATE_TIME', 'CHECKOUT', 'BOOKED']
 const PICKER_STEPS = ['SPECIALTY', 'BUNDLE_ITEMS', 'MENU_ITEM', 'OPTIONS', 'ADD_SERVICE', 'ADDON_OPTIONS', 'DATE_TIME', 'CHECKOUT']
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const {
@@ -170,8 +171,7 @@ export default async function handler(req, res) {
       provider_name: s.provider_name,
       location_key: s.location_key,
       duration_ms: s.duration_ms,
-      contact_phone: s.contact_phone,
-      contact_email: s.contact_email,
+      has_contact: !!(s.contact_phone || s.contact_email || s.contact_phone_hash_v1 || s.contact_email_hash_v1),
       started_at: s.started_at,
       device_id: s.device_id,
       utm_source: s.utm_source,
@@ -217,3 +217,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

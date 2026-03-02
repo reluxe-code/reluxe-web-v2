@@ -1,7 +1,9 @@
 // src/pages/admin/memberships.js
 // Admin dashboard for Boulevard memberships + account credits with profile drawer.
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 const STATUS_COLORS = {
   ACTIVE: 'bg-emerald-50 text-emerald-700',
@@ -87,7 +89,7 @@ export default function MembershipsPage() {
     try {
       const params = new URLSearchParams({ page: String(page), status: statusFilter })
       if (search) params.set('search', search)
-      const res = await fetch(`/api/admin/memberships?${params}`)
+      const res = await adminFetch(`/api/admin/memberships?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {
@@ -108,7 +110,7 @@ export default function MembershipsPage() {
   const handleSync = async () => {
     setSyncing(true)
     try {
-      const res = await fetch('/api/admin/blvd-sync/incremental', { method: 'POST' })
+      const res = await adminFetch('/api/admin/blvd-sync/incremental', { method: 'POST' })
       const result = await res.json()
       if (result.ok) {
         alert(`Sync complete: ${result.membershipsSynced || 0} memberships, ${result.creditsUpdated || 0} credits updated`)
@@ -129,7 +131,7 @@ export default function MembershipsPage() {
     setDrawerLoading(true)
     setDrawerData(null)
     try {
-      const res = await fetch(`/api/admin/membership-detail?client_id=${clientId}`)
+      const res = await adminFetch(`/api/admin/membership-detail?client_id=${clientId}`)
       const text = await res.text()
       let json
       try { json = JSON.parse(text) } catch { throw new Error('Invalid response from server') }
@@ -195,6 +197,14 @@ export default function MembershipsPage() {
 
   const memberships = sortRows(data?.memberships || [], mSort)
   const credits = sortRows(data?.clientsWithCredit || [], cSort)
+
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => {
+    const fromMemberships = (data?.memberships || []).map(m => m.client?.boulevard_id).filter(Boolean)
+    const fromCredits = (data?.clientsWithCredit || []).map(c => c.boulevard_id).filter(Boolean)
+    return [...new Set([...fromMemberships, ...fromCredits])]
+  }, [data])
+  const { clients: jitClients } = useClientJit(boulevardIds)
 
   return (
     <AdminLayout>
@@ -282,8 +292,8 @@ export default function MembershipsPage() {
                     return (
                       <tr key={m.id} className="border-b last:border-b-0 hover:bg-neutral-50 cursor-pointer" onClick={() => openDrawer(clientId)}>
                         <td className="px-4 py-3">
-                          <p className="font-medium">{client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim() || '—'}</p>
-                          <p className="text-xs text-neutral-400">{client.email || client.phone || ''}</p>
+                          <p className="font-medium">{jitDisplayName(jitClients[client.boulevard_id], client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim())}</p>
+                          <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[client.boulevard_id], client.email, client.phone)}</p>
                         </td>
                         <td className="px-4 py-3 text-xs max-w-[200px]"><p className="truncate" title={m.name}>{m.name}</p></td>
                         <td className="px-4 py-3"><StatusBadge status={m.status} /></td>
@@ -339,9 +349,9 @@ export default function MembershipsPage() {
                     <tr><td colSpan={7} className="px-4 py-8 text-center text-neutral-400">No clients with credit balance</td></tr>
                   ) : credits.map((c) => (
                     <tr key={c.id} className="border-b last:border-b-0 hover:bg-neutral-50 cursor-pointer" onClick={() => openDrawer(c.id)}>
-                      <td className="px-4 py-3 font-medium">{c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim() || '—'}</td>
-                      <td className="px-4 py-3 text-neutral-500">{c.email || '—'}</td>
-                      <td className="px-4 py-3 text-neutral-500">{c.phone || '—'}</td>
+                      <td className="px-4 py-3 font-medium">{jitDisplayName(jitClients[c.boulevard_id], c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim())}</td>
+                      <td className="px-4 py-3 text-neutral-500">{(jitClients[c.boulevard_id]?._revealed ? jitClients[c.boulevard_id]?.email : jitClients[c.boulevard_id]?.emailMasked) || c.email || '—'}</td>
+                      <td className="px-4 py-3 text-neutral-500">{(jitClients[c.boulevard_id]?._revealed ? jitClients[c.boulevard_id]?.mobilePhone : jitClients[c.boulevard_id]?.phoneMasked) || c.phone || '—'}</td>
                       <td className="px-4 py-3 text-right"><span className="text-emerald-600 font-semibold">{c.creditFormatted}</span></td>
                       <td className="px-4 py-3 text-right">{c.visit_count || 0}</td>
                       <td className="px-4 py-3 text-right">${parseFloat(c.total_spend || 0).toLocaleString()}</td>

@@ -2,8 +2,9 @@
 // GET — Returns recent Bird sync activity for auditing.
 // Query params: ?days=1 (default), ?status=failed, ?limit=100
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -56,3 +57,5 @@ export default async function handler(req, res) {
     entries: entries || [],
   })
 }
+
+export default withAdminAuth(handler)

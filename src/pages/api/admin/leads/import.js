@@ -2,6 +2,8 @@
 // One-time bulk import of historical leads from Google Sheet export.
 // POST { leads: [...] } — inserts + auto-matches against blvd_clients.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 export const config = { maxDuration: 120 }
 
@@ -29,7 +31,7 @@ function parseServiceInterest(campaign) {
   return null
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { leads } = req.body
@@ -51,14 +53,16 @@ export default async function handler(req, res) {
 
     if (!phone && !email) { skipped++; continue }
 
-    // Dedup check
+    // Dedup check (hash-based)
     let existing = null
-    if (phone) {
-      const { data } = await db.from('leads').select('id').eq('phone', phone).limit(1)
+    const phoneHash = phone ? hashPhone(phone) : null
+    const emailHash = email ? hashEmail(email) : null
+    if (phoneHash) {
+      const { data } = await db.from('leads').select('id').eq('phone_hash_v1', phoneHash).limit(1)
       existing = data?.[0]
     }
-    if (!existing && email) {
-      const { data } = await db.from('leads').select('id').eq('email', email).limit(1)
+    if (!existing && emailHash) {
+      const { data } = await db.from('leads').select('id').eq('email_hash_v1', emailHash).limit(1)
       existing = data?.[0]
     }
     if (existing) { skipped++; continue }
@@ -70,6 +74,8 @@ export default async function handler(req, res) {
       last_name: (lead.last_name || '').trim() || null,
       email,
       phone,
+      phone_hash_v1: phoneHash,
+      email_hash_v1: emailHash,
       source: (lead.source || 'facebook').toLowerCase(),
       platform: lead.platform || null,
       campaign: lead.campaign || null,
@@ -112,22 +118,25 @@ export default async function handler(req, res) {
     let client = null
 
     if (lead.phone) {
-      const cleanPhone = lead.phone.replace(/\D/g, '').slice(-10)
-      if (cleanPhone.length === 10) {
+      const ph = hashPhone(lead.phone)
+      if (ph) {
         const { data } = await db.from('blvd_clients')
           .select('id, visit_count, first_visit_at')
-          .ilike('phone', `%${cleanPhone}`)
+          .eq('phone_hash_v1', ph)
           .limit(1)
         client = data?.[0]
       }
     }
 
     if (!client && lead.email) {
-      const { data } = await db.from('blvd_clients')
-        .select('id, visit_count, first_visit_at')
-        .ilike('email', lead.email)
-        .limit(1)
-      client = data?.[0]
+      const eh = hashEmail(lead.email)
+      if (eh) {
+        const { data } = await db.from('blvd_clients')
+          .select('id, visit_count, first_visit_at')
+          .eq('email_hash_v1', eh)
+          .limit(1)
+        client = data?.[0]
+      }
     }
 
     if (!client) continue
@@ -175,3 +184,5 @@ export default async function handler(req, res) {
     total_submitted: leads.length,
   })
 }
+
+export default withAdminAuth(handler)

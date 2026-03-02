@@ -2,8 +2,10 @@
 // Full customer profile with referral data for the admin drawer.
 // GET ?client_id=<uuid>
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { client_id } = req.query
@@ -21,11 +23,16 @@ export default async function handler(req, res) {
 
     if (summaryErr) throw summaryErr
 
+    // Get boulevard_id for response
+    const { data: blvdRow } = await db
+      .from('blvd_clients')
+      .select('boulevard_id')
+      .eq('id', client_id)
+      .maybeSingle()
+
     const client = {
       client_id: summary.client_id,
-      name: summary.name || [summary.first_name, summary.last_name].filter(Boolean).join(' ') || 'Unknown',
-      email: summary.email,
-      phone: summary.phone,
+      boulevard_id: blvdRow?.boulevard_id || null,
       ltv_bucket: summary.ltv_bucket,
       total_visits: summary.total_visits,
       total_spend: Math.round(Number(summary.total_spend || 0)),
@@ -34,22 +41,14 @@ export default async function handler(req, res) {
       days_since_last_visit: summary.days_since_last_visit,
     }
 
-    // 2. Find linked member by phone or email
-    const conditions = []
-    const clientPhone = (summary.phone || '').replace(/\D/g, '').slice(-10)
-    if (clientPhone) conditions.push(`phone.ilike.%${clientPhone}`)
-    if (summary.email) conditions.push(`email.ilike.${summary.email}`)
-
+    // 2. Find linked member by blvd_client_id
     let member = null
-    if (conditions.length) {
-      const { data: memberRow } = await db
-        .from('members')
-        .select('id, first_name, last_name, phone, email, auth_user_id, created_at')
-        .or(conditions.join(','))
-        .limit(1)
-        .maybeSingle()
-      member = memberRow
-    }
+    const { data: memberRow } = await db
+      .from('members')
+      .select('id, auth_user_id, created_at')
+      .eq('blvd_client_id', client_id)
+      .maybeSingle()
+    member = memberRow
 
     // 3. Referral codes (if member exists)
     let referralCodes = []
@@ -118,10 +117,17 @@ export default async function handler(req, res) {
     }
 
     // 5. Inbound referrals — who referred THIS customer
+    // Look up by phone/email hash from blvd_clients
     let inboundReferrals = []
+    const { data: clientHashes } = await db
+      .from('blvd_clients')
+      .select('phone_hash_v1, email_hash_v1')
+      .eq('id', client_id)
+      .maybeSingle()
+
     const inboundConditions = []
-    if (clientPhone) inboundConditions.push(`referee_phone.ilike.%${clientPhone}`)
-    if (summary.email) inboundConditions.push(`referee_email.ilike.${summary.email}`)
+    if (clientHashes?.phone_hash_v1) inboundConditions.push(`referee_phone_hash_v1.eq.${clientHashes.phone_hash_v1}`)
+    if (clientHashes?.email_hash_v1) inboundConditions.push(`referee_email_hash_v1.eq.${clientHashes.email_hash_v1}`)
 
     if (inboundConditions.length) {
       const { data: inbound } = await db
@@ -132,20 +138,11 @@ export default async function handler(req, res) {
         .limit(20)
 
       if (inbound?.length) {
-        // Resolve referrer names
-        const referrerIds = [...new Set(inbound.map(r => r.referrer_member_id).filter(Boolean))]
-        const { data: referrers } = referrerIds.length
-          ? await db.from('members').select('id, first_name, last_name').in('id', referrerIds)
-          : { data: [] }
-        const referrerMap = {}
-        for (const m of (referrers || [])) {
-          referrerMap[m.id] = `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'Unknown'
-        }
-
+        // Resolve referrer member IDs (no PII needed)
         inboundReferrals = inbound.map(r => ({
           id: r.id,
           status: r.status,
-          referrerName: referrerMap[r.referrer_member_id] || 'Unknown',
+          referrer_member_id: r.referrer_member_id,
           bookedAt: r.booked_at,
           completedAt: r.completed_at,
           creditedAt: r.credited_at,
@@ -158,10 +155,6 @@ export default async function handler(req, res) {
       client,
       member: member ? {
         id: member.id,
-        firstName: member.first_name,
-        lastName: member.last_name,
-        phone: member.phone,
-        email: member.email,
         hasAuth: !!member.auth_user_id,
         createdAt: member.created_at,
       } : null,
@@ -175,3 +168,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

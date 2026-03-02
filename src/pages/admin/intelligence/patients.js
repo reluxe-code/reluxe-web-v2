@@ -2,6 +2,8 @@
 // Patient Intelligence — LTV, visits, credit, memberships, vouchers, referrals.
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 const STATUS_COLORS = {
   ACTIVE: 'bg-emerald-50 text-emerald-700',
@@ -103,7 +105,7 @@ export default function PatientsReport() {
       if (ltvFilter) params.set('ltv', ltvFilter)
       if (search) params.set('search', search)
       params.set('window_days', windowDays)
-      const res = await fetch(`/api/admin/intelligence/patients?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/patients?${params}`)
       const text = await res.text()
       let json
       try { json = JSON.parse(text) } catch { throw new Error('Invalid response from server') }
@@ -126,7 +128,7 @@ export default function PatientsReport() {
       if (ltvFilter) params.set('ltv', ltvFilter)
       if (search) params.set('search', search)
       params.set('window_days', windowDays)
-      const res = await fetch(`/api/admin/intelligence/patients?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/patients?${params}`)
       const json = await res.json()
       const patients = json.patients?.data || []
       const headers = ['Name', 'Email', 'Phone', 'LTV', 'Visits', 'Spend', 'Credit', 'Membership', 'Vouchers', 'First Visit', 'Last Visit', 'Days Since']
@@ -156,6 +158,10 @@ export default function PatientsReport() {
   const summary = data?.summary
   const patients = data?.patients
 
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => (patients?.data || []).map(p => p.boulevard_id).filter(Boolean), [patients?.data])
+  const { clients: jitClients } = useClientJit(boulevardIds)
+
   // Client-side sort on the page data
   const sortedPatients = useMemo(() => {
     const rows = patients?.data || []
@@ -180,7 +186,7 @@ export default function PatientsReport() {
     setDrawerData(null)
     try {
       const params = new URLSearchParams({ client_id: clientId, window_days: windowDays })
-      const res = await fetch(`/api/admin/intelligence/patient-detail?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/patient-detail?${params}`)
       const text = await res.text()
       let json
       try { json = JSON.parse(text) } catch { throw new Error('Invalid response from server') }
@@ -283,7 +289,6 @@ export default function PatientsReport() {
             <option value="visits_desc">Most Visits</option>
             <option value="recent">Most Recent</option>
             <option value="oldest">Most Absent</option>
-            <option value="name_asc">Name A-Z</option>
           </select>
           <select value={windowDays} onChange={(e) => setWindowDays(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white">
             <option value="30">Last 30 days</option>
@@ -332,8 +337,8 @@ export default function PatientsReport() {
                     {sortedPatients.map((p) => (
                       <tr key={p.client_id} className="border-b last:border-b-0 hover:bg-neutral-50 cursor-pointer" onClick={() => openDrawer(p.client_id)}>
                         <td className="px-4 py-2">
-                          <p className="font-medium">{p.name}</p>
-                          <p className="text-xs text-neutral-400">{p.email || p.phone || ''}</p>
+                          <p className="font-medium">{jitDisplayName(jitClients[p.boulevard_id], p.name)}</p>
+                          <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[p.boulevard_id], p.email, p.phone)}</p>
                         </td>
                         <td className="px-4 py-2"><LtvBadge bucket={p.ltv_bucket} /></td>
                         <td className="px-4 py-2 text-right text-neutral-600">{p.total_visits}</td>

@@ -3,6 +3,7 @@
 // GET ?client_id=<uuid>
 import { getServiceClient } from '@/lib/supabase'
 import { adminQuery } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 function collapseServicesForDisplay(services = []) {
   const toxRows = services.filter((s) => s.slug === 'tox')
@@ -25,7 +26,7 @@ function collapseServicesForDisplay(services = []) {
   ]
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { client_id, window_days = '365' } = req.query
@@ -114,7 +115,7 @@ export default async function handler(req, res) {
       // Linked RELUXE member + referral
       db
         .from('members')
-        .select('id, first_name, last_name, phone, email, created_at')
+        .select('id, created_at')
         .eq('blvd_client_id', client_id)
         .maybeSingle(),
       // Core 4 score
@@ -342,9 +343,7 @@ export default async function handler(req, res) {
 
     const client = {
       client_id: summary.client_id,
-      name: summary.name || [summary.first_name, summary.last_name].filter(Boolean).join(' ') || 'Unknown',
-      email: summary.email,
-      phone: summary.phone,
+      boulevard_id: creditRow?.boulevard_id || null,
       ltv_bucket: summary.ltv_bucket,
       total_visits: summary.total_visits,
       total_spend: Math.round(Number(summary.total_spend || 0)),
@@ -393,9 +392,6 @@ export default async function handler(req, res) {
       } : null,
       member: member ? {
         id: member.id,
-        name: `${member.first_name || ''} ${member.last_name || ''}`.trim(),
-        phone: member.phone,
-        email: member.email,
         createdAt: member.created_at,
       } : null,
     })
@@ -404,3 +400,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

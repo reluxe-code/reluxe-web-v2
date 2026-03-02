@@ -1,13 +1,14 @@
 // src/pages/api/admin/blvd-sync/report-reschedule.js
 // Delete old export, create new DAILY at 00:30 UTC (7:30 PM EST).
 import { adminQuery } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 30 }
 
 const TOX_REPORT_ID = 'urn:blvd:Report:0bb8e07b-8405-4335-a8cc-b7b736ef7b7b'
 const OLD_EXPORT_ID = 'urn:blvd:ReportExport:f4ef3b82-0f2b-4a45-8d70-824d10741899'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const results = {}
@@ -62,3 +63,5 @@ export default async function handler(req, res) {
 
   return res.json(results)
 }
+
+export default withAdminAuth(handler)

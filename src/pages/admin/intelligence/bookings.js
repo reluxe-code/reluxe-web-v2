@@ -2,6 +2,7 @@
 // Bookings Intelligence — unified view of online + in-office bookings with detail drawer.
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
 
 // ─── Source badge colors ───
 const SOURCE_COLORS = {
@@ -101,7 +102,7 @@ function DetailDrawer({ booking, onClose }) {
       ? `session_id=${booking.session_id}`
       : `appointment_id=${booking.blvd_appointment_id}`
 
-    fetch(`/api/admin/intelligence/booking-detail?${params}`)
+    adminFetch(`/api/admin/intelligence/booking-detail?${params}`)
       .then(r => r.json())
       .then(data => setDetail(data))
       .catch(() => setDetail(null))
@@ -286,8 +287,7 @@ function InOfficeDetail({ detail }) {
         <h3 className="text-sm font-semibold text-neutral-800 mb-2">Client</h3>
         <div className="text-xs space-y-1">
           <div className="font-medium text-neutral-700">{client?.name || [client?.first_name, client?.last_name].filter(Boolean).join(' ') || 'Unknown'}</div>
-          {client?.email && <div className="text-neutral-500">{client.email}</div>}
-          {client?.phone && <div className="text-neutral-500">{client.phone}</div>}
+          {client?.boulevard_id && <div className="text-neutral-400 text-[10px]">{client.boulevard_id}</div>}
           {client?.visit_count > 0 && <div className="text-neutral-400">{client.visit_count} total visits · {formatCurrency(client.total_spend)} lifetime</div>}
         </div>
       </div>
@@ -379,7 +379,7 @@ export default function BookingsIntelligence() {
       if (locationFilter) params.set('location', locationFilter)
       if (search.trim()) params.set('search', search.trim())
 
-      const res = await fetch(`/api/admin/intelligence/bookings?${params}`)
+      const res = await adminFetch(`/api/admin/intelligence/bookings?${params}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setData(await res.json())
     } catch (e) {

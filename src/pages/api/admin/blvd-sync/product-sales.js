@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import Papa from 'papaparse'
 import { adminQuery, getAdminAuthHeader } from '@/server/blvdAdmin'
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 60 }
 
@@ -458,7 +459,7 @@ async function chunkedUpsert(db, table, rows, onConflict, chunkSize = 500) {
   }
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { fileUrl, dryRun = false, mode = 'latest', fullRefresh = false } = req.body || {}
@@ -640,8 +641,6 @@ export default async function handler(req, res) {
       .filter((r) => r.client_boulevard_id && !existingClientsByBlvd.has(r.client_boulevard_id))
       .map((r) => ({
         boulevard_id: r.client_boulevard_id,
-        name: r.client_name || null,
-        email: r.client_email || null,
         synced_at: new Date().toISOString(),
       }))
 
@@ -770,3 +769,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

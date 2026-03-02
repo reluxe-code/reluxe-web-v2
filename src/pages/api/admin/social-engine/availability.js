@@ -2,8 +2,9 @@
 // Fetches open time slots for a provider+location+service+date.
 import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem } from '@/server/blvd'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { providerSlug, locationKey, serviceSlug, date, debug } = req.query
@@ -106,3 +107,5 @@ export default async function handler(req, res) {
     res.status(503).json({ error: 'Failed to fetch availability', detail: err.message })
   }
 }
+
+export default withAdminAuth(handler)

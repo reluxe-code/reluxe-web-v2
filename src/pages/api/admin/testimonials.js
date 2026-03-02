@@ -3,12 +3,13 @@
 // Uses service role client to bypass RLS.
 
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = {
   api: { bodyParser: { sizeLimit: '4mb' } },
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const client = getServiceClient()
   const { action } = req.query
 
@@ -155,3 +156,5 @@ export default async function handler(req, res) {
 
   return res.status(400).json({ error: 'Unknown action' })
 }
+
+export default withAdminAuth(handler)

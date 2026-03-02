@@ -1,8 +1,10 @@
 // src/pages/admin/intelligence/concierge.js
 // Daily Concierge — Agentic Retention Engine CMS.
 // Tabs: Queue (per-cohort), Templates (SMS editor), Projections (14-day forecast).
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
+import { adminFetch } from '@/lib/adminFetch'
+import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
 
 // ── Shared constants ──────────────────────────────────────────
 
@@ -136,6 +138,10 @@ export default function DailyConcierge() {
   const [projectionLoading, setProjectionLoading] = useState(false)
   const [expandedProjCohort, setExpandedProjCohort] = useState(null)
 
+  // JIT client name resolution
+  const boulevardIds = useMemo(() => (queue?.queue || []).map(e => e.boulevard_id).filter(Boolean), [queue?.queue])
+  const { clients: jitClients } = useClientJit(boulevardIds)
+
   const searchTimer = useRef(null)
   useEffect(() => {
     searchTimer.current = setTimeout(() => setSearch(searchInput), 400)
@@ -149,7 +155,7 @@ export default function DailyConcierge() {
 
   const loadConfig = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/concierge/config')
+      const res = await adminFetch('/api/admin/concierge/config')
       if (!res.ok) return
       const data = await res.json()
       setEngineEnabled(!!data.engine?.enabled)
@@ -179,9 +185,9 @@ export default function DailyConcierge() {
   const handleEnableEngine = useCallback(async () => {
     setEnablingEngine(true)
     try {
-      const cfgRes = await fetch('/api/admin/concierge/config')
+      const cfgRes = await adminFetch('/api/admin/concierge/config')
       const cfgData = await cfgRes.json()
-      const res = await fetch('/api/admin/concierge/config', {
+      const res = await adminFetch('/api/admin/concierge/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ engine: { ...(cfgData.engine || {}), enabled: true } }),
@@ -201,7 +207,7 @@ export default function DailyConcierge() {
 
   const loadDashboard = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/concierge/dashboard')
+      const res = await adminFetch('/api/admin/concierge/dashboard')
       if (!res.ok) return
       setDashboard(await res.json())
     } catch (e) {
@@ -225,7 +231,7 @@ export default function DailyConcierge() {
         sort,
       })
       if (search) params.set('search', search)
-      const res = await fetch(`/api/admin/concierge/queue?${params}`)
+      const res = await adminFetch(`/api/admin/concierge/queue?${params}`)
       if (!res.ok) throw new Error((await res.json()).error)
       setQueue(await res.json())
       setSelectedIds(new Set())
@@ -248,7 +254,7 @@ export default function DailyConcierge() {
     setDrawerView('message')
     setProfileData(null)
     try {
-      const res = await fetch(`/api/admin/concierge/detail?id=${entryId}`)
+      const res = await adminFetch(`/api/admin/concierge/detail?id=${entryId}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load')
       setDrawerData(await res.json())
     } catch (e) {
@@ -266,7 +272,7 @@ export default function DailyConcierge() {
     setProfileLoading(true)
     setProfileData(null)
     try {
-      const res = await fetch(`/api/admin/intelligence/patient-detail?client_id=${clientId}`)
+      const res = await adminFetch(`/api/admin/intelligence/patient-detail?client_id=${clientId}`)
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to load profile')
       setProfileData(await res.json())
     } catch (e) {
@@ -284,7 +290,7 @@ export default function DailyConcierge() {
     if (!confirm(`Generate queue for ${CAMPAIGN_LABELS[cohortSlug]}? This will expire old ready entries for this cohort.`)) return
     setGenerating(true)
     try {
-      const res = await fetch('/api/admin/concierge/generate', {
+      const res = await adminFetch('/api/admin/concierge/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cohorts: [cohortSlug] }),
@@ -309,7 +315,7 @@ export default function DailyConcierge() {
     if (!confirm(`${label} ${ids.length} entries?`)) return
     setApproving(true)
     try {
-      const res = await fetch('/api/admin/concierge/approve', {
+      const res = await adminFetch('/api/admin/concierge/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, action }),
@@ -328,11 +334,11 @@ export default function DailyConcierge() {
     if (!confirm(`Approve ALL ready ${CAMPAIGN_LABELS[cohortSlug]} entries?`)) return
     setApproving(true)
     try {
-      const res1 = await fetch(`/api/admin/concierge/queue?status=ready&cohort=${selectedCohort}&limit=1000`)
+      const res1 = await adminFetch(`/api/admin/concierge/queue?status=ready&cohort=${selectedCohort}&limit=1000`)
       const allReady = await res1.json()
       const ids = (allReady.queue || []).map((q) => q.id)
       if (!ids.length) { setApproving(false); return alert('No ready entries') }
-      const res2 = await fetch('/api/admin/concierge/approve', {
+      const res2 = await adminFetch('/api/admin/concierge/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids, action: 'approve' }),
@@ -354,12 +360,12 @@ export default function DailyConcierge() {
     setSending(true)
     try {
       // Get approved IDs for this cohort only
-      const res1 = await fetch(`/api/admin/concierge/queue?status=approved&cohort=${selectedCohort}&limit=1000`)
+      const res1 = await adminFetch(`/api/admin/concierge/queue?status=approved&cohort=${selectedCohort}&limit=1000`)
       const approved = await res1.json()
       const ids = (approved.queue || []).map((q) => q.id)
       if (!ids.length) { setSending(false); return alert('No approved entries to send') }
 
-      const res = await fetch('/api/admin/concierge/send', {
+      const res = await adminFetch('/api/admin/concierge/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids }),
@@ -382,7 +388,7 @@ export default function DailyConcierge() {
     if (!phone) return alert('Enter a phone number')
     setTestSending(true)
     try {
-      const res = await fetch('/api/admin/concierge/test-send', {
+      const res = await adminFetch('/api/admin/concierge/test-send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queue_id: queueId, phone }),
@@ -419,7 +425,7 @@ export default function DailyConcierge() {
     setTemplateSaving(true)
     try {
       // First read current engine config to merge with threshold update
-      const cfgRes = await fetch('/api/admin/concierge/config')
+      const cfgRes = await adminFetch('/api/admin/concierge/config')
       const cfgData = await cfgRes.json()
 
       const campaignUpdates = Object.entries(templateDrafts).map(([slug, d]) => ({
@@ -428,7 +434,7 @@ export default function DailyConcierge() {
         unavailable_template: d.unavailable_template || null,
         ab_split: d.ab_split, active: d.active,
       }))
-      const res = await fetch('/api/admin/concierge/config', {
+      const res = await adminFetch('/api/admin/concierge/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -453,7 +459,7 @@ export default function DailyConcierge() {
     setProjection(null)
     setExpandedProjCohort(null)
     try {
-      const res = await fetch(`/api/admin/concierge/projection?offset=${projectionOffset}`)
+      const res = await adminFetch(`/api/admin/concierge/projection?offset=${projectionOffset}`)
       if (!res.ok) throw new Error((await res.json()).error)
       setProjection(await res.json())
     } catch (e) {
@@ -642,8 +648,8 @@ export default function DailyConcierge() {
                             <div className="flex items-center gap-2">
                               {entry.is_test && <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-200 text-amber-800 font-bold">TEST</span>}
                               <div>
-                                <p className="font-medium">{entry.client_name}</p>
-                                <p className="text-xs text-neutral-400">{entry.phone}{entry.client_email ? ` · ${entry.client_email}` : ''}</p>
+                                <p className="font-medium">{jitDisplayName(jitClients[entry.boulevard_id], entry.client_name)}</p>
+                                <p className="text-xs text-neutral-400">{jitContactInfo(jitClients[entry.boulevard_id], entry.client_email, entry.phone) || entry.phone}</p>
                               </div>
                             </div>
                           </td>
@@ -1006,11 +1012,11 @@ export default function DailyConcierge() {
                     onClick={() => drawerData.entry.client_id && openProfile(drawerData.entry.client_id)}
                     className={`text-xl font-bold ${drawerData.entry.client_id ? 'text-violet-700 hover:text-violet-900 hover:underline cursor-pointer' : 'text-black cursor-default'}`}
                   >
-                    {drawerData.client?.name || 'Unknown'}
+                    {jitDisplayName(jitClients[drawerData.client?.boulevard_id], drawerData.client?.name) || 'Unknown'}
                   </button>
                   <div className="mt-1 space-y-0.5">
-                    {drawerData.client?.email && <p className="text-sm text-neutral-500">{drawerData.client.email}</p>}
-                    {drawerData.client?.phone && <p className="text-sm text-neutral-500">{drawerData.client.phone}</p>}
+                    {(jitClients[drawerData.client?.boulevard_id]?.emailMasked || drawerData.client?.email) && <p className="text-sm text-neutral-500">{jitClients[drawerData.client?.boulevard_id]?.emailMasked || drawerData.client?.email}</p>}
+                    {(jitClients[drawerData.client?.boulevard_id]?.phoneMasked || drawerData.client?.phone) && <p className="text-sm text-neutral-500">{jitClients[drawerData.client?.boulevard_id]?.phoneMasked || drawerData.client?.phone}</p>}
                   </div>
                   <div className="mt-2 flex gap-2">
                     <CohortBadge cohort={drawerData.entry.cohort} />
@@ -1120,11 +1126,11 @@ export default function DailyConcierge() {
                 {drawerData.entry.status === 'ready' && (
                   <div className="flex gap-3 pt-4 border-t">
                     <button onClick={async () => {
-                      await fetch('/api/admin/concierge/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [drawerData.entry.id], action: 'approve' }) })
+                      await adminFetch('/api/admin/concierge/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [drawerData.entry.id], action: 'approve' }) })
                       closeDrawer(); loadQueue(); loadDashboard()
                     }} className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Approve</button>
                     <button onClick={async () => {
-                      await fetch('/api/admin/concierge/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [drawerData.entry.id], action: 'skip' }) })
+                      await adminFetch('/api/admin/concierge/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [drawerData.entry.id], action: 'skip' }) })
                       closeDrawer(); loadQueue(); loadDashboard()
                     }} className="flex-1 px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-300">Skip</button>
                   </div>
@@ -1139,10 +1145,10 @@ export default function DailyConcierge() {
                   <>
                     {/* Profile Header */}
                     <div>
-                      <h3 className="text-xl font-bold">{profileData.client?.name || 'Unknown'}</h3>
+                      <h3 className="text-xl font-bold">{jitDisplayName(jitClients[profileData.client?.boulevard_id], profileData.client?.name) || 'Unknown'}</h3>
                       <div className="mt-1 space-y-0.5">
-                        {profileData.client?.email && <p className="text-sm text-neutral-500">{profileData.client.email}</p>}
-                        {profileData.client?.phone && <p className="text-sm text-neutral-500">{profileData.client.phone}</p>}
+                        {(profileData.client?.email || jitClients[profileData.client?.boulevard_id]?.emailMasked) && <p className="text-sm text-neutral-500">{jitClients[profileData.client?.boulevard_id]?.emailMasked || profileData.client?.email}</p>}
+                        {(profileData.client?.phone || jitClients[profileData.client?.boulevard_id]?.phoneMasked) && <p className="text-sm text-neutral-500">{jitClients[profileData.client?.boulevard_id]?.phoneMasked || profileData.client?.phone}</p>}
                       </div>
                       {profileData.client?.ltv_bucket && (
                         <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${

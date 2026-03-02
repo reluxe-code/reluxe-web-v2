@@ -2,6 +2,8 @@
 // Tox Intelligence Engine API — segments, provider retention, tox type breakdown.
 // GET ?location=all|westfield|carmel&provider=staffId&segment=on_schedule|due|overdue|lost
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 export const config = { maxDuration: 30 }
 
@@ -17,7 +19,7 @@ async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   return rows
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { location, provider, segment, search, tox_type, min_visits, sort, page = '1', limit = '50' } = req.query
@@ -154,6 +156,22 @@ export default async function handler(req, res) {
       .sort((a, b) => b.retention_pct - a.retention_pct)
 
     // 4. Patient list (paginated, filterable)
+    // Search: views no longer have PII columns — search blvd_clients first
+    let searchClientIds = null
+    if (search) {
+      const q = `%${search}%`
+      const conditions = [`name.ilike.${q}`]
+      const phoneHash = hashPhone(search)
+      const emailHash = hashEmail(search)
+      if (phoneHash) conditions.push(`phone_hash_v1.eq.${phoneHash}`)
+      if (emailHash) conditions.push(`email_hash_v1.eq.${emailHash}`)
+      const { data: matchingClients } = await db
+        .from('blvd_clients')
+        .select('id')
+        .or(conditions.join(','))
+      searchClientIds = (matchingClients || []).map(c => c.id)
+    }
+
     let patientQuery = db
       .from('client_tox_summary')
       .select('*', { count: 'exact' })
@@ -168,9 +186,11 @@ export default async function handler(req, res) {
       patientQuery = patientQuery.eq('last_provider_staff_id', provider)
     }
     if (search) {
-      // Search by name, email, or phone (case-insensitive)
-      const q = `%${search}%`
-      patientQuery = patientQuery.or(`name.ilike.${q},email.ilike.${q},phone.ilike.${q},first_name.ilike.${q},last_name.ilike.${q}`)
+      if (searchClientIds && searchClientIds.length > 0) {
+        patientQuery = patientQuery.in('client_id', searchClientIds)
+      } else {
+        patientQuery = patientQuery.eq('client_id', '00000000-0000-0000-0000-000000000000')
+      }
     }
     if (tox_type) {
       patientQuery = patientQuery.eq('primary_tox_type', tox_type)
@@ -179,7 +199,7 @@ export default async function handler(req, res) {
       patientQuery = patientQuery.gte('tox_visits', parseInt(min_visits, 10))
     }
 
-    // Sort
+    // Sort (name_asc no longer available in view)
     const sortMap = {
       days_desc: ['days_since_last_tox', { ascending: false }],
       days_asc: ['days_since_last_tox', { ascending: true }],
@@ -187,7 +207,6 @@ export default async function handler(req, res) {
       spend_asc: ['total_tox_spend', { ascending: true }],
       visits_desc: ['tox_visits', { ascending: false }],
       visits_asc: ['tox_visits', { ascending: true }],
-      name_asc: ['name', { ascending: true }],
     }
     const [sortCol, sortOpts] = sortMap[sort] || sortMap.days_desc
     patientQuery = patientQuery.order(sortCol, sortOpts)
@@ -197,34 +216,53 @@ export default async function handler(req, res) {
 
     if (patientErr) throw patientErr
 
-    // Resolve provider names for the patient list
+    // Enrich with client names + provider names
+    const patientClientIds = (patients || []).map(p => p.client_id).filter(Boolean)
     const patientProviderIds = [...new Set((patients || []).map((p) => p.last_provider_staff_id).filter(Boolean))]
+    let clientInfoMap = {}
     let patientStaffLookup = {}
-    if (patientProviderIds.length > 0) {
-      const { data: pStaff } = await db
-        .from('staff')
-        .select('id, name')
-        .in('id', patientProviderIds)
-      patientStaffLookup = Object.fromEntries((pStaff || []).map((s) => [s.id, s.name]))
-    }
 
-    const patient_list = (patients || []).map((p) => ({
-      client_id: p.client_id,
-      name: p.name || [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown',
-      email: p.email,
-      phone: p.phone,
-      tox_visits: p.tox_visits,
-      last_tox_visit: p.last_tox_visit,
-      days_since_last_tox: p.days_since_last_tox,
-      tox_segment: p.tox_segment,
-      primary_tox_type: p.primary_tox_type,
-      last_tox_type: p.last_tox_type,
-      tox_switching: p.tox_switching,
-      total_tox_spend: Number(p.total_tox_spend || 0),
-      avg_interval_days: p.avg_tox_interval_days,
-      provider_name: patientStaffLookup[p.last_provider_staff_id] || null,
-      location: p.last_location_key,
-    }))
+    const enrichPromises = []
+    if (patientClientIds.length > 0) {
+      enrichPromises.push(
+        db.from('blvd_clients')
+          .select('id, boulevard_id')
+          .in('id', patientClientIds)
+          .then(({ data }) => {
+            for (const c of (data || [])) clientInfoMap[c.id] = c
+          })
+      )
+    }
+    if (patientProviderIds.length > 0) {
+      enrichPromises.push(
+        db.from('staff')
+          .select('id, name')
+          .in('id', patientProviderIds)
+          .then(({ data }) => {
+            patientStaffLookup = Object.fromEntries((data || []).map((s) => [s.id, s.name]))
+          })
+      )
+    }
+    await Promise.all(enrichPromises)
+
+    const patient_list = (patients || []).map((p) => {
+      const ci = clientInfoMap[p.client_id]
+      return {
+        client_id: p.client_id,
+        boulevard_id: ci?.boulevard_id || p.boulevard_id || null,
+        tox_visits: p.tox_visits,
+        last_tox_visit: p.last_tox_visit,
+        days_since_last_tox: p.days_since_last_tox,
+        tox_segment: p.tox_segment,
+        primary_tox_type: p.primary_tox_type,
+        last_tox_type: p.last_tox_type,
+        tox_switching: p.tox_switching,
+        total_tox_spend: Number(p.total_tox_spend || 0),
+        avg_interval_days: p.avg_tox_interval_days,
+        provider_name: patientStaffLookup[p.last_provider_staff_id] || null,
+        location: p.last_location_key,
+      }
+    })
 
     return res.json({
       summary,
@@ -267,3 +305,5 @@ function isFollowUp(serviceName) {
   const lower = (serviceName || '').toLowerCase()
   return lower.includes('post injection') || (lower.includes('follow') && lower.includes('up'))
 }
+
+export default withAdminAuth(handler)

@@ -3,8 +3,9 @@
 // GET ?client_id=<uuid>  (blvd_clients.id)
 import { getServiceClient } from '@/lib/supabase'
 import { adminQuery } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { client_id } = req.query
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
     const [clientRow, memberships, recentVisits, member] = await Promise.all([
       // 1. Client info + cached credit
       db.from('blvd_clients')
-        .select('id, boulevard_id, first_name, last_name, name, email, phone, visit_count, total_spend, first_visit_at, last_visit_at, account_credit, account_credit_updated_at')
+        .select('id, boulevard_id, visit_count, total_spend, first_visit_at, last_visit_at, account_credit, account_credit_updated_at')
         .eq('id', client_id)
         .single()
         .then(r => r.data),
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
 
       // 4. Linked RELUXE member (if any)
       db.from('members')
-        .select('id, first_name, last_name, phone, email, blvd_client_id, created_at')
+        .select('id, blvd_client_id, created_at')
         .eq('blvd_client_id', client_id)
         .maybeSingle()
         .then(r => r.data),
@@ -108,9 +109,6 @@ export default async function handler(req, res) {
       })),
       member: member ? {
         id: member.id,
-        name: `${member.first_name || ''} ${member.last_name || ''}`.trim(),
-        phone: member.phone,
-        email: member.email,
         createdAt: member.created_at,
       } : null,
       referralStats,
@@ -120,3 +118,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

@@ -3,6 +3,8 @@
 // POST { firstName, lastName, phone }
 import { getServiceClient } from '@/lib/supabase'
 import { generateReferralCode, generateFallbackCode } from '@/lib/referralCodes'
+import { hashPhone } from '@/lib/piiHash'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 function normalizePhone(raw) {
   const digits = (raw || '').replace(/\D/g, '')
@@ -11,7 +13,7 @@ function normalizePhone(raw) {
   return null
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { firstName, lastName, phone } = req.body
@@ -27,21 +29,19 @@ export default async function handler(req, res) {
   const db = getServiceClient()
 
   try {
-    // Check if member already exists by phone
-    const last10 = normalized.replace(/\D/g, '').slice(-10)
+    // Check if member already exists by phone hash
+    const phoneHash = hashPhone(normalized)
     const { data: existingMember } = await db
       .from('members')
-      .select('id, first_name, last_name, phone')
-      .or(`phone.ilike.%${last10}`)
+      .select('id')
+      .eq('phone_hash_v1', phoneHash)
       .limit(1)
       .maybeSingle()
 
     let memberId
-    let memberName
 
     if (existingMember) {
       memberId = existingMember.id
-      memberName = `${existingMember.first_name || ''} ${existingMember.last_name || ''}`.trim()
     } else {
       // Create new member
       const { data: newMember, error: memberErr } = await db
@@ -50,6 +50,7 @@ export default async function handler(req, res) {
           first_name: firstName.trim(),
           last_name: (lastName || '').trim() || null,
           phone: normalized,
+          phone_hash_v1: phoneHash,
         })
         .select('id')
         .single()
@@ -59,7 +60,6 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Failed to create member' })
       }
       memberId = newMember.id
-      memberName = `${firstName.trim()} ${(lastName || '').trim()}`.trim()
     }
 
     // Check if member already has a referral code
@@ -73,16 +73,13 @@ export default async function handler(req, res) {
     if (existingCode) {
       const code = existingCode.custom_code || existingCode.code
       const referralUrl = `https://reluxemedspa.com/referral/${code}`
-      const smsBody = encodeURIComponent(`Hey! I wanted to share my RELUXE Med Spa referral link with you. You'll get $25 off your first treatment: ${referralUrl}`)
 
       return res.json({
         ok: true,
         alreadyEnrolled: true,
         memberId,
-        memberName,
         code,
         referralUrl,
-        smsLink: `sms:${normalized}?body=${smsBody}`,
       })
     }
 
@@ -115,19 +112,18 @@ export default async function handler(req, res) {
     }
 
     const referralUrl = `https://reluxemedspa.com/referral/${code}`
-    const smsBody = encodeURIComponent(`Hey! I wanted to share my RELUXE Med Spa referral link with you. You'll get $25 off your first treatment: ${referralUrl}`)
 
     return res.json({
       ok: true,
       alreadyEnrolled: false,
       memberId,
-      memberName,
       code,
       referralUrl,
-      smsLink: `sms:${normalized}?body=${smsBody}`,
     })
   } catch (err) {
     console.error('[admin/referral/enroll]', err.message)
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

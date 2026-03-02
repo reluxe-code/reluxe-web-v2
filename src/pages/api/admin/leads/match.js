@@ -3,6 +3,8 @@
 // Phase 1: Match unmatched leads → booked, cancelled, or converted.
 // Phase 2: Re-evaluate existing 'booked' leads for cancellations or conversions.
 import { getServiceClient } from '@/lib/supabase'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 120 }
 
@@ -19,7 +21,7 @@ async function checkAppointmentStatus(db, clientId) {
   return 'no_appointments'
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -34,7 +36,7 @@ export default async function handler(req, res) {
   while (hasMore) {
     const { data: leads, error: leadsErr } = await db
       .from('leads')
-      .select('id, phone, email, status, created_at')
+      .select('id, phone_hash_v1, email_hash_v1, status, created_at')
       .in('status', ['new', 'contacted', 'booked'])
       .is('blvd_client_id', null)
       .order('created_at', { ascending: true })
@@ -48,25 +50,22 @@ export default async function handler(req, res) {
     for (const lead of leads) {
       let client = null
 
-      // Match by phone (last 10 digits)
-      if (lead.phone) {
-        const cleanPhone = lead.phone.replace(/\D/g, '').slice(-10)
-        if (cleanPhone.length === 10) {
-          const { data } = await db
-            .from('blvd_clients')
-            .select('id, visit_count, first_visit_at')
-            .ilike('phone', `%${cleanPhone}`)
-            .limit(1)
-          client = data?.[0]
-        }
-      }
-
-      // Fallback: match by email
-      if (!client && lead.email) {
+      // Match by phone hash
+      if (lead.phone_hash_v1) {
         const { data } = await db
           .from('blvd_clients')
           .select('id, visit_count, first_visit_at')
-          .ilike('email', lead.email)
+          .eq('phone_hash_v1', lead.phone_hash_v1)
+          .limit(1)
+        client = data?.[0]
+      }
+
+      // Fallback: match by email hash
+      if (!client && lead.email_hash_v1) {
+        const { data } = await db
+          .from('blvd_clients')
+          .select('id, visit_count, first_visit_at')
+          .eq('email_hash_v1', lead.email_hash_v1)
           .limit(1)
         client = data?.[0]
       }
@@ -117,7 +116,7 @@ export default async function handler(req, res) {
         new_value: newStatus,
         metadata: {
           blvd_client_id: client.id,
-          match_type: lead.phone ? 'phone' : 'email',
+          match_type: lead.phone_hash_v1 ? 'phone_hash' : 'email_hash',
           visit_count: client.visit_count,
         },
       })
@@ -193,3 +192,5 @@ export default async function handler(req, res) {
 
   return res.json({ ok: true, summary: results })
 }
+
+export default withAdminAuth(handler)

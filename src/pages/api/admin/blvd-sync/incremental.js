@@ -6,8 +6,10 @@ import { getServiceClient } from '@/lib/supabase'
 import { LOCATION_IDS } from '@/server/blvd'
 import { ensureReferralCode } from '@/lib/referralCodes'
 import { sendCAPIEvents, buildUserData } from '@/lib/metaCAPI'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail, hashPhonePrefix } from '@/lib/piiHash'
 
-export const config = { maxDuration: 60 }
+export const config = { maxDuration: 300 }
 
 const PAGE_SIZE = 50
 
@@ -116,7 +118,7 @@ const APPOINTMENTS_QUERY = `
           duration
           createdAt
           cancelled
-          cancellation { cancelledAt notes reason }
+          cancellation { cancelledAt }
           location { id }
           client {
             id firstName lastName name email mobilePhone
@@ -137,7 +139,7 @@ const APPOINTMENTS_QUERY = `
   }
 `
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Accept both GET (cron) and POST (manual)
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'GET or POST only' })
@@ -160,6 +162,16 @@ export default async function handler(req, res) {
   }
 
   const db = getServiceClient()
+  const deadline = Date.now() + 270_000 // 270s — return before 300s wall
+  const isNearDeadline = () => Date.now() > deadline
+
+  // Clean up stale "running" entries (older than 10 min = timed out)
+  await db
+    .from('blvd_sync_log')
+    .update({ status: 'timeout', completed_at: new Date().toISOString(), error: 'Function timed out' })
+    .eq('status', 'running')
+    .eq('sync_type', 'incremental')
+    .lt('started_at', new Date(Date.now() - 10 * 60 * 1000).toISOString())
 
   // Create sync log
   const { data: logEntry } = await db
@@ -206,19 +218,17 @@ export default async function handler(req, res) {
           // Upsert client
           let clientId = null
           if (node.client?.id) {
+            const clientPhone = node.client.mobilePhone || null
+            const clientEmail = node.client.email || null
             const { data: upserted } = await db
               .from('blvd_clients')
               .upsert(
                 {
                   boulevard_id: node.client.id,
-                  first_name: node.client.firstName || null,
-                  last_name: node.client.lastName || null,
-                  name:
-                    node.client.name ||
-                    [node.client.firstName, node.client.lastName].filter(Boolean).join(' ') ||
-                    null,
-                  email: node.client.email || null,
-                  phone: node.client.mobilePhone || null,
+                  // Hashed PII only — no raw PII persisted
+                  phone_hash_v1: hashPhone(clientPhone),
+                  email_hash_v1: hashEmail(clientEmail),
+                  phone_prefix_hash_v1: hashPhonePrefix(clientPhone),
                   synced_at: new Date().toISOString(),
                 },
                 { onConflict: 'boulevard_id' }
@@ -281,103 +291,118 @@ export default async function handler(req, res) {
         if (!pageInfo.hasNextPage) break
         cursor = pageInfo.endCursor
       }
+      if (isNearDeadline()) break
     }
 
-    // ── Sync memberships (paginate all, upsert) ──
+    // ── Sync memberships + packages in parallel ──
     let membershipsSynced = 0
-    try {
-      let mCursor = null
-      for (let mPage = 0; mPage < 20; mPage++) {
-        const mData = await adminQuery(MEMBERSHIPS_QUERY, {
-          first: 100,
-          after: mCursor,
-        })
-        const mEdges = mData.memberships?.edges || []
-        const mPageInfo = mData.memberships?.pageInfo || {}
-
-        for (const edge of mEdges) {
-          const m = edge.node
-          if (!m?.id) continue
-
-          // Resolve client internal ID
-          let mClientId = null
-          if (m.clientId) {
-            const { data: clientRow } = await db
-              .from('blvd_clients')
-              .select('id')
-              .eq('boulevard_id', m.clientId)
-              .maybeSingle()
-            mClientId = clientRow?.id || null
-          }
-
-          await db.from('blvd_memberships').upsert({
-            boulevard_id: m.id,
-            client_id: mClientId,
-            client_boulevard_id: m.clientId,
-            name: m.name,
-            status: m.status,
-            start_on: m.startOn,
-            end_on: m.endOn || null,
-            cancel_on: m.cancelOn || null,
-            next_charge_date: m.nextChargeDate || null,
-            unpause_on: m.unpauseOn || null,
-            interval: m.interval || null,
-            unit_price: m.unitPrice || 0,
-            term_number: m.termNumber || 1,
-            location_boulevard_id: m.locationId || null,
-            location_key: LOCATION_URN_MAP[m.locationId] || null,
-            vouchers: m.vouchers || [],
-            synced_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'boulevard_id' })
-
-          membershipsSynced++
-        }
-
-        if (!mPageInfo.hasNextPage) break
-        mCursor = mPageInfo.endCursor
-      }
-    } catch (mErr) {
-      console.error('Membership sync error (non-fatal):', mErr.message)
-    }
-
-    // ── Sync package catalog (templates only — Boulevard doesn't expose purchased packages via API) ──
-    // Client-level package purchases must be imported via /api/admin/packages/import
     let packagesSynced = 0
     let packageSyncError = null
-    try {
-      let pCursor = null
-      for (let pPage = 0; pPage < 20; pPage++) {
-        const pData = await adminQuery(PACKAGE_CATALOG_QUERY, {
-          first: 100,
-          after: pCursor,
-        })
-        const pEdges = pData.packages?.edges || []
-        const pPageInfo = pData.packages?.pageInfo || {}
 
-        for (const edge of pEdges) {
-          const p = edge.node
-          if (!p?.id) continue
+    const [membershipsResult, packagesResult] = await Promise.allSettled([
+      // Memberships
+      (async () => {
+        let count = 0
+        let mCursor = null
+        for (let mPage = 0; mPage < 20; mPage++) {
+          if (isNearDeadline()) break
+          const mData = await adminQuery(MEMBERSHIPS_QUERY, {
+            first: 100,
+            after: mCursor,
+          })
+          const mEdges = mData.memberships?.edges || []
+          const mPageInfo = mData.memberships?.pageInfo || {}
 
-          await db.from('blvd_package_catalog').upsert({
-            boulevard_id: p.id,
-            name: p.name,
-            description: p.description || null,
-            active: p.active ?? true,
-            unit_price: p.unitPrice || 0,
-            vouchers: p.vouchers || [],
-            synced_at: new Date().toISOString(),
-          }, { onConflict: 'boulevard_id' })
+          for (const edge of mEdges) {
+            const m = edge.node
+            if (!m?.id) continue
 
-          packagesSynced++
+            let mClientId = null
+            if (m.clientId) {
+              const { data: clientRow } = await db
+                .from('blvd_clients')
+                .select('id')
+                .eq('boulevard_id', m.clientId)
+                .maybeSingle()
+              mClientId = clientRow?.id || null
+            }
+
+            await db.from('blvd_memberships').upsert({
+              boulevard_id: m.id,
+              client_id: mClientId,
+              client_boulevard_id: m.clientId,
+              name: m.name,
+              status: m.status,
+              start_on: m.startOn,
+              end_on: m.endOn || null,
+              cancel_on: m.cancelOn || null,
+              next_charge_date: m.nextChargeDate || null,
+              unpause_on: m.unpauseOn || null,
+              interval: m.interval || null,
+              unit_price: m.unitPrice || 0,
+              term_number: m.termNumber || 1,
+              location_boulevard_id: m.locationId || null,
+              location_key: LOCATION_URN_MAP[m.locationId] || null,
+              vouchers: m.vouchers || [],
+              synced_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'boulevard_id' })
+
+            count++
+          }
+
+          if (!mPageInfo.hasNextPage) break
+          mCursor = mPageInfo.endCursor
         }
+        return count
+      })(),
+      // Package catalog
+      (async () => {
+        let count = 0
+        let pCursor = null
+        for (let pPage = 0; pPage < 20; pPage++) {
+          if (isNearDeadline()) break
+          const pData = await adminQuery(PACKAGE_CATALOG_QUERY, {
+            first: 100,
+            after: pCursor,
+          })
+          const pEdges = pData.packages?.edges || []
+          const pPageInfo = pData.packages?.pageInfo || {}
 
-        if (!pPageInfo.hasNextPage) break
-        pCursor = pPageInfo.endCursor
-      }
-    } catch (pkgErr) {
-      console.error('Package catalog sync error (non-fatal):', pkgErr.message)
-      packageSyncError = pkgErr.message
+          for (const edge of pEdges) {
+            const p = edge.node
+            if (!p?.id) continue
+
+            await db.from('blvd_package_catalog').upsert({
+              boulevard_id: p.id,
+              name: p.name,
+              description: p.description || null,
+              active: p.active ?? true,
+              unit_price: p.unitPrice || 0,
+              vouchers: p.vouchers || [],
+              synced_at: new Date().toISOString(),
+            }, { onConflict: 'boulevard_id' })
+
+            count++
+          }
+
+          if (!pPageInfo.hasNextPage) break
+          pCursor = pPageInfo.endCursor
+        }
+        return count
+      })(),
+    ])
+
+    if (membershipsResult.status === 'fulfilled') {
+      membershipsSynced = membershipsResult.value
+    } else {
+      console.error('Membership sync error (non-fatal):', membershipsResult.reason?.message)
+    }
+    if (packagesResult.status === 'fulfilled') {
+      packagesSynced = packagesResult.value
+    } else {
+      console.error('Package catalog sync error (non-fatal):', packagesResult.reason?.message)
+      packageSyncError = packagesResult.reason?.message
     }
 
     // ── Sync account credit for clients with memberships or recent activity ──
@@ -406,7 +431,7 @@ export default async function handler(req, res) {
 
       // Batch query Boulevard for account balances (10 at a time)
       const clientArray = Array.from(clientBlvdIds)
-      for (let i = 0; i < clientArray.length; i += 10) {
+      for (let i = 0; i < clientArray.length && !isNearDeadline(); i += 10) {
         const batch = clientArray.slice(i, i + 10)
         const balanceQuery = `query { ${batch.map((id, idx) =>
           `c${idx}: node(id: "${id}") { ... on Client { id currentAccountBalance } }`
@@ -456,9 +481,9 @@ export default async function handler(req, res) {
         // Find clients that don't have a linked member yet
         const { data: clientsForEnroll } = await db
           .from('blvd_clients')
-          .select('id, first_name, last_name, email, phone')
+          .select('id, phone_hash_v1, email_hash_v1')
           .in('id', clientIdArray)
-          .not('phone', 'is', null)
+          .not('phone_hash_v1', 'is', null)
 
         if (clientsForEnroll?.length) {
           // Get existing members by blvd_client_id to skip them
@@ -470,22 +495,20 @@ export default async function handler(req, res) {
 
           for (const client of clientsForEnroll) {
             if (existingSet.has(client.id)) continue
-            if (!client.phone) continue
+            if (!client.phone_hash_v1) continue
             try {
-              // Create member row
+              // Create member row — hashed PII only
               const { data: member } = await db
                 .from('members')
-                .upsert({
-                  phone: client.phone,
+                .insert({
                   blvd_client_id: client.id,
-                  first_name: client.first_name || null,
-                  last_name: client.last_name || null,
-                  email: client.email || null,
-                }, { onConflict: 'phone' })
-                .select('id, first_name')
+                  phone_hash_v1: client.phone_hash_v1,
+                  email_hash_v1: client.email_hash_v1 || null,
+                })
+                .select('id')
                 .single()
               if (member) {
-                await ensureReferralCode(db, member.id, member.first_name)
+                await ensureReferralCode(db, member.id, null)
                 referralEnrolled++
               }
             } catch { /* skip individual failures */ }
@@ -503,7 +526,7 @@ export default async function handler(req, res) {
         .from('blvd_appointments')
         .select(`
           id, boulevard_id, client_id, status, start_at, location_key,
-          blvd_clients!inner(email, phone, first_name, last_name, boulevard_id)
+          blvd_clients!inner(boulevard_id)
         `)
         .eq('status', 'completed')
         .is('meta_capi_sent_at', null)
@@ -523,11 +546,28 @@ export default async function handler(req, res) {
           svcByAppt[svc.appointment_id].push(svc)
         }
 
+        // Resolve PII from Boulevard API transiently for Meta CAPI (never persisted)
+        const blvdIds = [...new Set(unsentAppts.map(a => a.blvd_clients?.boulevard_id).filter(Boolean))]
+        const resolvedClients = {}
+        for (let i = 0; i < blvdIds.length; i += 10) {
+          const batch = blvdIds.slice(i, i + 10)
+          const fragments = batch.map((id, j) =>
+            `c${j}: node(id: "${id}") { ... on Client { id firstName lastName email mobilePhone } }`
+          )
+          try {
+            const batchData = await adminQuery(`query { ${fragments.join('\n')} }`)
+            batch.forEach((id, j) => {
+              if (batchData?.[`c${j}`]) resolvedClients[id] = batchData[`c${j}`]
+            })
+          } catch { /* skip batch on failure */ }
+        }
+
         const capiEvents = []
         const sentApptIds = []
         for (const appt of unsentAppts) {
-          const client = appt.blvd_clients
-          if (!client?.email && !client?.phone) continue
+          const blvdId = appt.blvd_clients?.boulevard_id
+          const client = blvdId ? resolvedClients[blvdId] : null
+          if (!client?.email && !client?.mobilePhone) continue
 
           const services = svcByAppt[appt.id] || []
           const totalValue = services.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0)
@@ -540,10 +580,10 @@ export default async function handler(req, res) {
             action_source: 'system_generated',
             user_data: buildUserData({
               email: client.email,
-              phone: client.phone,
-              firstName: client.first_name,
-              lastName: client.last_name,
-              externalId: client.boulevard_id,
+              phone: client.mobilePhone,
+              firstName: client.firstName,
+              lastName: client.lastName,
+              externalId: blvdId,
             }),
             custom_data: {
               value: totalValue,
@@ -604,3 +644,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

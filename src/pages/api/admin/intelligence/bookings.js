@@ -1,6 +1,8 @@
 // src/pages/api/admin/intelligence/bookings.js
 // Unified bookings list: online (booking_sessions) + in-office (blvd_appointments).
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { maskPhone, maskEmail, hashPhone, hashEmail } from '@/lib/piiHash'
 
 function deriveSource(pagePath) {
   if (!pagePath) return 'Unknown'
@@ -14,7 +16,7 @@ function deriveSource(pagePath) {
   return 'Other'
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const {
@@ -71,7 +73,7 @@ export default async function handler(req, res) {
           service: s.service_name || null,
           provider: s.provider_name || null,
           location: s.location_key || null,
-          client_name: s.contact_email || s.contact_phone || (s.member_id ? 'Member' : 'Anonymous'),
+          client_name: maskEmail(s.contact_email) || maskPhone(s.contact_phone) || (s.member_id ? 'Member' : 'Anonymous'),
           source: src,
           flow_type: s.flow_type,
           page_path: s.page_path,
@@ -90,7 +92,7 @@ export default async function handler(req, res) {
         .from('blvd_appointments')
         .select(`
           *,
-          blvd_clients ( name, first_name, last_name, email, phone ),
+          blvd_clients ( boulevard_id ),
           blvd_appointment_services ( service_name, service_slug, provider_staff_id, price, duration_minutes, provider_boulevard_id )
         `)
         .in('status', ['booked', 'confirmed', 'arrived', 'started', 'completed'])
@@ -115,7 +117,7 @@ export default async function handler(req, res) {
         const providerInfo = providerStaffId ? staffById.get(providerStaffId) : null
         const providerName = providerInfo?.name || null
         const serviceName = services.map(s => s.service_name).filter(Boolean).join(', ') || null
-        const clientName = client?.name || [client?.first_name, client?.last_name].filter(Boolean).join(' ') || null
+        const clientBlvdId = client?.boulevard_id || null
 
         if (provider && providerName && !providerName.toLowerCase().includes(provider.toLowerCase())) continue
         if (search && !matchesSearchInOffice(appt, client, serviceName, providerName, search)) continue
@@ -128,7 +130,7 @@ export default async function handler(req, res) {
           service: serviceName,
           provider: providerName,
           location: appt.location_key || null,
-          client_name: clientName,
+          boulevard_id: clientBlvdId,
           source: 'In-Office',
           flow_type: null,
           page_path: null,
@@ -189,12 +191,17 @@ export default async function handler(req, res) {
 
 function matchesSearch(session, term) {
   const t = term.toLowerCase()
-  return (
+  // Search by service/provider name (non-PII), or match hashed phone/email
+  if (
     (session.service_name || '').toLowerCase().includes(t) ||
-    (session.provider_name || '').toLowerCase().includes(t) ||
-    (session.contact_email || '').toLowerCase().includes(t) ||
-    (session.contact_phone || '').includes(t)
-  )
+    (session.provider_name || '').toLowerCase().includes(t)
+  ) return true
+  // Hash-based PII matching: check if search term matches phone or email hash
+  const phoneHash = hashPhone(term)
+  const emailHash = hashEmail(term)
+  if (phoneHash && session.contact_phone_hash_v1 === phoneHash) return true
+  if (emailHash && session.contact_email_hash_v1 === emailHash) return true
+  return false
 }
 
 function matchesSearchInOffice(appt, client, serviceName, providerName, term) {
@@ -202,8 +209,8 @@ function matchesSearchInOffice(appt, client, serviceName, providerName, term) {
   return (
     (serviceName || '').toLowerCase().includes(t) ||
     (providerName || '').toLowerCase().includes(t) ||
-    (client?.name || '').toLowerCase().includes(t) ||
-    (client?.email || '').toLowerCase().includes(t) ||
-    (client?.phone || '').includes(t)
+    (client?.boulevard_id || '').toLowerCase().includes(t)
   )
 }
+
+export default withAdminAuth(handler)

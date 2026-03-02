@@ -2,8 +2,9 @@
 // Admin: manually retry Boulevard sync for a gift card order
 import { getServiceClient } from '@/lib/supabase'
 import { syncOneGiftCard } from '@/lib/blvdGiftCards'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const { orderId } = req.body || {}
@@ -70,3 +71,5 @@ export default async function handler(req, res) {
     error: synced === 0 ? 'All cards failed to sync' : null,
   })
 }
+
+export default withAdminAuth(handler)

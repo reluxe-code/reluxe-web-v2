@@ -1,8 +1,9 @@
 // src/pages/api/admin/concierge/reconcile.js
 // POST: match completed bookings back to concierge link tokens for revenue attribution.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -11,7 +12,7 @@ export default async function handler(req, res) {
     // 1. Find booking sessions with concierge tracking tokens
     const { data: sessions } = await db
       .from('booking_sessions')
-      .select('id, tracking_token, contact_phone, contact_email, completed_at')
+      .select('id, tracking_token, completed_at')
       .like('tracking_token', 'cg_%')
       .eq('outcome', 'completed')
       .not('completed_at', 'is', null)
@@ -83,3 +84,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

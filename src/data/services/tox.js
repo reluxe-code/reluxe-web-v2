@@ -217,17 +217,8 @@ s.testimonials = [
   },
 ];
 
-// 👩‍⚕️ Providers (added: Krista & Hannah; ready for Alexis)
+// 👩‍⚕️ Providers
 s.providers = [
-  {
-    name: 'Krista Spalding, NP',
-    title: 'Nurse Practitioner Injector',
-    headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/krista.png',
-    bio: 'Detail-obsessed injector focused on natural movement and balanced facial aesthetics.',
-    href: '/book/tox',
-    instagram: 'https://instagram.com/injector.krista',
-    specialties: ['Tox', 'Lip Filler', 'Morpheus8', 'Facial Balancing'],
-  },
   {
     name: 'Hannah, RN',
     title: 'Nurse Injector',

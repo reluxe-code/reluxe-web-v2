@@ -2,10 +2,11 @@
 // Tests Admin API connection and manages staff Boulevard ID mappings.
 import { adminQuery, ADMIN_URL } from '@/server/blvdAdmin'
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 120 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') return handleDiscover(req, res)
   if (req.method === 'POST') return handleSave(req, res)
   return res.status(405).json({ error: 'Method not allowed' })
@@ -90,3 +91,5 @@ async function handleSave(req, res) {
 
   return res.json({ ok: true, results })
 }
+
+export default withAdminAuth(handler)

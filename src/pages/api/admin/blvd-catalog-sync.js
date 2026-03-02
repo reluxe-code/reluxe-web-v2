@@ -2,10 +2,11 @@
 // Syncs the full Boulevard service catalog into Supabase for admin search.
 import { blvd, LOCATION_IDS, getLocationById } from '@/server/blvd'
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 60 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   const db = getServiceClient()
@@ -53,3 +54,5 @@ export default async function handler(req, res) {
     res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)

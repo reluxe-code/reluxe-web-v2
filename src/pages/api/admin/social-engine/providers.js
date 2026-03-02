@@ -2,8 +2,9 @@
 // Lists bookable providers with their services and locations.
 import { getServiceClient } from '@/lib/supabase'
 import { SERVICE_BOOKING_MAP } from '@/data/serviceBookingMap'
+import { withAdminAuth } from '@/lib/adminAuth'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
@@ -56,3 +57,5 @@ export default async function handler(req, res) {
 
   res.json(providers)
 }
+
+export default withAdminAuth(handler)

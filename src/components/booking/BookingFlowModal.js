@@ -741,36 +741,29 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
                   {/* ── HOME ── */}
                   {step === 'HOME' && (
                     <motion.div key="home" {...stepAnim}>
-                      {isAuthenticated && profile ? (
-                        <AuthHome
-                          member={member}
-                          profile={profile}
-                          recentServices={recentServices}
-                          fonts={fonts}
-                          locationKey={locationKey}
-                          onSelectProvider={handleSelectProvider}
-                          onRebook={handleRebook}
-                          onBrowseAll={() => dispatch({ type: 'NAVIGATE', step: 'CATEGORIES' })}
-                          onOpenDrawer={() => { onClose(); openDrawer('visits') }}
-                        />
-                      ) : (
-                        <AnonHome
-                          tab={anonTab}
-                          onTabChange={(tab) => {
-                            dispatch({ type: 'SET_ANON_TAB', tab })
-                            if (tab === 'providers' && !providers) fetchProviders()
-                          }}
-                          menuData={menuData}
-                          menuLoading={menuLoading}
-                          locationBundles={locationBundles}
-                          providers={providers}
-                          providersLoading={providersLoading}
-                          fonts={fonts}
-                          onSelectCategory={handleSelectCategory}
-                          onSelectBundle={handleSelectBundle}
-                          onSelectProvider={handleSelectProvider}
-                        />
-                      )}
+                      <AnonHome
+                        tab={anonTab}
+                        onTabChange={(tab) => {
+                          dispatch({ type: 'SET_ANON_TAB', tab })
+                          if (tab === 'providers' && !providers) fetchProviders()
+                        }}
+                        menuData={menuData}
+                        menuLoading={menuLoading}
+                        locationBundles={locationBundles}
+                        providers={providers}
+                        providersLoading={providersLoading}
+                        fonts={fonts}
+                        onSelectCategory={handleSelectCategory}
+                        onSelectBundle={handleSelectBundle}
+                        onSelectProvider={handleSelectProvider}
+                        isAuthenticated={isAuthenticated}
+                        member={member}
+                        profile={profile}
+                        recentServices={recentServices}
+                        onRebook={handleRebook}
+                        onBrowseAll={() => dispatch({ type: 'NAVIGATE', step: 'CATEGORIES' })}
+                        onOpenDrawer={() => { onClose(); openDrawer('visits') }}
+                      />
                     </motion.div>
                   )}
 
@@ -1128,116 +1121,23 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
 
 // ─── Inline Sub-Components ───
 
-function AuthHome({ member, profile, recentServices, fonts, locationKey, onSelectProvider, onRebook, onBrowseAll, onOpenDrawer }) {
-  const firstName = member?.first_name || 'there'
-  const providerList = (profile?.providers || []).slice(0, 3)
-
-  return (
-    <div>
-      <p style={{ fontFamily: fonts?.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white, marginBottom: 16 }}>
-        Hey, {firstName}
-      </p>
-
-      {/* Your Providers */}
-      {providerList.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <p style={sectionLabel(fonts)}>Your Providers</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {providerList.map(p => (
-              <button
-                key={p.staffId}
-                onClick={() => onSelectProvider({
-                  name: p.name,
-                  slug: p.slug,
-                  staffId: p.staffId,
-                  boulevardProviderId: p.boulevardProviderId,
-                  boulevardServiceMap: p.serviceMap,
-                  image: p.image,
-                })}
-                style={rowButton(fonts)}
-              >
-                {p.image ? (
-                  <img src={p.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                ) : (
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${colors.violet}, ${colors.fuchsia})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600 }}>{(p.name || '?')[0]}</span>
-                  </div>
-                )}
-                <span style={{ fontWeight: 600, color: colors.white, flex: 1 }}>{p.name}</span>
-                <span style={{ fontSize: '0.6875rem', color: 'rgba(250,248,245,0.35)', flexShrink: 0 }}>
-                  {p.visit_count} visit{p.visit_count !== 1 ? 's' : ''}
-                </span>
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="8 5 13 10 8 15" /></svg>
-              </button>
-            ))}
-            {/* Open to any provider */}
-            <button onClick={() => onBrowseAll()} style={rowButton(fonts)}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(250,248,245,0.06)', border: '1px dashed rgba(250,248,245,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 6v8M6 10h8" /></svg>
-              </div>
-              <span style={{ fontWeight: 600, color: 'rgba(250,248,245,0.5)', flex: 1 }}>Open to any provider</span>
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="8 5 13 10 8 15" /></svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Rebook a Service */}
-      {recentServices.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <p style={sectionLabel(fonts)}>Rebook a Service</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {recentServices.map(svc => (
-              <button
-                key={svc.slug}
-                onClick={() => onRebook(svc)}
-                style={cardButton(fonts)}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontWeight: 600, color: colors.white, display: 'block' }}>{svc.name}</span>
-                    <span style={{ fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>
-                      {svc.provider?.name ? `w/ ${svc.provider.name} · ` : ''}{daysAgo(svc.date)}
-                    </span>
-                  </div>
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="8 5 13 10 8 15" /></svg>
-                </div>
-              </button>
-            ))}
-            {profile?.visits?.length > 5 && (
-              <button
-                onClick={onOpenDrawer}
-                style={{ fontFamily: fonts?.body, fontSize: '0.75rem', fontWeight: 600, color: '#A78BFA', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0', textAlign: 'center' }}
-              >
-                View all history →
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Browse All */}
-      <button onClick={onBrowseAll} style={{ ...ctaButton(fonts), width: '100%' }}>
-        Browse All Services
-      </button>
-    </div>
-  )
-}
-
-function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, providers, providersLoading, fonts, onSelectCategory, onSelectBundle, onSelectProvider }) {
+function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, providers, providersLoading, fonts, onSelectCategory, onSelectBundle, onSelectProvider, isAuthenticated, member, profile, recentServices, onRebook, onBrowseAll, onOpenDrawer }) {
   const [showAllBundles, setShowAllBundles] = useState(false)
   const [showCategories, setShowCategories] = useState(false)
 
   const VISIBLE_BUNDLES = 4
 
+  const tabs = [
+    { key: 'treat', label: 'What to Treat' },
+    ...(isAuthenticated && profile ? [{ key: 'foryou', label: 'For You' }] : []),
+    { key: 'providers', label: 'Providers' },
+  ]
+
   return (
     <div>
-      {/* Pill toggle — 2 tabs */}
+      {/* Pill toggle */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'rgba(250,248,245,0.04)', borderRadius: 999, padding: 3 }}>
-        {[
-          { key: 'treat', label: 'What to Treat' },
-          { key: 'providers', label: 'Providers' },
-        ].map(t => (
+        {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => onTabChange(t.key)}
@@ -1345,12 +1245,122 @@ function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, pr
         </div>
       )}
 
+      {/* For You tab — authenticated users only */}
+      {tab === 'foryou' && isAuthenticated && profile && (
+        <ForYouTab
+          member={member}
+          profile={profile}
+          recentServices={recentServices}
+          fonts={fonts}
+          onSelectProvider={onSelectProvider}
+          onRebook={onRebook}
+          onBrowseAll={onBrowseAll}
+          onOpenDrawer={onOpenDrawer}
+        />
+      )}
+
       {/* Providers tab */}
       {tab === 'providers' && (
         providersLoading ? <LoadingSkeleton count={4} /> : (
           <ProviderList providers={providers || []} fonts={fonts} onSelectProvider={onSelectProvider} />
         )
       )}
+    </div>
+  )
+}
+
+function ForYouTab({ member, profile, recentServices, fonts, onSelectProvider, onRebook, onBrowseAll, onOpenDrawer }) {
+  const firstName = member?.first_name || 'there'
+  const providerList = (profile?.providers || []).slice(0, 3)
+
+  return (
+    <div>
+      <p style={{ fontFamily: fonts?.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white, marginBottom: 16 }}>
+        Hey, {firstName}
+      </p>
+
+      {/* Your Providers */}
+      {providerList.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <p style={sectionLabel(fonts)}>Your Providers</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {providerList.map(p => (
+              <button
+                key={p.staffId}
+                onClick={() => onSelectProvider({
+                  name: p.name,
+                  slug: p.slug,
+                  staffId: p.staffId,
+                  boulevardProviderId: p.boulevardProviderId,
+                  boulevardServiceMap: p.serviceMap,
+                  image: p.image,
+                })}
+                style={rowButton(fonts)}
+              >
+                {p.image ? (
+                  <img src={p.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${colors.violet}, ${colors.fuchsia})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600 }}>{(p.name || '?')[0]}</span>
+                  </div>
+                )}
+                <span style={{ fontWeight: 600, color: colors.white, flex: 1 }}>{p.name}</span>
+                <span style={{ fontSize: '0.6875rem', color: 'rgba(250,248,245,0.35)', flexShrink: 0 }}>
+                  {p.visit_count} visit{p.visit_count !== 1 ? 's' : ''}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="8 5 13 10 8 15" /></svg>
+              </button>
+            ))}
+            {/* Open to any provider */}
+            <button onClick={() => onBrowseAll()} style={rowButton(fonts)}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(250,248,245,0.06)', border: '1px dashed rgba(250,248,245,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 6v8M6 10h8" /></svg>
+              </div>
+              <span style={{ fontWeight: 600, color: 'rgba(250,248,245,0.5)', flex: 1 }}>Open to any provider</span>
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="8 5 13 10 8 15" /></svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Rebook a Service */}
+      {recentServices.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <p style={sectionLabel(fonts)}>Rebook a Service</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {recentServices.map(svc => (
+              <button
+                key={svc.slug}
+                onClick={() => onRebook(svc)}
+                style={cardButton(fonts)}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                  <div style={{ textAlign: 'left' }}>
+                    <span style={{ fontWeight: 600, color: colors.white, display: 'block' }}>{svc.name}</span>
+                    <span style={{ fontSize: '0.6875rem', color: 'rgba(250,248,245,0.4)' }}>
+                      {svc.provider?.name ? `w/ ${svc.provider.name} · ` : ''}{daysAgo(svc.date)}
+                    </span>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="rgba(250,248,245,0.3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="8 5 13 10 8 15" /></svg>
+                </div>
+              </button>
+            ))}
+            {profile?.visits?.length > 5 && (
+              <button
+                onClick={onOpenDrawer}
+                style={{ fontFamily: fonts?.body, fontSize: '0.75rem', fontWeight: 600, color: '#A78BFA', background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 0', textAlign: 'center' }}
+              >
+                View all history →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Browse All */}
+      <button onClick={onBrowseAll} style={{ ...ctaButton(fonts), width: '100%' }}>
+        Browse All Services
+      </button>
     </div>
   )
 }

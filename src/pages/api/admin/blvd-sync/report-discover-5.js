@@ -1,13 +1,14 @@
 // src/pages/api/admin/blvd-sync/report-discover-5.js
 // Try creating export with execution time, also check DurationInterval type.
 import { adminQuery } from '@/server/blvdAdmin'
+import { withAdminAuth } from '@/lib/adminAuth'
 
 export const config = { maxDuration: 60 }
 
 const TOX_REPORT_ID = 'urn:blvd:Report:0bb8e07b-8405-4335-a8cc-b7b736ef7b7b'
 const EXISTING_EXPORT_ID = 'urn:blvd:ReportExport:4fd5dae1-f879-46be-a762-e4e88ed6ca76'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const results = { steps: [] }
@@ -130,3 +131,5 @@ export default async function handler(req, res) {
 
   return res.json(results)
 }
+
+export default withAdminAuth(handler)

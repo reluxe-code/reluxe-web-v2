@@ -1,6 +1,8 @@
 // src/pages/api/admin/intelligence/rebooking.js
 // Rebooking gaps — clients who completed recently but have no future appointment.
 import { getServiceClient } from '@/lib/supabase'
+import { withAdminAuth } from '@/lib/adminAuth'
+import { hashPhone, hashEmail } from '@/lib/piiHash'
 
 async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   const rows = []
@@ -14,7 +16,7 @@ async function fetchAllRows(buildQuery, chunkSize = 1000, maxRows = 100000) {
   return rows
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const { timeframe, search, page = '1', limit = '50' } = req.query
@@ -60,15 +62,20 @@ export default async function handler(req, res) {
 
     let query = db
       .from('blvd_clients')
-      .select('id, name, first_name, last_name, email, phone', { count: 'exact' })
+      .select('id, boulevard_id', { count: 'exact' })
       .in('id', clientIds)
 
     if (search) {
       const q = `%${search}%`
-      query = query.or(`name.ilike.${q},email.ilike.${q},phone.ilike.${q},first_name.ilike.${q},last_name.ilike.${q}`)
+      const conditions = [`name.ilike.${q}`]
+      const phoneHash = hashPhone(search)
+      const emailHash = hashEmail(search)
+      if (phoneHash) conditions.push(`phone_hash_v1.eq.${phoneHash}`)
+      if (emailHash) conditions.push(`email_hash_v1.eq.${emailHash}`)
+      query = query.or(conditions.join(','))
     }
 
-    query = query.order('name', { ascending: true })
+    query = query.order('boulevard_id', { ascending: true })
 
     const { data: clients, count, error: clientErr } = await query
       .range(offset, offset + pageSize - 1)
@@ -160,9 +167,7 @@ export default async function handler(req, res) {
 
     const patient_list = (clients || []).map((c) => ({
       client_id: c.id,
-      name: c.name || [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Unknown',
-      email: c.email,
-      phone: c.phone,
+      boulevard_id: c.boulevard_id || null,
       days_since: daysMap[c.id]?.days ?? null,
       timeframe: daysMap[c.id]?.detail || null,
       last_visit: lastApptMap[c.id]?.last_visit || null,
@@ -187,3 +192,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message })
   }
 }
+
+export default withAdminAuth(handler)
