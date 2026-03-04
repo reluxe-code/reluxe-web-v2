@@ -256,6 +256,11 @@ const nextConfig = {
       },
     ];
 
+    // Long-lived cache for static assets (images, fonts, etc.)
+    const staticCacheHeaders = [
+      { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+    ];
+
     return [
       { source: '/:path*', headers: globalSecurityHeaders },
       { source: '/api/:path*', headers: apiSecurityHeaders },
@@ -264,6 +269,10 @@ const nextConfig = {
       { source: '/capture/:path*', headers: noIndexNoFollow },
       { source: '/dashboard/:path*', headers: noIndexNoFollow },
       { source: '/app/:path*', headers: noIndexNoFollow },
+      // Static asset caching
+      { source: '/images/:path*', headers: staticCacheHeaders },
+      { source: '/fonts/:path*', headers: staticCacheHeaders },
+      { source: '/_next/static/:path*', headers: staticCacheHeaders },
     ];
   },
 

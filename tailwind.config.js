@@ -61,8 +61,8 @@ module.exports = {
         },
 
         fontFamily: {
-            inter: ['Inter, sans-serif'],
-            heebo: ['Heebo, sans-serif'],
+            inter: ['var(--font-inter)', 'Inter', 'sans-serif'],
+            heebo: ['var(--font-heebo)', 'Heebo', 'sans-serif'],
         },
 
         container: {

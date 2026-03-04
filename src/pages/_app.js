@@ -2,8 +2,23 @@
 import Head from 'next/head'
 import PropTypes from 'prop-types'
 import Layout from '../components/layout/layout'
+import { Inter, Heebo } from 'next/font/google'
 
 import '../styles/globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+const heebo = Heebo({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-heebo',
+})
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { useGAUX } from '@/hooks/useGAUX'
@@ -117,7 +132,7 @@ function MyApp({ Component, pageProps }) {
 
   if (getLayout) {
     return (
-      <>
+      <div className={`${inter.variable} ${heebo.variable}`}>
         <AnalyticsScripts />
         <Head>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -127,12 +142,12 @@ function MyApp({ Component, pageProps }) {
         <ChatWidget />
         <Analytics />
         <SpeedInsights />
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div className={`${inter.variable} ${heebo.variable}`}>
       <script src="/blvd-widget.js" defer />
       <AnalyticsScripts />
       <BoulevardScripts />
@@ -145,7 +160,8 @@ function MyApp({ Component, pageProps }) {
               <link rel="shortcut icon" href="/favicon.png" />
               <link rel="preconnect" href="https://fonts.googleapis.com" />
               <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-              <link rel="stylesheet" href={fontPairings.bold.googleUrl} />
+              <link rel="preload" as="style" href={fontPairings.bold.googleUrl} />
+              <link rel="stylesheet" href={fontPairings.bold.googleUrl} media="print" onLoad="this.media='all'" />
               {/* Default OG image — overridden by any page that sets its own og:image */}
               <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
               <meta property="og:image:width" content="1200" />
@@ -165,7 +181,7 @@ function MyApp({ Component, pageProps }) {
       </LocationProvider>
       <Analytics />
       <SpeedInsights />
-    </>
+    </div>
   )
 }
 

@@ -93,6 +93,17 @@ export const TOOL_DEFINITIONS = [
     },
   },
   {
+    name: 'lookup_provider',
+    description: 'Look up a provider by name to find what services they offer and at which locations. Use this FIRST when a user mentions a provider by name before specifying a service (e.g. "is Jane available?", "I want to book with Sarah").',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Provider first name or full name (e.g. "Jane", "Jane Smith")' },
+      },
+      required: ['name'],
+    },
+  },
+  {
     name: 'request_sms_followup',
     description: 'Send an SMS so a human team member can follow up. Use when you cannot fully help the user.',
     input_schema: {
@@ -127,6 +138,9 @@ export async function executeTool(name, args) {
 
     case 'verify_code_and_checkout':
       return verifyAndCheckout(args)
+
+    case 'lookup_provider':
+      return lookupProvider(args.name)
 
     case 'request_sms_followup':
       return requestSmsFollowup(args.phone, args.summary)
@@ -337,6 +351,68 @@ async function verifyAndCheckout({ cartId, codeId, code, date, startTime, firstN
       return { error: 'Invalid verification code. Please check the code and try again.' }
     }
     return { error: 'Could not complete booking. Please try again or call (317) 763-1142.' }
+  }
+}
+
+// Look up a provider by name — returns their services, locations, and IDs
+async function lookupProvider(name) {
+  try {
+    const sb = getServiceClient()
+    const q = name.toLowerCase().trim()
+
+    const { data: staff, error } = await sb
+      .from('staff')
+      .select('name, title, boulevard_provider_id, boulevard_service_map, locations')
+      .eq('status', 'published')
+      .not('boulevard_provider_id', 'is', null)
+
+    if (error || !staff?.length) {
+      return { found: false, message: `I couldn't find a provider named "${name}". Would you like to see our full team?` }
+    }
+
+    // Match by first name or full name (case-insensitive)
+    const matches = staff.filter(s => {
+      const full = (s.name || '').toLowerCase()
+      const first = full.split(' ')[0]
+      return full === q || first === q || full.includes(q)
+    })
+
+    if (matches.length === 0) {
+      // Suggest closest names
+      const allNames = staff.map(s => s.name).join(', ')
+      return { found: false, message: `I couldn't find a provider named "${name}". Our providers are: ${allNames}` }
+    }
+
+    const results = matches.map(s => {
+      const serviceMap = s.boulevard_service_map || {}
+      const services = Object.keys(serviceMap)
+      const locs = (Array.isArray(s.locations) ? s.locations : [])
+        .map(l => (l.slug || l.title || '').toLowerCase())
+        .filter(l => l.includes('westfield') || l.includes('carmel'))
+        .map(l => l.includes('westfield') ? 'westfield' : 'carmel')
+
+      // Build service→location→itemId map for easy booking
+      const serviceDetails = {}
+      for (const [slug, locMap] of Object.entries(serviceMap)) {
+        serviceDetails[slug] = {}
+        for (const [loc, itemId] of Object.entries(locMap)) {
+          serviceDetails[slug][loc] = itemId
+        }
+      }
+
+      return {
+        name: s.name,
+        title: s.title,
+        boulevardProviderId: s.boulevard_provider_id,
+        services,
+        locations: [...new Set(locs)],
+        serviceDetails,
+      }
+    })
+
+    return { found: true, providers: results }
+  } catch (err) {
+    return { error: 'Failed to look up provider' }
   }
 }
 

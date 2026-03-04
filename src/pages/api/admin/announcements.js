@@ -25,6 +25,10 @@ async function handler(req, res) {
       const row = req.body
       const isUpdate = !!row.id
 
+      // Sanitize: empty strings → null for date columns
+      if (!row.start_date) row.start_date = null
+      if (!row.end_date) row.end_date = null
+
       // Ensure slug is set
       if (!row.slug) {
         row.slug = (row.title || 'announcement')

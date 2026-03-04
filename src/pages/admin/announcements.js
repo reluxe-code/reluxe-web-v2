@@ -2,6 +2,7 @@
 // Admin page for managing announcement popups (exit-intent, on-load, specials)
 import { useState, useEffect, useCallback } from 'react'
 import { adminFetch } from '@/lib/adminFetch'
+import AdminLayout from '@/components/admin/AdminLayout'
 
 const TRIGGERS = [
   { value: 'exit', label: 'Exit Intent', desc: 'Shows when cursor leaves the viewport' },
@@ -14,6 +15,14 @@ const STYLES = [
   { value: 'dark', label: 'Dark', desc: 'Dark luxury feel' },
   { value: 'minimal', label: 'Minimal', desc: 'Clean white card' },
   { value: 'neon', label: 'Neon', desc: 'Black with neon purple text' },
+]
+
+const CTA_LINKS = [
+  { value: '/start', label: 'Open Booking' },
+  { value: '/services', label: 'Open Services' },
+  { value: '/specials', label: 'Open Specials' },
+  { value: '/team', label: 'Open Team' },
+  { value: '__custom', label: 'Custom URL…' },
 ]
 
 const BLANK = {
@@ -104,8 +113,20 @@ function AnnouncementEditor({ item, onSave, onCancel, saving }) {
             <Field label="CTA Button Text">
               <Input value={form.cta_label} onChange={(v) => set('cta_label', v)} />
             </Field>
-            <Field label="CTA Link URL">
-              <Input value={form.cta_url} onChange={(v) => set('cta_url', v)} placeholder="/specials" />
+            <Field label="CTA Link">
+              <Select
+                value={CTA_LINKS.some((l) => l.value === form.cta_url) ? form.cta_url : '__custom'}
+                onChange={(v) => { if (v !== '__custom') set('cta_url', v) }}
+                options={CTA_LINKS}
+              />
+              {!CTA_LINKS.some((l) => l.value === form.cta_url) && (
+                <Input
+                  value={form.cta_url}
+                  onChange={(v) => set('cta_url', v)}
+                  placeholder="/your-page"
+                  className="mt-2"
+                />
+              )}
             </Field>
           </div>
 
@@ -334,15 +355,11 @@ export default function AnnouncementsAdmin() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <div className="max-w-4xl mx-auto px-6 py-10">
+    <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <div className="flex items-center gap-3">
-              <a href="/admin" className="text-xs text-neutral-400 hover:text-neutral-600">&larr; Admin</a>
-            </div>
-            <h1 className="text-2xl font-bold text-neutral-800 mt-1">Announcements & Popups</h1>
+            <h1 className="text-2xl font-bold text-neutral-800">Announcements & Popups</h1>
             <p className="text-sm text-neutral-500 mt-1">Manage exit-intent popups, on-load announcements, and special promotions.</p>
           </div>
           {!editing && (
@@ -413,9 +430,8 @@ export default function AnnouncementsAdmin() {
             <li><strong>Priority</strong> — if multiple announcements are active, the highest priority one shows first</li>
           </ul>
         </div>
-      </div>
     </div>
   )
 }
 
-AnnouncementsAdmin.getLayout = (page) => page
+AnnouncementsAdmin.getLayout = (page) => <AdminLayout>{page}</AdminLayout>

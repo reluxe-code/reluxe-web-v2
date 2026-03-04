@@ -40,6 +40,7 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/concierge', label: 'Daily Concierge' },
       { href: '/admin/conversations', label: 'Conversations', notify: 'conversations' },
       { href: '/admin/intelligence/social-engine', label: 'Social Engine' },
+      { href: '/admin/announcements', label: 'Announcements & Popups' },
     ],
   },
   {

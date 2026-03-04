@@ -21,7 +21,7 @@
 /*----------------------------------------*/
 /*  - default
 /*----------------------------------------*/
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Fonts loaded via next/font in _app.js — no @import needed */
 
 @tailwind base;
 @tailwind components;

@@ -6,6 +6,9 @@ class MyDocument extends Document {
       <Html lang="en" className="scroll-smooth">
         <Head />
         <body className="font-inter relative">
+          {/* DNS prefetch for third-party domains */}
+          <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+          <link rel="dns-prefetch" href="https://connect.facebook.net" />
           <Main />
           <NextScript />
         </body>
