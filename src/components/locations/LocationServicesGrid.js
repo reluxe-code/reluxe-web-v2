@@ -60,6 +60,7 @@ function ServiceCard({ item, locationSlug, muted }) {
         <Link
           href={`/services/${serviceSlug}/${targetCity}`}
           className="text-[11px] font-semibold px-3 py-1.5 rounded-full border border-gray-200 text-gray-700 hover:border-gray-900 hover:text-gray-900 transition"
+          aria-label={`Learn more about ${item.title}`}
         >
           Learn More
         </Link>

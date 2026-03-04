@@ -1,5 +1,6 @@
 // POST /api/chat — AI Chat Concierge endpoint
 // Handles conversation with Claude Haiku, server-side tool execution, session metadata logging.
+// Booking state is managed server-side in chat_sessions.booking_state (JSONB).
 // NO message content is persisted. Phone numbers are transient (pass-through only).
 
 import Anthropic from '@anthropic-ai/sdk'
@@ -21,6 +22,7 @@ const MAX_MESSAGES = 50
 const MAX_TOOL_ROUNDS = 5
 const SLIDING_WINDOW = 20 // Send last N messages to Claude
 const MAX_MESSAGE_CHARS = 800 // Per-message content length cap
+const MAX_RETRIES = 2 // Retry on 429 rate limits
 
 let anthropic = null
 function getAnthropicClient() {
@@ -28,6 +30,23 @@ function getAnthropicClient() {
     anthropic = new Anthropic() // Uses ANTHROPIC_API_KEY env var
   }
   return anthropic
+}
+
+// Retry Anthropic calls on 429 with exponential backoff
+async function callWithRetry(fn) {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      if (err.status === 429 && attempt < MAX_RETRIES) {
+        const delay = Math.min(1000 * 2 ** attempt, 4000) // 1s, 2s, 4s
+        safeLog('[chat] 429 retry', { attempt: attempt + 1, delayMs: delay })
+        await new Promise(r => setTimeout(r, delay))
+        continue
+      }
+      throw err
+    }
+  }
 }
 
 function hashIp(ip) {
@@ -106,6 +125,7 @@ export default async function handler(req, res) {
     // ── Session management ──
     let currentSessionId = sessionId
     let isNewSession = false
+    let bookingState = null
 
     if (!currentSessionId) {
       // Rate limit: new sessions per hour
@@ -132,15 +152,14 @@ export default async function handler(req, res) {
 
       if (insertErr) {
         safeError('[chat] session insert', insertErr.message)
-        // Non-fatal — continue without session tracking
       }
     }
 
-    // ── Per-session token budget — block runaway conversations ──
+    // ── Load session data (token budget + booking state) ──
     if (currentSessionId && !isNewSession) {
       const { data: session } = await supabase
         .from('chat_sessions')
-        .select('total_input_tokens, total_output_tokens')
+        .select('total_input_tokens, total_output_tokens, booking_state')
         .eq('session_token', currentSessionId)
         .single()
 
@@ -151,11 +170,36 @@ export default async function handler(req, res) {
             error: 'This conversation has used its budget. Please start a new chat or call (317) 763-1142.',
           })
         }
+        bookingState = session.booking_state || null
       }
     }
 
     // ── Build prompt + call Claude ──
-    const systemPrompt = buildSystemPrompt()
+    const systemBlocks = [
+      { type: 'text', text: buildSystemPrompt(), cache_control: { type: 'ephemeral' } },
+    ]
+
+    // Inject booking state summary so Claude knows where the flow stands
+    if (bookingState && bookingState.step && bookingState.step !== 'IDLE') {
+      const bs = bookingState
+      const lines = ['## ACTIVE BOOKING — YOU MUST CALL advance_booking']
+      lines.push('A booking is in progress. You MUST call advance_booking with the user\'s response. Do NOT answer from the knowledge base. Do NOT share hours or availability without calling the tool first.')
+      lines.push(`Current step: ${bs.step}`)
+      if (bs.providerName) lines.push(`Provider: ${bs.providerName}`)
+      if (bs.serviceName) lines.push(`Service: ${bs.serviceName}`)
+      if (bs.locationKey) lines.push(`Location: ${bs.locationKey}`)
+      if (bs.date) lines.push(`Date: ${bs.date}`)
+      if (bs.startTime) lines.push(`Time: ${bs.startTime}`)
+      lines.push('Call advance_booking NOW with the user\'s latest input.')
+      systemBlocks.push({ type: 'text', text: lines.join('\n') })
+    }
+
+    // Tag the last tool definition for caching
+    const cachedTools = TOOL_DEFINITIONS.map((tool, i) =>
+      i === TOOL_DEFINITIONS.length - 1
+        ? { ...tool, cache_control: { type: 'ephemeral' } }
+        : tool
+    )
 
     // Sliding window: send only the last N messages
     const conversationMessages = messages.slice(-SLIDING_WINDOW).map(m => ({
@@ -163,15 +207,15 @@ export default async function handler(req, res) {
       content: m.content,
     }))
 
-    let response = await client.messages.create({
+    let response = await callWithRetry(() => client.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      system: systemPrompt,
+      system: systemBlocks,
       messages: conversationMessages,
-      tools: TOOL_DEFINITIONS,
-    })
+      tools: cachedTools,
+    }))
 
-    // ── Tool-use loop (max 3 rounds) ──
+    // ── Tool-use loop (max rounds) ──
     let toolRound = 0
     const toolNames = []
     let totalInputTokens = response.usage?.input_tokens || 0
@@ -187,7 +231,7 @@ export default async function handler(req, res) {
         break
       }
 
-      // Extract tool use blocks and execute in parallel
+      // Extract tool use blocks and execute
       const toolUseBlocks = response.content.filter(b => b.type === 'tool_use')
       toolUseBlocks.forEach(t => {
         safeLog('[chat] tool call', { tool: t.name, round: toolRound })
@@ -197,7 +241,14 @@ export default async function handler(req, res) {
       const toolResults = await Promise.all(
         toolUseBlocks.map(async (toolUse) => {
           try {
-            const result = await executeTool(toolUse.name, toolUse.input)
+            // Pass booking state to advance_booking; other tools ignore it
+            const result = await executeTool(toolUse.name, toolUse.input, bookingState)
+
+            // Update booking state from advance_booking results
+            if (toolUse.name === 'advance_booking' && result.bookingState) {
+              bookingState = result.bookingState
+            }
+
             return {
               type: 'tool_result',
               tool_use_id: toolUse.id,
@@ -216,17 +267,17 @@ export default async function handler(req, res) {
       )
 
       // Continue conversation with tool results
-      response = await client.messages.create({
+      response = await callWithRetry(() => client.messages.create({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: systemPrompt,
+        system: systemBlocks,
         messages: [
           ...conversationMessages,
           { role: 'assistant', content: response.content },
           { role: 'user', content: toolResults },
         ],
-        tools: TOOL_DEFINITIONS,
-      })
+        tools: cachedTools,
+      }))
 
       totalInputTokens += response.usage?.input_tokens || 0
       totalOutputTokens += response.usage?.output_tokens || 0
@@ -236,20 +287,13 @@ export default async function handler(req, res) {
     const textBlocks = response.content.filter(b => b.type === 'text')
     const assistantMessage = textBlocks.map(b => b.text).join('\n')
 
-    // Log any unprocessed tool_use blocks after max rounds
-    for (const block of response.content) {
-      if (block.type === 'tool_use') {
-        safeLog('[chat] unprocessed tool_use after max rounds', { tool: block.name })
-      }
-    }
-
     // ── Update session metadata ──
-    const messageCount = messages.length + 1 // +1 for the new assistant response
+    const messageCount = messages.length + 1
 
-    // Determine outcome based on tool usage
+    // Determine outcome from booking state
     let outcome = 'active'
-    if (toolNames.includes('verify_code_and_checkout')) outcome = 'booking_completed'
-    else if (toolNames.includes('create_cart')) outcome = 'booking_started'
+    if (bookingState?.step === 'COMPLETED') outcome = 'booking_completed'
+    else if (bookingState?.cartId) outcome = 'booking_started'
     else if (toolNames.includes('request_sms_followup')) outcome = 'sms_fallback'
 
     const updateData = {
@@ -260,12 +304,19 @@ export default async function handler(req, res) {
     }
 
     if (toolNames.length > 0) {
-      // Append tool names (not args) to the existing array
       updateData.tool_calls = toolNames.map(t => ({ tool: t, ts: Date.now() }))
     }
 
     if (outcome !== 'active') {
       updateData.outcome = outcome
+    }
+
+    // Persist booking state server-side
+    if (bookingState) {
+      updateData.booking_state = bookingState
+      if (bookingState.cartId) {
+        updateData.booking_cart_id = bookingState.cartId
+      }
     }
 
     const { error: updateErr } = await supabase
@@ -275,7 +326,6 @@ export default async function handler(req, res) {
 
     if (updateErr) {
       safeError('[chat] session update', updateErr.message)
-      // Non-fatal
     }
 
     // ── Response ──
@@ -294,7 +344,6 @@ export default async function handler(req, res) {
   } catch (err) {
     safeError('[chat] handler error', err.message)
 
-    // Anthropic-specific errors
     if (err.status === 429) {
       return res.status(429).json({
         error: 'Our AI assistant is busy right now. Please try again in a moment.',

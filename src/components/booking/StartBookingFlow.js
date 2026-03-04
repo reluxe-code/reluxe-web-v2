@@ -870,7 +870,16 @@ export default function StartBookingFlow({
                 Choose your provider to continue.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {locationFilteredProviders.map((p) => (
+                {(prefillServiceSlug ? filteredProvidersForService(prefillServiceSlug) : locationFilteredProviders).length > 1 && (
+                  <BookingChoiceCard
+                    key="provider-first-available"
+                    onClick={() => setProviderChoiceSlug(FIRST_AVAILABLE_SLUG)}
+                    title="First Available"
+                    subtitle="We'll find the best match for you"
+                    fonts={fonts}
+                  />
+                )}
+                {(prefillServiceSlug ? filteredProvidersForService(prefillServiceSlug) : locationFilteredProviders).map((p) => (
                   <BookingChoiceCard
                     key={`provider-choice-${p.slug}`}
                     onClick={() => setProviderChoiceSlug(p.slug)}

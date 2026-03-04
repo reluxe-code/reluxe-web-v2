@@ -29,7 +29,7 @@ async function getDateCache() {
   if (!sb) return _dates;
 
   try {
-    const [staff, blog, inspiration, brands, products, locations, cmsServices, serviceCategories] = await Promise.all([
+    const [staff, blog, inspiration, brands, products, locations, cmsServices, serviceCategories, stories] = await Promise.all([
       sb.from('staff').select('slug, updated_at').eq('status', 'published'),
       sb.from('blog_posts').select('slug, updated_at, published_at').eq('status', 'published'),
       sb.from('inspiration_articles').select('slug, updated_at').eq('status', 'published'),
@@ -38,6 +38,7 @@ async function getDateCache() {
       sb.from('locations').select('slug, updated_at'),
       sb.from('cms_services').select('slug, updated_at').eq('status', 'published'),
       sb.from('service_categories').select('slug, updated_at').eq('active', true),
+      sb.from('stories').select('slug, updated_at').eq('status', 'published'),
     ]);
 
     for (const r of staff.data || []) _dates[`/team/${r.slug}`] = r.updated_at;
@@ -51,6 +52,7 @@ async function getDateCache() {
     for (const r of locations.data || []) _dates[`/locations/${r.slug}`] = r.updated_at;
     for (const r of cmsServices.data || []) _dates[`/services/${r.slug}`] = r.updated_at;
     for (const r of serviceCategories.data || []) _dates[`/services/collections/${r.slug}`] = r.updated_at;
+    for (const r of stories.data || []) _dates[`/stories/${r.slug}`] = r.updated_at;
 
     console.log(`[next-sitemap] Loaded ${Object.keys(_dates).length} lastmod dates from Supabase`);
   } catch (err) {
@@ -89,18 +91,22 @@ module.exports = {
     '/referral', '/referral/**',
     '/r', '/r/**',
     '/capture', '/capture/**',
-    // Preview / beta / shop
+    // Preview / beta / shop / experiments
     '/beta', '/beta/**',
     '/preview', '/preview/**',
-    '/shop', '/shop/**', '/shop',
-    // Blog (removed from site)
-    '/blog', '/blog/**',
+    '/shop', '/shop/**',
+    '/experiments', '/experiments/**',
+    // Server sitemap (handled separately)
+    '/server-sitemap.xml',
     // Utility
     '/sitemap',
   ],
 
   // ── robots.txt ──────────────────────────────────────────────────────────
   robotsTxtOptions: {
+    additionalSitemaps: [
+      `${SITE_URL}/server-sitemap.xml`, // Dynamic CMS sitemap
+    ],
     policies: [
       {
         userAgent: '*',
@@ -123,6 +129,7 @@ module.exports = {
           '/beta/',
           '/preview/',
           '/shop/',
+          '/experiments/',
           '/sitemap',
         ],
       },
@@ -181,12 +188,21 @@ module.exports = {
     else if (path === '/learn') { priority = 0.85; changefreq = 'weekly'; }
     // ── Best Med Spa (geo authority pages) ──
     else if (path.startsWith('/best-med-spa/')) { priority = 0.85; changefreq = 'monthly'; }
+    // ── Comparisons ──
+    else if (path.startsWith('/compare/')) { priority = 0.88; changefreq = 'monthly'; }
+    // ── Cost Guides ──
+    else if (path.startsWith('/cost/')) { priority = 0.88; changefreq = 'monthly'; }
+    // ── Guides ──
+    else if (path.startsWith('/guide/')) { priority = 0.85; changefreq = 'monthly'; }
     // ── Conditions ──
     else if (path === '/conditions') { priority = 0.85; changefreq = 'monthly'; }
     else if (path.startsWith('/conditions/')) { priority = 0.8; changefreq = 'monthly'; }
     // ── Events ──
     else if (path === '/events') { priority = 0.8; changefreq = 'monthly'; }
     else if (path.startsWith('/events/')) { priority = 0.7; changefreq = 'monthly'; }
+    // ── Stories ──
+    else if (path === '/stories') { priority = 0.8; changefreq = 'weekly'; }
+    else if (path.startsWith('/stories/')) { priority = 0.75; changefreq = 'monthly'; }
     // ── Weddings / men / special pages ──
     else if (path === '/wedding' || path === '/weddings') { priority = 0.8; changefreq = 'monthly'; }
     else if (path === '/men') { priority = 0.8; changefreq = 'monthly'; }

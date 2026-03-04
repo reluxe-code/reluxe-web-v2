@@ -3,7 +3,7 @@ import Link from 'next/link'
 import BetaLayout from '@/components/beta/BetaLayout'
 
 export default function PrivacyPolicyPage() {
-  const updated = 'August 26, 2025'
+  const updated = 'March 4, 2026'
   const effective = 'May 4, 2024'
 
   return (
@@ -55,16 +55,17 @@ export default function PrivacyPolicyPage() {
                   ['#use', '2. How We Use Your Information'],
                   ['#sharing', '3. Information Sharing'],
                   ['#cookies', '4. Cookies & Tracking'],
-                  ['#marketing', '5. Marketing Communications'],
-                  ['#payments', '6. Payment Information'],
-                  ['#retention', '7. Data Retention'],
-                  ['#security', '8. Security'],
-                  ['#children', '9. Children’s Privacy'],
-                  ['#international', '10. International Visitors'],
-                  ['#rights', '11. Your Rights'],
-                  ['#links', '12. Links to Other Websites'],
-                  ['#changes', '13. Changes to this Policy'],
-                  ['#contact', '14. Contact Us'],
+                  [‘#marketing’, ‘5. Marketing Communications’],
+                  [‘#otp’, ‘6. Account Authentication Messages’],
+                  [‘#payments’, ‘7. Payment Information’],
+                  [‘#retention’, ‘8. Data Retention’],
+                  [‘#security’, ‘9. Security’],
+                  [‘#children’, ‘10. Children\u2019s Privacy’],
+                  [‘#international’, ‘11. International Visitors’],
+                  [‘#rights’, ‘12. Your Rights’],
+                  [‘#links’, ‘13. Links to Other Websites’],
+                  [‘#changes’, ‘14. Changes to this Policy’],
+                  [‘#contact’, ‘15. Contact Us’],
                 ].map(([href, label]) => (
                   <div key={href}>
                     <a href={href} className="text-neutral-700 hover:text-neutral-900 underline decoration-neutral-300 hover:decoration-neutral-500">
@@ -129,49 +130,64 @@ export default function PrivacyPolicyPage() {
 
               <h3 id="marketing" className="mt-10 text-2xl font-bold text-neutral-900">5. Marketing Communications (Email & SMS)</h3>
               <ul className="mt-2 list-disc pl-6 space-y-1">
-                <li><span className="font-semibold">Consent:</span> By providing your email or phone number, you consent to receive communications from us.</li>
-                <li><span className="font-semibold">Content:</span> Promotions, reminders, updates, and service information.</li>
-                <li><span className="font-semibold">Frequency:</span> Typically 2–4 messages per month unless you initiate a conversation.</li>
-                <li><span className="font-semibold">Message & Data Rates:</span> May apply.</li>
-                <li><span className="font-semibold">Opting Out:</span> Unsubscribe via email link or reply STOP to SMS at any time.</li>
-                <li><span className="font-semibold">Two-Way:</span> You may reply to ask questions or request appointments.</li>
-                <li><span className="font-semibold">Quiet Hours:</span> Typically 9:00 PM–7:30 AM local time; we don’t send marketing during these hours unless you message us.</li>
-                <li><span className="font-semibold">Carrier Disclaimer:</span> Carriers are not liable for delayed or undelivered messages.</li>
+                <li><span className="font-semibold">Consent:</span> By providing your email address or opting in to SMS marketing, you consent to receive promotional messages from RELUXE Med Spa.</li>
+                <li><span className="font-semibold">Content:</span> Promotions, appointment reminders, special events, and service updates.</li>
+                <li><span className="font-semibold">Frequency:</span> Typically 2–4 messages per month unless you initiate additional conversations.</li>
+                <li><span className="font-semibold">Message & Data Rates:</span> Standard carrier message and data rates may apply.</li>
+                <li><span className="font-semibold">Opting Out:</span> You may unsubscribe from email via the link in any message or reply STOP to SMS at any time.</li>
+                <li><span className="font-semibold">Two-Way Messaging:</span> You may reply to SMS messages to ask questions or request appointments.</li>
+                <li><span className="font-semibold">Quiet Hours:</span> Marketing messages are generally sent between 7:30 AM and 9:00 PM local time.</li>
+                <li><span className="font-semibold">Carrier Disclaimer:</span> Carriers are not responsible for delayed or undelivered messages.</li>
               </ul>
 
-              <h3 id="payments" className="mt-10 text-2xl font-bold text-neutral-900">6. Payment Information</h3>
+              <h3 id="otp" className="mt-10 text-2xl font-bold text-neutral-900">6. Account Authentication Messages (One-Time Passcodes)</h3>
+              <p className="mt-2">
+                If you request account access or login verification on the RELUXE Med Spa website or application, you may receive a one-time passcode (OTP) via SMS to verify your identity.
+              </p>
+              <p className="mt-3">These messages:</p>
+              <ul className="mt-2 list-disc pl-6 space-y-1">
+                <li>Are sent only when you request them</li>
+                <li>Contain verification codes required to access your account</li>
+                <li>Are transactional and not marketing messages</li>
+                <li>Are not recurring</li>
+              </ul>
+              <p className="mt-3">
+                Message and data rates may apply depending on your mobile carrier.
+              </p>
+
+              <h3 id="payments" className="mt-10 text-2xl font-bold text-neutral-900">7. Payment Information</h3>
               <p className="mt-2">
                 We do not store payment card details. Transactions are processed securely by third-party
                 processors (e.g., Boulevard, Cherry) that maintain their own privacy and security practices.
               </p>
 
-              <h3 id="retention" className="mt-10 text-2xl font-bold text-neutral-900">7. Data Retention</h3>
+              <h3 id="retention" className="mt-10 text-2xl font-bold text-neutral-900">8. Data Retention</h3>
               <p className="mt-2">
                 We retain personal information only as long as necessary to provide services, meet legal,
                 tax, or regulatory obligations, resolve disputes, and enforce agreements. You may request
-                deletion at any time (see Section 11).
+                deletion at any time (see Section 12).
               </p>
 
-              <h3 id="security" className="mt-10 text-2xl font-bold text-neutral-900">8. Security</h3>
+              <h3 id="security" className="mt-10 text-2xl font-bold text-neutral-900">9. Security</h3>
               <p className="mt-2">
                 We use SSL encryption and reasonable administrative, technical, and physical safeguards to
                 protect your information. No method of transmission or storage is 100% secure.
               </p>
 
-              <h3 id="children" className="mt-10 text-2xl font-bold text-neutral-900">9. Children’s Privacy</h3>
+              <h3 id="children" className="mt-10 text-2xl font-bold text-neutral-900">10. Children&apos;s Privacy</h3>
               <p className="mt-2">
                 Our website and services are intended for individuals 18 years and older. We do not knowingly
                 collect personal information from children under 13. If we learn that we have collected such
                 information, we will promptly delete it.
               </p>
 
-              <h3 id="international" className="mt-10 text-2xl font-bold text-neutral-900">10. International Visitors</h3>
+              <h3 id="international" className="mt-10 text-2xl font-bold text-neutral-900">11. International Visitors</h3>
               <p className="mt-2">
                 Our services are intended for U.S. residents. If you access our website from outside the U.S.,
                 your information will be transferred to and processed in the United States.
               </p>
 
-              <h3 id="rights" className="mt-10 text-2xl font-bold text-neutral-900">11. Your Rights</h3>
+              <h3 id="rights" className="mt-10 text-2xl font-bold text-neutral-900">12. Your Rights</h3>
               <ul className="mt-2 list-disc pl-6 space-y-1">
                 <li>Access, correct, or delete your personal information</li>
                 <li>Request a copy of your data</li>
@@ -179,19 +195,19 @@ export default function PrivacyPolicyPage() {
                 <li>File a complaint with a regulatory authority, where applicable</li>
               </ul>
 
-              <h3 id="links" className="mt-10 text-2xl font-bold text-neutral-900">12. Links to Other Websites</h3>
+              <h3 id="links" className="mt-10 text-2xl font-bold text-neutral-900">13. Links to Other Websites</h3>
               <p className="mt-2">
                 Our website may contain links to third-party sites. We are not responsible for their privacy
                 practices and encourage you to review their policies.
               </p>
 
-              <h3 id="changes" className="mt-10 text-2xl font-bold text-neutral-900">13. Changes to this Policy</h3>
+              <h3 id="changes" className="mt-10 text-2xl font-bold text-neutral-900">14. Changes to this Policy</h3>
               <p className="mt-2">
                 We may update this Privacy Policy from time to time. Updates will be posted here with a revised
                 effective date. Significant changes may also be communicated via email.
               </p>
 
-              <h3 id="contact" className="mt-10 text-2xl font-bold text-neutral-900">14. Contact Us</h3>
+              <h3 id="contact" className="mt-10 text-2xl font-bold text-neutral-900">15. Contact Us</h3>
               <address className="not-italic mt-2 space-y-1">
                 <div><strong>RELUXE Med Spa</strong></div>
                 <div>514 E State Road 32, Westfield, IN 46074</div>

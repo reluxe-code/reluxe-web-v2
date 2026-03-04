@@ -108,7 +108,7 @@ export function toQueryString(obj = {}) {
 export async function getStartBookingBaseProps(query = {}) {
   const sb = getServiceClient()
   const [{ data: staffRows }, { data: configRow }, { data: routingRow }] = await Promise.all([
-    sb.from('staff').select('*').eq('status', 'published').order('sort_order').order('name'),
+    sb.from('staff').select('*').eq('status', 'published').neq('allow_online_booking', false).order('sort_order').order('name'),
     sb.from('site_config').select('value').eq('key', 'treatment_bundles').limit(1).single(),
     sb.from('site_config').select('value').eq('key', 'provider_routing').limit(1).single(),
   ])

@@ -3,9 +3,16 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import HeaderTwo from '@/components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
 import ProductSEO from '@/components/seo/ProductSEO'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 import { getServiceClient } from '@/lib/supabase'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 export async function getStaticPaths() {
   const db = getServiceClient()
@@ -67,289 +74,377 @@ export default function ProductDetailPage({ product, brand, related }) {
   return (
     <>
       <ProductSEO product={p} brand={b} />
-      <HeaderTwo />
+      <BetaLayout title={`${p.name} — ${b.name}`} description={p.short_description || p.description?.slice(0, 160)}>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.28),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
-          {/* Breadcrumbs */}
-          <nav className="mb-6 text-xs text-white/50">
-            <Link href="/skincare" className="hover:text-white/80">Skincare</Link>
-            <span className="mx-2">/</span>
-            <Link href={`/skincare/${b.slug}`} className="hover:text-white/80">{b.name}</Link>
-            <span className="mx-2">/</span>
-            <span className="text-white/70">{p.name}</span>
-          </nav>
+        {/* Hero */}
+        <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+          <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '3.5rem 1.5rem 5rem' }}>
+            {/* Breadcrumbs */}
+            <nav style={{ marginBottom: '1.5rem', fontSize: '0.75rem', color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+              <Link href="/skincare" style={{ color: 'inherit', textDecoration: 'none' }}>Skincare</Link>
+              <span style={{ margin: '0 0.5rem' }}>/</span>
+              <Link href={`/skincare/${b.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{b.name}</Link>
+              <span style={{ margin: '0 0.5rem' }}>/</span>
+              <span style={{ color: 'rgba(250,248,245,0.6)' }}>{p.name}</span>
+            </nav>
 
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-5 order-2 lg:order-1">
-              {p.image_url ? (
-                <div className="relative aspect-square w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl bg-white">
-                  <img src={p.image_url} alt={p.name} className="h-full w-full object-contain p-8" />
-                </div>
-              ) : (
-                <div className="aspect-square w-full rounded-3xl bg-neutral-800 flex items-center justify-center">
-                  <span className="text-neutral-500 text-sm">No image</span>
-                </div>
-              )}
-            </div>
-            <div className="lg:col-span-7 order-1 lg:order-2">
-              <p className="text-[11px] tracking-widest uppercase text-white/60">{b.name}</p>
-              <h1 className="mt-2 text-3xl md:text-4xl font-extrabold tracking-tight">{p.name}</h1>
-              {p.subtitle && <p className="mt-2 text-lg text-violet-300 font-medium">{p.subtitle}</p>}
-              {p.price && (
-                <p className="mt-3 text-2xl font-bold text-white">${Number(p.price).toFixed(2)}</p>
-              )}
-              <p className="mt-4 text-neutral-300 leading-relaxed product-description">
-                {p.short_description || p.description?.slice(0, 200)}
-              </p>
-
-              {/* Badges */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {p.is_bestseller && (
-                  <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30">
-                    Bestseller
-                  </span>
-                )}
-                {p.is_new && (
-                  <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30">
-                    New
-                  </span>
-                )}
-                {!canBuyOnline && (
-                  <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-white/70">
-                    In-Clinic Only
-                  </span>
+            <div className="grid lg:grid-cols-12 gap-10 items-center">
+              <div className="lg:col-span-5 order-2 lg:order-1">
+                {p.image_url ? (
+                  <div style={{ position: 'relative', aspectRatio: '1', width: '100%', overflow: 'hidden', borderRadius: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', backgroundColor: '#fff' }}>
+                    <img src={p.image_url} alt={p.name} style={{ height: '100%', width: '100%', objectFit: 'contain', padding: '2rem' }} />
+                  </div>
+                ) : (
+                  <div style={{ aspectRatio: '1', width: '100%', borderRadius: '1.5rem', backgroundColor: colors.charcoal, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: colors.muted, fontSize: '0.875rem', fontFamily: fonts.body }}>No image</span>
+                  </div>
                 )}
               </div>
-
-              {/* CTAs */}
-              <div className="mt-6 flex flex-wrap gap-3">
-                {canBuyOnline && p.purchase_url && (
-                  <a
-                    href={p.purchase_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-                  >
-                    Buy Online
-                  </a>
+              <div className="lg:col-span-7 order-1 lg:order-2">
+                <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>{b.name}</p>
+                <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700, lineHeight: 1.1, color: colors.white, marginTop: '0.5rem' }}>
+                  {p.name}
+                </h1>
+                {p.subtitle && (
+                  <p style={{ marginTop: '0.5rem', fontSize: '1.125rem', fontWeight: 500, fontFamily: fonts.body, background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    {p.subtitle}
+                  </p>
                 )}
-                <a
-                  href="/book/consult"
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15 hover:ring-white/30 transition"
-                >
-                  {canBuyOnline ? 'Build My Routine' : 'Book Skin Consult'}
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+                {p.price && (
+                  <p style={{ marginTop: '0.75rem', fontSize: '1.5rem', fontWeight: 700, color: colors.white, fontFamily: fonts.body }}>
+                    ${Number(p.price).toFixed(2)}
+                  </p>
+                )}
+                <p className="product-description" style={{ fontFamily: fonts.body, fontSize: 'clamp(0.9375rem, 1.5vw, 1.0625rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', marginTop: '1rem', maxWidth: '36rem' }}>
+                  {p.short_description || p.description?.slice(0, 200)}
+                </p>
 
-      {/* Colorescience Anniversary Sale Banner */}
-      {b.slug === 'colorescience' && (
-        <div className="py-4 px-4" style={{ background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
-          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
-            <div className="flex-1">
-              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#CF7155' }}>Limited Time &middot; March 5–22</p>
-              <p className="text-lg font-bold mt-0.5" style={{ color: '#CF7155', fontStyle: 'italic', fontFamily: 'Playfair Display, serif' }}>Anniversary Sale: 20% Off Sitewide + Free Shipping</p>
-            </div>
-            <a
-              href="https://colorescience.com/reluxe-med-spa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold text-white whitespace-nowrap hover:opacity-90 transition"
-              style={{ background: 'linear-gradient(135deg, #CF7155, #B85A40)' }}>
-              Shop the Sale &rarr;
-            </a>
-          </div>
-        </div>
-      )}
-
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 space-y-14">
-        {/* Full description */}
-        {p.description && (
-          <section>
-            <h2 className="text-2xl font-extrabold tracking-tight">About {p.name}</h2>
-            <div className="mt-4 text-neutral-700 leading-relaxed whitespace-pre-line product-description">
-              {p.description}
-            </div>
-          </section>
-        )}
-
-        {/* Key Ingredients */}
-        {p.key_ingredients?.length > 0 && (
-          <section>
-            <h2 className="text-xl font-extrabold tracking-tight">Key Ingredients</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {p.key_ingredients.map(ing => (
-                <span key={ing} className="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-violet-50 text-violet-700 ring-1 ring-violet-200">
-                  {ing}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* How to Use */}
-        {p.how_to_use && (
-          <section>
-            <h2 className="text-xl font-extrabold tracking-tight">How to Use</h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed product-how-to-use">{p.how_to_use}</p>
-          </section>
-        )}
-
-        {/* Pro Tip */}
-        {p.pro_tip && (
-          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6">
-            <p className="text-sm font-semibold text-violet-700 mb-1">Pro Tip from Our Clinicians</p>
-            <p className="text-neutral-700">{p.pro_tip}</p>
-          </div>
-        )}
-
-        {/* Skin Types & Concerns */}
-        {(p.skin_types?.length > 0 || p.concerns?.length > 0) && (
-          <section className="grid gap-8 md:grid-cols-2">
-            {p.skin_types?.length > 0 && (
-              <div>
-                <h3 className="text-lg font-bold">Best For Skin Types</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {p.skin_types.map(t => (
-                    <span key={t} className="inline-flex items-center rounded-xl px-3 py-1.5 text-sm bg-neutral-100 text-neutral-700 capitalize">
-                      {t}
+                {/* Badges */}
+                <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {p.is_bestseller && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                      padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body,
+                      backgroundColor: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.25)',
+                    }}>
+                      Bestseller
                     </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {p.concerns?.length > 0 && (
-              <div>
-                <h3 className="text-lg font-bold">Targets</h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {p.concerns.map(c => (
-                    <span key={c} className="inline-flex items-center rounded-xl px-3 py-1.5 text-sm bg-neutral-100 text-neutral-700 capitalize">
-                      {c.replace(/-/g, ' ')}
+                  )}
+                  {p.is_new && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                      padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body,
+                      backgroundColor: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)',
+                    }}>
+                      New
                     </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Staff Picks */}
-        {p.staff_picks && Object.keys(p.staff_picks).length > 0 && (
-          <section>
-            <h2 className="text-xl font-extrabold tracking-tight">Staff Pick</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              {Object.entries(p.staff_picks).map(([location, reason]) => (
-                <div key={location} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-violet-600 capitalize">{location} Team</p>
-                  <p className="mt-1 text-neutral-700">{reason}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Treatment Pairings */}
-        {p.related_services?.length > 0 && (
-          <section>
-            <h2 className="text-xl font-extrabold tracking-tight">Pairs Well With</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {p.related_services.map(slug => (
-                <Link
-                  key={slug}
-                  href={`/services/${slug}`}
-                  className="inline-flex items-center rounded-xl px-4 py-2 text-sm font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition capitalize"
-                >
-                  {slug.replace(/-/g, ' ')}
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* FAQ */}
-        {p.faq?.length > 0 && (
-          <section className="product-faq">
-            <h2 className="text-xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
-            <div className="mt-4 divide-y rounded-2xl border">
-              {p.faq.map((item, i) => (
-                <div key={i}>
-                  <button
-                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left"
-                  >
-                    <span className="text-sm font-semibold text-neutral-800">{item.q}</span>
-                    <svg
-                      className={`w-4 h-4 text-neutral-400 transition-transform ${faqOpen === i ? 'rotate-180' : ''}`}
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {faqOpen === i && (
-                    <div className="px-5 pb-4 text-sm text-neutral-600 leading-relaxed">{item.a}</div>
+                  )}
+                  {!canBuyOnline && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                      padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body,
+                      backgroundColor: 'rgba(250,248,245,0.08)', color: 'rgba(250,248,245,0.6)',
+                    }}>
+                      In-Clinic Only
+                    </span>
                   )}
                 </div>
-              ))}
+
+                {/* CTAs */}
+                <div style={{ marginTop: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  {canBuyOnline && p.purchase_url && (
+                    <a
+                      href={p.purchase_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                        fontFamily: fonts.body, fontWeight: 600, fontSize: '0.9375rem',
+                        color: '#fff', background: gradients.primary, textDecoration: 'none',
+                      }}
+                    >
+                      Buy Online
+                    </a>
+                  )}
+                  <GravityBookButton fontKey={FONT_KEY} size="hero" />
+                </div>
+              </div>
             </div>
-          </section>
+          </div>
+        </section>
+
+        {/* Colorescience Anniversary Sale Banner */}
+        {b.slug === 'colorescience' && (
+          <div style={{ padding: '1rem 1rem', background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
+            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
+              <div className="flex-1">
+                <p style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#CF7155', fontFamily: fonts.body }}>Limited Time &middot; March 5&ndash;22</p>
+                <p style={{ fontSize: '1.125rem', fontWeight: 700, marginTop: '0.125rem', color: '#CF7155', fontStyle: 'italic', fontFamily: fonts.display }}>Anniversary Sale: 20% Off Sitewide + Free Shipping</p>
+              </div>
+              <a
+                href="https://colorescience.com/reluxe-med-spa"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '9999px', padding: '0.625rem 1.5rem',
+                  fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body,
+                  color: '#fff', whiteSpace: 'nowrap',
+                  background: 'linear-gradient(135deg, #CF7155, #B85A40)',
+                  textDecoration: 'none',
+                }}
+              >
+                Shop the Sale &rarr;
+              </a>
+            </div>
+          </div>
         )}
 
-        {/* Related Products */}
-        {related.length > 0 && (
-          <section>
-            <h2 className="text-xl font-extrabold tracking-tight">More from {b.name}</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map(r => {
-                const rType = r.purchase_type || b.purchase_type || 'in_clinic'
-                const rCanBuy = rType === 'affiliate' || rType === 'direct'
-                return (
-                  <Link key={r.slug} href={`/skincare/${b.slug}/${r.slug}`} className="group">
-                    <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-                      <h4 className="font-bold group-hover:text-violet-600 transition-colors">{r.name}</h4>
-                      {r.short_description && <p className="mt-2 text-neutral-700 text-sm">{r.short_description}</p>}
-                      <div className="mt-4 flex items-center gap-2">
-                        {r.is_bestseller && (
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700">
-                            Bestseller
-                          </span>
-                        )}
-                        {rCanBuy ? (
-                          <span className="inline-flex items-center rounded-xl px-3 py-1 text-xs font-semibold text-violet-600">
-                            Shop Online →
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-xl px-3 py-1 text-xs font-semibold bg-neutral-100 text-neutral-600">
-                            In-Clinic Only
-                          </span>
-                        )}
-                      </div>
+        <main style={{ maxWidth: '72rem', margin: '0 auto', padding: '3rem 1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
+
+            {/* Full description */}
+            {p.description && (
+              <section>
+                <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>About {p.name}</h2>
+                <div className="product-description" style={{ marginTop: '1rem', color: colors.body, fontFamily: fonts.body, lineHeight: 1.625, whiteSpace: 'pre-line' }}>
+                  {p.description}
+                </div>
+              </section>
+            )}
+
+            {/* Key Ingredients */}
+            {p.key_ingredients?.length > 0 && (
+              <section>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>Key Ingredients</h2>
+                <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {p.key_ingredients.map(ing => (
+                    <span key={ing} style={{
+                      display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                      padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, fontFamily: fonts.body,
+                      background: gradients.subtle, color: colors.violet, border: '1px solid rgba(124,58,237,0.15)',
+                    }}>
+                      {ing}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* How to Use */}
+            {p.how_to_use && (
+              <section>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>How to Use</h2>
+                <p className="product-how-to-use" style={{ marginTop: '1rem', color: colors.body, fontFamily: fonts.body, lineHeight: 1.625 }}>{p.how_to_use}</p>
+              </section>
+            )}
+
+            {/* Pro Tip */}
+            {p.pro_tip && (
+              <div style={{
+                borderRadius: '1rem', padding: '1.5rem',
+                background: gradients.subtle, border: '1px solid rgba(124,58,237,0.15)',
+              }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body, color: colors.violet, marginBottom: '0.25rem' }}>Pro Tip from Our Clinicians</p>
+                <p style={{ color: colors.body, fontFamily: fonts.body, lineHeight: 1.625 }}>{p.pro_tip}</p>
+              </div>
+            )}
+
+            {/* Skin Types & Concerns */}
+            {(p.skin_types?.length > 0 || p.concerns?.length > 0) && (
+              <section className="grid gap-8 md:grid-cols-2">
+                {p.skin_types?.length > 0 && (
+                  <div>
+                    <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading }}>Best For Skin Types</h3>
+                    <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {p.skin_types.map(t => (
+                        <span key={t} style={{
+                          display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                          padding: '0.375rem 0.75rem', fontSize: '0.875rem', fontFamily: fonts.body,
+                          backgroundColor: colors.stone, color: colors.body, textTransform: 'capitalize',
+                        }}>
+                          {t}
+                        </span>
+                      ))}
                     </div>
-                  </Link>
-                )
-              })}
-            </div>
-          </section>
-        )}
+                  </div>
+                )}
+                {p.concerns?.length > 0 && (
+                  <div>
+                    <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading }}>Targets</h3>
+                    <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      {p.concerns.map(c => (
+                        <span key={c} style={{
+                          display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                          padding: '0.375rem 0.75rem', fontSize: '0.875rem', fontFamily: fonts.body,
+                          backgroundColor: colors.stone, color: colors.body, textTransform: 'capitalize',
+                        }}>
+                          {c.replace(/-/g, ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
 
-        {/* Back nav */}
-        <div className="flex flex-wrap gap-3 pt-4">
-          <Link href={`/skincare/${b.slug}`} className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold ring-1 ring-neutral-300 hover:bg-neutral-50">
-            ← {b.name}
-          </Link>
-          <Link href="/skincare" className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold ring-1 ring-neutral-300 hover:bg-neutral-50">
-            All Brands
-          </Link>
-          <a href="/book/consult" className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white bg-neutral-900 hover:bg-black transition">
-            Book Skincare Consult
-          </a>
-        </div>
-      </main>
+            {/* Staff Picks */}
+            {p.staff_picks && Object.keys(p.staff_picks).length > 0 && (
+              <section>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>Staff Pick</h2>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  {Object.entries(p.staff_picks).map(([location, reason]) => (
+                    <div key={location} style={{
+                      borderRadius: '1rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff',
+                      padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    }}>
+                      <p style={{ fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body, color: colors.violet, textTransform: 'capitalize' }}>{location} Team</p>
+                      <p style={{ marginTop: '0.25rem', color: colors.body, fontFamily: fonts.body }}>{reason}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Treatment Pairings */}
+            {p.related_services?.length > 0 && (
+              <section>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>Pairs Well With</h2>
+                <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {p.related_services.map(slug => (
+                    <Link
+                      key={slug}
+                      href={`/services/${slug}`}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                        padding: '0.5rem 1rem', fontSize: '0.875rem', fontWeight: 500, fontFamily: fonts.body,
+                        backgroundColor: colors.stone, color: colors.body, textTransform: 'capitalize',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      {slug.replace(/-/g, ' ')}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* FAQ */}
+            {p.faq?.length > 0 && (
+              <section className="product-faq">
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>Frequently Asked Questions</h2>
+                <div style={{ marginTop: '1rem', borderRadius: '1rem', border: `1px solid ${colors.stone}`, overflow: 'hidden' }}>
+                  {p.faq.map((item, i) => (
+                    <div key={i} style={{ borderTop: i > 0 ? `1px solid ${colors.stone}` : 'none' }}>
+                      <button
+                        onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '1rem 1.25rem', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body, color: colors.heading }}>{item.q}</span>
+                        <svg
+                          style={{ width: '1rem', height: '1rem', color: colors.muted, transition: 'transform 0.2s', transform: faqOpen === i ? 'rotate(180deg)' : 'none', flexShrink: 0, marginLeft: '0.5rem' }}
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {faqOpen === i && (
+                        <div style={{ padding: '0 1.25rem 1rem', fontSize: '0.875rem', color: colors.body, fontFamily: fonts.body, lineHeight: 1.625 }}>{item.a}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Related Products */}
+            {related.length > 0 && (
+              <section>
+                <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>More from {b.name}</h2>
+                <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {related.map(r => {
+                    const rType = r.purchase_type || b.purchase_type || 'in_clinic'
+                    const rCanBuy = rType === 'affiliate' || rType === 'direct'
+                    return (
+                      <Link key={r.slug} href={`/skincare/${b.slug}/${r.slug}`} className="group" style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff',
+                          padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                          transition: 'box-shadow 0.3s',
+                        }}
+                        className="hover:shadow-md"
+                        >
+                          <h4 style={{ fontFamily: fonts.display, fontWeight: 700, color: colors.heading }} className="group-hover:text-violet-600 transition-colors">{r.name}</h4>
+                          {r.short_description && <p style={{ marginTop: '0.5rem', color: colors.body, fontSize: '0.875rem', fontFamily: fonts.body }}>{r.short_description}</p>}
+                          <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {r.is_bestseller && (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                                padding: '0.125rem 0.5rem', fontSize: '0.625rem', fontWeight: 600, fontFamily: fonts.body,
+                                backgroundColor: 'rgba(245,158,11,0.1)', color: '#b45309',
+                              }}>
+                                Bestseller
+                              </span>
+                            )}
+                            {rCanBuy ? (
+                              <span style={{ fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body, color: colors.violet }}>
+                                Shop Online &rarr;
+                              </span>
+                            ) : (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+                                padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body,
+                                backgroundColor: colors.stone, color: colors.body,
+                              }}>
+                                In-Clinic Only
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Back nav */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', paddingTop: '1rem' }}>
+              <Link
+                href={`/skincare/${b.slug}`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '9999px', padding: '0.5rem 1rem',
+                  fontFamily: fonts.body, fontWeight: 600,
+                  border: `1px solid ${colors.taupe}`, color: colors.heading, textDecoration: 'none',
+                }}
+              >
+                &larr; {b.name}
+              </Link>
+              <Link
+                href="/skincare"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '9999px', padding: '0.5rem 1rem',
+                  fontFamily: fonts.body, fontWeight: 600,
+                  border: `1px solid ${colors.taupe}`, color: colors.heading, textDecoration: 'none',
+                }}
+              >
+                All Brands
+              </Link>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
+            </div>
+          </div>
+        </main>
+      </BetaLayout>
     </>
   )
 }
+
+ProductDetailPage.getLayout = (page) => page

@@ -7,7 +7,7 @@ import ChatBubble from './ChatBubble'
 
 const PRIVACY_NOTICE = 'This chat is AI-powered. Messages are not stored. If I need your phone number for booking or follow-up, it\'s used only for that purpose and never saved.'
 
-export default function ChatMessages({ messages, isLoading }) {
+export default function ChatMessages({ messages, isLoading, starters, onStarterClick }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -47,6 +47,34 @@ export default function ChatMessages({ messages, isLoading }) {
           <ChatBubble key={i} role={msg.role} content={msg.content} />
         ))}
       </AnimatePresence>
+
+      {/* Starter suggestion chips */}
+      {starters && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '4px 16px 8px' }}>
+          {starters.map((text) => (
+            <button
+              key={text}
+              onClick={() => onStarterClick(text)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 20,
+                border: '1px solid #D8B4FE',
+                backgroundColor: '#FAF5FF',
+                color: '#7C3AED',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                lineHeight: 1.3,
+              }}
+              onMouseEnter={e => { e.target.style.backgroundColor = '#7C3AED'; e.target.style.color = '#fff' }}
+              onMouseLeave={e => { e.target.style.backgroundColor = '#FAF5FF'; e.target.style.color = '#7C3AED' }}
+            >
+              {text}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Typing indicator */}
       {isLoading && (

@@ -1298,7 +1298,7 @@ function ForYouTab({ member, profile, recentServices, fonts, onSelectProvider, o
                 style={rowButton(fonts)}
               >
                 {p.image ? (
-                  <img src={p.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  <img src={p.image} alt={p.name} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${colors.violet}, ${colors.fuchsia})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600 }}>{(p.name || '?')[0]}</span>
@@ -1460,7 +1460,7 @@ function ProviderList({ providers, fonts, onSelectProvider }) {
           }}
         >
           {p.image ? (
-            <img src={p.image} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginBottom: 8 }} />
+            <img src={p.image} alt={p.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginBottom: 8 }} />
           ) : (
             <div style={{ width: 48, height: 48, borderRadius: '50%', background: `linear-gradient(135deg, ${colors.violet}, ${colors.fuchsia})`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: '1rem', color: '#fff', fontWeight: 600 }}>{(p.name || '?')[0]}</span>

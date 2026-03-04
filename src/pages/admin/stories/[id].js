@@ -35,7 +35,8 @@ const EMPTY_TREATMENT = { date: '', treatment: '', slug: '', description: '', im
 const EMPTY_TREATMENT_EMBED = { platform: 'instagram', url: '', caption: '' }
 const EMPTY_TREATMENT_IMAGE = { url: '', caption: '' }
 const EMPTY_EMBED = { platform: 'instagram', url: '', caption: '' }
-const EMPTY_GALLERY = { url: '', caption: '', alt: '' }
+const EMPTY_GALLERY = { url: '', caption: '', alt: '', type: 'journey' }
+const EMPTY_LIFESTYLE = { url: '', caption: '', alt: '', type: 'lifestyle' }
 
 const SERVICE_SLUGS = [
   '', 'tox', 'filler', 'sculptra', 'morpheus8', 'microneedling', 'ipl',
@@ -150,6 +151,35 @@ export default function AdminStoryEdit() {
     })
   }
 
+  /* ─── Typed gallery helpers (lifestyle vs journey within single gallery array) ─── */
+  function getGalleryRealIndex(type, filteredIndex) {
+    const all = story.gallery || []
+    let count = -1
+    for (let i = 0; i < all.length; i++) {
+      const isLifestyle = all[i].type === 'lifestyle'
+      if ((type === 'lifestyle' && isLifestyle) || (type !== 'lifestyle' && !isLifestyle)) {
+        count++
+        if (count === filteredIndex) return i
+      }
+    }
+    return -1
+  }
+
+  function addGalleryItem(type) {
+    const template = type === 'lifestyle' ? EMPTY_LIFESTYLE : EMPTY_GALLERY
+    addArrayItem('gallery', template)
+  }
+
+  function updateGalleryItem(type, filteredIndex, key, value) {
+    const realIndex = getGalleryRealIndex(type, filteredIndex)
+    if (realIndex >= 0) updateArrayItem('gallery', realIndex, key, value)
+  }
+
+  function removeGalleryItem(type, filteredIndex) {
+    const realIndex = getGalleryRealIndex(type, filteredIndex)
+    if (realIndex >= 0) removeArrayItem('gallery', realIndex)
+  }
+
   /* ─── Nested array helpers (e.g. treatments[i].embeds, treatments[i].images) ─── */
   function addNestedItem(field, index, nestedKey, template) {
     setStory((prev) => {
@@ -213,7 +243,9 @@ export default function AdminStoryEdit() {
 
   const treatments = story.treatments || []
   const socialEmbeds = story.social_embeds || []
-  const gallery = story.gallery || []
+  const allGallery = story.gallery || []
+  const lifestyleGallery = allGallery.filter((g) => g.type === 'lifestyle')
+  const journeyGallery = allGallery.filter((g) => g.type !== 'lifestyle')
 
   return (
     <AdminLayout>
@@ -482,36 +514,71 @@ export default function AdminStoryEdit() {
         </Section>
 
         {/* ─── Gallery ─── */}
-        <Section title="Gallery">
+        <Section title="Lifestyle Gallery — Who They Are">
+          <p className="text-xs text-neutral-400 -mt-2 mb-3">Personal or professional photos showing who this person is outside of RELUXE.</p>
           <div className="grid grid-cols-2 gap-4">
-            {gallery.map((g, i) => (
+            {lifestyleGallery.map((g, i) => (
               <div key={i} className="border border-neutral-100 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-neutral-400">Media {i + 1}</span>
-                  <button type="button" onClick={() => removeArrayItem('gallery', i)} className="text-xs text-red-500 hover:text-red-700">Remove</button>
+                  <span className="text-xs font-semibold text-neutral-400">Lifestyle {i + 1}</span>
+                  <button type="button" onClick={() => removeGalleryItem('lifestyle', i)} className="text-xs text-red-500 hover:text-red-700">Remove</button>
                 </div>
                 <ImageUpload
                   value={g.url}
-                  onChange={(url) => updateArrayItem('gallery', i, 'url', url)}
+                  onChange={(url) => updateGalleryItem('lifestyle', i, 'url', url)}
                   folder="stories"
                   label="Photo or Video"
                   accept="image/*,video/*"
                 />
                 <Field label="Caption">
-                  <Input value={g.caption} onChange={(v) => updateArrayItem('gallery', i, 'caption', v)} />
+                  <Input value={g.caption} onChange={(v) => updateGalleryItem('lifestyle', i, 'caption', v)} />
                 </Field>
                 <Field label="Alt Text">
-                  <Input value={g.alt} onChange={(v) => updateArrayItem('gallery', i, 'alt', v)} />
+                  <Input value={g.alt} onChange={(v) => updateGalleryItem('lifestyle', i, 'alt', v)} />
                 </Field>
               </div>
             ))}
           </div>
           <button
             type="button"
-            onClick={() => addArrayItem('gallery', EMPTY_GALLERY)}
+            onClick={() => addGalleryItem('lifestyle')}
             className="px-4 py-2 border border-dashed rounded-lg text-sm font-medium text-neutral-500 hover:border-neutral-400 hover:text-neutral-700 transition w-full"
           >
-            + Add Photo or Video
+            + Add Lifestyle Photo
+          </button>
+        </Section>
+
+        <Section title="RELUXE Journey Gallery">
+          <p className="text-xs text-neutral-400 -mt-2 mb-3">Treatment photos, before &amp; after, in-clinic images and videos.</p>
+          <div className="grid grid-cols-2 gap-4">
+            {journeyGallery.map((g, i) => (
+              <div key={i} className="border border-neutral-100 rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-neutral-400">Journey {i + 1}</span>
+                  <button type="button" onClick={() => removeGalleryItem('journey', i)} className="text-xs text-red-500 hover:text-red-700">Remove</button>
+                </div>
+                <ImageUpload
+                  value={g.url}
+                  onChange={(url) => updateGalleryItem('journey', i, 'url', url)}
+                  folder="stories"
+                  label="Photo or Video"
+                  accept="image/*,video/*"
+                />
+                <Field label="Caption">
+                  <Input value={g.caption} onChange={(v) => updateGalleryItem('journey', i, 'caption', v)} />
+                </Field>
+                <Field label="Alt Text">
+                  <Input value={g.alt} onChange={(v) => updateGalleryItem('journey', i, 'alt', v)} />
+                </Field>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => addGalleryItem('journey')}
+            className="px-4 py-2 border border-dashed rounded-lg text-sm font-medium text-neutral-500 hover:border-neutral-400 hover:text-neutral-700 transition w-full"
+          >
+            + Add Journey Photo or Video
           </button>
         </Section>
 

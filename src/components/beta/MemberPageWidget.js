@@ -127,7 +127,7 @@ function TeamVariant({ member, profile, fonts, openDrawer, openRebookModal }) {
           {topProviders.map((p, i) => (
             <div key={p.staffId || i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.75rem 0.875rem', borderRadius: '0.75rem', background: i === 0 ? `${colors.violet}08` : 'rgba(250,248,245,0.03)', border: `1px solid ${i === 0 ? `${colors.violet}20` : 'rgba(250,248,245,0.06)'}` }}>
               {p.image
-                ? <img src={p.image} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                ? <img src={p.image} alt={p.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(250,248,245,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(250,248,245,0.3)', flexShrink: 0 }}>{(p.name || '?')[0]}</div>
               }
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -291,7 +291,7 @@ function LocationVariant({ member, profile, fonts, openDrawer, openRebookModal, 
           <div style={{ display: 'flex', gap: 8 }}>
             {providersHere.map((p) => (
               <div key={p.staffId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.4rem 0.625rem', borderRadius: 999, background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.06)' }}>
-                {p.image && <img src={p.image} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />}
+                {p.image && <img src={p.image} alt={p.name} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />}
                 <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 500, color: 'rgba(250,248,245,0.6)' }}>{p.name?.split(' ')[0]}</span>
               </div>
             ))}

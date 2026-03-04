@@ -1,10 +1,15 @@
 // pages/landing/new-patient-botox.js
 // New Patient Intro — Botox (update offer constants below)
 
-import Head from 'next/head'
-import { useEffect, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useState } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 import TestimonialWidget from '@/components/testimonials/TestimonialWidget'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -55,55 +60,40 @@ const BOTOX_TESTIMONIALS = [
 ]
 
 export default function NewPatientBotoxPage() {
-  const [showStickyCta, setShowStickyCta] = useState(false)
   const [lightbox, setLightbox] = useState(null)
 
-  useEffect(() => {
-    const onScroll = () => setShowStickyCta(window.scrollY > 280)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
-    <>
-      <Head>
-        <title>{OFFER_NAME} — {OFFER_BASELINE} for {OFFER_PRICE} | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content={`New to RELUXE? ${OFFER_NAME}: ${OFFER_BASELINE} for ${OFFER_PRICE} (${OFFER_VALUE}). We start with a proven baseline, then tailor to your anatomy. Add-ons available at ${OFFER_ADDON}.`}
-        />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <meta property="og:title" content={`${OFFER_NAME} — ${OFFER_BASELINE} for ${OFFER_PRICE} | RELUXE`} />
-        <meta
-          property="og:description"
-          content={`Start with ${OFFER_BASELINE}, customize from there. Add-ons at ${OFFER_ADDON}. Natural results, not frozen.`}
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://reluxemedspa.com/landing/new-patient-botox" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={`${OFFER_NAME} — ${OFFER_BASELINE} for ${OFFER_PRICE}`}
+      description={`New to RELUXE? ${OFFER_NAME}: ${OFFER_BASELINE} for ${OFFER_PRICE} (${OFFER_VALUE}). We start with a proven baseline, then tailor to your anatomy. Add-ons available at ${OFFER_ADDON}.`}
+      canonical="https://reluxemedspa.com/landing/new-patient-botox"
+    >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.20),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-[320px] py-7 md:py-10">
-          <div className="text-white max-w-3xl">
-            <p className="text-[11px] sm:text-xs tracking-widest uppercase text-neutral-400">
-              RELUXE • Carmel & Westfield
+      <section
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: colors.ink,
+          backgroundImage: `${grain}, radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.18), transparent 60%)`,
+        }}
+      >
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '2.5rem 1rem', minHeight: 320 }}>
+          <div style={{ color: colors.white, maxWidth: '48rem' }}>
+            <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.letterSpacing, textTransform: 'uppercase', color: colors.muted }}>
+              RELUXE &bull; Carmel &amp; Westfield
             </p>
 
-            <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+            <h1 style={{ marginTop: '0.5rem', fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, color: colors.white }}>
               {OFFER_NAME}
             </h1>
 
-            <p className="mt-3 text-neutral-300 text-base sm:text-lg leading-relaxed">
+            <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, fontSize: typeScale.subhead.size, lineHeight: typeScale.subhead.lineHeight, color: colors.white }}>
               Get <strong>{OFFER_BASELINE} for {OFFER_PRICE}</strong>{' '}
-              <span className="text-neutral-400">({OFFER_VALUE})</span>. We start with a proven baseline—then tailor it to your anatomy.
+              <span style={{ color: colors.muted }}>({OFFER_VALUE})</span>. We start with a proven baseline—then{' '}
+              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>tailor it to your anatomy</span>.
             </p>
 
-            <ul className="mt-4 space-y-2 text-neutral-300">
+            <ul style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontFamily: fonts.body, color: colors.white }}>
               <LI>
                 Baseline: <strong>{OFFER_BASELINE}</strong>. {OFFER_NOTE}
               </LI>
@@ -111,28 +101,26 @@ export default function NewPatientBotoxPage() {
                 Add extra areas or lower face at <strong>{OFFER_ADDON}</strong>.
               </LI>
               <LI>
-                Designed to find <strong>your</strong> perfect dose (not “one size fits all”).
+                Designed to find <strong>your</strong> perfect dose (not &quot;one size fits all&quot;).
               </LI>
             </ul>
 
-            <div className="mt-5 inline-flex flex-wrap items-center gap-2 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
-              <div className="inline-flex items-center gap-2">
+            <div style={{ marginTop: '1.25rem', display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', borderRadius: '9999px', backgroundColor: 'rgba(250,248,245,0.05)', padding: '0.75rem 1rem', border: '1px solid rgba(250,248,245,0.1)' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Stars rating={5} />
-                <span className="text-sm font-semibold text-white">5</span>
-                <span className="text-sm text-neutral-400">•</span>
-                <span className="text-sm text-neutral-200">300+ Google Reviews</span>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>5</span>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>&bull;</span>
+                <span style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.white }}>300+ Google Reviews</span>
               </div>
-              <span className="text-xs text-neutral-400">Results vary. Dosing customized by injector.</span>
+              <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>Results vary. Dosing customized by injector.</span>
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:gap-3">
-              <CTA href={BOOK_URL} primary>Book Botox Intro</CTA>
-              <CTA href={BOOK_URL} dataAttr="westfield">Book Westfield</CTA>
-              <CTA href={BOOK_URL} dataAttr="carmel">Book Carmel</CTA>
+            <div style={{ marginTop: '1.5rem' }}>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
             </div>
 
-            <div className="mt-2 text-[11px] text-neutral-400">
-              Intro pricing: {OFFER_BASELINE} {OFFER_PRICE} • Add-ons {OFFER_ADDON}.
+            <div style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
+              Intro pricing: {OFFER_BASELINE} {OFFER_PRICE} &bull; Add-ons {OFFER_ADDON}.
             </div>
           </div>
         </div>
@@ -144,8 +132,6 @@ export default function NewPatientBotoxPage() {
         copy="These are real RELUXE patients. Your injector customizes dosing to your anatomy and goals."
         images={BOTOX_RESULTS}
         onOpen={setLightbox}
-        bookHref={BOOK_URL}
-        buttonText="Book Botox Intro"
       />
 
       {/* Reviews */}
@@ -156,93 +142,81 @@ export default function NewPatientBotoxPage() {
       />
 
       {/* How it works */}
-      <section className="relative bg-neutral-50 py-12 sm:py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
-          <div className="lg:col-span-6">
-            <Card title={`How the ${OFFER_NAME} Works`}>
-              <ul className="space-y-2 text-neutral-700">
-                <Bullet>
-                  We start with <strong>{OFFER_BASELINE}</strong> as a baseline.
-                </Bullet>
-                <Bullet>Your injector customizes your exact dose based on muscle strength and goals.</Bullet>
-                <Bullet>{OFFER_NOTE}</Bullet>
-                <Bullet>
-                  Want extra areas? Add units for <strong>{OFFER_ADDON}</strong>.
-                </Bullet>
-              </ul>
-            </Card>
-          </div>
+      <section style={{ backgroundColor: colors.cream, padding: '3rem 0' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 28rem), 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+          <Card title={`How the ${OFFER_NAME} Works`}>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontFamily: fonts.body, color: colors.body }}>
+              <Bullet>
+                We start with <strong>{OFFER_BASELINE}</strong> as a baseline.
+              </Bullet>
+              <Bullet>Your injector customizes your exact dose based on muscle strength and goals.</Bullet>
+              <Bullet>{OFFER_NOTE}</Bullet>
+              <Bullet>
+                Want extra areas? Add units for <strong>{OFFER_ADDON}</strong>.
+              </Bullet>
+            </ul>
+          </Card>
 
-          <div className="lg:col-span-6">
-            <Card title="Why this dose-first approach converts better">
-              <ul className="space-y-2 text-neutral-700">
-                <Bullet>
-                  It avoids under-treating. You get a <strong>real result</strong> that matches your anatomy.
-                </Bullet>
-                <Bullet>
-                  It dials your long-term plan so you know <strong>your</strong> ideal dose moving forward.
-                </Bullet>
-                <Bullet>
-                  You can add targeted areas the same day—no extra appointment required.
-                </Bullet>
-              </ul>
-            </Card>
-          </div>
+          <Card title="Why this dose-first approach converts better">
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontFamily: fonts.body, color: colors.body }}>
+              <Bullet>
+                It avoids under-treating. You get a <strong>real result</strong> that matches your anatomy.
+              </Bullet>
+              <Bullet>
+                It dials your long-term plan so you know <strong>your</strong> ideal dose moving forward.
+              </Bullet>
+              <Bullet>
+                You can add targeted areas the same day—no extra appointment required.
+              </Bullet>
+            </ul>
+          </Card>
         </div>
 
-        <div className="mt-8 text-center px-4">
-          <CTA href={BOOK_URL} primary>Book Now</CTA>
-          <p className="mt-2 text-xs text-neutral-500">Treatment plan and dosing are customized by your injector.</p>
+        <div style={{ marginTop: '2rem', textAlign: 'center', padding: '0 1rem' }}>
+          <GravityBookButton fontKey={FONT_KEY} size="hero" />
+          <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>Treatment plan and dosing are customized by your injector.</p>
         </div>
       </section>
 
       {/* What to Expect */}
-      <WhatToExpectSection bookHref={BOOK_URL} buttonText="Book Botox Intro" />
+      <WhatToExpectSection />
 
       {/* FAQs */}
       <FaqSection
         title="Botox Intro — FAQ"
         items={[
-          { q: `Is ${OFFER_BASELINE} a full face treatment?`, a: `No. It’s a baseline for the most common areas. We customize from there based on anatomy and goals.` },
-          { q: `What if I need more or less than ${OFFER_BASELINE}?`, a: `Perfect—that’s the point. We’ll tailor your dose and adjust units based on your face and desired result.` },
+          { q: `Is ${OFFER_BASELINE} a full face treatment?`, a: `No. It's a baseline for the most common areas. We customize from there based on anatomy and goals.` },
+          { q: `What if I need more or less than ${OFFER_BASELINE}?`, a: `Perfect—that's the point. We'll tailor your dose and adjust units based on your face and desired result.` },
           { q: `Can I add extra areas?`, a: `Yes. Add-ons are available at ${OFFER_ADDON}.` },
           { q: 'How long do results last?', a: 'Most patients see results for ~3–4 months. Your injector will help you choose the right cadence.' },
         ]}
-        bookHref={BOOK_URL}
       />
 
       {/* Lightbox */}
       {lightbox && <Lightbox img={lightbox} onClose={() => setLightbox(null)} />}
-
-      {/* Sticky mobile CTA */}
-      {showStickyCta && (
-        <StickyCTA
-          title={`${OFFER_NAME} • ${OFFER_BASELINE} for ${OFFER_PRICE}`}
-          subtitle={`Add-ons ${OFFER_ADDON} • ${OFFER_NOTE}`}
-          href={BOOK_URL}
-        />
-      )}
-    </>
+    </BetaLayout>
   )
 }
+
+NewPatientBotoxPage.getLayout = (page) => page
 
 /* =========================
  *  Shared Sections/Components
  *  (kept inline so page is truly copy/paste)
  * ========================= */
 
-function ResultsSection({ title, copy, images, onOpen, bookHref, buttonText }) {
+function ResultsSection({ title, copy, images, onOpen }) {
   const imgs = Array.isArray(images) ? images.slice(0, 6) : []
   return (
-    <section className="py-14 bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section style={{ padding: '3.5rem 0', backgroundColor: '#fff' }}>
+      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
         <div className="md:grid md:grid-cols-12 md:gap-8 items-start">
           <div className="md:col-span-4">
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">{title}</h2>
-            <p className="mt-3 text-neutral-600">{copy}</p>
-            <div className="mt-5">
-              <CTA href={bookHref} primary>{buttonText}</CTA>
-              <p className="mt-2 text-xs text-neutral-500">Results vary. Photos shown are representative outcomes.</p>
+            <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>{title}</h2>
+            <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, color: colors.body }}>{copy}</p>
+            <div style={{ marginTop: '1.25rem' }}>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
+              <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>Results vary. Photos shown are representative outcomes.</p>
             </div>
           </div>
 
@@ -253,11 +227,12 @@ function ResultsSection({ title, copy, images, onOpen, bookHref, buttonText }) {
                   key={i}
                   type="button"
                   onClick={() => onOpen(img)}
-                  className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-200 shadow-sm hover:shadow-md transition text-left"
+                  style={{ borderRadius: '9999px' }}
+                  className="relative aspect-square overflow-hidden shadow-sm hover:shadow-md transition text-left"
                   aria-label={`View result ${i + 1}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.src} alt={img.alt} className="h-full w-full object-cover" loading={i < 2 ? 'eager' : 'lazy'} />
+                  <img src={img.src} alt={img.alt} className="h-full w-full object-cover" style={{ borderRadius: '9999px' }} loading={i < 2 ? 'eager' : 'lazy'} />
                 </button>
               ))}
             </div>
@@ -268,11 +243,12 @@ function ResultsSection({ title, copy, images, onOpen, bookHref, buttonText }) {
                   key={i}
                   type="button"
                   onClick={() => onOpen(img)}
-                  className="snap-start shrink-0 w-[calc(50%-0.5rem)] relative aspect-square rounded-2xl overflow-hidden border border-neutral-200 shadow-sm"
+                  style={{ borderRadius: '9999px' }}
+                  className="snap-start shrink-0 w-[calc(50%-0.5rem)] relative aspect-square overflow-hidden shadow-sm"
                   aria-label={`View result ${i + 1}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.src} alt={img.alt} className="h-full w-full object-cover" loading={i < 2 ? 'eager' : 'lazy'} />
+                  <img src={img.src} alt={img.alt} className="h-full w-full object-cover" style={{ borderRadius: '9999px' }} loading={i < 2 ? 'eager' : 'lazy'} />
                 </button>
               ))}
             </div>
@@ -283,85 +259,37 @@ function ResultsSection({ title, copy, images, onOpen, bookHref, buttonText }) {
   )
 }
 
-function ReviewsSection({ title, subtitle, testimonials, bookHref, buttonText }) {
-  const list = Array.isArray(testimonials) ? testimonials : []
+function WhatToExpectSection() {
   return (
-    <section className="py-14 bg-neutral-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">{title}</h2>
-            <p className="mt-2 text-sm text-neutral-600">{subtitle}</p>
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 ring-1 ring-neutral-200">
-              <Stars rating={5} />
-              <span className="text-sm font-semibold text-neutral-900">5</span>
-              <span className="text-sm text-neutral-500">•</span>
-              <span className="text-sm text-neutral-700">300+ Google Reviews</span>
-            </div>
-          </div>
-          <div className="hidden sm:block">
-            <CTA href={bookHref} primary>{buttonText}</CTA>
-          </div>
-        </div>
-
-        <div className="mt-7 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none]">
-          <style jsx>{`section :global(::-webkit-scrollbar){display:none;}`}</style>
-
-          {list.map((t, i) => (
-            <figure key={i} className="snap-start min-w-[85%] sm:min-w-[60%] lg:min-w-[32%] bg-white rounded-3xl border border-neutral-200 p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
-                  {t.service || 'Tox'}
-                </span>
-                <Stars rating={t.rating || 5} />
-              </div>
-              <blockquote className="mt-3 text-neutral-800 leading-relaxed">“{t.text}”</blockquote>
-              <figcaption className="mt-4 text-sm text-neutral-600">
-                — {t.author}{t.location ? `, ${t.location}` : ''}{t.monthYear ? ` • ${t.monthYear}` : ''}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-
-        <div className="mt-6 sm:hidden">
-          <CTA href={bookHref} primary>{buttonText}</CTA>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function WhatToExpectSection({ bookHref, buttonText }) {
-  return (
-    <section className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
-      <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">What to Expect</h2>
-        <p className="mt-3 text-neutral-600">Quick visit. Natural results. Your dose dialed in for future appointments.</p>
+    <section style={{ maxWidth: '80rem', margin: '0 auto', padding: '3rem 1rem' }}>
+      <div style={{ maxWidth: '48rem', margin: '0 auto', textAlign: 'center' }}>
+        <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>What to Expect</h2>
+        <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, color: colors.body }}>Quick visit. Natural results. Your dose dialed in for future appointments.</p>
       </div>
 
       <div className="mt-7 grid gap-4 sm:gap-6 sm:grid-cols-3">
         <StepCard step="Day 0" title="Consult + Treatment" copy="We map your movement and tailor dosing to your goals (~20–30 minutes)." />
         <StepCard step="Days 2–7" title="Starts Kicking In" copy="Muscles relax, lines soften, and you look refreshed—not frozen." />
-        <StepCard step="Week 2" title="Peak Result" copy="You’ll see the final result and we’ll know your ideal plan moving forward." />
+        <StepCard step="Week 2" title="Peak Result" copy="You'll see the final result and we'll know your ideal plan moving forward." />
       </div>
 
-      <div className="mt-8 text-center">
-        <CTA href={bookHref} primary>{buttonText}</CTA>
+      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <GravityBookButton fontKey={FONT_KEY} size="hero" />
       </div>
     </section>
   )
 }
 
-function FaqSection({ title, items, bookHref }) {
+function FaqSection({ title, items }) {
   const list = Array.isArray(items) ? items : []
   return (
-    <section className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-14">
-      <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center">{title}</h3>
-      <div className="mt-7 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
+    <section style={{ maxWidth: '64rem', margin: '0 auto', padding: '3.5rem 1rem' }}>
+      <h3 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, textAlign: 'center', color: colors.heading }}>{title}</h3>
+      <div style={{ marginTop: '1.75rem', border: `1px solid ${colors.stone}`, borderRadius: '1.5rem', backgroundColor: '#fff', overflow: 'hidden' }} className="divide-y divide-neutral-200">
         {list.map((x, i) => <FaqItem key={i} q={x.q} a={x.a} />)}
       </div>
-      <div className="mt-8 text-center">
-        <CTA href={bookHref} primary>Book Now</CTA>
+      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <GravityBookButton fontKey={FONT_KEY} size="hero" />
       </div>
     </section>
   )
@@ -371,7 +299,7 @@ function Lightbox({ img, onClose }) {
   return (
     <div className="fixed inset-0 z-[999] bg-black/80 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true">
       <div className="max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
-        <div className="rounded-2xl overflow-hidden border border-white/10 bg-black">
+        <div style={{ borderRadius: '9999px', overflow: 'hidden', border: '1px solid rgba(250,248,245,0.1)', backgroundColor: '#000' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={img.src} alt={img.alt || 'Result'} className="w-full h-auto object-contain" />
         </div>
@@ -383,33 +311,19 @@ function Lightbox({ img, onClose }) {
   )
 }
 
-function CTA({ href, children, primary, dataAttr }) {
-  const base =
-    'inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
-  const styles = primary
-    ? 'text-white w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-black shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-neutral-900'
-    : 'text-white/90 w-full sm:w-auto ring-1 ring-white/20 hover:bg-white/10'
-  return (
-    <a href={href} data-book-loc={dataAttr} className={`${base} ${styles} group`} rel="noopener">
-      {children}
-      {primary && <Arrow />}
-    </a>
-  )
-}
-
 function Card({ title, children }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-sm">
-      <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">{title}</h3>
-      <div className="mt-3 sm:mt-4">{children}</div>
+    <div style={{ border: `1px solid ${colors.stone}`, borderRadius: '1.5rem', backgroundColor: '#fff', padding: '1.25rem 1.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+      <h3 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>{title}</h3>
+      <div style={{ marginTop: '0.75rem' }}>{children}</div>
     </div>
   )
 }
 
 function Bullet({ children }) {
   return (
-    <li className="flex items-start gap-2">
-      <span className="mt-2 h-2 w-2 rounded-full bg-emerald-500" />
+    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+      <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', background: gradients.primary, flexShrink: 0 }} />
       <span>{children}</span>
     </li>
   )
@@ -417,8 +331,8 @@ function Bullet({ children }) {
 
 function LI({ children }) {
   return (
-    <li className="flex items-start gap-2">
-      <span className="mt-2 h-2 w-2 rounded-full bg-emerald-300" />
+    <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+      <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', backgroundColor: colors.violet, flexShrink: 0 }} />
       <span>{children}</span>
     </li>
   )
@@ -426,14 +340,14 @@ function LI({ children }) {
 
 function StepCard({ step, title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="h-10 min-w-[86px] px-3 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900 text-white font-bold text-[11px] sm:text-xs tracking-tight flex items-center justify-center whitespace-nowrap">
+    <div style={{ border: `1px solid ${colors.stone}`, borderRadius: '1.5rem', backgroundColor: '#fff', padding: '1.25rem 1.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ height: '2.5rem', minWidth: '5.5rem', padding: '0 0.75rem', borderRadius: '0.75rem', background: gradients.primary, color: '#fff', fontFamily: fonts.body, fontWeight: 700, fontSize: '0.6875rem', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap' }}>
           {step}
         </div>
-        <h6 className="text-sm sm:text-base font-extrabold tracking-tight">{title}</h6>
+        <h6 style={{ fontFamily: fonts.display, fontSize: '1rem', fontWeight: 700, color: colors.heading }}>{title}</h6>
       </div>
-      <p className="mt-3 text-neutral-700 text-sm sm:text-base">{copy}</p>
+      <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, color: colors.body, fontSize: '0.9375rem' }}>{copy}</p>
     </div>
   )
 }
@@ -442,39 +356,14 @@ function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
     <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group">
-      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 font-semibold flex items-center justify-between">
-        <span className="text-sm sm:text-base">{q}</span>
-        <svg className={`h-5 w-5 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+      <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '1rem 1.5rem', fontFamily: fonts.body, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '0.9375rem', color: colors.heading }}>{q}</span>
+        <svg className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} style={{ color: colors.muted }} viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.188l3.71-3.957a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd" />
         </svg>
       </summary>
-      <div className="px-4 sm:px-6 pb-5 text-neutral-700 text-sm sm:text-base">{a}</div>
+      <div style={{ padding: '0 1.5rem 1.25rem', fontFamily: fonts.body, color: colors.body, fontSize: '0.9375rem' }}>{a}</div>
     </details>
-  )
-}
-
-function Arrow() {
-  return (
-    <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="currentColor" viewBox="0 0 20 20">
-      <path d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 11-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" />
-    </svg>
-  )
-}
-
-function StickyCTA({ title, subtitle, href }) {
-  return (
-    <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-[calc(100%-24px)] sm:w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="text-[11px] text-neutral-400">{subtitle}</p>
-        </div>
-        <a href={href} className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-black active:scale-[.99] touch-manipulation">
-          Book
-        </a>
-      </div>
-    </div>
   )
 }
 

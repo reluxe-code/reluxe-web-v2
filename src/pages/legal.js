@@ -1,7 +1,11 @@
 // pages/legal.js
-import Head from 'next/head'
 import Link from 'next/link'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 export default function LegalHubPage() {
   const updated = 'August 26, 2025'
@@ -111,100 +115,198 @@ export default function LegalHubPage() {
   }
 
   return (
-    <>
-      <Head>
-        <title>Terms, Conditions, Policies & Legal | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Explore RELUXE Med Spa’s legal hub: Privacy Policy, Messaging Terms, Return Policy, Terms of Service, HIPAA, Accessibility, Cookie Policy, and more."
-        />
-        <link rel="canonical" href="https://www.reluxemedspa.com/legal" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      </Head>
-
-      <HeaderTwo />
-
-      {/* Page Header */}
-      <header className="bg-gradient-to-b from-neutral-50 to-white border-b border-neutral-200">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-          <p className="text-xs font-semibold tracking-widest text-neutral-500 uppercase">Legal</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900">
+    <BetaLayout
+      title="Terms, Conditions, Policies & Legal"
+      description="Explore RELUXE Med Spa's legal hub: Privacy Policy, Messaging Terms, Return Policy, Terms of Service, HIPAA, Accessibility, Cookie Policy, and more."
+      canonical="https://www.reluxemedspa.com/legal"
+      structuredData={jsonLd}
+    >
+      {/* Hero */}
+      <header
+        style={{
+          backgroundColor: colors.ink,
+          backgroundImage: `${grain}, radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.18) 0%, transparent 70%)`,
+          backgroundSize: 'cover',
+        }}
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <p
+            style={{
+              fontFamily: fonts.body,
+              ...typeScale.label,
+              color: colors.muted,
+            }}
+          >
+            Legal
+          </p>
+          <h1
+            style={{
+              fontFamily: fonts.display,
+              fontSize: typeScale.sectionHeading.size,
+              fontWeight: typeScale.sectionHeading.weight,
+              lineHeight: typeScale.sectionHeading.lineHeight,
+              color: colors.white,
+              marginTop: '0.5rem',
+            }}
+          >
             Terms, Conditions, Policies & Legal
           </h1>
-          <div className="mt-3 text-sm text-neutral-600">
+          <div
+            style={{
+              fontFamily: fonts.body,
+              fontSize: typeScale.caption.size,
+              color: colors.muted,
+              marginTop: '0.75rem',
+            }}
+          >
             <span><strong>Last Updated:</strong> {updated}</span>
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Intro / Help */}
-          <aside className="lg:col-span-4">
-            <div className="sticky top-24 rounded-2xl border border-neutral-200 bg-white shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-neutral-900">Need help?</h2>
-              <p className="mt-2 text-sm text-neutral-700">
-                Not sure which policy applies? Start with our{' '}
-                <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and{' '}
-                <Link href="/return-policy" className="underline">Return Policy</Link>, or contact us.
-              </p>
-              <div className="mt-4 space-y-2 text-sm">
-                <div><a href="mailto:hello@reluxemedspa.com" className="underline">hello@reluxemedspa.com</a></div>
-                <div><a href="tel:+13177631142" className="underline">(317) 763-1142</a></div>
-              </div>
-              <div className="mt-6">
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-neutral-900 shadow hover:opacity-95 transition"
+      <main style={{ backgroundColor: colors.cream }}>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Intro / Help */}
+            <aside className="lg:col-span-4">
+              <div
+                className="sticky top-24 shadow-sm p-6"
+                style={{
+                  borderRadius: '9999px',
+                  border: `1px solid ${colors.stone}`,
+                  backgroundColor: '#fff',
+                }}
+              >
+                <h2
+                  style={{
+                    fontFamily: fonts.display,
+                    fontSize: '1.125rem',
+                    fontWeight: 600,
+                    color: colors.heading,
+                  }}
                 >
-                  Contact RELUXE
-                </Link>
-              </div>
-            </div>
-          </aside>
-
-          {/* Sections */}
-          <section className="lg:col-span-8">
-            {sections.map((section) => (
-              <div key={section.title} className="mb-10">
-                <h3 className="text-xl font-bold text-neutral-900">{section.title}</h3>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {section.items.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="group rounded-2xl border border-neutral-200 bg-white shadow-sm p-5 hover:shadow-md transition"
-                    >
-                      <h4 className="text-base font-semibold text-neutral-900 group-hover:underline">
-                        {item.name}
-                      </h4>
-                      <p className="mt-2 text-sm text-neutral-700">{item.desc}</p>
-                      <div className="mt-4 text-sm font-medium text-neutral-900">
-                        <span className="inline-flex items-center gap-1">
-                          View details
-                          <svg
-                            className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 01-.023 1.418l-5 4.999a1 1 0 11-1.382-1.445L13.586 10H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+                  Need help?
+                </h2>
+                <p
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: typeScale.caption.size,
+                    color: colors.body,
+                    marginTop: '0.5rem',
+                  }}
+                >
+                  Not sure which policy applies? Start with our{' '}
+                  <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and{' '}
+                  <Link href="/return-policy" className="underline">Return Policy</Link>, or contact us.
+                </p>
+                <div
+                  className="mt-4 space-y-2"
+                  style={{ fontFamily: fonts.body, fontSize: typeScale.caption.size }}
+                >
+                  <div><a href="mailto:hello@reluxemedspa.com" className="underline">hello@reluxemedspa.com</a></div>
+                  <div><a href="tel:+13177631142" className="underline">(317) 763-1142</a></div>
+                </div>
+                <div className="mt-6">
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center justify-center px-5 py-3 text-sm font-semibold text-white shadow hover:opacity-95 transition"
+                    style={{
+                      borderRadius: '9999px',
+                      background: gradients.primary,
+                      fontFamily: fonts.body,
+                    }}
+                  >
+                    Contact RELUXE
+                  </Link>
                 </div>
               </div>
-            ))}
-          </section>
+            </aside>
+
+            {/* Sections */}
+            <section className="lg:col-span-8">
+              {sections.map((section) => (
+                <div key={section.title} className="mb-10">
+                  <h3
+                    style={{
+                      fontFamily: fonts.display,
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      color: colors.heading,
+                    }}
+                  >
+                    {section.title}
+                  </h3>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    {section.items.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="group shadow-sm p-5 hover:shadow-md transition"
+                        style={{
+                          borderRadius: '9999px',
+                          border: `1px solid ${colors.stone}`,
+                          backgroundColor: '#fff',
+                          display: 'block',
+                        }}
+                      >
+                        <h4
+                          className="group-hover:underline"
+                          style={{
+                            fontFamily: fonts.display,
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            color: colors.heading,
+                          }}
+                        >
+                          {item.name}
+                        </h4>
+                        <p
+                          style={{
+                            fontFamily: fonts.body,
+                            fontSize: typeScale.caption.size,
+                            color: colors.body,
+                            marginTop: '0.5rem',
+                          }}
+                        >
+                          {item.desc}
+                        </p>
+                        <div
+                          style={{
+                            fontFamily: fonts.body,
+                            fontSize: typeScale.caption.size,
+                            fontWeight: 500,
+                            color: colors.heading,
+                            marginTop: '1rem',
+                          }}
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            View details
+                            <svg
+                              className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10.293 3.293a1 1 0 011.414 0l5 5a1 1 0 01-.023 1.418l-5 4.999a1 1 0 11-1.382-1.445L13.586 10H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          </div>
         </div>
       </main>
-    </>
+    </BetaLayout>
   )
 }
+
+LegalHubPage.getLayout = (page) => page

@@ -1,13 +1,18 @@
-// src/pages/offers/[slug].js
-import Head from 'next/head'
-import { useEffect, useMemo, useState } from 'react'
-import { OFFERS, isActive, allowedAt } from '@/data/offers'
-import Link from 'next/link'
-import HeaderTwo from '@/components/header/header-2'
+// src/pages/hot-deals/[slug].js
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import BetaLayout from '@/components/beta/BetaLayout';
+import GravityBookButton from '@/components/beta/GravityBookButton';
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens';
+import { OFFERS, isActive, allowedAt } from '@/data/offers';
+
+const FONT_KEY = 'bold';
+const fonts = fontPairings[FONT_KEY];
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
 const LOCATIONS = {
   westfield: { id: 'cf34bcaa-6702-46c6-9f5f-43be8943cc58', label: 'Westfield' },
-  carmel:    { id: '3ce18260-2e1f-4beb-8fcf-341bc85a682c', label: 'Carmel'    },
+  carmel: { id: '3ce18260-2e1f-4beb-8fcf-341bc85a682c', label: 'Carmel' },
 };
 
 // --- Inline, SSR-safe replacement for useLocationPref ---
@@ -36,13 +41,13 @@ function useLocationPref() {
 
 export async function getStaticPaths() {
   return {
-    paths: OFFERS.map(o => ({ params: { slug: o.slug } })),
+    paths: OFFERS.map((o) => ({ params: { slug: o.slug } })),
     fallback: false,
   };
 }
 
 export async function getStaticProps({ params }) {
-  const offer = OFFERS.find(o => o.slug === params.slug) || null;
+  const offer = OFFERS.find((o) => o.slug === params.slug) || null;
   if (!offer) return { notFound: true };
   return { props: { offer }, revalidate: 300 };
 }
@@ -121,7 +126,7 @@ export default function OfferPage({ offer }) {
       return;
     }
 
-    const cfg = (window.bookingMap && slug) ? window.bookingMap[slug] : null;
+    const cfg = window.bookingMap && slug ? window.bookingMap[slug] : null;
     const params = { locationId, visitType: 'SELF_VISIT' };
     if (cfg?.path) params.path = cfg.path;
 
@@ -139,40 +144,107 @@ export default function OfferPage({ offer }) {
   const title = offer?.title || hero?.headline || 'Special Offer';
 
   return (
-    <>
-      <Head>
-        <title>{offer?.seo?.title || title} | RELUXE Med Spa Westfield & Carmel</title>
-        {offer?.seo?.description && (
-          <meta name="description" content={offer.seo.description} />
-        )}
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={offer?.seo?.title || title}
+      description={offer?.seo?.description || offer.overview || ''}
+      canonical={`https://reluxemedspa.com/hot-deals/${offer.slug}`}
+      structuredData={jsonLd}
+    >
       {/* Hero / Above the fold */}
-      <section className="relative bg-black text-white">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 px-6 py-10">
-          <div className="flex flex-col justify-center">
+      <section
+        className="relative"
+        style={{
+          backgroundColor: colors.ink,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Grain overlay */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: grain,
+            backgroundRepeat: 'repeat',
+            opacity: 0.5,
+            pointerEvents: 'none',
+          }}
+        />
+        {/* Radial gradient glow */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.2,
+            background: `radial-gradient(60% 60% at 50% 0%, ${colors.violet}40, transparent 60%)`,
+            pointerEvents: 'none',
+          }}
+        />
+
+        <div
+          className="relative max-w-6xl mx-auto grid md:grid-cols-2 gap-6 px-6"
+          style={{ paddingTop: '3rem', paddingBottom: '3rem' }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             {hero?.kicker && (
-              <p className="text-xs uppercase tracking-wide text-white/70">
+              <p
+                style={{
+                  fontFamily: fonts.body,
+                  ...typeScale.label,
+                  color: 'rgba(250,248,245,0.5)',
+                }}
+              >
                 {hero.kicker}
               </p>
             )}
-            <h1 className="text-3xl sm:text-4xl font-semibold mt-1">
+            <h1
+              style={{
+                fontFamily: fonts.display,
+                fontSize: 'clamp(1.875rem, 4vw, 2.5rem)',
+                fontWeight: 600,
+                color: colors.white,
+                marginTop: hero?.kicker ? '0.25rem' : 0,
+              }}
+            >
               {hero?.headline || title}
             </h1>
-            {hero?.subhead && <p className="mt-3 text-white/90">{hero.subhead}</p>}
-            {priceDisplay && <p className="mt-3 text-xl font-semibold">{priceDisplay}</p>}
+            {hero?.subhead && (
+              <p
+                style={{
+                  marginTop: '0.75rem',
+                  fontFamily: fonts.body,
+                  fontSize: typeScale.body.size,
+                  lineHeight: typeScale.body.lineHeight,
+                  color: 'rgba(250,248,245,0.75)',
+                }}
+              >
+                {hero.subhead}
+              </p>
+            )}
+            {priceDisplay && (
+              <p
+                style={{
+                  marginTop: '0.75rem',
+                  fontFamily: fonts.display,
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  color: colors.white,
+                }}
+              >
+                {priceDisplay}
+              </p>
+            )}
 
             {/* Location selector (if both) */}
             {canPick ? (
-              <div className="inline-flex mt-4 rounded-md border border-white/30 overflow-hidden">
+              <div
+                style={{
+                  display: 'inline-flex',
+                  marginTop: '1rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid rgba(250,248,245,0.2)',
+                  overflow: 'hidden',
+                }}
+              >
                 {['westfield', 'carmel'].map((k) => (
                   <button
                     key={k}
@@ -180,16 +252,31 @@ export default function OfferPage({ offer }) {
                       setLocationKey(k);
                       savePref(k);
                     }}
-                    className={`px-3 py-2 text-sm ${
-                      locationKey === k ? 'bg-white text-black' : 'bg-black text-white'
-                    }`}
+                    style={{
+                      padding: '0.5rem 0.75rem',
+                      fontFamily: fonts.body,
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: locationKey === k ? '#fff' : 'transparent',
+                      color: locationKey === k ? colors.ink : '#fff',
+                      transition: 'background-color 0.2s, color 0.2s',
+                    }}
                   >
                     {LOCATIONS[k].label}
                   </button>
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-xs text-white/70">
+              <p
+                style={{
+                  marginTop: '0.75rem',
+                  fontFamily: fonts.body,
+                  fontSize: '0.75rem',
+                  color: 'rgba(250,248,245,0.5)',
+                }}
+              >
                 Available at:{' '}
                 {(offer.locations || [])
                   .map((l) => l[0].toUpperCase() + l.slice(1))
@@ -197,52 +284,116 @@ export default function OfferPage({ offer }) {
               </p>
             )}
 
-            <div className="mt-5">
+            <div style={{ marginTop: '1.25rem' }}>
               <button
                 onClick={openBooking}
                 disabled={!active}
-                className={`inline-flex items-center rounded-md px-5 py-3 text-sm font-semibold transition
-                  ${active ? 'bg-white text-black hover:bg-neutral-200' : 'bg-white/30 text-white/70 cursor-not-allowed'}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  borderRadius: '9999px',
+                  padding: '0.75rem 1.5rem',
+                  fontFamily: fonts.body,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: active ? 'pointer' : 'not-allowed',
+                  transition: 'background-color 0.2s',
+                  ...(active
+                    ? { background: gradients.primary, color: '#fff' }
+                    : { backgroundColor: 'rgba(250,248,245,0.2)', color: 'rgba(250,248,245,0.5)' }),
+                }}
               >
                 {active ? (hero?.ctaLabel || 'Book Now') : 'Offer Ended'}
               </button>
             </div>
 
             {/* Fine print peek on mobile */}
-            <div className="mt-3 text-[11px] text-white/60 sm:hidden">
+            <div className="sm:hidden" style={{ marginTop: '0.75rem', fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)' }}>
               {offer?.finePrint?.[0]}
             </div>
           </div>
 
-          <div className="relative aspect-[4/3] md:aspect-[5/4] rounded-2xl overflow-hidden ring-1 ring-white/10">
+          <div
+            style={{
+              position: 'relative',
+              aspectRatio: '4/3',
+              borderRadius: '1rem',
+              overflow: 'hidden',
+              border: '1px solid rgba(250,248,245,0.08)',
+            }}
+            className="md:aspect-[5/4]"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={heroImg}
               alt={title}
-              className="w-full h-full object-cover"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
         </div>
       </section>
 
       {/* Body */}
-      <section className="bg-white">
-        <div className="max-w-5xl mx-auto px-6 py-10">
+      <section style={{ backgroundColor: colors.cream }}>
+        <div
+          className="max-w-5xl mx-auto px-6"
+          style={{ paddingTop: '3rem', paddingBottom: '3rem' }}
+        >
           {/* Offer Overview */}
           {(offer.overview || offer.description) && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-2">Overview</h2>
-              <p className="text-neutral-700">{offer.overview || offer.description}</p>
+            <div style={{ marginBottom: '2rem' }}>
+              <h2
+                style={{
+                  fontFamily: fonts.display,
+                  fontSize: typeScale.subhead.size,
+                  fontWeight: 600,
+                  color: colors.heading,
+                  marginBottom: '0.5rem',
+                }}
+              >
+                Overview
+              </h2>
+              <p
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: typeScale.body.size,
+                  lineHeight: typeScale.body.lineHeight,
+                  color: colors.body,
+                }}
+              >
+                {offer.overview || offer.description}
+              </p>
             </div>
           )}
 
           {/* Details */}
           {offer.details?.length ? (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-2">What’s included</h3>
-              <ul className="list-disc pl-6 space-y-1">
+            <div style={{ marginBottom: '2rem' }}>
+              <h3
+                style={{
+                  fontFamily: fonts.display,
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  color: colors.heading,
+                  marginBottom: '0.5rem',
+                }}
+              >
+                What&apos;s included
+              </h3>
+              <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {offer.details.map((li, i) => (
-                  <li key={i}>{li}</li>
+                  <li
+                    key={i}
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: typeScale.body.size,
+                      lineHeight: typeScale.body.lineHeight,
+                      color: colors.body,
+                    }}
+                  >
+                    {li}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -250,11 +401,31 @@ export default function OfferPage({ offer }) {
 
           {/* Fine Print */}
           {offer.finePrint?.length ? (
-            <div className="mb-10">
-              <h3 className="text-lg font-semibold mb-2">Fine Print</h3>
-              <ul className="list-disc pl-6 space-y-1 text-sm text-neutral-600">
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3
+                style={{
+                  fontFamily: fonts.display,
+                  fontSize: '1.125rem',
+                  fontWeight: 600,
+                  color: colors.heading,
+                  marginBottom: '0.5rem',
+                }}
+              >
+                Fine Print
+              </h3>
+              <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 {offer.finePrint.map((li, i) => (
-                  <li key={i}>{li}</li>
+                  <li
+                    key={i}
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: typeScale.caption.size,
+                      lineHeight: typeScale.caption.lineHeight,
+                      color: colors.muted,
+                    }}
+                  >
+                    {li}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -262,18 +433,41 @@ export default function OfferPage({ offer }) {
 
           {/* Bottom CTA */}
           {active ? (
-            <div className="flex items-center justify-center">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <button
                 onClick={openBooking}
-                className="inline-flex items-center rounded-md bg-black text-white px-6 py-3 text-sm font-semibold hover:bg-neutral-800"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  borderRadius: '9999px',
+                  background: gradients.primary,
+                  color: '#fff',
+                  padding: '0.75rem 1.5rem',
+                  fontFamily: fonts.body,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                }}
               >
                 {hero?.ctaLabel || 'Book Now'}
               </button>
             </div>
           ) : (
-            <div className="text-center text-neutral-500">
+            <div
+              style={{
+                textAlign: 'center',
+                fontFamily: fonts.body,
+                fontSize: typeScale.body.size,
+                color: colors.muted,
+              }}
+            >
               This offer has ended. See our{' '}
-              <Link href="/deals" className="underline">
+              <Link
+                href="/hot-deals"
+                style={{ textDecoration: 'underline', color: colors.violet }}
+              >
                 current deals
               </Link>
               .
@@ -281,6 +475,8 @@ export default function OfferPage({ offer }) {
           )}
         </div>
       </section>
-    </>
+    </BetaLayout>
   );
 }
+
+OfferPage.getLayout = (page) => page;

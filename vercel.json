@@ -31,6 +31,22 @@
     {
       "path": "/api/cron/sync-product-reports",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/generate-inspiration",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/publish-inspiration",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-products",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/publish-products",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

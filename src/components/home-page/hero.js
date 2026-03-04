@@ -40,12 +40,11 @@ export default function HeroOne({ heroItems, settings }) {
               <Image
                 src={image}
                 alt="RELUXE: Luxury Med Spa in Westfield & Carmel, IN | Botox • Facials • Lasers • Massage"
-                layout="fill"
-                objectFit="cover"
-                objectPosition="top center"
+                fill
+                sizes="100vw"
+                style={{ objectFit: 'cover', objectPosition: 'top center' }}
                 priority
                 quality={70}
-                className="object-cover object-top"
               />
             </div>
 

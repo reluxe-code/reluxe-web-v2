@@ -55,10 +55,11 @@ function Services({ services }) {
                         <div className="service-image flex justify-end w-full lg:h-full h-[679px] relative">
                             <Image
                                 src="/images/service/1.jpg"
-                                alt="Service Image"
+                                alt="RELUXE Med Spa services"
                                 quality={70}
-                                layout="fill"
-                                objectFit="cover"
+                                fill
+                                sizes="(max-width: 992px) 100vw, 50vw"
+                                style={{ objectFit: 'cover' }}
                                 priority
                             />
                         </div>

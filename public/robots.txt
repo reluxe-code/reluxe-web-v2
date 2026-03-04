@@ -18,6 +18,7 @@ Disallow: /capture/
 Disallow: /beta/
 Disallow: /preview/
 Disallow: /shop/
+Disallow: /experiments/
 Disallow: /sitemap
 
 # Host
@@ -25,3 +26,4 @@ Host: https://reluxemedspa.com
 
 # Sitemaps
 Sitemap: https://reluxemedspa.com/sitemap.xml
+Sitemap: https://reluxemedspa.com/server-sitemap.xml

@@ -1,127 +1,128 @@
-import Head from 'next/head'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useState } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
 import EventInquiryForm from '@/components/events/EventInquiryForm'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 
-const BOOK_URL = '/book/'
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 export default function PhotoshootPrepPage() {
-  const [showStickyCta, setShowStickyCta] = useState(false)
-  useEffect(() => {
-    const onScroll = () => setShowStickyCta(window.scrollY > 300)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
-    <>
-      <Head>
-        <title>Photoshoot & Headshot Prep | Carmel & Westfield | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Carmel & Westfield photoshoot and headshot prep. Tox/filler timing, HydraFacial®, dermaplane, light peels, and camera-ready skincare for portraits, branding, and engagement photos."
-        />
-        <link rel="canonical" href="https://reluxemedspa.com/events/photoshoot-prep" />
-        <meta property="og:title" content="Photoshoot & Headshot Prep | RELUXE Med Spa" />
-        <meta property="og:description" content="Camera-ready skin for portraits, branding sessions, and engagement photos with smart timing and no-downtime glow." />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Photoshoot & Headshot Prep | Carmel & Westfield"
+      description="Carmel & Westfield photoshoot and headshot prep. Tox/filler timing, HydraFacial, dermaplane, light peels, and camera-ready skincare for portraits, branding, and engagement photos."
+      canonical="https://reluxemedspa.com/events/photoshoot-prep"
+    >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.25),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-white">
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '5rem 1.5rem' }}>
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7">
-              <p className="text-xs tracking-widest uppercase text-neutral-400">RELUXE • Photoshoot & Headshots</p>
-              <h1 className="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight">
-                Photoshoot &amp; Headshot Prep — Carmel &amp; Westfield
+              <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+                RELUXE &middot; Photoshoot &amp; Headshots
+              </p>
+              <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, color: colors.white, marginTop: '0.75rem' }}>
+                Photoshoot &amp; Headshot{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Prep.
+                </span>
               </h1>
-              <p className="mt-4 text-neutral-300 text-lg leading-relaxed">
-                Be camera-ready for headshots, branding sessions, content shoots, or engagement photos. We’ll time
+              <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginTop: '1.5rem' }}>
+                Be camera-ready for headshots, branding sessions, content shoots, or engagement photos. We&apos;ll time
                 treatments to avoid downtime and create a smooth, even, natural-looking glow.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a
-                  href={BOOK_URL}
-                  className="group inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-                >
-                  Book Photoshoot Prep
-                  <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 11-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"/></svg>
-                </a>
+              <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
                 <a
                   href="#timing"
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15 hover:ring-white/30 transition"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                    fontWeight: 600, fontFamily: fonts.body,
+                    color: 'rgba(250,248,245,0.9)', border: '1px solid rgba(250,248,245,0.15)',
+                    textDecoration: 'none', fontSize: '0.9375rem',
+                  }}
                 >
                   See Timing Guide
                 </a>
               </div>
-              <div className="mt-6 flex flex-wrap gap-2 text-xs text-neutral-400">
-                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Photo-friendly treatments</span>
-                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Downtime-aware planning</span>
-                <span className="px-3 py-1 rounded-full bg-white/5 ring-1 ring-white/10">Makeup-ready finish</span>
+              <div style={{ marginTop: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {['Photo-friendly treatments', 'Downtime-aware planning', 'Makeup-ready finish'].map(tag => (
+                  <span key={tag} style={{
+                    padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.75rem', fontFamily: fonts.body,
+                    backgroundColor: 'rgba(250,248,245,0.05)', border: '1px solid rgba(250,248,245,0.08)', color: 'rgba(250,248,245,0.4)',
+                  }}>
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
             <div className="lg:col-span-5">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl">
-                <img src="/images/treatments/photoshoot.jpg" alt="Carmel Westfield headshot & photoshoot prep" className="h-full w-full object-cover" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-                  <p className="text-xs text-neutral-200">Images represent service categories available at RELUXE.</p>
+              <div style={{ position: 'relative', aspectRatio: '4/5', width: '100%', overflow: 'hidden', borderRadius: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', border: '1px solid rgba(250,248,245,0.1)' }}>
+                <img src="/images/treatments/photoshoot.jpg" alt="Carmel Westfield headshot & photoshoot prep" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'rgba(250,248,245,0.7)', fontFamily: fonts.body }}>Images represent service categories available at RELUXE.</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Local SEO */}
-          <div className="mt-6 text-sm text-neutral-400">
-            Serving <strong>Carmel</strong>, <strong>Westfield</strong>, Zionsville, and North Indianapolis.
-          </div>
+          <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+            Serving <strong style={{ color: 'rgba(250,248,245,0.6)' }}>Carmel</strong>, <strong style={{ color: 'rgba(250,248,245,0.6)' }}>Westfield</strong>, Zionsville, and North Indianapolis.
+          </p>
         </div>
       </section>
 
       {/* Event Inquiry */}
-      <section className="bg-gradient-to-b from-black to-neutral-950 py-16">
-        <div className="mx-auto max-w-2xl px-4 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Interested in Photoshoot Prep?</h2>
-          <p className="mt-3 text-neutral-400">Tell us about your shoot and we&apos;ll create a custom plan.</p>
-          <div className="mt-8">
+      <section style={{ background: `linear-gradient(to bottom, ${colors.ink}, #111)`, padding: '4rem 0' }}>
+        <div style={{ maxWidth: '42rem', margin: '0 auto', padding: '0 1rem', textAlign: 'center', color: colors.white }}>
+          <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.white }}>
+            Interested in Photoshoot Prep?
+          </h2>
+          <p style={{ marginTop: '0.75rem', color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>Tell us about your shoot and we&apos;ll create a custom plan.</p>
+          <div style={{ marginTop: '2rem' }}>
             <EventInquiryForm defaultEventType="Photoshoot" />
           </div>
         </div>
       </section>
 
       {/* Timing Guide */}
-      <section id="timing" className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Camera-Ready Timing Guide</h2>
-          <p className="mt-3 text-neutral-600">
-            We’ll tailor this to your shoot date, goals, and skin type. Here’s a proven framework that avoids last-minute surprises.
+      <section id="timing" style={{ maxWidth: '80rem', margin: '0 auto', padding: '4rem 1.5rem' }}>
+        <div style={{ maxWidth: '48rem', margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>
+            Camera-Ready Timing Guide
+          </h2>
+          <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>
+            We&apos;ll tailor this to your shoot date, goals, and skin type. Here&apos;s a proven framework that avoids last-minute surprises.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginTop: '2.5rem' }}>
           <TimingCard
-            when="4–6 Weeks Out"
+            when="4-6 Weeks Out"
             items={[
-              'Plan neurotoxins (Botox®, Dysport®, Jeuveau®, Daxxify®) so they settle naturally',
+              'Plan neurotoxins (Botox, Dysport, Jeuveau, Daxxify) so they settle naturally',
               'Consider filler balance (lips/cheeks/chin/jawline) if needed',
-              'Start SkinPen® microneedling for texture (if timeline permits)',
+              'Start SkinPen microneedling for texture (if timeline permits)',
             ]}
           />
           <TimingCard
-            when="2–3 Weeks Out"
+            when="2-3 Weeks Out"
             items={[
-              'HydraFacial® or Glo2Facial® for clarity + hydration',
+              'HydraFacial or Glo2Facial for clarity + hydration',
               'Light peel (case-by-case) to brighten tone',
-              'Refine skincare routine—no big product changes later',
+              'Refine skincare routine -- no big product changes later',
             ]}
           />
           <TimingCard
-            when="5–7 Days Out"
+            when="5-7 Days Out"
             items={[
               'Dermaplane for a smooth, makeup-friendly canvas',
               'Signature facial + Hydrinity hydration boost',
@@ -129,7 +130,7 @@ export default function PhotoshootPrepPage() {
             ]}
           />
           <TimingCard
-            when="1–2 Days Out"
+            when="1-2 Days Out"
             items={[
               'Keep it gentle: cleanse, moisturize, SPF',
               'Avoid new actives and harsh exfoliation',
@@ -138,90 +139,84 @@ export default function PhotoshootPrepPage() {
           />
         </div>
 
-        <div className="mt-10 text-center">
-          <a
-            href={BOOK_URL}
-            className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-          >
-            Start My Photoshoot Plan
-          </a>
+        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+          <GravityBookButton fontKey={FONT_KEY} size="hero" />
         </div>
       </section>
 
       {/* Popular Services */}
-      <section id="services" className="relative bg-neutral-50 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">High-Impact, Photo-Friendly Services</h2>
-            <p className="mt-3 text-neutral-600">Glow, smoothness, and balance—without downtime surprises.</p>
+      <section id="services" style={{ backgroundColor: colors.cream, padding: '4rem 0' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1.5rem' }}>
+          <div style={{ maxWidth: '48rem', margin: '0 auto', textAlign: 'center' }}>
+            <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>
+              High-Impact, Photo-Friendly Services
+            </h2>
+            <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>Glow, smoothness, and balance -- without downtime surprises.</p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ marginTop: '2.5rem' }}>
             <ServiceCard
               title="Injectables"
-              subtitle="Botox • Dysport • Daxxify • Jeuveau"
-              copy="Refine lines and expressions for close-ups. Planned 3–4+ weeks out to settle naturally."
+              subtitle="Botox - Dysport - Daxxify - Jeuveau"
+              copy="Refine lines and expressions for close-ups. Planned 3-4+ weeks out to settle naturally."
               image="/images/treatments/injectables.jpg"
               href="/book/tox/"
             />
             <ServiceCard
               title="Dermal Filler"
-              subtitle="Lips • Cheeks • Chin • Jawline"
+              subtitle="Lips - Cheeks - Chin - Jawline"
               copy="Subtle contour and symmetry that reads beautifully on camera. Schedule far enough ahead to perfect."
               image="/images/wedding/filler.jpg"
               href="/book/filler/"
             />
             <ServiceCard
-              title="HydraFacial® / Glo2Facial®"
+              title="HydraFacial / Glo2Facial"
               subtitle="No-downtime glow"
-              copy="Fast clarity and hydration that makeup loves—ideal 1–2 weeks before your shoot."
+              copy="Fast clarity and hydration that makeup loves -- ideal 1-2 weeks before your shoot."
               image="/images/treatments/facials.jpg"
               href="/book/facials/"
             />
             <ServiceCard
               title="Dermaplane + Light Peel"
               subtitle="Makeup-ready canvas"
-              copy="Sweeps away peach fuzz and dullness for smooth, even application. Time ~5–7 days out."
+              copy="Sweeps away peach fuzz and dullness for smooth, even application. Time ~5-7 days out."
               image="/images/treatments/dermaplane.jpg"
               href="/book/facials/"
             />
             <ServiceCard
-              title="SkinPen® Microneedling"
+              title="SkinPen Microneedling"
               subtitle="Texture & pores"
-              copy="For those with more runway—refines texture and scars. Plan 4–6+ weeks and consider a series."
+              copy="For those with more runway -- refines texture and scars. Plan 4-6+ weeks and consider a series."
               image="/images/treatments/skinpen.jpg"
               href="/book/microneedling/"
             />
             <ServiceCard
               title="Laser & RF"
-              subtitle="Opus • ClearLift • IPL"
-              copy="Tone and refine with appropriate healing windows. We’ll advise based on date and goals."
+              subtitle="Opus - ClearLift - IPL"
+              copy="Tone and refine with appropriate healing windows. We'll advise based on date and goals."
               image="/images/treatments/laser.jpg"
               href="/book/laser/"
             />
           </div>
 
-          <div className="mt-10 text-center">
-            <a
-              href={BOOK_URL}
-              className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-            >
-              Book Photoshoot Services
-            </a>
+          <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
           </div>
         </div>
       </section>
 
       {/* FAQs */}
-      <section id="faq" className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16">
-        <h4 className="text-2xl md:text-3xl font-extrabold tracking-tight text-center">Photoshoot Prep FAQs</h4>
-        <div className="mt-8 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
+      <section id="faq" style={{ maxWidth: '64rem', margin: '0 auto', padding: '4rem 1.5rem' }}>
+        <h4 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading, textAlign: 'center' }}>
+          Photoshoot Prep FAQs
+        </h4>
+        <div style={{ marginTop: '2rem', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff', overflow: 'hidden' }}>
           <FaqItem
             q="When should I schedule injectables before a photoshoot?"
-            a="Plan neurotoxins about 3–4 weeks out so results are smooth and natural by shoot day. Filler timing varies by area; we’ll map it to your date."
+            a="Plan neurotoxins about 3-4 weeks out so results are smooth and natural by shoot day. Filler timing varies by area; we'll map it to your date."
           />
           <FaqItem
-            q="What’s safe the week of my shoot?"
+            q="What's safe the week of my shoot?"
             a="Stick with dermaplane, signature facial, and hydration boosts. Avoid aggressive peels, new actives, or anything with visible flaking."
           />
           <FaqItem
@@ -229,67 +224,60 @@ export default function PhotoshootPrepPage() {
             a="Yes! We can coordinate timelines for teams and provide simple, camera-friendly skincare guidance for consistent results."
           />
           <FaqItem
-            q="I’m acne-prone—how do we prevent a flare right before?"
+            q="I'm acne-prone -- how do we prevent a flare right before?"
             a="We build a gentle routine early, use non-comedogenic products, and time facials to decongest without irritation."
           />
         </div>
 
-        <div className="mt-8 text-center">
-          <a
-            href={BOOK_URL}
-            className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-          >
-            Book a Carmel/Westfield Consult
-          </a>
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <GravityBookButton fontKey={FONT_KEY} size="hero" />
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-          <div className="relative rounded-3xl bg-gradient-to-br from-violet-600 via-fuchsia-500 to-neutral-900 p-[1px]">
-            <div className="rounded-3xl bg-neutral-950 px-8 py-12 text-center">
-              <h5 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+      <section style={{ position: 'relative', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '4rem 1.5rem' }}>
+          <div style={{ borderRadius: '1.5rem', background: `linear-gradient(135deg, ${colors.violet}, ${colors.fuchsia}, ${colors.charcoal})`, padding: '1px' }}>
+            <div style={{ borderRadius: '1.5rem', backgroundColor: colors.ink, padding: '3rem 2rem', textAlign: 'center' }}>
+              <h5 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.white }}>
                 Ready for Your Close-Up?
               </h5>
-              <p className="mt-3 text-neutral-300 max-w-2xl mx-auto">
-                Carmel & Westfield’s trusted med spa for photo-friendly glow that reads beautifully on camera.
+              <p style={{ marginTop: '0.75rem', color: 'rgba(250,248,245,0.5)', fontFamily: fonts.body, maxWidth: '42rem', margin: '0.75rem auto 0' }}>
+                Carmel &amp; Westfield&apos;s trusted med spa for photo-friendly glow that reads beautifully on camera.
               </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-white/10 ring-1 ring-white/20 hover:bg-white/15 transition">Book Now</a>
-                <a href="#services" className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-black/60 ring-1 ring-white/10 hover:bg-black/70 transition">Explore Services</a>
+              <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
+                <a href="#services" style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                  fontWeight: 600, fontFamily: fonts.body, fontSize: '0.9375rem',
+                  color: colors.white, backgroundColor: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(250,248,245,0.1)', textDecoration: 'none',
+                }}>
+                  Explore Services
+                </a>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Sticky mobile CTA */}
-      {showStickyCta && (
-        <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">Book Photoshoot Prep</p>
-              <p className="text-[11px] text-neutral-400">Carmel & Westfield</p>
-            </div>
-            <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-black">
-              Book
-            </a>
-          </div>
-        </div>
-      )}
-    </>
+    </BetaLayout>
   )
 }
 
 // --- Components ---
 function TimingCard({ when, items }) {
   return (
-    <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]">
-      <div className="p-6">
-        <h3 className="text-xl font-bold tracking-tight">{when}</h3>
-        <ul className="mt-3 list-disc pl-6 space-y-1 text-neutral-700">
+    <div style={{
+      overflow: 'hidden', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`,
+      backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      transition: 'box-shadow 0.3s',
+    }}
+    className="hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]"
+    >
+      <div style={{ padding: '1.5rem' }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>{when}</h3>
+        <ul style={{ marginTop: '0.75rem', paddingLeft: '1.5rem', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '0.25rem', color: colors.body, fontFamily: fonts.body }}>
           {items.map((t, i) => <li key={i}>{t}</li>)}
         </ul>
       </div>
@@ -299,17 +287,23 @@ function TimingCard({ when, items }) {
 
 function ServiceCard({ title, subtitle, copy, image, href }) {
   return (
-    <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]">
-      <div className="aspect-[4/3] w-full overflow-hidden">
+    <div style={{
+      overflow: 'hidden', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`,
+      backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      transition: 'box-shadow 0.3s',
+    }}
+    className="group hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]"
+    >
+      <div style={{ aspectRatio: '4/3', width: '100%', overflow: 'hidden' }}>
         <img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
       </div>
-      <div className="p-6">
-        <h4 className="text-xl font-bold tracking-tight">{title}</h4>
-        {subtitle && <p className="mt-1 text-sm text-neutral-500">{subtitle}</p>}
-        <p className="mt-3 text-neutral-700">{copy}</p>
-        <div className="mt-5 flex items-center justify-between">
-          <a href={href} className="text-violet-700 hover:text-violet-600 font-semibold">Book Now →</a>
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600/20 to-fuchsia-500/20 ring-1 ring-violet-200" />
+      <div style={{ padding: '1.5rem' }}>
+        <h4 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>{title}</h4>
+        {subtitle && <p style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: colors.muted, fontFamily: fonts.body }}>{subtitle}</p>}
+        <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>{copy}</p>
+        <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <a href={href} style={{ color: colors.violet, fontWeight: 600, fontFamily: fonts.body, textDecoration: 'none' }}>Book Now &rarr;</a>
+          <div style={{ height: '2rem', width: '2rem', borderRadius: '0.75rem', background: gradients.subtle, border: `1px solid rgba(124,58,237,0.15)` }} />
         </div>
       </div>
     </div>
@@ -319,12 +313,14 @@ function ServiceCard({ title, subtitle, copy, image, href }) {
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
-    <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group">
-      <summary className="cursor-pointer list-none px-6 py-4 font-semibold flex items-center justify-between">
+    <details open={open} onToggle={(e) => setOpen(e.target.open)} style={{ borderBottom: `1px solid ${colors.stone}` }}>
+      <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '1rem 1.5rem', fontWeight: 600, fontFamily: fonts.body, color: colors.heading, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>{q}</span>
-        <svg className={`h-5 w-5 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.188l3.71-3.957a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd"/></svg>
+        <svg style={{ height: '1.25rem', width: '1.25rem', color: colors.muted, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.188l3.71-3.957a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd"/></svg>
       </summary>
-      <div className="px-6 pb-5 text-neutral-700">{a}</div>
+      <div style={{ padding: '0 1.5rem 1.25rem', color: colors.body, fontFamily: fonts.body }}>{a}</div>
     </details>
   )
 }
+
+PhotoshootPrepPage.getLayout = (page) => page

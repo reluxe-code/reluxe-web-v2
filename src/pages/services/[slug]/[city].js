@@ -1,9 +1,9 @@
 // src/pages/services/[slug]/[city].js
-import Head from 'next/head';
 import Link from 'next/link';
-import Image from 'next/image';
 import { FiChevronDown } from 'react-icons/fi';
-import HeaderTwo from '@/components/header/header-2';
+import BetaLayout from '@/components/beta/BetaLayout';
+import GravityBookButton from '@/components/beta/GravityBookButton';
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens';
 import { getServicesList } from '@/data/servicesList';
 import { LOCATION_KEYS, getLocation } from '@/data/locations';
 import { getLocationContent } from '@/data/locationContent';
@@ -12,6 +12,11 @@ import TestimonialWidget from '@/components/testimonials/TestimonialWidget';
 import { getTestimonialsSSR } from '@/lib/testimonials';
 import { getServiceClient } from '@/lib/supabase';
 import { transformCmsToServiceObject } from '@/lib/cmsTransform';
+
+const FONT_KEY = 'bold';
+const fonts = fontPairings[FONT_KEY];
+
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
 /** small helper to add/update a single query param on a (likely relative) href */
 function addQuery(href = '/', key, val) {
@@ -28,12 +33,12 @@ export async function getStaticPaths() {
   if (USE_CMS) {
     try {
       const sb = getServiceClient();
-      const { data } = await sb
+      const { data: svcs } = await sb
         .from('cms_services')
         .select('slug')
-        .eq('status', 'published');
+        .eq('enabled', true);
       const paths = [];
-      for (const s of (data || [])) {
+      for (const s of svcs || []) {
         for (const city of LOCATION_KEYS) {
           paths.push({ params: { slug: s.slug, city } });
         }
@@ -42,12 +47,9 @@ export async function getStaticPaths() {
     } catch {}
   }
 
-  let services = [];
-  try { services = await getServicesList(); } catch { services = []; }
-
+  const all = await getServicesList();
   const paths = [];
-  for (const s of (services || [])) {
-    if (!s?.slug) continue;
+  for (const s of all) {
     for (const city of LOCATION_KEYS) {
       paths.push({ params: { slug: s.slug, city } });
     }
@@ -56,12 +58,9 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const slug = params?.slug || '';
-  const cityKey = params?.city || '';
-
-  if (!slug || !cityKey || !LOCATION_KEYS.includes(cityKey)) {
-    return { notFound: true };
-  }
+  const { slug, city } = params;
+  const cityKey = String(city).toLowerCase();
+  if (!LOCATION_KEYS.includes(cityKey)) return { notFound: true };
 
   let service = null;
   let locationContent = null;
@@ -74,8 +73,8 @@ export async function getStaticProps({ params }) {
         .from('cms_services')
         .select('*')
         .eq('slug', slug)
-        .eq('status', 'published')
-        .single();
+        .eq('enabled', true)
+        .maybeSingle();
 
       if (svc) {
         const { data: blocks } = await sb
@@ -195,46 +194,54 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
   } : null;
 
   return (
-    <>
-      <Head>
-        <title>{title}</title>
-        <meta name="description" content={desc} />
-        <link rel="canonical" href={canonical} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={desc} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonical} />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={desc} />
-        <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-        {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={`${service.name} in ${loc.city}, ${loc.state}`}
+      description={desc}
+      canonical={canonical}
+      structuredData={faqSchema}
+    >
       {/* HERO */}
-      <header className="relative h-72 md:h-[360px] bg-cover bg-center" style={{ backgroundImage: `url('${hero}')` }}>
-        <div className="absolute inset-0 bg-black/55 flex flex-col justify-center items-center text-center px-6">
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white drop-shadow">
-            {service.name} in {loc.city}
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        {hero && (
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.15 }}>
+            <img src={hero} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        )}
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '5rem 1.5rem', textAlign: 'center' }}>
+          <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2rem, 5vw, 4rem)', fontWeight: 700, lineHeight: 1.1, color: colors.white }}>
+            {service.name} in{' '}
+            <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {loc.city}
+            </span>
           </h1>
-          <p className="mt-3 text-gray-200 max-w-2xl">{desc}</p>
-          <div className="mt-6 flex gap-3">
+          <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '40rem', margin: '1.5rem auto 0' }}>
+            {desc}
+          </p>
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             {isAvailableHere ? (
               <Link
                 href={bookingHref}
                 data-book-loc={targetCityForCTA}
-                className="inline-flex items-center gap-2 bg-white text-neutral-900 font-semibold py-2 px-5 rounded-full shadow hover:bg-gray-100 transition"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                  fontFamily: fonts.body, fontWeight: 600, fontSize: '0.9375rem',
+                  color: '#fff', background: gradients.primary, textDecoration: 'none',
+                }}
               >
                 Book {service.name}
               </Link>
             ) : (
               <Link
                 href={`/services/${service.slug}/westfield`}
-                className="inline-flex items-center gap-2 bg-white text-neutral-900 font-semibold py-2 px-5 rounded-full shadow hover:bg-gray-100 transition"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                  fontFamily: fonts.body, fontWeight: 600, fontSize: '0.9375rem',
+                  color: '#fff', background: gradients.primary, textDecoration: 'none',
+                }}
               >
                 View Westfield Availability
               </Link>
@@ -242,34 +249,44 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
             <Link
               href={consultHref}
               data-book-loc={targetCityForCTA}
-              className="inline-flex items-center gap-2 bg-reluxe-primary text-white font-semibold py-2 px-5 rounded-full shadow hover:opacity-90 transition"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                fontFamily: fonts.body, fontWeight: 600, fontSize: '0.9375rem',
+                color: 'rgba(250,248,245,0.8)', border: '1px solid rgba(250,248,245,0.12)',
+                textDecoration: 'none',
+              }}
             >
               Free Consult
             </Link>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* AVAILABILITY / NOTICE */}
-      <section className="py-10">
-        <div className="max-w-6xl mx-auto px-4">
+      <section style={{ padding: '3rem 0' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '0 1.5rem' }}>
           {!isAvailableHere ? (
-            <div className="rounded-2xl border p-6 bg-amber-50 border-amber-200">
-              <h2 className="text-xl font-bold mb-2">Not Available in {loc.city}</h2>
-              <p className="text-neutral-800">
+            <div style={{ borderRadius: '1rem', padding: '1.5rem', backgroundColor: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+              <h2 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading, marginBottom: '0.5rem' }}>Not Available in {loc.city}</h2>
+              <p style={{ color: colors.body, fontFamily: fonts.body }}>
                 {service.name} is not currently offered at our {loc.city} location. We do provide it at our Westfield flagship.
               </p>
 
-              {/* Alternative service suggestions */}
               {alternatives.length > 0 && (
-                <div className="mt-4">
-                  <p className="font-semibold text-neutral-700 mb-2">Similar services available in {loc.city}:</p>
-                  <div className="flex flex-wrap gap-2">
+                <div style={{ marginTop: '1rem' }}>
+                  <p style={{ fontWeight: 600, color: colors.body, fontFamily: fonts.body, marginBottom: '0.5rem' }}>Similar services available in {loc.city}:</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {alternatives.map((alt, i) => (
                       <Link
                         key={i}
                         href={`/services/${alt.slug}/carmel`}
-                        className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-4 py-1.5 text-sm font-medium hover:bg-amber-100 transition"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                          borderRadius: '9999px', border: '1px solid rgba(245,158,11,0.3)', backgroundColor: '#fff',
+                          padding: '0.375rem 1rem', fontSize: '0.875rem', fontWeight: 500, fontFamily: fonts.body,
+                          color: colors.heading, textDecoration: 'none',
+                        }}
                       >
                         {alt.label}
                       </Link>
@@ -278,52 +295,71 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
                 </div>
               )}
 
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link href={`/services/${service.slug}/westfield`} className="inline-flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition">
+              <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <Link
+                  href={`/services/${service.slug}/westfield`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                    borderRadius: '9999px', padding: '0.5rem 1.25rem',
+                    fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body,
+                    color: '#fff', backgroundColor: colors.ink, textDecoration: 'none',
+                  }}
+                >
                   {service.name} at Westfield
                 </Link>
-                <Link href={addQuery(bookingBase, 'loc', 'westfield')} data-book-loc="westfield" className="inline-flex items-center gap-2 border border-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-black hover:text-white transition">
+                <Link
+                  href={addQuery(bookingBase, 'loc', 'westfield')}
+                  data-book-loc="westfield"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                    borderRadius: '9999px', padding: '0.5rem 1.25rem',
+                    fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body,
+                    color: colors.heading, border: `1px solid ${colors.ink}`, textDecoration: 'none',
+                  }}
+                >
                   Book at Westfield
                 </Link>
               </div>
             </div>
           ) : (
             <div className="grid md:grid-cols-[2fr,1fr] gap-6 items-start">
-              <div className="rounded-2xl border shadow-sm bg-white p-6">
-                <h2 className="text-2xl font-bold mb-3">{service.name} — {loc.label}</h2>
-                <p className="text-neutral-700">{locationContent?.description}</p>
+              <div style={{ borderRadius: '1rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <h2 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading, marginBottom: '0.75rem' }}>
+                  {service.name} — {loc.label}
+                </h2>
+                <p style={{ color: colors.body, fontFamily: fonts.body, lineHeight: 1.625 }}>{locationContent?.description}</p>
 
                 {!!locationContent?.differences?.length && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold mb-2">What&apos;s unique about {loc.city}</h3>
-                    <ul className="list-disc ml-5 space-y-1">
-                      {locationContent.differences.map((d, i) => <li key={i}>{d}</li>)}
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <h3 style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading, marginBottom: '0.5rem' }}>What&apos;s unique about {loc.city}</h3>
+                    <ul style={{ listStyleType: 'disc', marginLeft: '1.25rem' }}>
+                      {locationContent.differences.map((d, i) => <li key={i} style={{ color: colors.body, fontFamily: fonts.body, marginBottom: '0.25rem' }}>{d}</li>)}
                     </ul>
                   </div>
                 )}
 
                 {!!locationContent?.localSeoBullets?.length && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold mb-2">Local notes</h3>
-                    <ul className="list-disc ml-5 space-y-1">
-                      {locationContent.localSeoBullets.map((b, i) => <li key={i}>{b}</li>)}
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <h3 style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading, marginBottom: '0.5rem' }}>Local notes</h3>
+                    <ul style={{ listStyleType: 'disc', marginLeft: '1.25rem' }}>
+                      {locationContent.localSeoBullets.map((b, i) => <li key={i} style={{ color: colors.body, fontFamily: fonts.body, marginBottom: '0.25rem' }}>{b}</li>)}
                     </ul>
                   </div>
                 )}
               </div>
 
               {/* INFO CARD */}
-              <aside className="rounded-2xl border shadow-sm bg-gray-50 p-6">
-                <div className="text-sm uppercase tracking-wide text-neutral-500">Location</div>
-                <h3 className="text-lg font-bold mb-3">{loc.label}</h3>
-                {loc.address && <p className="mb-2">{loc.address}</p>}
-                {loc.phone && <p className="mb-2">Call/Text: <a className="underline" href={`tel:${loc.phone.replace(/\D/g,'')}`}>{loc.phone}</a></p>}
+              <aside style={{ borderRadius: '1rem', border: `1px solid ${colors.stone}`, backgroundColor: colors.cream, padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.muted, fontFamily: fonts.body }}>Location</div>
+                <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading, marginBottom: '0.75rem' }}>{loc.label}</h3>
+                {loc.address && <p style={{ fontFamily: fonts.body, color: colors.body, marginBottom: '0.5rem' }}>{loc.address}</p>}
+                {loc.phone && <p style={{ fontFamily: fonts.body, color: colors.body, marginBottom: '0.5rem' }}>Call/Text: <a style={{ textDecoration: 'underline', color: colors.violet }} href={`tel:${loc.phone.replace(/\D/g,'')}`}>{loc.phone}</a></p>}
                 {loc.mapUrl && (
-                  <a href={loc.mapUrl} target="_blank" rel="noreferrer" className="inline-block mt-2 text-sm underline">
+                  <a href={loc.mapUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '0.5rem', fontSize: '0.875rem', textDecoration: 'underline', color: colors.violet, fontFamily: fonts.body }}>
                     View on Google Maps
                   </a>
                 )}
-                {loc.hoursNote && <p className="mt-3 text-sm text-neutral-600">{loc.hoursNote}</p>}
+                {loc.hoursNote && <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: colors.muted, fontFamily: fonts.body }}>{loc.hoursNote}</p>}
               </aside>
             </div>
           )}
@@ -332,10 +368,10 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
 
       {/* COMPLEMENTARY SERVICES */}
       {!!locationContent?.complementary?.length && (
-        <section className="py-12 bg-gray-50">
-          <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-4">Great together with {service.name}</h2>
-            <div className="flex flex-wrap gap-3">
+        <section style={{ padding: '3rem 0', backgroundColor: colors.cream }}>
+          <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '0 1.5rem' }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading, marginBottom: '1rem' }}>Great together with {service.name}</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
               {locationContent.complementary.map((c, i) => {
                 const safeHref = addQuery(c.href || '#', 'loc', targetCityForCTA);
                 const needsOverrideAttr = /^\/book(\/|$)/.test(safeHref);
@@ -344,9 +380,14 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
                     key={i}
                     href={safeHref}
                     {...(needsOverrideAttr ? { 'data-book-loc': targetCityForCTA } : {})}
-                    className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-2 shadow-sm hover:bg-gray-100 transition"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                      borderRadius: '9999px', border: `1px solid ${colors.stone}`, backgroundColor: '#fff',
+                      padding: '0.5rem 1rem', fontFamily: fonts.body, fontWeight: 500,
+                      color: colors.heading, textDecoration: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                    }}
                   >
-                    <span className="font-medium">{c.label}</span>
+                    {c.label}
                   </Link>
                 );
               })}
@@ -367,21 +408,19 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
 
       {/* LOCATION-SPECIFIC FAQs */}
       {!!locationContent?.faqs?.length && (
-        <section className="py-12">
-          <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-4">
+        <section style={{ padding: '3rem 0' }}>
+          <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '0 1.5rem' }}>
+            <h2 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading, marginBottom: '1rem' }}>
               FAQs — {service.name} in {loc.city}
             </h2>
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {locationContent.faqs.map((faq, i) => (
-                <details key={i} className="group border border-gray-200 rounded-xl overflow-hidden">
-                  <summary className="flex justify-between items-center p-4 bg-gray-50 cursor-pointer hover:bg-violet-50 transition-colors">
-                    <span className="font-medium text-gray-800 group-open:text-violet-600">
-                      {faq.q}
-                    </span>
-                    <FiChevronDown className="h-5 w-5 text-gray-500 transition-transform duration-200 group-open:rotate-180 group-open:text-violet-600 shrink-0 ml-3" />
+                <details key={i} className="group" style={{ borderRadius: '0.75rem', border: `1px solid ${colors.stone}`, overflow: 'hidden' }}>
+                  <summary style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: colors.cream, cursor: 'pointer', fontFamily: fonts.body }}>
+                    <span style={{ fontWeight: 500, color: colors.heading }}>{faq.q}</span>
+                    <FiChevronDown className="h-5 w-5 transition-transform duration-200 group-open:rotate-180 shrink-0 ml-3" style={{ color: colors.muted }} />
                   </summary>
-                  <div className="p-4 text-gray-700 bg-white">{faq.a}</div>
+                  <div style={{ padding: '1rem', color: colors.body, fontFamily: fonts.body, backgroundColor: '#fff', lineHeight: 1.625 }}>{faq.a}</div>
                 </details>
               ))}
             </div>
@@ -390,13 +429,24 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
       )}
 
       {/* CROSS-LINK TO OTHER CITY */}
-      <section className="py-10">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="rounded-2xl border p-5 flex flex-wrap items-center justify-between gap-3 bg-white">
-            <div className="font-semibold">Looking for {service.name} in the other city?</div>
-            <div className="flex gap-3">
+      <section style={{ padding: '3rem 0' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto', padding: '0 1.5rem' }}>
+          <div style={{
+            borderRadius: '1rem', border: `1px solid ${colors.stone}`, padding: '1.25rem',
+            backgroundColor: '#fff', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem',
+          }}>
+            <span style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading }}>Looking for {service.name} in the other city?</span>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
               {['westfield','carmel'].filter(k => k !== cityKey).map(k => (
-                <Link key={k} className="rounded-full px-4 py-2 border hover:bg-gray-50" href={`/services/${service.slug}/${k}`}>
+                <Link
+                  key={k}
+                  href={`/services/${service.slug}/${k}`}
+                  style={{
+                    borderRadius: '9999px', padding: '0.5rem 1rem',
+                    border: `1px solid ${colors.taupe}`, fontFamily: fonts.body, fontWeight: 500,
+                    color: colors.heading, textDecoration: 'none', fontSize: '0.875rem',
+                  }}
+                >
                   {k === 'westfield' ? 'Westfield page' : 'Carmel page'}
                 </Link>
               ))}
@@ -404,6 +454,8 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
           </div>
         </div>
       </section>
-    </>
+    </BetaLayout>
   );
 }
+
+ServiceLocationPage.getLayout = (page) => page;

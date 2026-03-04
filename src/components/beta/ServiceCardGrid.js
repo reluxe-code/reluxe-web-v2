@@ -122,6 +122,7 @@ function ServiceCard({ svc, fonts, index, onBook }) {
           <a
             href={`/services/${svc.slug}`}
             className="rounded-full transition-all duration-200 hover:bg-gray-50"
+            aria-label={`Learn more about ${svc.name}`}
             style={{
               fontFamily: fonts.body,
               fontSize: '0.6875rem',

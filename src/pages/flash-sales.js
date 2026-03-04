@@ -2,10 +2,15 @@
 // Adds ?all=1 mode to preview all upcoming scheduled drops.
 // Normal mode = today's live deals only.
 
-import Head from 'next/head'
 import { useEffect, useMemo, useState } from 'react'
-import HeaderTwo from '../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 import { flashDeals as rawFlashDeals } from '../data/flashDeals'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 // ---------- helpers ----------
 function safeDeals(raw) {
@@ -24,7 +29,6 @@ function isActiveDealForNow(deal, nowMs) {
   return nowMs >= start && nowMs <= end
 }
 
-// used in ?all=1 mode: show anything not finished yet
 function isUpcomingOrActive(deal, nowMs) {
   const end = new Date(deal.endTime).getTime()
   return end >= nowMs
@@ -66,7 +70,6 @@ function getEarlyBirdStatus(deal, nowMs) {
   }
 }
 
-// tiny util to format date headers in ?all=1 mode
 function formatDay(dateStr) {
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', {
@@ -76,7 +79,6 @@ function formatDay(dateStr) {
   })
 }
 
-// get "YYYY-MM-DD" from startTime to group by day
 function getDayKey(dateStr) {
   const d = new Date(dateStr)
   const y = d.getFullYear()
@@ -94,7 +96,7 @@ function ShareButton({ url }) {
       try {
         await navigator.share({
           title: 'RELUXE Flash Deal',
-          text: 'Limited-time RELUXE deal — act fast.',
+          text: 'Limited-time RELUXE deal \u2014 act fast.',
           url,
         })
       } catch {
@@ -114,7 +116,7 @@ function ShareButton({ url }) {
   return (
     <button
       onClick={handleShare}
-      className="text-[11px] font-semibold text-violet-700 hover:text-violet-600"
+      style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.violet }}
     >
       {copied ? 'Link Copied!' : 'Share'}
     </button>
@@ -138,31 +140,44 @@ function DealCard({ deal, nowMs }) {
       : deal.regularPrice
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.4)]">
+    <article className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.4)]" style={{ border: `1px solid ${colors.stone}` }}>
       <div className="flex flex-col p-5 flex-1">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-base md:text-lg font-bold text-neutral-900 leading-tight break-words">
+            <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading, lineHeight: 1.3 }}>
               {deal.name}
             </h3>
-            <p className="mt-1 text-[13px] text-neutral-600 leading-snug break-words">
+            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.body, marginTop: '0.25rem', lineHeight: 1.4 }}>
               {deal.blurb}
             </p>
             {deal.limitNote && (
-              <p className="mt-1 text-[11px] text-rose-600 font-semibold leading-snug">
+              <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, color: colors.rose, marginTop: '0.25rem' }}>
                 {deal.limitNote}
               </p>
             )}
             {deal.notes && (
-              <p className="mt-1 text-[11px] text-neutral-500 leading-snug">
+              <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted, marginTop: '0.25rem' }}>
                 {deal.notes}
               </p>
             )}
           </div>
 
           {/* Countdown */}
-          <span className="shrink-0 inline-flex items-center rounded-full bg-black px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-lg">
+          <span style={{
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            borderRadius: '9999px',
+            background: colors.ink,
+            padding: '0.25rem 0.625rem',
+            fontFamily: fonts.body,
+            fontSize: '0.625rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            color: colors.white,
+          }}>
             {countdown}
           </span>
         </div>
@@ -170,36 +185,36 @@ function DealCard({ deal, nowMs }) {
         {/* Pricing */}
         <div className="mt-3 flex flex-wrap items-end gap-4">
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">
+            <div style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.muted }}>
               Flash Price
             </div>
-            <div className="text-xl font-extrabold text-neutral-900 leading-none">
+            <div style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 800, color: colors.heading, lineHeight: 1 }}>
               {flashPriceDisplay}
             </div>
           </div>
 
-          <div className="text-neutral-500 text-[13px] line-through leading-none">
+          <div style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: colors.muted, textDecoration: 'line-through', lineHeight: 1 }}>
             {regularPriceDisplay}
           </div>
         </div>
 
         {/* Early Bird */}
         {showEarly && (
-          <div className="mt-3 rounded-xl bg-gradient-to-r from-violet-600 to-black p-3 text-white shadow-[0_16px_32px_-8px_rgba(139,92,246,0.5)] ring-1 ring-white/20">
+          <div className="mt-3 rounded-xl p-3 text-white" style={{ background: gradients.primary, boxShadow: '0 16px 32px -8px rgba(139,92,246,0.5)', border: '1px solid rgba(250,248,245,0.2)' }}>
             <div className="flex items-start justify-between">
-              <div className="text-[13px] font-semibold leading-tight">
+              <div style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, lineHeight: 1.3 }}>
                 Early Access Bonus
               </div>
-              <div className="text-[10px] font-mono bg-white/10 px-2 py-1 rounded-md ring-1 ring-white/20 leading-none">
+              <div style={{ fontFamily: 'monospace', fontSize: '0.625rem', background: 'rgba(255,255,255,0.1)', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', border: '1px solid rgba(255,255,255,0.2)', lineHeight: 1 }}>
                 CODE: {early.code}
               </div>
             </div>
             {early.extraDetails && (
-              <p className="mt-1 text-[11px] text-white/80 leading-snug">
+              <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.8)', marginTop: '0.25rem', lineHeight: 1.4 }}>
                 {early.extraDetails}
               </p>
             )}
-            <p className="mt-2 text-[10px] font-medium text-white/60 uppercase tracking-wide leading-none">
+            <p style={{ fontFamily: fonts.body, fontSize: '0.625rem', fontWeight: 500, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.5rem', lineHeight: 1 }}>
               Ends in{' '}
               {formatCountdown(Math.max(early.expiresAtMs - nowMs, 0))}
             </p>
@@ -210,16 +225,27 @@ function DealCard({ deal, nowMs }) {
         <div className="mt-4 flex items-center justify-between">
           <a
             href={deal.linkBook}
-            className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-[13px] font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '9999px',
+              padding: '0.5rem 0.75rem',
+              fontFamily: fonts.body,
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              color: '#fff',
+              background: gradients.primary,
+            }}
           >
-            Claim Deal →
+            Claim Deal &rarr;
           </a>
 
           <ShareButton url={deal.linkShare} />
         </div>
 
         {/* Timing */}
-        <div className="mt-3 text-[10px] text-neutral-500 leading-relaxed">
+        <div style={{ fontFamily: fonts.body, fontSize: '0.625rem', color: colors.muted, marginTop: '0.75rem', lineHeight: 1.6 }}>
           <div>
             Starts:{' '}
             {new Date(deal.startTime).toLocaleString('en-US', {
@@ -247,10 +273,11 @@ function DealCard({ deal, nowMs }) {
 function FaqItem({ q, a }) {
   return (
     <details className="group">
-      <summary className="cursor-pointer list-none px-6 py-4 font-semibold flex items-center justify-between">
-        <span className="text-neutral-900">{q}</span>
+      <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between" style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading }}>
+        <span>{q}</span>
         <svg
-          className="h-5 w-5 text-neutral-400 transition-transform group-open:rotate-180"
+          className="h-5 w-5 transition-transform group-open:rotate-180"
+          style={{ color: colors.muted }}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -261,7 +288,7 @@ function FaqItem({ q, a }) {
           />
         </svg>
       </summary>
-      <div className="px-6 pb-5 text-neutral-700 text-sm leading-relaxed">
+      <div style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body, lineHeight: 1.6 }} className="px-6 pb-5">
         {a}
       </div>
     </details>
@@ -291,14 +318,13 @@ export default function FlashSalePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // normalize incoming data so we never reference undefined
+  // normalize incoming data
   const { services, products } = useMemo(
     () => safeDeals(rawFlashDeals),
     []
   )
 
   // --- CURRENT MODE (default) ---
-  // filter only currently active deals for public view
   const {
     activeServices,
     activeProducts,
@@ -325,13 +351,11 @@ export default function FlashSalePage() {
     }
   }, [services, products, nowMs])
 
-  // --- FUTURE / ALL MODE (admin-ish) ---
-  // build a map of day -> { services:[], products:[], dayLabel }
+  // --- FUTURE / ALL MODE ---
   const futureSchedule = useMemo(() => {
     if (!showAll) return []
 
     const _now = nowMs
-    // step 1: filter for "end in future"
     const upcomingServices = services.filter((d) =>
       isUpcomingOrActive(d, _now)
     )
@@ -339,7 +363,6 @@ export default function FlashSalePage() {
       isUpcomingOrActive(d, _now)
     )
 
-    // step 2: group by dayKey derived from startTime
     const bucket = {}
     for (const s of upcomingServices) {
       const key = getDayKey(s.startTime)
@@ -366,7 +389,6 @@ export default function FlashSalePage() {
       bucket[key].products.push(p)
     }
 
-    // step 3: turn into sorted array by dayKey ascending
     const sorted = Object.values(bucket).sort((a, b) =>
       a.dayKey.localeCompare(b.dayKey)
     )
@@ -374,7 +396,7 @@ export default function FlashSalePage() {
     return sorted
   }, [showAll, services, products, nowMs])
 
-  // SEO/jsonLd still describes current live stuff (not schedule view)
+  // SEO/jsonLd
   const jsonLd = useMemo(() => {
     if (!hasAnything) {
       return {
@@ -417,52 +439,41 @@ export default function FlashSalePage() {
   }, [hasAnything, activeServices, activeProducts])
 
   return (
-    <>
-      <Head>
-        <title>Flash Sale | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Today’s limited-time RELUXE flash deals on massage, injectables, facials, laser, and skincare. When it’s gone, it’s gone."
-        />
-        <link
-          rel="canonical"
-          href="https://reluxemedspa.com/flash-sales"
-        />
-        <meta
-          property="og:title"
-          content="RELUXE Flash Deal of the Day"
-        />
-        <meta
-          property="og:description"
-          content="Act fast. These treatments and products are discounted for hours, not days."
-        />
-        <meta
-          property="og:image"
-          content="https://reluxemedspa.com/images/og/new-default-1200x630.png"
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd),
-          }}
-        />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Flash Sale"
+      description="Today's limited-time RELUXE flash deals on massage, injectables, facials, laser, and skincare. When it's gone, it's gone."
+      canonical="https://reluxemedspa.com/flash-sales"
+      structuredData={jsonLd}
+    >
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.28),transparent_60%)]" />
-
+      <section
+        className="relative overflow-hidden"
+        style={{
+          backgroundColor: colors.ink,
+          backgroundImage: `${grain}, radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.2), transparent 60%)`,
+          color: colors.white,
+        }}
+      >
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
           <div className="max-w-3xl">
-            <p className="text-[11px] tracking-widest uppercase text-white/60 font-semibold flex items-center gap-3 flex-wrap">
-              <span>RELUXE • Flash Deals</span>
+            <p className="flex items-center gap-3 flex-wrap" style={{ fontFamily: fonts.body, ...typeScale.label, color: 'rgba(250,248,245,0.6)' }}>
+              <span>RELUXE &bull; Flash Deals</span>
 
               {/* admin-ish toggle pill */}
               <a
                 href={showAll ? '/flash-sales' : '/flash-sales?all=1'}
-                className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white ring-1 ring-white/20 hover:bg-white/20"
+                style={{
+                  borderRadius: '9999px',
+                  background: 'rgba(250,248,245,0.1)',
+                  padding: '0.25rem 0.5rem',
+                  fontFamily: fonts.body,
+                  fontSize: '0.625rem',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: colors.white,
+                  border: '1px solid rgba(250,248,245,0.2)',
+                }}
               >
                 {showAll ? 'View Today' : 'View Schedule'}
               </a>
@@ -470,44 +481,66 @@ export default function FlashSalePage() {
 
             <div className="mt-2 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex-1">
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                  Today Only. Blink and It’s Gone.
+                <h1
+                  style={{
+                    fontFamily: fonts.display,
+                    fontSize: typeScale.hero.size,
+                    fontWeight: typeScale.hero.weight,
+                    lineHeight: typeScale.hero.lineHeight,
+                    color: colors.white,
+                  }}
+                >
+                  Today Only.{' '}
+                  <span
+                    style={{
+                      background: gradients.primary,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    Blink and It&apos;s Gone.
+                  </span>
                 </h1>
               </div>
 
               {/* live status pill */}
-              <div className="flex items-center gap-2 text-[10px] text-white/70 leading-tight">
+              <div className="flex items-center gap-2" style={{ fontFamily: fonts.body, fontSize: '0.625rem', color: 'rgba(250,248,245,0.7)' }}>
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ backgroundColor: colors.violet }} />
+                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: colors.violet }} />
                 </span>
-                <span className="font-semibold tracking-wide uppercase text-white/80">
+                <span style={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(250,248,245,0.8)' }}>
                   {hasAnything ? 'Live Now' : 'No Active Drop'}
                 </span>
               </div>
             </div>
 
-            <p className="mt-4 text-neutral-300 text-lg leading-snug">
+            <p style={{ fontFamily: fonts.body, fontSize: '1.125rem', color: 'rgba(250,248,245,0.7)', marginTop: '1rem', lineHeight: 1.4 }}>
               Limited-quantity pricing on our most requested services
               and skincare. These offers activate and expire on a
-              timer. When the countdown hits zero, it’s over.
+              timer. When the countdown hits zero, it&apos;s over.
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-[13px]">
-              <a
-                href="/book/"
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-              >
-                Book Ahead
-              </a>
+            <div className="mt-6 flex flex-wrap items-center gap-3" style={{ fontSize: '0.8125rem' }}>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
               <a
                 href="/join-texts"
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold text-white/90 ring-1 ring-white/15 hover:ring-white/30 transition"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '9999px',
+                  padding: '0.5rem 1rem',
+                  fontFamily: fonts.body,
+                  fontWeight: 600,
+                  color: 'rgba(250,248,245,0.9)',
+                  border: '1px solid rgba(250,248,245,0.15)',
+                }}
               >
                 Get Text Alerts
               </a>
 
-              <div className="text-[11px] text-white/50 leading-tight">
+              <div style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.5)', lineHeight: 1.3 }}>
                 Pro tip: Some drops include a bonus code for the first
                 two hours. After that, pricing goes back up.
               </div>
@@ -521,28 +554,34 @@ export default function FlashSalePage() {
         // -------- NORMAL LIVE VIEW --------
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {!hasAnything && (
-            <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm text-center">
-              <h2 className="text-xl font-extrabold tracking-tight text-neutral-900">
+            <div className="rounded-2xl bg-white p-6 shadow-sm text-center" style={{ border: `1px solid ${colors.stone}` }}>
+              <h2 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>
                 Nothing Live (Yet)
               </h2>
-              <p className="mt-2 text-[14px] text-neutral-700 max-w-xl mx-auto leading-relaxed">
+              <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body, maxWidth: '36rem', marginLeft: 'auto', marginRight: 'auto', marginTop: '0.5rem', lineHeight: 1.6 }}>
                 Flash Deals drop during Thanksgiving week, Black Friday,
-                the weekend, Cyber Monday — plus surprise “Flash
-                Tuesdays.” Join texts so you’re first to know.
+                the weekend, Cyber Monday &mdash; plus surprise &ldquo;Flash
+                Tuesdays.&rdquo; Join texts so you&apos;re first to know.
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                 <a
                   href="/join-texts"
-                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-[13px] font-semibold text-white bg-gradient-to-r from-violet-600 to-black hover:from-violet-500 hover:to-neutral-900 transition"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '9999px',
+                    padding: '0.5rem 1rem',
+                    fontFamily: fonts.body,
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    color: '#fff',
+                    background: gradients.primary,
+                  }}
                 >
                   Get Text Alerts
                 </a>
-                <a
-                  href="/book/"
-                  className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-[13px] font-semibold ring-1 ring-neutral-300 hover:bg-neutral-50"
-                >
-                  Book a Consult
-                </a>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
               </div>
             </div>
           )}
@@ -565,10 +604,10 @@ export default function FlashSalePage() {
                     {activeServices.length > 0 && (
                       <>
                         <div className="flex items-baseline justify-between">
-                          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-neutral-900">
+                          <h2 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading }}>
                             Services
                           </h2>
-                          <div className="text-[11px] text-neutral-500">
+                          <div style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
                             Limited slots / may sell out
                           </div>
                         </div>
@@ -591,10 +630,10 @@ export default function FlashSalePage() {
                     {activeProducts.length > 0 && (
                       <>
                         <div className="flex items-baseline justify-between">
-                          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-neutral-900">
-                            Skincare & Retail
+                          <h2 style={{ fontFamily: fonts.display, fontSize: '1.5rem', fontWeight: 700, color: colors.heading }}>
+                            Skincare &amp; Retail
                           </h2>
-                          <div className="text-[11px] text-neutral-500">
+                          <div style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
                             While in stock
                           </div>
                         </div>
@@ -620,11 +659,11 @@ export default function FlashSalePage() {
         // -------- SCHEDULE VIEW (?all=1) --------
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {futureSchedule.length === 0 && (
-            <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm text-center">
-              <h2 className="text-xl font-extrabold tracking-tight text-neutral-900">
+            <div className="rounded-2xl bg-white p-6 shadow-sm text-center" style={{ border: `1px solid ${colors.stone}` }}>
+              <h2 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>
                 No Upcoming Drops
               </h2>
-              <p className="mt-2 text-[14px] text-neutral-700 max-w-xl mx-auto leading-relaxed">
+              <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body, maxWidth: '36rem', marginLeft: 'auto', marginRight: 'auto', marginTop: '0.5rem', lineHeight: 1.6 }}>
                 Looks like nothing is queued in the future. Add new
                 deals to /data/flashDeals.js to populate this view.
               </p>
@@ -637,26 +676,26 @@ export default function FlashSalePage() {
                 const dayServices = dayBlock.services
                 const dayProducts = dayBlock.products
 
-                // if both sides each have exactly one, we mirror the side-by-side pair logic
                 const pairMode =
                   dayServices.length === 1 && dayProducts.length === 1
 
                 return (
                   <div
                     key={dayBlock.dayKey}
-                    className="rounded-2xl border border-neutral-200 bg-white shadow-sm"
+                    className="rounded-2xl bg-white shadow-sm"
+                    style={{ border: `1px solid ${colors.stone}` }}
                   >
-                    <div className="border-b border-neutral-200 bg-neutral-50/60 rounded-t-2xl px-4 py-3 sm:px-6">
+                    <div className="rounded-t-2xl px-4 py-3 sm:px-6" style={{ borderBottom: `1px solid ${colors.stone}`, backgroundColor: colors.cream }}>
                       <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
                         <div>
-                          <div className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                          <div style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.muted }}>
                             Scheduled Drop
                           </div>
-                          <div className="text-lg font-extrabold text-neutral-900 leading-tight">
+                          <div style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading, lineHeight: 1.3 }}>
                             {dayBlock.dayLabel}
                           </div>
                         </div>
-                        <div className="text-[11px] text-neutral-500">
+                        <div style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
                           Runs{' '}
                           {dayServices[0] || dayProducts[0]
                             ? new Date(
@@ -666,7 +705,7 @@ export default function FlashSalePage() {
                                 hour: 'numeric',
                                 minute: '2-digit',
                               })
-                            : '—'}{' '}
+                            : '\u2014'}{' '}
                           to{' '}
                           {dayServices[0] || dayProducts[0]
                             ? new Date(
@@ -676,7 +715,7 @@ export default function FlashSalePage() {
                                 hour: 'numeric',
                                 minute: '2-digit',
                               })
-                            : '—'}
+                            : '\u2014'}
                         </div>
                       </div>
                     </div>
@@ -703,10 +742,10 @@ export default function FlashSalePage() {
                           {dayServices.length > 0 && (
                             <div>
                               <div className="flex items-baseline justify-between">
-                                <h3 className="text-base md:text-lg font-extrabold tracking-tight text-neutral-900">
+                                <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading }}>
                                   Services
                                 </h3>
-                                <div className="text-[11px] text-neutral-500">
+                                <div style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
                                   Limited slots / may sell out
                                 </div>
                               </div>
@@ -728,10 +767,10 @@ export default function FlashSalePage() {
                           {dayProducts.length > 0 && (
                             <div>
                               <div className="flex items-baseline justify-between">
-                                <h3 className="text-base md:text-lg font-extrabold tracking-tight text-neutral-900">
-                                  Skincare & Retail
+                                <h3 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading }}>
+                                  Skincare &amp; Retail
                                 </h3>
-                                <div className="text-[11px] text-neutral-500">
+                                <div style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
                                   While in stock
                                 </div>
                               </div>
@@ -760,15 +799,15 @@ export default function FlashSalePage() {
       )}
 
       {/* FAQ / fine print */}
-      <section className="relative bg-neutral-50 py-14">
+      <section className="relative py-14" style={{ backgroundColor: colors.cream }}>
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900">
+            <h3 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>
               Flash Deal FAQs
             </h3>
           </div>
 
-          <div className="mt-8 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+          <div className="mt-8 divide-y rounded-2xl bg-white" style={{ border: `1px solid ${colors.stone}` }}>
             <FaqItem
               q="Do I have to come in today?"
               a="Not always. Many flash offers just require you to lock in pricing within the countdown window. You can schedule and redeem later, subject to availability and any stated expiration."
@@ -779,15 +818,15 @@ export default function FlashSalePage() {
             />
             <FaqItem
               q="Can I buy this as a gift?"
-              a="Yes. These make amazing gifts. Ask us to put the service or product under a gift balance and we’ll attach it to their name."
+              a="Yes. These make amazing gifts. Ask us to put the service or product under a gift balance and we'll attach it to their name."
             />
             <FaqItem
               q="Are these stackable with memberships or other promos?"
-              a="In most cases no, because these are already deeply discounted. If stacking is allowed, we’ll say so clearly on the deal card."
+              a="In most cases no, because these are already deeply discounted. If stacking is allowed, we'll say so clearly on the deal card."
             />
           </div>
 
-          <p className="mt-6 text-[11px] text-neutral-500 text-center leading-relaxed max-w-2xl mx-auto">
+          <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted, textAlign: 'center', lineHeight: 1.6, maxWidth: '42rem', marginLeft: 'auto', marginRight: 'auto', marginTop: '1.5rem' }}>
             All offers subject to change or early sell-out. Must be a
             good candidate for treatment. Medical services require
             appropriate consultation and approval. See clinic for full
@@ -795,6 +834,8 @@ export default function FlashSalePage() {
           </p>
         </div>
       </section>
-    </>
+    </BetaLayout>
   )
 }
+
+FlashSalePage.getLayout = (page) => page

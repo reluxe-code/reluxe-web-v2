@@ -23,6 +23,7 @@ export default async function handler(req, res) {
       .select('id, slug, name, title, featured_image, transparent_bg, role, boulevard_provider_id, boulevard_service_map, locations, specialties')
       .eq('status', 'published')
       .not('boulevard_provider_id', 'is', null)
+      .neq('allow_online_booking', false)
       .order('sort_order')
 
     if (!staff?.length) {

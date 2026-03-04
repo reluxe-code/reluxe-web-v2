@@ -1,63 +1,47 @@
-// pages/landing/bf-daxxify-b2g1.js
+// pages/landing/bf-daxxify.js
 // Black Friday Daxxify Deal — Buy 2 Areas, Get 1 Free (up to 120 units)
 
-import Head from 'next/head'
-import { useEffect, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useState } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 
 const BOOK_URL = '/book/tox'
 const DEALS_URL = '/book/bf25-daxxify/'
 
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
+
 export default function DaxxifyBlackFridayPage() {
-  const [showStickyCta, setShowStickyCta] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setShowStickyCta(window.scrollY > 280)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
-    <>
-      <Head>
-        <title>Black Friday Daxxify — Buy 2 Areas, Get 1 Free | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Black Friday Daxxify deal at RELUXE: Buy 2 areas, get 1 free (up to 120 units) for $560. Book in November or buy up to 4 to use through 2026."
-        />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <meta name="theme-color" content="#0a0a0a" />
-        <meta property="og:title" content="Black Friday Daxxify — Buy 2 Areas, Get 1 Free | RELUXE" />
-        <meta
-          property="og:description"
-          content="Try Daxxify with our best pricing of the year. Treat forehead, 11s, and crow’s feet in a single, full-dose visit."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://reluxemedspa.com/landing/bf-daxxify-b2g1" />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Black Friday Daxxify — Buy 2 Areas, Get 1 Free"
+      description="Black Friday Daxxify deal at RELUXE: Buy 2 areas, get 1 free (up to 120 units) for $560. Book in November or buy up to 4 to use through 2026."
+      canonical="https://reluxemedspa.com/landing/bf-daxxify"
+    >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(56,189,248,0.25),transparent_60%)]" />
+      <section className="relative overflow-hidden" style={{ backgroundColor: colors.ink }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 min-h-[320px] py-7 md:py-8">
-          <div className="text-white max-w-3xl">
-            <p className="text-[11px] sm:text-xs tracking-widest uppercase text-neutral-400">
-              RELUXE • Carmel &amp; Westfield
+          <div className="max-w-3xl" style={{ color: colors.white }}>
+            <p className="text-[11px] sm:text-xs tracking-widest uppercase" style={{ color: colors.muted, fontFamily: fonts.body }}>
+              RELUXE &bull; Carmel &amp; Westfield
             </p>
-            <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+            <h1
+              className="mt-2 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight"
+              style={{ fontFamily: fonts.display }}
+            >
               Black Friday Daxxify: Buy 2 Areas, Get 1 Free
             </h1>
-            <p className="mt-3 text-neutral-300 text-base sm:text-lg leading-relaxed">
-              Curious about Daxxify™ and its longer-lasting potential? This limited Black Friday offer gives you the{' '}
-              <strong>look of 3 areas for the price of 2</strong> — forehead, 11s, and crow’s feet — for just{' '}
+            <p className="mt-3 text-base sm:text-lg leading-relaxed" style={{ fontFamily: fonts.body, color: '#D4D4D4' }}>
+              Curious about Daxxify&trade; and its longer-lasting potential? This limited Black Friday offer gives you the{' '}
+              <strong>look of 3 areas for the price of 2</strong> — forehead, 11s, and crow&rsquo;s feet — for just{' '}
               <strong>$560</strong> (up to 120 units).
             </p>
-            <ul className="mt-3 space-y-2 text-neutral-300">
+            <ul className="mt-3 space-y-2" style={{ color: '#D4D4D4' }}>
               <LI>Buy 2 Daxxify areas, get the 3rd free — up to 120 units for $560.</LI>
-              <LI>Ideal for forehead lines, frown lines (11s), and crow’s feet in one full-dose visit.</LI>
+              <LI>Ideal for forehead lines, frown lines (11s), and crow&rsquo;s feet in one full-dose visit.</LI>
               <LI>
                 All units are used in <strong>one appointment</strong> so you can see how Daxxify performs at the right
                 dose for your muscles.
@@ -72,7 +56,7 @@ export default function DaxxifyBlackFridayPage() {
             {/* CTAs */}
             <div className="mt-5 flex flex-col sm:flex-row sm:flex-wrap gap-2.5 sm:gap-3">
               <CTA href={BOOK_URL} primary>
-                Book in November • Pay at Your Visit
+                Book in November &bull; Pay at Your Visit
               </CTA>
               <CTA href={DEALS_URL}>
                 Not Due Yet? Buy Up to 4 for 2026
@@ -85,8 +69,8 @@ export default function DaxxifyBlackFridayPage() {
               </CTA>
             </div>
 
-            <div className="mt-2 text-[11px] text-neutral-400">
-              Mention the <strong>“Black Friday Daxxify Buy 2, Get 1 Free”</strong> deal in your booking notes. Limited
+            <div className="mt-2 text-[11px]" style={{ color: colors.muted, fontFamily: fonts.body }}>
+              Mention the <strong>&ldquo;Black Friday Daxxify Buy 2, Get 1 Free&rdquo;</strong> deal in your booking notes. Limited
               supply and appointment spots.
             </div>
           </div>
@@ -94,12 +78,12 @@ export default function DaxxifyBlackFridayPage() {
       </section>
 
       {/* How it works / Why 1 appointment */}
-      <section className="relative bg-neutral-50 py-12 sm:py-14">
+      <section className="relative py-12 sm:py-14" style={{ backgroundColor: colors.cream }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid lg:grid-cols-12 gap-6 sm:gap-8 items-stretch">
           <div className="lg:col-span-6">
             <Card title="Your Daxxify Black Friday Deal">
-              <ul className="space-y-2 text-neutral-700">
-                <Bullet>Look of 3 areas with Daxxify (forehead, 11s, crow’s feet) for the price of 2.</Bullet>
+              <ul className="space-y-2" style={{ color: colors.body }}>
+                <Bullet>Look of 3 areas with Daxxify (forehead, 11s, crow&rsquo;s feet) for the price of 2.</Bullet>
                 <Bullet>Up to 120 units for $560.</Bullet>
                 <Bullet>
                   Book in November for treatment now or pre-purchase up to 4 packages to use later through 2026.
@@ -110,7 +94,7 @@ export default function DaxxifyBlackFridayPage() {
           </div>
           <div className="lg:col-span-6">
             <Card title="Why All Units Are Used in One Visit">
-              <ul className="space-y-2 text-neutral-700">
+              <ul className="space-y-2" style={{ color: colors.body }}>
                 <Bullet>
                   Daxxify dosing is tailored to your anatomy. A full, single-visit treatment tells us how your muscles
                   actually respond.
@@ -128,10 +112,10 @@ export default function DaxxifyBlackFridayPage() {
         </div>
         <div className="mt-8 text-center px-4">
           <CTA href={BOOK_URL} primary>
-            Claim Black Friday Daxxify • Book or Buy Now
+            Claim Black Friday Daxxify &bull; Book or Buy Now
           </CTA>
-          <p className="mt-2 text-xs text-neutral-500">
-            Limited-time pricing only for Black Friday / Cyber Monday. Once it’s gone, Daxxify returns to standard
+          <p className="mt-2 text-xs" style={{ color: colors.muted, fontFamily: fonts.body }}>
+            Limited-time pricing only for Black Friday / Cyber Monday. Once it&rsquo;s gone, Daxxify returns to standard
             rates.
           </p>
         </div>
@@ -140,21 +124,26 @@ export default function DaxxifyBlackFridayPage() {
       {/* What to Expect */}
       <section className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">What to Expect</h2>
-          <p className="mt-3 text-neutral-600">
+          <h2
+            className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight"
+            style={{ color: colors.heading, fontFamily: fonts.display }}
+          >
+            What to Expect
+          </h2>
+          <p className="mt-3" style={{ color: colors.body, fontFamily: fonts.body }}>
             A Daxxify visit that feels like RELUXE — with extra-good Black Friday pricing.
           </p>
         </div>
         <div className="mt-7 grid gap-4 sm:gap-6 sm:grid-cols-3">
           <StepCard
             step="Day 0"
-            title="Consult &amp; Daxxify Treatment"
-            copy="We review your history, map forehead, 11s, and crow’s feet, and treat with your Black Friday Daxxify package."
+            title="Consult & Daxxify Treatment"
+            copy="We review your history, map forehead, 11s, and crow's feet, and treat with your Black Friday Daxxify package."
           />
           <StepCard
             step="Days 2–7"
             title="Lines Begin to Soften"
-            copy="You’ll notice expression lines softening and makeup sitting more smoothly as Daxxify takes effect."
+            copy="You'll notice expression lines softening and makeup sitting more smoothly as Daxxify takes effect."
           />
           <StepCard
             step="Weeks Ahead"
@@ -171,25 +160,28 @@ export default function DaxxifyBlackFridayPage() {
 
       {/* FAQ */}
       <section id="faq" className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-14">
-        <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center">
+        <h3
+          className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center"
+          style={{ color: colors.heading, fontFamily: fonts.display }}
+        >
           Black Friday Daxxify Deal — FAQ
         </h3>
-        <div className="mt-7 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
+        <div className="mt-7 divide-y rounded-3xl bg-white" style={{ border: `1px solid ${colors.stone}` }}>
           <FaqItem
             q="What is Daxxify?"
-            a="Daxxify is a neuromodulator in the same treatment family as Botox, Jeuveau, Dysport, and others. Many patients choose it for its potential to last longer than traditional tox options. Your injector will review if it’s a good fit for you."
+            a="Daxxify is a neuromodulator in the same treatment family as Botox, Jeuveau, Dysport, and others. Many patients choose it for its potential to last longer than traditional tox options. Your injector will review if it's a good fit for you."
           />
           <FaqItem
             q="Do I have to pay now to get the deal?"
-            a="If you’re ready now, you can simply book in November and pay at your visit. If you want to lock in Black Friday pricing for future visits, you can pre-purchase up to 4 Daxxify packages now to use through 2026."
+            a="If you're ready now, you can simply book in November and pay at your visit. If you want to lock in Black Friday pricing for future visits, you can pre-purchase up to 4 Daxxify packages now to use through 2026."
           />
           <FaqItem
             q="Why do I need to use all units at once?"
-            a="We want you to see how Daxxify performs at the right dose for your muscles. Splitting units between visits usually means under-treating each area and doesn’t give us a clear picture for future planning."
+            a="We want you to see how Daxxify performs at the right dose for your muscles. Splitting units between visits usually means under-treating each area and doesn't give us a clear picture for future planning."
           />
           <FaqItem
             q="Which areas are best for this deal?"
-            a="This Black Friday package is designed for forehead lines, frown lines (11s), and crow’s feet treated in the same appointment. Your injector will confirm the plan for your face."
+            a="This Black Friday package is designed for forehead lines, frown lines (11s), and crow's feet treated in the same appointment. Your injector will confirm the plan for your face."
           />
           <FaqItem
             q="How many Daxxify packages can I buy?"
@@ -198,7 +190,7 @@ export default function DaxxifyBlackFridayPage() {
         </div>
         <div className="mt-8 text-center">
           <CTA href={BOOK_URL} primary>
-            Claim Black Friday Daxxify • Book or Buy Now
+            Claim Black Friday Daxxify &bull; Book or Buy Now
           </CTA>
         </div>
       </section>
@@ -206,12 +198,15 @@ export default function DaxxifyBlackFridayPage() {
       {/* Final CTA */}
       <section className="relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
-          <div className="relative rounded-3xl bg-gradient-to-br from-sky-500 via-violet-600 to-neutral-900 p-[1px]">
-            <div className="rounded-3xl bg-neutral-950 px-6 sm:px-8 py-10 sm:py-12 text-center">
-              <h4 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+          <div className="relative rounded-3xl p-[1px]" style={{ background: gradients.primary }}>
+            <div className="rounded-3xl px-6 sm:px-8 py-10 sm:py-12 text-center" style={{ backgroundColor: colors.ink }}>
+              <h4
+                className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight"
+                style={{ color: colors.white, fontFamily: fonts.display }}
+              >
                 Your Daxxify Moment, Black Friday Pricing
               </h4>
-              <p className="mt-3 text-neutral-300 max-w-2xl mx-auto">
+              <p className="mt-3 max-w-2xl mx-auto" style={{ color: '#D4D4D4', fontFamily: fonts.body }}>
                 Experience Daxxify across your 3 key tox areas with our best pricing of the year. Book in November or
                 lock in packages for 2026.
               </p>
@@ -219,54 +214,32 @@ export default function DaxxifyBlackFridayPage() {
                 <CTA href={BOOK_URL} primary>
                   Claim the Daxxify Buy 2, Get 1 Free Deal
                 </CTA>
-                <p className="mt-2 text-[11px] text-neutral-400">
-                  Limited Black Friday / Cyber Monday offer. Once it’s over, Daxxify returns to regular pricing.
+                <p className="mt-2 text-[11px]" style={{ color: colors.muted, fontFamily: fonts.body }}>
+                  Limited Black Friday / Cyber Monday offer. Once it&rsquo;s over, Daxxify returns to regular pricing.
                 </p>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Sticky mobile CTA */}
-      {showStickyCta && (
-        <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-[calc(100%-24px)] sm:w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sky-500 to-violet-600" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">Black Friday Daxxify • Buy 2 Areas, Get 1 Free</p>
-              <p className="text-[11px] text-neutral-400">Book now or buy up to 4 for 2026.</p>
-            </div>
-            <a
-              href={BOOK_URL}
-              className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-black active:scale-[.99] touch-manipulation"
-            >
-              Book
-            </a>
-          </div>
-        </div>
-      )}
-    </>
+    </BetaLayout>
   )
 }
+
+DaxxifyBlackFridayPage.getLayout = (page) => page
 
 /* ---------- Shared Components ---------- */
 function CTA({ href, children, primary, dataAttr }) {
   const base =
-    'inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500'
-  const styles = primary
-    ? 'text-white w-full sm:w-auto bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900'
-    : 'text-white/90 w-full sm:w-auto ring-1 ring-white/20 hover:bg_white/10'.replace(
-        '_',
-        ''
-      )
+    'inline-flex items-center justify-center px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500'
+  const cls = primary
+    ? `${base} text-white w-full sm:w-auto shadow-lg group`
+    : `${base} text-white/90 w-full sm:w-auto ring-1 ring-white/20 hover:bg-white/10 group`
+  const style = primary
+    ? { background: gradients.primary, borderRadius: '9999px', fontFamily: fonts.body }
+    : { borderRadius: '9999px', fontFamily: fonts.body }
   return (
-    <a
-      href={href}
-      data-book-loc={dataAttr}
-      className={`${base} ${styles} group`}
-      rel="noopener"
-    >
+    <a href={href} data-book-loc={dataAttr} className={cls} style={style} rel="noopener">
       {children}
       {primary && <Arrow />}
     </a>
@@ -275,49 +248,57 @@ function CTA({ href, children, primary, dataAttr }) {
 
 function Card({ title, children }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-sm">
-      <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">{title}</h3>
-      <div className="mt-3 sm:mt-4">{children}</div>
+    <div className="rounded-3xl bg-white p-5 sm:p-6 shadow-sm" style={{ border: `1px solid ${colors.stone}` }}>
+      <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight" style={{ color: colors.heading, fontFamily: fonts.display }}>{title}</h3>
+      <div className="mt-3 sm:mt-4" style={{ fontFamily: fonts.body }}>{children}</div>
     </div>
   )
 }
+
 function Bullet({ children }) {
   return (
-    <li className="flex items-start gap-2">
-      <span className="mt-2 h-2 w-2 rounded-full bg-violet-600" />
+    <li className="flex items-start gap-2" style={{ fontFamily: fonts.body }}>
+      <span className="mt-2 h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.violet }} />
       <span>{children}</span>
     </li>
   )
 }
+
 function LI({ children }) {
   return (
-    <li className="flex items-start gap-2">
-      <span className="mt-2 h-2 w-2 rounded-full bg-violet-400" />
+    <li className="flex items-start gap-2" style={{ fontFamily: fonts.body }}>
+      <span className="mt-2 h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.violet, opacity: 0.6 }} />
       <span>{children}</span>
     </li>
   )
 }
+
 function StepCard({ step, title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-sm">
+    <div className="rounded-3xl bg-white p-5 sm:p-6 shadow-sm" style={{ border: `1px solid ${colors.stone}` }}>
       <div className="flex items-center gap-3">
-        <div className="h-10 min-w-[86px] px-3 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white font-bold text-[11px] sm:text-xs tracking-tight flex items-center justify-center whitespace-nowrap">
+        <div
+          className="h-10 min-w-[86px] px-3 rounded-xl text-white font-bold text-[11px] sm:text-xs tracking-tight flex items-center justify-center whitespace-nowrap"
+          style={{ background: gradients.primary, fontFamily: fonts.body }}
+        >
           {step}
         </div>
-        <h6 className="text-sm sm:text-base font-extrabold tracking-tight">{title}</h6>
+        <h6 className="text-sm sm:text-base font-extrabold tracking-tight" style={{ color: colors.heading, fontFamily: fonts.display }}>{title}</h6>
       </div>
-      <p className="mt-3 text-neutral-700 text-sm sm:text-base">{copy}</p>
+      <p className="mt-3 text-sm sm:text-base" style={{ color: colors.body, fontFamily: fonts.body }}>{copy}</p>
     </div>
   )
 }
+
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
     <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group">
-      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 font-semibold flex items-center justify-between">
-        <span className="text-sm sm:text-base">{q}</span>
+      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 font-semibold flex items-center justify-between" style={{ fontFamily: fonts.body }}>
+        <span className="text-sm sm:text-base" style={{ color: colors.heading }}>{q}</span>
         <svg
-          className={`h-5 w-5 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`}
+          style={{ color: colors.muted }}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -328,10 +309,11 @@ function FaqItem({ q, a }) {
           />
         </svg>
       </summary>
-      <div className="px-4 sm:px-6 pb-5 text-neutral-700 text-sm sm:text-base">{a}</div>
+      <div className="px-4 sm:px-6 pb-5 text-sm sm:text-base" style={{ color: colors.body, fontFamily: fonts.body }}>{a}</div>
     </details>
   )
 }
+
 function Arrow() {
   return (
     <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="currentColor" viewBox="0 0 20 20">

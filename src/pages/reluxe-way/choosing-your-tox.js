@@ -2,9 +2,14 @@
 // The RELUXE Way — Choosing Your Tox (standalone spoke page)
 
 /* eslint-disable @next/next/no-img-element */
-import Head from 'next/head'
-import { useEffect, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useState } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -19,7 +24,7 @@ const HUB_URL = '/reluxe-way'
 const TOX_PRICING_URL = '/reluxe-way/tox-pricing'
 const INJECTOR_STANDARD_URL = '/reluxe-way/injector-standard'
 
-// ✅ Consult URLs (update to your true “Getting Started with RELUXE” route)
+// Consult URLs
 const CONSULT_URL = '/book/getting-started'
 const CONSULT_URL_WESTFIELD = '/book/getting-started?loc=westfield'
 const CONSULT_URL_CARMEL = '/book/getting-started?loc=carmel'
@@ -69,7 +74,7 @@ function getSchema() {
         url: CANONICAL_URL,
         name: 'Choosing Your Tox | Botox, Jeuveau, Dysport, Daxxify | RELUXE (Carmel & Westfield)',
         description:
-          'Botox®, Jeuveau®, Dysport®, or Daxxify®? Learn the differences, when each shines, and how RELUXE helps you choose based on your face and goals in Carmel & Westfield.',
+          'Botox\u00AE, Jeuveau\u00AE, Dysport\u00AE, or Daxxify\u00AE? Learn the differences, when each shines, and how RELUXE helps you choose based on your face and goals in Carmel & Westfield.',
         isPartOf: { '@id': `${SITE_URL}#website` },
         about: [
           { '@type': 'Thing', name: 'Botox vs Jeuveau' },
@@ -108,89 +113,55 @@ function getSchema() {
 }
 
 export default function ChoosingYourToxPage() {
-  const [showSticky, setShowSticky] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 360)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  const smsBody = encodeURIComponent(`Hi RELUXE! I’d love to book a ${CONSULT_NAME}. Can you help?`)
+  const smsBody = encodeURIComponent(`Hi RELUXE! I'd love to book a ${CONSULT_NAME}. Can you help?`)
   const smsHref = `sms:${MARKETING_SMS}?&body=${smsBody}`
   const callHref = `tel:${PHONE_CALL}`
 
   const pageTitle =
     'Choosing Your Tox | Botox vs Jeuveau vs Dysport vs Daxxify | RELUXE (Carmel & Westfield)'
   const pageDescription =
-    'Botox®, Jeuveau®, Dysport®, or Daxxify®? Learn the differences, when each shines, and how RELUXE helps you choose based on your face and goals in Carmel & Westfield.'
+    'Botox, Jeuveau, Dysport, or Daxxify? Learn the differences, when each shines, and how RELUXE helps you choose based on your face and goals in Carmel & Westfield.'
 
   return (
-    <>
-      <Head>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <link rel="canonical" href={CANONICAL_URL} />
-        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-
-        {/* Open Graph */}
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content="Choosing Your Tox — The RELUXE Way" />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:image:secure_url" content={OG_IMAGE} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Choosing Your Tox — Botox, Jeuveau, Dysport, Daxxify (RELUXE)" />
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Choosing Your Tox — The RELUXE Way" />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={OG_IMAGE} />
-
-        {/* Local */}
-        <meta name="geo.region" content="US-IN" />
-        <meta name="geo.placename" content="Carmel, IN; Westfield, IN" />
-
-        {/* JSON-LD */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(getSchema(), null, 2) }} />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={pageTitle}
+      description={pageDescription}
+      canonical={CANONICAL_URL}
+      ogImage={OG_IMAGE}
+      structuredData={getSchema()}
+    >
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.22),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-          <div className="max-w-5xl text-white">
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative' }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="max-w-5xl" style={{ color: colors.white }}>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] tracking-widest uppercase text-neutral-400">The RELUXE Way</span>
-              <span className="text-neutral-600">•</span>
-              <span className="text-[11px] tracking-widest uppercase text-neutral-400">Carmel & Westfield</span>
-              <span className="text-neutral-600">•</span>
+              <span style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>The RELUXE Way</span>
+              <span style={{ color: colors.muted }}>&bull;</span>
+              <span style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Carmel & Westfield</span>
+              <span style={{ color: colors.muted }}>&bull;</span>
               <a
                 href={HUB_URL}
                 onClick={() => trackEvent('hub_click', { placement: 'hero_breadcrumb' })}
-                className="text-[11px] tracking-widest uppercase text-emerald-300 hover:text-emerald-200"
+                style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
               >
-                Back to the hub →
+                Back to the hub &rarr;
               </a>
             </div>
 
-            <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
-              There’s no “best” tox—only the right one.
+            <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight }} className="mt-3">
+              There&rsquo;s no &ldquo;best&rdquo; tox--only the{' '}
+              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>right one.</span>
             </h1>
 
-            <p className="mt-4 text-neutral-200 text-base sm:text-lg leading-relaxed">
-              Botox®, Jeuveau®, Dysport®, and Daxxify® each have a role. We choose based on your movement, anatomy, goals, and timeline.
+            <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.85)' }} className="mt-4 text-base sm:text-lg leading-relaxed">
+              Botox&reg;, Jeuveau&reg;, Dysport&reg;, and Daxxify&reg; each have a role. We choose based on your movement, anatomy, goals, and timeline.
             </p>
 
-            <p className="mt-3 text-neutral-300 text-sm sm:text-base leading-relaxed">
-              The fastest way to choose is a consult. We’ll map your movement, talk through your preferences (soft vs strong hold),
-              and recommend the best fit—without pressure.
+            <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-3 text-sm sm:text-base leading-relaxed">
+              The fastest way to choose is a consult. We&rsquo;ll map your movement, talk through your preferences (soft vs strong hold),
+              and recommend the best fit--without pressure.
             </p>
 
             {/* Consult-first CTAs */}
@@ -221,13 +192,13 @@ export default function ChoosingYourToxPage() {
               </CTA>
             </div>
 
-            <div className="mt-5 rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+            <div style={{ borderRadius: '1rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)' }} className="mt-5 p-4">
               <div className="grid sm:grid-cols-3 gap-3">
                 <MiniStat label="Decision factors" value="Movement + goals" />
                 <MiniStat label="Your preference" value="Soft vs strong hold" />
                 <MiniStat label="Your timeline" value="Events + maintenance" />
               </div>
-              <p className="mt-3 text-[12px] text-neutral-400">
+              <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-3 text-[12px]">
                 Education only. Your plan is customized by your injector. Results vary.
               </p>
             </div>
@@ -236,41 +207,43 @@ export default function ChoosingYourToxPage() {
       </section>
 
       {/* QUICK GUIDE */}
-      <section className="bg-white py-12 sm:py-14">
+      <section className="py-12 sm:py-14" style={{ background: '#fff' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Eyebrow>Quick guide</Eyebrow>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
               How we choose your tox at RELUXE
             </h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed">
-              People often ask, “Which tox is best?” Our answer: it depends on your facial movement, your goals, and your ideal cadence.
-              Here’s the exact decision framework we use.
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
+              People often ask, &ldquo;Which tox is best?&rdquo; Our answer: it depends on your facial movement, your goals, and your ideal cadence.
+              Here&rsquo;s the exact decision framework we use.
             </p>
           </div>
 
           <div className="mt-8 grid md:grid-cols-3 gap-4 sm:gap-6">
-            <StepCard step="Step 1" title="Map movement" copy="We look at how your face moves in motion—not just lines at rest." />
+            <StepCard step="Step 1" title="Map movement" copy="We look at how your face moves in motion--not just lines at rest." />
             <StepCard step="Step 2" title="Clarify your goal" copy="Soft + natural, stronger hold, lift feel, or longevity-first." />
-            <StepCard step="Step 3" title="Match tox to you" copy="We choose based on fit—then adjust over time as we learn your face." />
+            <StepCard step="Step 3" title="Match tox to you" copy="We choose based on fit--then adjust over time as we learn your face." />
           </div>
 
-          <div className="mt-8 rounded-3xl border border-neutral-200 bg-neutral-50 p-6 sm:p-7">
-            <p className="text-neutral-800 leading-relaxed">
-              Want the fastest answer? Book a consult. We’ll recommend the best fit, explain why, and tailor the plan to your preferences.
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: colors.cream, padding: '1.75rem' }} className="mt-8">
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="leading-relaxed">
+              Want the fastest answer? Book a consult. We&rsquo;ll recommend the best fit, explain why, and tailor the plan to your preferences.
             </p>
             <div className="mt-5 grid sm:grid-cols-2 gap-2 max-w-2xl">
               <a
                 href={CONSULT_URL_WESTFIELD}
                 onClick={() => trackEvent('consult_click', { placement: 'quick_guide_consult', location: 'westfield' })}
-                className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
+                style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, background: colors.ink, color: colors.white }}
+                className="inline-flex items-center justify-center px-6 py-3 transition hover:opacity-90"
               >
                 Book Westfield Consult
               </a>
               <a
                 href={CONSULT_URL_CARMEL}
                 onClick={() => trackEvent('consult_click', { placement: 'quick_guide_consult', location: 'carmel' })}
-                className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                className="inline-flex items-center justify-center px-6 py-3 transition hover:opacity-80"
               >
                 Book Carmel Consult
               </a>
@@ -280,21 +253,21 @@ export default function ChoosingYourToxPage() {
       </section>
 
       {/* COMPARISON CARDS */}
-      <section className="bg-neutral-50 border-y border-neutral-200 py-12 sm:py-14">
+      <section style={{ backgroundColor: colors.cream, borderTop: `1px solid ${colors.stone}`, borderBottom: `1px solid ${colors.stone}` }} className="py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Eyebrow>Compare</Eyebrow>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
               What each tox is great for
             </h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed">
-              These are general tendencies—not hard rules. Your injector will guide final selection based on your anatomy and goals.
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
+              These are general tendencies--not hard rules. Your injector will guide final selection based on your anatomy and goals.
             </p>
           </div>
 
           <div className="mt-8 grid lg:grid-cols-2 gap-4 sm:gap-6">
             <ToxCard
-              name="Botox®"
+              name="Botox\u00AE"
               vibe="Proven + predictable"
               bestFor={[
                 'Patients who want a very established option',
@@ -302,12 +275,12 @@ export default function ChoosingYourToxPage() {
                 'Great for consistent maintenance',
               ]}
               notes={[
-                'Excellent “baseline” choice for many faces',
+                'Excellent "baseline" choice for many faces',
                 'We tailor dosing to your desired movement',
               ]}
             />
             <ToxCard
-              name="Jeuveau®"
+              name="Jeuveau\u00AE"
               vibe="Soft, expressive, value-forward"
               bestFor={[
                 'Patients who want a natural, refreshed look',
@@ -321,19 +294,19 @@ export default function ChoosingYourToxPage() {
               highlight
             />
             <ToxCard
-              name="Dysport®"
+              name="Dysport\u00AE"
               vibe="Great coverage + fast feel for many patients"
               bestFor={[
-                'Patients who like how it “settles” across larger areas',
+                'Patients who like how it "settles" across larger areas',
                 'Those who want a fast-feeling onset (varies)',
                 'Forehead-style areas for many faces (injector dependent)',
               ]}
               notes={[
-                'Units are not 1:1 with Botox—your injector will translate dosing correctly',
+                'Units are not 1:1 with Botox--your injector will translate dosing correctly',
               ]}
             />
             <ToxCard
-              name="Daxxify®"
+              name="Daxxify\u00AE"
               vibe="Longevity-first, premium option"
               bestFor={[
                 'Patients who prioritize longer time between visits',
@@ -341,31 +314,26 @@ export default function ChoosingYourToxPage() {
                 'Planning around travel, schedules, or life events',
               ]}
               notes={[
-                'Longevity varies—your injector will help set expectations',
+                'Longevity varies--your injector will help set expectations',
               ]}
             />
           </div>
 
-          <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-sm">
-            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">
-              The “right tox” can change over time
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }} className="mt-8">
+            <h3 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-xl sm:text-2xl font-extrabold tracking-tight">
+              The &ldquo;right tox&rdquo; can change over time
             </h3>
-            <p className="mt-3 text-neutral-700 leading-relaxed">
-              As we learn your face and your preferences, we may adjust dose, areas, or even the tox itself. That’s not inconsistency—it’s personalization.
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3 leading-relaxed">
+              As we learn your face and your preferences, we may adjust dose, areas, or even the tox itself. That&rsquo;s not inconsistency--it&rsquo;s personalization.
             </p>
 
             <div className="mt-5 flex flex-col sm:flex-row gap-2">
-              <a
-                href={CONSULT_URL}
-                onClick={() => trackEvent('consult_click', { placement: 'compare_primary_consult', location: 'any' })}
-                className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
-              >
-                Book a Consult
-              </a>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
               <a
                 href={TOX_PRICING_URL}
                 onClick={() => trackEvent('spoke_click', { placement: 'compare_secondary_pricing', target: TOX_PRICING_URL })}
-                className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition"
+                style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-80"
               >
                 See Pricing
               </a>
@@ -375,24 +343,24 @@ export default function ChoosingYourToxPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-white py-12 sm:py-14">
+      <section className="py-12 sm:py-14" style={{ background: '#fff' }}>
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center text-neutral-900">
-            Choosing Your Tox — FAQ
+          <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center">
+            Choosing Your Tox -- FAQ
           </h2>
 
-          <div className="mt-7 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff' }} className="mt-7">
             <FaqItem
               q="Can I switch tox brands later?"
               a="Yes. Many patients try one option and later switch based on how they like the feel, look, or cadence. We guide you based on results and preferences."
             />
             <FaqItem
-              q="Is one tox always ‘stronger’ than the others?"
-              a="Not necessarily. “Strength” depends on dose, placement, and your anatomy. Your injector will choose the best fit and tailor dosing to your goals."
+              q='Is one tox always "stronger" than the others?'
+              a='Not necessarily. "Strength" depends on dose, placement, and your anatomy. Your injector will choose the best fit and tailor dosing to your goals.'
             />
             <FaqItem
-              q="How do I choose if I’m new to tox?"
-              a="Start with a consult. We’ll map your movement, learn your preferences, and recommend the best option to begin with—then adjust as we learn your face."
+              q="How do I choose if I'm new to tox?"
+              a="Start with a consult. We'll map your movement, learn your preferences, and recommend the best option to begin with--then adjust as we learn your face."
             />
             <FaqItem
               q="Does pricing differ between toxins?"
@@ -401,15 +369,8 @@ export default function ChoosingYourToxPage() {
           </div>
 
           <div className="mt-8 text-center">
-            <a
-              href={CONSULT_URL}
-              onClick={() => trackEvent('consult_click', { placement: 'faq_primary_consult', location: 'any' })}
-              className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold bg-gradient-to-r from-emerald-500 to-black text-white hover:from-emerald-400 hover:to-neutral-900 transition"
-            >
-              Book a Consult
-              <Arrow />
-            </a>
-            <p className="mt-2 text-xs text-neutral-500">
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
+            <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-2 text-xs">
               Dosing and treatment plan are customized by your injector. Results vary.
             </p>
           </div>
@@ -417,34 +378,36 @@ export default function ChoosingYourToxPage() {
       </section>
 
       {/* CONTACT STRIP */}
-      <section className="bg-neutral-50 border-t border-neutral-200 py-12 sm:py-14">
+      <section style={{ backgroundColor: colors.cream, borderTop: `1px solid ${colors.stone}` }} className="py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-neutral-200 bg-white p-7 sm:p-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '2rem 2.5rem' }}>
+            <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               Want a human answer?
             </h2>
-            <p className="mt-3 text-neutral-700 leading-relaxed max-w-3xl">
-              The best place to start is a consult with one of our amazing nurse injectors. Have a question before you come or want help booking? Call, text, or DM us and we’re happy to help.
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3 leading-relaxed max-w-3xl">
+              The best place to start is a consult with one of our amazing nurse injectors. Have a question before you come or want help booking? Call, text, or DM us and we&rsquo;re happy to help.
             </p>
 
             <div className="mt-6 grid sm:grid-cols-2 gap-2 max-w-2xl">
               <a
                 href={CONSULT_URL_WESTFIELD}
                 onClick={() => trackEvent('consult_click', { placement: 'contact_consult', location: 'westfield' })}
-                className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
+                style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, background: colors.ink, color: colors.white }}
+                className="inline-flex items-center justify-center px-6 py-3 transition hover:opacity-90"
               >
                 Book Westfield Consult
               </a>
               <a
                 href={CONSULT_URL_CARMEL}
                 onClick={() => trackEvent('consult_click', { placement: 'contact_consult', location: 'carmel' })}
-                className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                className="inline-flex items-center justify-center px-6 py-3 transition hover:opacity-80"
               >
                 Book Carmel Consult
               </a>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm" style={{ fontFamily: fonts.body, color: colors.body }}>
               <a
                 href={smsHref}
                 onClick={() => trackEvent('sms_click', { placement: 'contact_sms', phone: MARKETING_SMS })}
@@ -452,7 +415,7 @@ export default function ChoosingYourToxPage() {
               >
                 Text us
               </a>
-              <span>•</span>
+              <span>&bull;</span>
               <a
                 href={callHref}
                 onClick={() => trackEvent('call_click', { placement: 'contact_call', phone: PHONE_CALL })}
@@ -460,7 +423,7 @@ export default function ChoosingYourToxPage() {
               >
                 Call {DISPLAY_PHONE}
               </a>
-              <span>•</span>
+              <span>&bull;</span>
               <a
                 href={IG_DM_URL}
                 target="_blank"
@@ -470,7 +433,7 @@ export default function ChoosingYourToxPage() {
               >
                 DM us
               </a>
-              <span>•</span>
+              <span>&bull;</span>
               <a
                 href={IG_URL}
                 target="_blank"
@@ -480,7 +443,7 @@ export default function ChoosingYourToxPage() {
               >
                 @reluxemedspa
               </a>
-              <span>•</span>
+              <span>&bull;</span>
               <a
                 href={FB_MSG_URL}
                 target="_blank"
@@ -494,30 +457,39 @@ export default function ChoosingYourToxPage() {
           </div>
         </div>
       </section>
-
-      {/* MOBILE STICKY CTA */}
-      {showSticky && <StickyCTA title="Book a Consult" subtitle={CONSULT_NAME} href={CONSULT_URL} />}
-    </>
+    </BetaLayout>
   )
 }
+
+ChoosingYourToxPage.getLayout = (page) => page
 
 /* -----------------------------
    Components
 ------------------------------ */
 
 function CTA({ href, children, primary, external, trackName, trackParams }) {
-  const base =
-    'inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
-  const styles = primary
-    ? 'text-white w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-black shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-neutral-900'
-    : 'text-white/90 w-full sm:w-auto ring-1 ring-white/20 hover:bg-white/10'
+  const baseStyle = {
+    borderRadius: '9999px',
+    fontFamily: fonts.body,
+    fontWeight: 600,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.75rem 1.5rem',
+    minHeight: '48px',
+    transition: 'all 0.2s',
+  }
+  const primaryStyle = primary
+    ? { background: gradients.primary, color: '#fff', boxShadow: '0 4px 14px rgba(124,58,237,0.25)' }
+    : { border: '1px solid rgba(250,248,245,0.2)', color: 'rgba(250,248,245,0.9)' }
 
   return (
     <a
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noreferrer' : 'noopener'}
-      className={`${base} ${styles} group`}
+      style={{ ...baseStyle, ...primaryStyle }}
+      className="w-full sm:w-auto group"
       onClick={() => {
         if (trackName) trackEvent(trackName, trackParams || {})
       }}
@@ -529,57 +501,65 @@ function CTA({ href, children, primary, external, trackName, trackParams }) {
 }
 
 function Eyebrow({ children }) {
-  return <p className="text-[11px] tracking-widest uppercase text-neutral-500">{children}</p>
+  return (
+    <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>{children}</p>
+  )
 }
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-2xl bg-black/20 ring-1 ring-white/10 p-3">
-      <p className="text-[11px] tracking-widest uppercase text-neutral-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
+    <div style={{ borderRadius: '1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(250,248,245,0.08)', padding: '0.75rem' }}>
+      <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>{label}</p>
+      <p style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.white }} className="mt-1 text-sm">{value}</p>
     </div>
   )
 }
 
 function StepCard({ step, title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-sm">
+    <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <div className="flex items-center gap-3">
-        <div className="h-10 min-w-[88px] px-3 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900 text-white font-bold text-[11px] tracking-tight flex items-center justify-center">
+        <div style={{ borderRadius: '0.75rem', background: gradients.primary, color: '#fff', fontFamily: fonts.body, fontWeight: 700, fontSize: '11px', letterSpacing: '-0.01em', height: '2.5rem', minWidth: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.75rem' }}>
           {step}
         </div>
-        <h3 className="text-sm sm:text-base font-extrabold tracking-tight text-neutral-900">{title}</h3>
+        <h3 style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-sm sm:text-base tracking-tight">{title}</h3>
       </div>
-      <p className="mt-3 text-neutral-700 leading-relaxed">{copy}</p>
+      <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3 leading-relaxed">{copy}</p>
     </div>
   )
 }
 
 function ToxCard({ name, vibe, bestFor, notes, highlight }) {
   return (
-    <div className={`rounded-3xl border p-6 sm:p-7 shadow-sm ${highlight ? 'border-emerald-200 bg-emerald-50' : 'border-neutral-200 bg-white'}`}>
+    <div style={{
+      borderRadius: '1.5rem',
+      border: `1px solid ${highlight ? colors.violet || '#7C3AED' : colors.stone}`,
+      background: highlight ? 'rgba(124,58,237,0.04)' : '#fff',
+      padding: '1.75rem',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    }}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">{name}</h3>
-          <p className="mt-1 text-sm text-neutral-600">{vibe}</p>
+          <h3 style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-xl sm:text-2xl tracking-tight">{name}</h3>
+          <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-1 text-sm">{vibe}</p>
         </div>
         {highlight ? (
-          <span className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+          <span style={{ borderRadius: '9999px', background: 'rgba(124,58,237,0.1)', fontFamily: fonts.body, fontWeight: 600, color: '#7C3AED' }} className="inline-flex items-center px-3 py-1 text-xs">
             RELUXE Favorite
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+          <span style={{ borderRadius: '9999px', backgroundColor: colors.cream, fontFamily: fonts.body, fontWeight: 600, color: colors.body }} className="inline-flex items-center px-3 py-1 text-xs">
             Option
           </span>
         )}
       </div>
 
       <div className="mt-5">
-        <p className="text-[11px] tracking-widest uppercase text-neutral-500">Best for</p>
-        <ul className="mt-3 space-y-2 text-neutral-800">
+        <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Best for</p>
+        <ul className="mt-3 space-y-2" style={{ fontFamily: fonts.body, color: colors.body }}>
           {bestFor.map((x, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span className={`mt-2 h-2 w-2 rounded-full ${highlight ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+              <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', background: highlight ? gradients.primary : colors.muted, flexShrink: 0 }} />
               <span>{x}</span>
             </li>
           ))}
@@ -587,11 +567,11 @@ function ToxCard({ name, vibe, bestFor, notes, highlight }) {
       </div>
 
       <div className="mt-6">
-        <p className="text-[11px] tracking-widest uppercase text-neutral-500">Notes</p>
-        <ul className="mt-3 space-y-2 text-neutral-700">
+        <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Notes</p>
+        <ul className="mt-3 space-y-2" style={{ fontFamily: fonts.body, color: colors.body }}>
           {notes.map((x, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span className={`mt-2 h-2 w-2 rounded-full ${highlight ? 'bg-emerald-400' : 'bg-neutral-300'}`} />
+              <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', background: highlight ? 'rgba(124,58,237,0.5)' : colors.taupe, flexShrink: 0 }} />
               <span>{x}</span>
             </li>
           ))}
@@ -604,14 +584,14 @@ function ToxCard({ name, vibe, bestFor, notes, highlight }) {
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
-    <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group">
-      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 font-semibold flex items-center justify-between">
-        <span className="text-sm sm:text-base text-neutral-900">{q}</span>
-        <svg className={`h-5 w-5 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+    <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group" style={{ borderBottom: `1px solid ${colors.stone}` }}>
+      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 flex items-center justify-between" style={{ fontFamily: fonts.body, fontWeight: 600 }}>
+        <span style={{ color: colors.heading }} className="text-sm sm:text-base">{q}</span>
+        <svg className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} style={{ color: colors.muted }} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.188l3.71-3.957a.75.75 0 1 1 1.08 1.04l-4.24 4.52a.75.75 0 0 1-1.08 0L5.25 8.27a.75.75 0 0 1-.02-1.06Z" clipRule="evenodd" />
         </svg>
       </summary>
-      <div className="px-4 sm:px-6 pb-5 text-neutral-700 text-sm sm:text-base">{a}</div>
+      <div style={{ fontFamily: fonts.body, color: colors.body }} className="px-4 sm:px-6 pb-5 text-sm sm:text-base">{a}</div>
     </details>
   )
 }
@@ -621,26 +601,5 @@ function Arrow() {
     <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
       <path d="M12.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 1 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-2.293-2.293a1 1 0 0 1 0-1.414z" />
     </svg>
-  )
-}
-
-function StickyCTA({ title, subtitle, href }) {
-  return (
-    <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-[calc(100%-24px)] sm:w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="text-[11px] text-neutral-400">{subtitle}</p>
-        </div>
-        <a
-          href={href}
-          className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-black active:scale-[.99] touch-manipulation"
-          onClick={() => trackEvent('consult_click', { placement: 'sticky_cta', location: 'any' })}
-        >
-          Book
-        </a>
-      </div>
-    </div>
   )
 }

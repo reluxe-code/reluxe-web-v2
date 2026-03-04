@@ -1,34 +1,25 @@
 // src/pages/blog/[slug].js
-import Head from 'next/head';
 import Image from 'next/image';
-import Layout from '@/components/layout/layout';
-import HeaderTwo from '@/components/header/header-2';
+import BetaLayout from '@/components/beta/BetaLayout';
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens';
 import { getServiceClient } from '@/lib/supabase';
 
-function FancyTitle({ raw = '' }) {
-  const words = String(raw).split(/\s+/).filter(Boolean);
-  return (
-    <h1 className="flex flex-wrap justify-center text-center font-black leading-tight text-4xl sm:text-5xl lg:text-6xl mb-4">
-      <span className="mr-2">RE[</span>
-      {words.map((w, i) => (
-        <span
-          key={`${w}-${i}`}
-          className={`inline-block mr-2 ${i < words.length - 1 ? 'after:content-["."]' : ''}`}
-        >
-          {w}
-        </span>
-      ))}
-      <span>]</span>
-    </h1>
-  );
-}
+const FONT_KEY = 'bold';
+const fonts = fontPairings[FONT_KEY];
+
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
 export default function PostPage({ post, publishedDate }) {
-  if (!post) return <Layout><p className="p-8">Post not found.</p></Layout>;
+  if (!post) {
+    return (
+      <BetaLayout title="Post Not Found">
+        <p style={{ padding: '2rem', fontFamily: fonts.body, color: colors.muted }}>Post not found.</p>
+      </BetaLayout>
+    );
+  }
 
   const plainTitle = post.title || '';
   const plainExcerpt = (post.excerpt || '').replace(/<[^>]+>/g, '').trim();
-  const seoTitle = `${plainTitle} | RELUXE Med Spa Blog`;
   const pageUrl = `https://reluxemedspa.com/blog/${post.slug}`;
   const seoImage = 'https://reluxemedspa.com/images/og/new-default-1200x630.png';
 
@@ -55,33 +46,35 @@ export default function PostPage({ post, publishedDate }) {
   };
 
   return (
-    <Layout>
-      <Head>
-        <title>{seoTitle}</title>
-        <meta name="description" content={plainExcerpt} />
-        <link rel="canonical" href={pageUrl} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={plainExcerpt} />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={pageUrl} />
-        <meta property="og:image" content={seoImage} />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={seoTitle} />
-        <meta name="twitter:description" content={plainExcerpt} />
-        <meta name="twitter:image" content={seoImage} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
-      </Head>
+    <BetaLayout
+      title={plainTitle}
+      description={plainExcerpt}
+      canonical={pageUrl}
+      ogType="article"
+      structuredData={articleSchema}
+    >
+      {/* Hero */}
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '4rem 1.5rem', textAlign: 'center' }}>
+          <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+            RELUXE &middot; Blog
+          </p>
+          <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700, lineHeight: 1.1, color: colors.white, marginTop: '0.75rem', maxWidth: '48rem', marginLeft: 'auto', marginRight: 'auto' }}>
+            {plainTitle}
+          </h1>
+          {publishedDate && (
+            <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: 'rgba(250,248,245,0.4)', marginTop: '1rem' }}>
+              {publishedDate}
+            </p>
+          )}
+        </div>
+      </section>
 
-      <HeaderTwo
-        title={<FancyTitle raw={plainTitle} />}
-        subtitle={publishedDate}
-        image={post.featured_image || '/images/blog/blog-hero.jpg'}
-      />
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main style={{ maxWidth: '48rem', margin: '0 auto', padding: '3rem 1.5rem' }}>
         {post.featured_image ? (
-          <div className="relative w-full h-64 mb-8 rounded-lg overflow-hidden shadow-lg">
+          <div style={{ position: 'relative', width: '100%', height: '16rem', marginBottom: '2rem', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
             <Image
               src={post.featured_image}
               alt={plainTitle || 'Post image'}
@@ -94,12 +87,15 @@ export default function PostPage({ post, publishedDate }) {
 
         <article
           className="prose prose-lg mx-auto"
+          style={{ fontFamily: fonts.body }}
           dangerouslySetInnerHTML={{ __html: post.content || '' }}
         />
       </main>
-    </Layout>
+    </BetaLayout>
   );
 }
+
+PostPage.getLayout = (page) => page;
 
 export async function getStaticPaths() {
   const sb = getServiceClient();

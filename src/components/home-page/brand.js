@@ -46,7 +46,8 @@ function Brand({ brandItems, settings }) {
                                                 alt={brandItem?.title}
                                                 width={210}
                                                 height={90}
-                                                layout="responsive"
+                                                sizes="(max-width: 480px) 50vw, (max-width: 992px) 33vw, 20vw"
+                                                style={{ width: '100%', height: 'auto' }}
                                                 quality={70}
                                             />
 

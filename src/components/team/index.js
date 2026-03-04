@@ -31,8 +31,8 @@ function Team({ teamItems }) {
                                                 alt={teamItem?.title}
                                                 width={343}
                                                 height={409}
-                                                layout="responsive"
-                                                objectFit="cover"
+                                                sizes="(max-width: 576px) 100vw, (max-width: 768px) 50vw, 33vw"
+                                                style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
                                                 quality={70}
                                                 priority
                                             />

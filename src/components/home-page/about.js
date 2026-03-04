@@ -33,8 +33,7 @@ function About() {
                             width={540}
                             height={675}
                             quality={80}
-                            layout="fixed"
-                            objectFit="cover"
+                            style={{ objectFit: 'cover' }}
                             priority
                         />
                     </div>

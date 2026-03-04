@@ -2,35 +2,21 @@
 // Product page structured data: Product, BreadcrumbList, FAQPage, HowTo, Speakable
 
 import Head from 'next/head'
+import { LOCATIONS as SITE_LOCATIONS } from '@/data/locations'
 
-const LOCATIONS = [
-  {
-    '@type': 'MedicalBusiness',
-    name: 'RELUXE Med Spa — Westfield',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: '2498 E 146th St Suite 100',
-      addressLocality: 'Westfield',
-      addressRegion: 'IN',
-      postalCode: '46074',
-      addressCountry: 'US',
-    },
-    telephone: '+1-317-763-1142',
+const LOCATIONS = SITE_LOCATIONS.map((loc) => ({
+  '@type': 'MedicalBusiness',
+  name: `RELUXE Med Spa — ${loc.city}`,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: loc.address.replace(`, ${loc.city}, ${loc.state} ${loc.zip}`, ''),
+    addressLocality: loc.city,
+    addressRegion: loc.state,
+    postalCode: loc.zip,
+    addressCountry: 'US',
   },
-  {
-    '@type': 'MedicalBusiness',
-    name: 'RELUXE Med Spa — Carmel',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: '10485 N Pennsylvania St, Suite 150',
-      addressLocality: 'Carmel',
-      addressRegion: 'IN',
-      postalCode: '46280',
-      addressCountry: 'US',
-    },
-    telephone: '+1-317-763-1142',
-  },
-]
+  telephone: `+1-${loc.phone.replace(/[^0-9]/g, '')}`,
+}))
 
 export default function ProductSEO({ product, brand, siteName = 'RELUXE Med Spa' }) {
   const p = product || {}

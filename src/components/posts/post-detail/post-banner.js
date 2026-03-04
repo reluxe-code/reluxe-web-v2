@@ -14,8 +14,9 @@ function PostBanner({ title, image, date }) {
                 <Image
                     src={image}
                     alt={title}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    sizes="100vw"
+                    style={{ objectFit: 'cover' }}
                     priority
                 />
             </div>

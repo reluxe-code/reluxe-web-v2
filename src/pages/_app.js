@@ -35,6 +35,7 @@ import BoulevardScripts from '@/components/booking/BoulevardScripts'
 // Location preference provider & chooser
 import { LocationProvider } from '@/context/LocationContext'
 import { MemberProvider } from '@/context/MemberContext'
+import { SearchProvider } from '@/context/SearchContext'
 import LocationChooserModal from '@/components/location/LocationChooserModal'
 import MemberDrawerPortal from '@/components/beta/MemberDrawerPortal'
 import { fontPairings } from '@/components/preview/tokens'
@@ -42,6 +43,7 @@ import dynamic from 'next/dynamic'
 
 const AnnouncementModal = dynamic(() => import('@/components/promo/AnnouncementModal'), { ssr: false })
 const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false })
+const SearchOverlay = dynamic(() => import('@/components/search/SearchOverlay'), { ssr: false })
 
 // Guard against React DOM crash when browser extensions or mobile autofill
 // modify the DOM outside of React's control. The "removeChild" error
@@ -154,29 +156,32 @@ function MyApp({ Component, pageProps }) {
 
       <LocationProvider>
         <MemberProvider>
-          <Layout>
-            <Head>
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <link rel="shortcut icon" href="/favicon.png" />
-              <link rel="preconnect" href="https://fonts.googleapis.com" />
-              <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-              <link rel="preload" as="style" href={fontPairings.bold.googleUrl} />
-              <link rel="stylesheet" href={fontPairings.bold.googleUrl} media="print" onLoad="this.media='all'" />
-              {/* Default OG image — overridden by any page that sets its own og:image */}
-              <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-              <meta property="og:image:width" content="1200" />
-              <meta property="og:image:height" content="630" />
-              <meta property="og:image:type" content="image/png" />
-              <meta name="twitter:card" content="summary_large_image" />
-              <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-            </Head>
+          <SearchProvider>
+            <Layout>
+              <Head>
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <link rel="shortcut icon" href="/favicon.png" />
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link rel="preload" as="style" href={fontPairings.bold.googleUrl} />
+                <link rel="stylesheet" href={fontPairings.bold.googleUrl} media="print" onLoad="this.media='all'" />
+                {/* Default OG image — overridden by any page that sets its own og:image */}
+                <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta property="og:image:type" content="image/png" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
+              </Head>
 
-            <Component {...pageProps} />
-            <LocationChooserModal />
-            <AnnouncementModal />
-          </Layout>
-          <MemberDrawerPortal fonts={fontPairings.bold} />
-          <ChatWidget />
+              <Component {...pageProps} />
+              <LocationChooserModal />
+              <AnnouncementModal />
+            </Layout>
+            <MemberDrawerPortal fonts={fontPairings.bold} />
+            <SearchOverlay />
+            <ChatWidget />
+          </SearchProvider>
         </MemberProvider>
       </LocationProvider>
       <Analytics />

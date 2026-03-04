@@ -8,6 +8,7 @@ const footerLinks = {
     { label: 'Morpheus8', href: '/services/morpheus8' },
     { label: 'Laser Hair Removal', href: '/services/laser-hair-removal' },
     { label: 'Facials & Peels', href: '/services/facials' },
+    { label: 'Skincare', href: '/skincare' },
     { label: 'All Services', href: '/services' },
   ],
   Locations: [

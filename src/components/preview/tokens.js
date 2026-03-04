@@ -52,7 +52,7 @@ export const fontPairings = {
 };
 
 export const typeScale = {
-  hero: { size: 'clamp(3rem, 8vw, 7rem)', weight: 700, lineHeight: 1.0 },
+  hero: { size: 'clamp(2rem, 5vw, 3.5rem)', weight: 700, lineHeight: 1.1 },
   sectionHeading: { size: 'clamp(1.75rem, 3.5vw, 3rem)', weight: 600, lineHeight: 1.15 },
   subhead: { size: 'clamp(1.25rem, 2vw, 1.5rem)', weight: 500, lineHeight: 1.4 },
   body: { size: '1rem', weight: 400, lineHeight: 1.625 },

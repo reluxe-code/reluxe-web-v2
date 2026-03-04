@@ -32,6 +32,7 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/leads', label: 'Leads' },
       { href: '/admin/intelligence/content-engagement', label: 'Content Engagement' },
       { href: '/admin/intelligence/experiments', label: 'Experiments' },
+      { href: '/admin/intelligence/search-insights', label: 'Search Insights' },
     ],
   },
   {

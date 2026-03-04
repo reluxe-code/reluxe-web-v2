@@ -1,20 +1,29 @@
-// src/pages/offers/index.js
-import Head from 'next/head'
-import Link from 'next/link'
-import HeaderTwo from '@/components/header/header-2'
-import { OFFERS, isActive } from '@/data/offers'
+// src/pages/hot-deals/index.js
+import Link from 'next/link';
+import BetaLayout from '@/components/beta/BetaLayout';
+import GravityBookButton from '@/components/beta/GravityBookButton';
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens';
+import { OFFERS, isActive } from '@/data/offers';
+
+const FONT_KEY = 'bold';
+const fonts = fontPairings[FONT_KEY];
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
 // Build-time filter + serialization (avoid leaking functions/dates)
 export async function getStaticProps() {
-  const now = new Date()
-  let live = []
+  const now = new Date();
+  let live = [];
   try {
-    const all = Array.isArray(OFFERS) ? OFFERS : []
+    const all = Array.isArray(OFFERS) ? OFFERS : [];
     live = all
-      .filter(o => {
-        try { return isActive(o, now) } catch { return false }
+      .filter((o) => {
+        try {
+          return isActive(o, now);
+        } catch {
+          return false;
+        }
       })
-      .map(o => ({
+      .map((o) => ({
         slug: o.slug || '',
         title: o.title || '',
         shortTitle: o.shortTitle || '',
@@ -26,67 +35,176 @@ export async function getStaticProps() {
           subhead: o?.hero?.subhead || '',
         },
       }))
-      .filter(o => o.slug) // only routable
+      .filter((o) => o.slug); // only routable
   } catch (e) {
     // swallow errors so build doesn't crash hard; page renders "no offers"
-    live = []
+    live = [];
   }
 
   return {
     props: { live },
     revalidate: 300, // refresh list periodically
-  }
+  };
 }
 
 export default function OffersIndex({ live = [] }) {
   return (
-    <>
-      <Head>
-        <title>Med Spa Offers & Specials | RELUXE Med Spa Westfield & Carmel, IN</title>
-        <meta name="description" content="Current offers and specials at RELUXE Med Spa. Save on Botox, facials, laser treatments, body contouring & more in Carmel and Westfield, Indiana." />
-        <link rel="canonical" href="https://reluxemedspa.com/hot-deals" />
-        <meta property="og:title" content="Offers & Specials | RELUXE Med Spa" />
-        <meta property="og:description" content="Limited-time offers on Botox, facials, laser treatments & more at RELUXE in Carmel & Westfield." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://reluxemedspa.com/hot-deals" />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="Offers & Specials | RELUXE Med Spa" />
-        <meta name="twitter:description" content="Current offers and specials on Botox, facials, laser treatments & more in Carmel & Westfield." />
-      </Head>
+    <BetaLayout
+      title="Med Spa Offers & Specials"
+      description="Current offers and specials at RELUXE Med Spa. Save on Botox, facials, laser treatments, body contouring & more in Carmel and Westfield, Indiana."
+      canonical="https://reluxemedspa.com/hot-deals"
+    >
+      {/* Hero */}
+      <section
+        className="relative"
+        style={{
+          backgroundColor: colors.ink,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Grain overlay */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: grain,
+            backgroundRepeat: 'repeat',
+            opacity: 0.5,
+            pointerEvents: 'none',
+          }}
+        />
+        {/* Radial gradient glow */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.25,
+            background: `radial-gradient(60% 60% at 50% 0%, ${colors.violet}40, transparent 60%)`,
+            pointerEvents: 'none',
+          }}
+        />
 
-      <HeaderTwo />
+        <div
+          className="relative mx-auto max-w-6xl px-6"
+          style={{ paddingTop: '5rem', paddingBottom: '5rem' }}
+        >
+          <p
+            style={{
+              fontFamily: fonts.body,
+              ...typeScale.label,
+              color: colors.violet,
+              marginBottom: '1rem',
+            }}
+          >
+            Limited-Time Offers
+          </p>
+          <h1
+            style={{
+              fontFamily: fonts.display,
+              fontSize: typeScale.hero.size,
+              fontWeight: typeScale.hero.weight,
+              lineHeight: typeScale.hero.lineHeight,
+              color: colors.white,
+            }}
+          >
+            Current{' '}
+            <span
+              style={{
+                background: gradients.primary,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Offers
+            </span>
+          </h1>
+          <p
+            style={{
+              marginTop: '1rem',
+              maxWidth: '36rem',
+              fontFamily: fonts.body,
+              fontSize: '1.0625rem',
+              lineHeight: 1.6,
+              color: 'rgba(250,248,245,0.55)',
+            }}
+          >
+            Save on Botox, facials, laser treatments, body contouring &amp; more at our Carmel and Westfield locations.
+          </p>
+          <div style={{ marginTop: '2rem' }}>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
+          </div>
+        </div>
+      </section>
 
-      <section className="bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <h1 className="text-2xl font-semibold mb-6">Current Offers</h1>
-
+      {/* Offers Grid */}
+      <section style={{ backgroundColor: colors.cream }}>
+        <div
+          className="max-w-6xl mx-auto px-6"
+          style={{ paddingTop: '3rem', paddingBottom: '4rem' }}
+        >
           {live.length === 0 ? (
-            <div className="rounded-xl border p-6 text-neutral-600">
+            <div
+              style={{
+                borderRadius: '1rem',
+                border: `1px solid ${colors.taupe}`,
+                padding: '1.5rem',
+                fontFamily: fonts.body,
+                fontSize: typeScale.body.size,
+                color: colors.body,
+              }}
+            >
               No active offers right now. Check back soon, or see our{' '}
-              <Link href="/services" className="underline">services</Link>.
+              <Link
+                href="/services"
+                style={{ textDecoration: 'underline', color: colors.violet }}
+              >
+                services
+              </Link>
+              .
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {live.map(o => (
+              {live.map((o) => (
                 <Link
                   key={o.slug}
                   href={`/hot-deals/${o.slug}`}
-                  className="group rounded-xl border overflow-hidden hover:shadow-lg transition"
+                  style={{
+                    display: 'block',
+                    borderRadius: '1rem',
+                    border: `1px solid ${colors.taupe}`,
+                    overflow: 'hidden',
+                    textDecoration: 'none',
+                    transition: 'box-shadow 0.2s',
+                    backgroundColor: '#fff',
+                  }}
+                  className="group hover:shadow-lg"
                 >
-                  <div className="aspect-[4/3] bg-neutral-100">
+                  <div style={{ aspectRatio: '4/3', backgroundColor: colors.stone }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={o.hero.image}
                       alt={o.title || 'Offer'}
-                      className="w-full h-full object-cover"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   </div>
-                  <div className="p-4">
-                    <div className="text-sm text-neutral-500">
+                  <div style={{ padding: '1rem' }}>
+                    <div
+                      style={{
+                        fontFamily: fonts.body,
+                        fontSize: typeScale.caption.size,
+                        color: colors.muted,
+                      }}
+                    >
                       {o.shortTitle || o.title}
                     </div>
-                    <div className="text-neutral-900 font-semibold">
+                    <div
+                      style={{
+                        fontFamily: fonts.display,
+                        fontWeight: 600,
+                        color: colors.heading,
+                        marginTop: '0.125rem',
+                      }}
+                    >
                       {o.hero.headline || o.title}
                     </div>
                   </div>
@@ -96,6 +214,8 @@ export default function OffersIndex({ live = [] }) {
           )}
         </div>
       </section>
-    </>
-  )
+    </BetaLayout>
+  );
 }
+
+OffersIndex.getLayout = (page) => page;

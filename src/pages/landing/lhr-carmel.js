@@ -3,10 +3,14 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import Head from 'next/head'
-import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -31,27 +35,27 @@ const REEL_EMBED_URL = 'https://www.instagram.com/reel/DUn02FGDoSu/embed'
 const FAQS = [
   {
     q: 'Does laser hair removal hurt?',
-    a: 'Most people describe quick snaps + warmth. It’s fast, and we’ll keep you comfortable the whole time.',
+    a: 'Most people describe quick snaps + warmth. It\u2019s fast, and we\u2019ll keep you comfortable the whole time.',
   },
   {
     q: 'How many sessions will I need?',
-    a: 'Hair grows in cycles, so you’ll need multiple sessions. Your plan depends on area, hair density, hormones, and goals—we’ll map it in your consult.',
+    a: 'Hair grows in cycles, so you\u2019ll need multiple sessions. Your plan depends on area, hair density, hormones, and goals\u2014we\u2019ll map it in your consult.',
   },
   {
     q: 'Is it safe for my skin tone?',
-    a: 'We’ll confirm candidacy at your consult and tailor settings to you. If you’re a fit, we’ll build a safe plan for your skin and hair.',
+    a: 'We\u2019ll confirm candidacy at your consult and tailor settings to you. If you\u2019re a fit, we\u2019ll build a safe plan for your skin and hair.',
   },
   {
     q: 'Should I shave before my treatment?',
-    a: 'Yes—shave the area about 24 hours before. Skip waxing/epilating (we need the follicle). We’ll give you the full prep checklist.',
+    a: 'Yes\u2014shave the area about 24 hours before. Skip waxing/epilating (we need the follicle). We\u2019ll give you the full prep checklist.',
   },
   {
     q: 'When will I see results?',
-    a: 'Many clients notice changes after early sessions, and results build with consistency. We’ll set realistic expectations for your hair + skin type.',
+    a: 'Many clients notice changes after early sessions, and results build with consistency. We\u2019ll set realistic expectations for your hair + skin type.',
   },
   {
     q: 'What areas can be treated?',
-    a: 'Face, underarms, bikini, legs, arms, back, chest—most areas are fair game. We’ll confirm what’s best for you in consult.',
+    a: 'Face, underarms, bikini, legs, arms, back, chest\u2014most areas are fair game. We\u2019ll confirm what\u2019s best for you in consult.',
   },
 ]
 
@@ -65,14 +69,10 @@ function trackEvent(eventName, params = {}) {
   }
 
   if (typeof window.fbq === 'function') {
-    try {
-      window.fbq('trackCustom', eventName, payload)
-    } catch {}
+    try { window.fbq('trackCustom', eventName, payload) } catch {}
   }
   if (typeof window.gtag === 'function') {
-    try {
-      window.gtag('event', eventName, payload)
-    } catch {}
+    try { window.gtag('event', eventName, payload) } catch {}
   }
   if (Array.isArray(window.dataLayer)) {
     window.dataLayer.push({ event: eventName, ...payload })
@@ -107,13 +107,6 @@ function withUTMs(baseHref) {
 
 export default function LaserHairRemovalLanding() {
   const [videoOpen, setVideoOpen] = useState(false)
-  const [showSticky, setShowSticky] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 260)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => {
     if (!videoOpen) return
@@ -129,123 +122,97 @@ export default function LaserHairRemovalLanding() {
   const smsHref = `sms:${MARKETING_SMS}?&body=${smsBody}`
   const callHref = `tel:${PHONE_CALL}`
 
-  const ogTitle = 'Laser Hair Removal Consult | Carmel | RELUXE Med Spa'
   const ogDesc =
-    'Laser Hair Removal FAQ — answered. Watch the quick video, then book your free consult in Carmel to get started for spring/pool season.'
+    'Laser Hair Removal FAQ \u2014 answered. Watch the quick video, then book your free consult in Carmel to get started for spring/pool season.'
 
   return (
-    <>
-      <Head>
-        <title>Laser Hair Removal Consult | Carmel | RELUXE Med Spa</title>
-        <meta name="description" content={ogDesc} />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <meta property="og:title" content={ogTitle} />
-        <meta property="og:description" content={ogDesc} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Laser Hair Removal Consult | Carmel"
+      description={ogDesc}
+      canonical={`https://reluxemedspa.com${PAGE_PATH}`}
+    >
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.18),transparent_60%)]" />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <section
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: colors.ink,
+          backgroundImage: `${grain}, radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.18), transparent 60%)`,
+        }}
+      >
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '2rem 1rem 2.5rem' }}>
           <div className="grid lg:grid-cols-12 gap-7 lg:gap-10 items-stretch">
             {/* LEFT */}
-            <div className="lg:col-span-7 text-white lg:min-h-[560px] flex flex-col">
-              <p className="text-[11px] sm:text-xs tracking-widest uppercase text-neutral-400">
-                {BRAND} • {FOCUS_LOCATION_LABEL}
+            <div className="lg:col-span-7" style={{ color: colors.white, display: 'flex', flexDirection: 'column' }}>
+              <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.letterSpacing, textTransform: 'uppercase', color: colors.muted }}>
+                {BRAND} &bull; {FOCUS_LOCATION_LABEL}
               </p>
 
-              <h1 className="mt-2 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
-                Laser Hair Removal: Your Most Common Questions — Answered ✨
+              <h1 style={{ marginTop: '0.5rem', fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, color: colors.white }}>
+                Laser Hair Removal: Your Most Common Questions &mdash;{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Answered</span>
               </h1>
 
-              <p className="mt-3 text-neutral-300 text-base sm:text-lg leading-relaxed max-w-2xl">
-                You’re not alone. Most people hesitate because they’re unsure what it feels like, how many sessions it takes,
-                or whether it’s right for them. Watch the quick FAQ video—then book your <strong>free consult</strong> so we can build
+              <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, fontSize: typeScale.subhead.size, lineHeight: typeScale.subhead.lineHeight, color: colors.white, maxWidth: '42rem' }}>
+                You&apos;re not alone. Most people hesitate because they&apos;re unsure what it feels like, how many sessions it takes,
+                or whether it&apos;s right for them. Watch the quick FAQ video&mdash;then book your <strong>free consult</strong> so we can build
                 a plan for <strong>bikini/pool/spring season</strong>.
               </p>
 
               <div className="mt-5 grid gap-2 sm:grid-cols-3">
                 <MiniProof title="Free Consult" copy="Candidacy + plan + pricing clarity." />
-                <MiniProof title="Fast Answers" copy="Pain, prep, areas, timeline—covered." />
+                <MiniProof title="Fast Answers" copy="Pain, prep, areas, timeline\u2014covered." />
                 <MiniProof title="Start Now" copy="Best results come from consistency." />
               </div>
 
-              <div className="mt-6">
-                <CTA
-                  href={consultHref}
-                  primary
-                  onClick={() =>
-                    trackEvent('book_consult_click', {
-                      service: 'lhr',
-                      placement: 'hero',
-                      location: 'carmel',
-                    })
-                  }
-                >
-                  Book Free Consult (Carmel)
-                </CTA>
+              <div style={{ marginTop: '1.5rem' }}>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
 
                 <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                  <CTA
-                    href={smsHref}
-                    onClick={() =>
-                      trackEvent('sms_click', { service: 'lhr', placement: 'hero', phone: MARKETING_SMS })
-                    }
-                  >
+                  <TrackedLink href={smsHref} onClick={() => trackEvent('sms_click', { service: 'lhr', placement: 'hero', phone: MARKETING_SMS })}>
                     Text Us (Quick Help)
-                  </CTA>
-                  <CTA
-                    href={callHref}
-                    onClick={() =>
-                      trackEvent('call_click', { service: 'lhr', placement: 'hero', phone: PHONE_CALL })
-                    }
-                  >
+                  </TrackedLink>
+                  <TrackedLink href={callHref} onClick={() => trackEvent('call_click', { service: 'lhr', placement: 'hero', phone: PHONE_CALL })}>
                     Call {DISPLAY_PHONE}
-                  </CTA>
+                  </TrackedLink>
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
-                <p className="text-sm font-semibold text-white">What happens in your consult</p>
-                <ul className="mt-2 space-y-2 text-sm text-neutral-300">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-2 h-2 w-2 rounded-full bg-emerald-300" />
-                    <span>Confirm you’re a candidate + review skin/hair type</span>
+              <div style={{ marginTop: '1.25rem', borderRadius: '9999px', backgroundColor: 'rgba(250,248,245,0.05)', border: '1px solid rgba(250,248,245,0.1)', padding: '1rem' }}>
+                <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>What happens in your consult</p>
+                <ul style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', backgroundColor: colors.violet, flexShrink: 0 }} />
+                    <span>Confirm you&apos;re a candidate + review skin/hair type</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-2 h-2 w-2 rounded-full bg-emerald-300" />
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', backgroundColor: colors.violet, flexShrink: 0 }} />
                     <span>Pick areas + create a realistic session plan</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-2 h-2 w-2 rounded-full bg-emerald-300" />
+                  <li style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                    <span style={{ marginTop: '0.5rem', height: '0.5rem', width: '0.5rem', borderRadius: '9999px', backgroundColor: colors.violet, flexShrink: 0 }} />
                     <span>Answer prep + pain questions so you feel confident</span>
                   </li>
                 </ul>
-                <p className="mt-3 text-xs text-neutral-400">
+                <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>
                   Goal: you leave knowing exactly what to do next (and what results to expect).
                 </p>
               </div>
             </div>
 
             {/* RIGHT */}
-            <div className="lg:col-span-5 lg:min-h-[560px] flex flex-col">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-5 flex-1">
-                <p className="text-[11px] tracking-widest uppercase text-neutral-300">Watch the FAQ</p>
-                <h3 className="mt-1 text-lg sm:text-xl font-extrabold tracking-tight text-white">
+            <div className="lg:col-span-5 flex flex-col">
+              <div style={{ borderRadius: '1.5rem', border: '1px solid rgba(250,248,245,0.1)', backgroundColor: 'rgba(250,248,245,0.05)', padding: '1rem 1.25rem', flex: 1 }}>
+                <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.letterSpacing, textTransform: 'uppercase', color: colors.muted }}>Watch the FAQ</p>
+                <h3 style={{ marginTop: '0.25rem', fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.white }}>
                   Does it hurt? What areas? How do I start?
                 </h3>
-                <p className="mt-2 text-sm text-neutral-300">
-                  This is the exact consult conversation—just faster.
+                <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>
+                  This is the exact consult conversation&mdash;just faster.
                 </p>
 
                 {/* Mobile: inline embed */}
-                <div className="mt-4 md:hidden aspect-[9/16] w-full overflow-hidden rounded-2xl border border-white/10 bg-black">
+                <div className="mt-4 md:hidden" style={{ aspectRatio: '9/16', width: '100%', overflow: 'hidden', borderRadius: '1rem', border: '1px solid rgba(250,248,245,0.1)', backgroundColor: '#000' }}>
                   <iframe
                     src={REEL_EMBED_URL}
                     title="RELUXE Laser Hair Removal FAQ video"
@@ -258,7 +225,7 @@ export default function LaserHairRemovalLanding() {
 
                 {/* Desktop: preview -> modal */}
                 <div className="mt-4 hidden md:block">
-                  <div className="mx-auto w-full max-w-[320px]">
+                  <div style={{ margin: '0 auto', maxWidth: 320 }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -268,8 +235,8 @@ export default function LaserHairRemovalLanding() {
                       className="group w-full text-left"
                       aria-label="Open video fullscreen"
                     >
-                      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black shadow-xl">
-                        <div className="aspect-[9/16] max-h-[420px]">
+                      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '1rem', border: '1px solid rgba(250,248,245,0.1)', backgroundColor: '#000' }}>
+                        <div style={{ aspectRatio: '9/16', maxHeight: 420 }}>
                           <iframe
                             src={REEL_EMBED_URL}
                             title="RELUXE Laser Hair Removal preview"
@@ -280,50 +247,37 @@ export default function LaserHairRemovalLanding() {
                             referrerPolicy="strict-origin-when-cross-origin"
                           />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none" />
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/10">
-                            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.1), transparent)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', bottom: '0.75rem', left: '0.75rem', right: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', borderRadius: '9999px', backgroundColor: 'rgba(250,248,245,0.1)', padding: '0.375rem 0.75rem', fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 600, color: colors.white, border: '1px solid rgba(250,248,245,0.1)' }}>
+                            <span style={{ height: '0.5rem', width: '0.5rem', borderRadius: '9999px', backgroundColor: colors.violet }} />
                             Watch fullscreen
                           </span>
-                          <span className="text-xs text-white/80 group-hover:text-white transition">↗</span>
+                          <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.8)' }}>&nearr;</span>
                         </div>
                       </div>
                     </button>
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <CTA
-                        href={REEL_URL}
-                        primary
-                        onClick={() => trackEvent('ig_reel_click', { service: 'lhr', placement: 'video_card' })}
-                      >
+                      <TrackedLink href={REEL_URL} primary onClick={() => trackEvent('ig_reel_click', { service: 'lhr', placement: 'video_card' })}>
                         Watch on IG
-                      </CTA>
-                      <CTA
-                        href={consultHref}
-                        onClick={() => trackEvent('book_consult_click', { service: 'lhr', placement: 'video_card_cta', location: 'carmel' })}
-                      >
+                      </TrackedLink>
+                      <TrackedLink href={consultHref} onClick={() => trackEvent('book_consult_click', { service: 'lhr', placement: 'video_card_cta', location: 'carmel' })}>
                         Book Consult
-                      </CTA>
+                      </TrackedLink>
                     </div>
                   </div>
                 </div>
 
                 {/* Urgency block */}
-                <div className="mt-5 rounded-2xl bg-black/40 ring-1 ring-white/10 p-4">
-                  <p className="text-sm font-semibold text-white">Timing matters for spring/pool season</p>
-                  <p className="mt-1 text-sm text-neutral-300">
+                <div style={{ marginTop: '1.25rem', borderRadius: '1rem', backgroundColor: 'rgba(0,0,0,0.4)', border: '1px solid rgba(250,248,245,0.1)', padding: '1rem' }}>
+                  <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>Timing matters for spring/pool season</p>
+                  <p style={{ marginTop: '0.25rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>
                     If you want smoother skin with less maintenance, the best move is to start now. Your consult makes it simple:
-                    we’ll confirm candidacy and map the fastest realistic plan for you.
+                    we&apos;ll confirm candidacy and map the fastest realistic plan for you.
                   </p>
-                  <div className="mt-3">
-                    <CTA
-                      href={consultHref}
-                      primary
-                      onClick={() => trackEvent('book_consult_click', { service: 'lhr', placement: 'urgency_card', location: 'carmel' })}
-                    >
-                      Book Free Consult (Carmel)
-                    </CTA>
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <GravityBookButton fontKey={FONT_KEY} size="hero" />
                   </div>
                 </div>
               </div>
@@ -348,78 +302,63 @@ export default function LaserHairRemovalLanding() {
       )}
 
       {/* FAQ */}
-      <section id="faq" className="bg-neutral-50 py-12 sm:py-14">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <p className="text-[11px] tracking-widest uppercase text-neutral-500 text-center">
+      <section id="faq" style={{ backgroundColor: colors.cream, padding: '3rem 0 3.5rem' }}>
+        <div style={{ maxWidth: '64rem', margin: '0 auto', padding: '0 1rem' }}>
+          <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.letterSpacing, textTransform: 'uppercase', color: colors.muted, textAlign: 'center' }}>
             Laser Hair Removal FAQ
           </p>
-          <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-center text-neutral-900">
+          <h2 style={{ marginTop: '0.5rem', fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, textAlign: 'center', color: colors.heading }}>
             The questions everyone asks (tap to expand)
           </h2>
-          <p className="mt-2 text-center text-neutral-600 max-w-2xl mx-auto">
-            Exactly what your consult covers—so you feel confident before you start.
+          <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, textAlign: 'center', color: colors.body, maxWidth: '42rem', margin: '0.5rem auto 0' }}>
+            Exactly what your consult covers&mdash;so you feel confident before you start.
           </p>
 
-          <div className="mt-7 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
+          <div style={{ marginTop: '1.75rem', border: `1px solid ${colors.stone}`, borderRadius: '1.5rem', backgroundColor: '#fff', overflow: 'hidden' }} className="divide-y divide-neutral-200">
             {FAQS.map((x) => (
               <FaqItem key={x.q} q={x.q} a={x.a} />
             ))}
           </div>
 
           <div className="mt-8 grid gap-2 sm:grid-cols-2">
-            <CTA
-              href={consultHref}
-              primary
-              onClick={() => trackEvent('book_consult_click', { service: 'lhr', placement: 'faq', location: 'carmel' })}
-            >
-              Book Free Consult (Carmel)
-            </CTA>
-            <CTA
-              href={smsHref}
-              onClick={() => trackEvent('sms_click', { service: 'lhr', placement: 'faq', phone: MARKETING_SMS })}
-            >
+            <div>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
+            </div>
+            <TrackedLink href={smsHref} onClick={() => trackEvent('sms_click', { service: 'lhr', placement: 'faq', phone: MARKETING_SMS })}>
               Text Us Your Questions
-            </CTA>
+            </TrackedLink>
           </div>
 
-          <div className="mt-8 rounded-3xl bg-white ring-1 ring-neutral-200 p-6">
-            <h3 className="text-lg font-extrabold tracking-tight text-neutral-900">Still unsure if it’s “worth it”?</h3>
-            <p className="mt-2 text-neutral-700">
-              Laser hair removal is one of the best ways to reduce constant shaving/waxing and improve irritation over time—
-              but results depend on consistency, skin type, and hair type. That’s why the consult matters.
+          <div style={{ marginTop: '2rem', borderRadius: '1.5rem', backgroundColor: '#fff', border: `1px solid ${colors.stone}`, padding: '1.5rem' }}>
+            <h3 style={{ fontFamily: fonts.display, fontSize: typeScale.subhead.size, fontWeight: 700, color: colors.heading }}>Still unsure if it&apos;s &ldquo;worth it&rdquo;?</h3>
+            <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, color: colors.body }}>
+              Laser hair removal is one of the best ways to reduce constant shaving/waxing and improve irritation over time&mdash;
+              but results depend on consistency, skin type, and hair type. That&apos;s why the consult matters.
             </p>
-            <div className="mt-4">
-              <CTA
-                href={consultHref}
-                primary
-                onClick={() => trackEvent('book_consult_click', { service: 'lhr', placement: 'worth_it_card', location: 'carmel' })}
-              >
-                Book Free Consult (Carmel)
-              </CTA>
+            <div style={{ marginTop: '1rem' }}>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
             </div>
           </div>
         </div>
       </section>
-
-      {/* Sticky mobile CTA */}
-      {showSticky && <StickyOneCTA href={consultHref} />}
-    </>
+    </BetaLayout>
   )
 }
+
+LaserHairRemovalLanding.getLayout = (page) => page
 
 /* -----------------------------
    UI Components
 ------------------------------ */
 
-function CTA({ href, children, primary, onClick }) {
-  const base =
-    'inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
+function TrackedLink({ href, children, primary, onClick }) {
+  const base = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '9999px', padding: '0.75rem 1.5rem', fontFamily: fonts.body, fontWeight: 600, minHeight: '3rem', touchAction: 'manipulation', transition: 'all 150ms ease', textDecoration: 'none', width: '100%' }
   const styles = primary
-    ? 'text-white w-full bg-gradient-to-r from-emerald-500 to-black shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-neutral-900'
-    : 'text-white/90 w-full ring-1 ring-white/20 hover:bg-white/10 bg-neutral-900'
+    ? { ...base, color: '#fff', background: gradients.primary }
+    : { ...base, color: colors.white, border: '1px solid rgba(250,248,245,0.2)', backgroundColor: 'rgba(250,248,245,0.05)' }
 
   return (
-    <a href={href} className={`${base} ${styles}`} rel="noopener" onClick={onClick}>
+    <a href={href} style={styles} rel="noopener" onClick={onClick}>
       {children}
     </a>
   )
@@ -427,9 +366,9 @@ function CTA({ href, children, primary, onClick }) {
 
 function MiniProof({ title, copy }) {
   return (
-    <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-3">
-      <p className="text-sm font-semibold text-white">{title}</p>
-      <p className="mt-1 text-sm text-neutral-300">{copy}</p>
+    <div style={{ borderRadius: '1rem', backgroundColor: 'rgba(250,248,245,0.05)', border: '1px solid rgba(250,248,245,0.1)', padding: '0.75rem' }}>
+      <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>{title}</p>
+      <p style={{ marginTop: '0.25rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>{copy}</p>
     </div>
   )
 }
@@ -438,11 +377,11 @@ function QuickJump({ label, to }) {
   return (
     <a
       href={to}
-      className="rounded-2xl bg-white/5 ring-1 ring-white/10 px-4 py-3 text-sm font-semibold text-white/90 hover:bg-white/10 transition"
+      style={{ borderRadius: '9999px', backgroundColor: 'rgba(250,248,245,0.05)', border: '1px solid rgba(250,248,245,0.1)', padding: '0.75rem 1rem', fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(250,248,245,0.9)', textDecoration: 'none', display: 'block', textAlign: 'center', transition: 'background 150ms ease' }}
       onClick={() => trackEvent('jump_click', { service: 'lhr', label })}
       rel="noopener"
     >
-      {label} →
+      {label} &rarr;
     </a>
   )
 }
@@ -456,15 +395,15 @@ function VideoModal({ title, src, onClose }) {
       onClick={onClose}
     >
       <div className="w-full max-w-md sm:max-w-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="rounded-2xl overflow-hidden border border-white/10 bg-black">
-          <div className="px-4 py-3 flex items-center justify-between bg-black/60">
-            <p className="text-sm font-semibold text-white">{title}</p>
-            <button type="button" className="text-white/80 hover:text-white text-sm font-semibold" onClick={onClose}>
+        <div style={{ borderRadius: '1rem', overflow: 'hidden', border: '1px solid rgba(250,248,245,0.1)', backgroundColor: '#000' }}>
+          <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>{title}</p>
+            <button type="button" style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.8)', fontSize: '0.875rem', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }} onClick={onClose}>
               Close
             </button>
           </div>
 
-          <div className="aspect-[9/16] w-full">
+          <div style={{ aspectRatio: '9/16', width: '100%' }}>
             <iframe
               src={src}
               title={title}
@@ -480,28 +419,14 @@ function VideoModal({ title, src, onClose }) {
   )
 }
 
-function StickyOneCTA({ href }) {
-  return (
-    <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-[calc(100%-24px)] max-w-lg rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-      <a
-        href={href}
-        className="inline-flex w-full items-center justify-center rounded-xl px-3 py-3 text-sm font-extrabold text-white bg-gradient-to-r from-emerald-500 to-black active:scale-[.99] touch-manipulation"
-        onClick={() => trackEvent('book_consult_click', { service: 'lhr', placement: 'sticky', location: 'carmel' })}
-        rel="noopener"
-      >
-        Book Free Consult (Carmel)
-      </a>
-    </div>
-  )
-}
-
 function FaqItem({ q, a }) {
   return (
     <details className="group">
-      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 font-semibold flex items-center justify-between">
-        <span className="text-sm sm:text-base text-neutral-900">{q}</span>
+      <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '1rem 1.5rem', fontFamily: fonts.body, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '0.9375rem', color: colors.heading }}>{q}</span>
         <svg
-          className="h-5 w-5 text-neutral-400 transition-transform group-open:rotate-180"
+          className="h-5 w-5 transition-transform group-open:rotate-180"
+          style={{ color: colors.muted }}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -512,7 +437,7 @@ function FaqItem({ q, a }) {
           />
         </svg>
       </summary>
-      <div className="px-4 sm:px-6 pb-5 text-neutral-700 text-sm sm:text-base">{a}</div>
+      <div style={{ padding: '0 1.5rem 1.25rem', fontFamily: fonts.body, color: colors.body, fontSize: '0.9375rem' }}>{a}</div>
     </details>
   )
 }

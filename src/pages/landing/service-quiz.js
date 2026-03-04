@@ -8,12 +8,17 @@
 // - Lead capture only AFTER results (save plan + routine + $25 off code QUIZ)
 // - Two CTA buttons: Book recommended service OR Getting Started with RELUXE
 // - Always emails completion to hello@reluxemedspa.com via /api/quiz-service-results
-// - ✅ Captures attribution (full URL + UTMs + click IDs + referrer + first landing URL + device + fbc/fbp cookies)
-// - ✅ Captures startedAt + durationSeconds + userAgent and includes in email
+// - Captures attribution (full URL + UTMs + click IDs + referrer + first landing URL + device + fbc/fbp cookies)
+// - Captures startedAt + durationSeconds + userAgent and includes in email
 
-import Head from 'next/head'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  * EDIT THESE CONSTANTS
@@ -174,25 +179,25 @@ const QUESTIONS = [
   {
     id: 'q1_goal',
     title: 'What are you here for?',
-    subtitle: 'Tap one. We’ll tell you what to book first.',
+    subtitle: 'Tap one. We\u2019ll tell you what to book first.',
     options: [
-      { id: 'wrinkles', label: 'Wrinkles / fine lines', emoji: '🙂' },
-      { id: 'tone_texture', label: 'Sun damage / texture', emoji: '🌞' },
-      { id: 'dull', label: 'Dull / tired skin', emoji: '✨' },
-      { id: 'breakouts', label: 'Breakouts / congestion', emoji: '🫧' },
-      { id: 'body', label: 'Body goals', emoji: '💪' },
-      { id: 'not_sure', label: 'Not sure — tell me', emoji: '🤝' },
+      { id: 'wrinkles', label: 'Wrinkles / fine lines', emoji: '\ud83d\ude42' },
+      { id: 'tone_texture', label: 'Sun damage / texture', emoji: '\ud83c\udf1e' },
+      { id: 'dull', label: 'Dull / tired skin', emoji: '\u2728' },
+      { id: 'breakouts', label: 'Breakouts / congestion', emoji: '\ud83e\udee7' },
+      { id: 'body', label: 'Body goals', emoji: '\ud83d\udcaa' },
+      { id: 'not_sure', label: 'Not sure \u2014 tell me', emoji: '\ud83e\udd1d' },
     ],
   },
   {
     id: 'q2_style',
-    title: 'What’s your vibe?',
+    title: 'What\u2019s your vibe?',
     subtitle: 'This helps us pick the best starting point.',
     options: [
-      { id: 'easy', label: 'Easy + relaxing', emoji: '😌' },
-      { id: 'visible', label: 'I want visible results', emoji: '🔥' },
-      { id: 'low_commit', label: 'Low commitment', emoji: '🗓️' },
-      { id: 'guided', label: 'I want a pro to guide me', emoji: '🧠' },
+      { id: 'easy', label: 'Easy + relaxing', emoji: '\ud83d\ude0c' },
+      { id: 'visible', label: 'I want visible results', emoji: '\ud83d\udd25' },
+      { id: 'low_commit', label: 'Low commitment', emoji: '\ud83d\uddd3\ufe0f' },
+      { id: 'guided', label: 'I want a pro to guide me', emoji: '\ud83e\udde0' },
     ],
   },
   {
@@ -200,9 +205,9 @@ const QUESTIONS = [
     title: 'When are you hoping to start?',
     subtitle: null,
     options: [
-      { id: 'asap', label: 'As soon as possible', emoji: '🚀' },
-      { id: 'weeks', label: 'In the next few weeks', emoji: '🗓️' },
-      { id: 'exploring', label: 'I’m just exploring', emoji: '🔎' },
+      { id: 'asap', label: 'As soon as possible', emoji: '\ud83d\ude80' },
+      { id: 'weeks', label: 'In the next few weeks', emoji: '\ud83d\uddd3\ufe0f' },
+      { id: 'exploring', label: 'I\u2019m just exploring', emoji: '\ud83d\udd0e' },
     ],
   },
 ]
@@ -224,8 +229,8 @@ const SERVICES = {
     name: 'Signature Facial',
     price: '$150',
     image: '/images/quiz/services/signature-facial.jpg',
-    blurb: 'The classic “reset.” Clean, calm, refreshed — perfect first facial.',
-    routine: 'Routine: start here → then we build your plan.',
+    blurb: 'The classic \u201creset.\u201d Clean, calm, refreshed \u2014 perfect first facial.',
+    routine: 'Routine: start here \u2192 then we build your plan.',
   },
   glo2: {
     key: 'glo2',
@@ -233,23 +238,23 @@ const SERVICES = {
     price: '$250',
     image: '/images/quiz/services/glo2.jpg',
     blurb: 'Glow-forward and fun. Great when you want visible results without downtime.',
-    routine: 'Routine: glow now → maintain with monthly facials.',
+    routine: 'Routine: glow now \u2192 maintain with monthly facials.',
   },
   hydrafacial: {
     key: 'hydrafacial',
     name: 'HydraFacial',
     price: '$275',
     image: '/images/quiz/services/hydrafacial.jpg',
-    blurb: 'Trusted, noticeable, and worth it — especially for texture + congestion.',
-    routine: 'Routine: deep clean + hydrate → repeat as needed.',
+    blurb: 'Trusted, noticeable, and worth it \u2014 especially for texture + congestion.',
+    routine: 'Routine: deep clean + hydrate \u2192 repeat as needed.',
   },
   jeuveau: {
     key: 'jeuveau',
     name: 'Jeuveau',
     price: '$380',
     image: '/images/quiz/services/jeuveau.jpg',
-    blurb: 'A high-value “line softener” for common wrinkle areas (customized dosing).',
-    routine: 'Routine: treat → reassess at 2 weeks → maintenance plan.',
+    blurb: 'A high-value \u201cline softener\u201d for common wrinkle areas (customized dosing).',
+    routine: 'Routine: treat \u2192 reassess at 2 weeks \u2192 maintenance plan.',
   },
   daxxify: {
     key: 'daxxify',
@@ -257,15 +262,15 @@ const SERVICES = {
     price: '$580',
     image: '/images/quiz/services/daxxify.jpg',
     blurb: 'Premium, longevity-minded tox for people who want fewer visits.',
-    routine: 'Routine: premium longevity → fewer touchpoints.',
+    routine: 'Routine: premium longevity \u2192 fewer touchpoints.',
   },
   ipl_clearlift: {
     key: 'ipl_clearlift',
     name: 'IPL / ClearLift',
     price: 'Plan-based results',
     image: '/images/quiz/services/ipl-clearlift.jpg',
-    blurb: 'Tone, sun damage, redness, and texture — the “skin reset” category.',
-    routine: 'Routine: series-based plan → maintain with skincare/facials.',
+    blurb: 'Tone, sun damage, redness, and texture \u2014 the \u201cskin reset\u201d category.',
+    routine: 'Routine: series-based plan \u2192 maintain with skincare/facials.',
   },
   vascupen: {
     key: 'vascupen',
@@ -273,34 +278,34 @@ const SERVICES = {
     price: 'Targeted treatment',
     image: '/images/quiz/services/vascupen.jpg',
     blurb: 'Precision-focused help for small, stubborn concerns.',
-    routine: 'Routine: targeted correction → optional follow-up.',
+    routine: 'Routine: targeted correction \u2192 optional follow-up.',
   },
   evolve_body: {
     key: 'evolve_body',
     name: 'Evolve Body',
     price: 'Plan-based results',
     image: '/images/quiz/services/evolve.jpg',
-    blurb: 'Tone + smoothing + shape support — for body goals without major downtime.',
+    blurb: 'Tone + smoothing + shape support \u2014 for body goals without major downtime.',
     routine: 'Routine: body plan + progress check-ins.',
   },
 }
 
 /** =========================
- * “PERSONA” OUTPUT (shorter, tighter)
+ * "PERSONA" OUTPUT (shorter, tighter)
  * ========================= */
 function personaFromServiceKey(serviceKey) {
   const map = {
-    monthly_facial: { emoji: '🗓️', title: 'Maintenance Mode', vibe: 'Easy consistency that actually sticks.' },
-    signature_facial: { emoji: '✨', title: 'The Perfect Reset', vibe: 'The cleanest, safest place to start.' },
-    glo2: { emoji: '🌟', title: 'Glow Seeker', vibe: 'You want visible results fast.' },
-    hydrafacial: { emoji: '💧', title: 'Results-Driven', vibe: 'Reliable payoff. Worth it.' },
-    jeuveau: { emoji: '🙂', title: 'Line Softener', vibe: 'Smoother is the goal.' },
-    daxxify: { emoji: '⏳', title: 'Longevity Planner', vibe: 'Premium results, fewer visits.' },
-    ipl_clearlift: { emoji: '🌞', title: 'Skin Resetter', vibe: 'Tone + texture + sun damage focus.' },
-    vascupen: { emoji: '🎯', title: 'Detail Fixer', vibe: 'Targeted correction, not overkill.' },
-    evolve_body: { emoji: '💪', title: 'Body Optimizer', vibe: 'Body goals with a plan.' },
+    monthly_facial: { emoji: '\ud83d\uddd3\ufe0f', title: 'Maintenance Mode', vibe: 'Easy consistency that actually sticks.' },
+    signature_facial: { emoji: '\u2728', title: 'The Perfect Reset', vibe: 'The cleanest, safest place to start.' },
+    glo2: { emoji: '\ud83c\udf1f', title: 'Glow Seeker', vibe: 'You want visible results fast.' },
+    hydrafacial: { emoji: '\ud83d\udca7', title: 'Results-Driven', vibe: 'Reliable payoff. Worth it.' },
+    jeuveau: { emoji: '\ud83d\ude42', title: 'Line Softener', vibe: 'Smoother is the goal.' },
+    daxxify: { emoji: '\u23f3', title: 'Longevity Planner', vibe: 'Premium results, fewer visits.' },
+    ipl_clearlift: { emoji: '\ud83c\udf1e', title: 'Skin Resetter', vibe: 'Tone + texture + sun damage focus.' },
+    vascupen: { emoji: '\ud83c\udfaf', title: 'Detail Fixer', vibe: 'Targeted correction, not overkill.' },
+    evolve_body: { emoji: '\ud83d\udcaa', title: 'Body Optimizer', vibe: 'Body goals with a plan.' },
   }
-  return map[serviceKey] || { emoji: '✨', title: 'Your Best Start', vibe: 'Let’s keep it simple and effective.' }
+  return map[serviceKey] || { emoji: '\u2728', title: 'Your Best Start', vibe: 'Let\u2019s keep it simple and effective.' }
 }
 
 /** =========================
@@ -311,7 +316,7 @@ function computeServiceKey(answers) {
   const vibe = answers.q2_style
   const timing = answers.q3_timing
 
-  // Not sure or wants guidance → best safe start
+  // Not sure or wants guidance -> best safe start
   if (goal === 'not_sure' || vibe === 'guided') return 'signature_facial'
 
   if (goal === 'body') return 'evolve_body'
@@ -560,43 +565,68 @@ export default function ServiceQuizPage() {
   const consultHref = BOOK_LINKS.getting_started || '/book/getting-started'
 
   return (
-    <>
-      <Head>
-        <title>What Should I Book? — Quick Quiz | {BRAND}</title>
-        <meta name="description" content="Not sure what to book? Tap through 3 quick questions and we’ll recommend your best first service." />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-
-        {/* Social sharing */}
-        <meta property="og:title" content={`What Should I Book? — Quick Quiz | ${BRAND}`} />
-        <meta property="og:description" content="3 quick taps. One confident recommendation." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={`What Should I Book? \u2014 Quick Quiz | ${BRAND}`}
+      description="Not sure what to book? Tap through 3 quick questions and we'll recommend your best first service."
+      canonical={`https://reluxemedspa.com${PAGE_PATH}`}
+    >
       {/* Compact hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.20),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-          <div className="max-w-4xl text-white">
-            <p className="text-[11px] sm:text-xs tracking-widest uppercase text-neutral-400">
-              {BRAND} • {LOCATION_TAGLINE}
+      <section
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: colors.ink,
+          backgroundImage: `${grain}, radial-gradient(60% 60% at 50% 0%, rgba(16,185,129,0.15), transparent 60%)`,
+        }}
+      >
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
+          <div style={{ maxWidth: '56rem' }}>
+            <p style={{
+              fontFamily: fonts.body,
+              fontSize: '0.6875rem',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: colors.muted,
+            }}>
+              {BRAND} &middot; {LOCATION_TAGLINE}
             </p>
-            <h1 className="mt-1 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
-              Find your perfect first service
+            <h1 style={{
+              marginTop: '0.25rem',
+              fontFamily: fonts.display,
+              fontSize: typeScale.sectionHeading.size,
+              fontWeight: typeScale.sectionHeading.weight,
+              lineHeight: typeScale.sectionHeading.lineHeight,
+              color: colors.white,
+            }}>
+              Find your{' '}
+              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                perfect first service
+              </span>
             </h1>
-            <p className="mt-2 text-neutral-300 text-sm sm:text-base">
-              Three quick taps. One confident recommendation. <span className="text-neutral-400">Finish and unlock {COUPON_COPY} (code {COUPON_CODE}).</span>
+            <p style={{
+              marginTop: '0.5rem',
+              fontFamily: fonts.body,
+              fontSize: '0.9375rem',
+              color: 'rgba(250,248,245,0.6)',
+            }}>
+              Three quick taps. One confident recommendation. <span style={{ color: colors.muted }}>Finish and unlock {COUPON_COPY} (code {COUPON_CODE}).</span>
             </p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-neutral-400">{progressLabel}</span>
+            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>{progressLabel}</span>
               <button
                 type="button"
                 onClick={resetAll}
-                className="text-xs font-semibold text-white/80 hover:text-white underline underline-offset-4"
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: 'rgba(250,248,245,0.7)',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '4px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
                 Restart
               </button>
@@ -606,19 +636,40 @@ export default function ServiceQuizPage() {
       </section>
 
       {/* Main */}
-      <section className="bg-neutral-50 py-6 sm:py-8">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+      <section style={{ backgroundColor: colors.cream, padding: '1.5rem 0 2rem' }}>
+        <div style={{ maxWidth: '48rem', margin: '0 auto', padding: '0 1rem' }}>
+          <div style={{
+            borderRadius: '1.5rem',
+            border: `1px solid ${colors.stone}`,
+            backgroundColor: '#fff',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            overflow: 'hidden',
+          }}>
             {!showResults ? (
-              <div className="p-5 sm:p-7">
-                <p className="text-[11px] tracking-widest uppercase text-neutral-500">Quick Match Quiz</p>
-                <h2 className="mt-2 text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">
+              <div style={{ padding: '1.5rem' }}>
+                <p style={{
+                  fontFamily: fonts.body,
+                  fontSize: '0.6875rem',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: colors.muted,
+                }}>
+                  Quick Match Quiz
+                </p>
+                <h2 style={{
+                  marginTop: '0.5rem',
+                  fontFamily: fonts.display,
+                  fontSize: typeScale.subhead.size,
+                  fontWeight: typeScale.subhead.weight,
+                  lineHeight: typeScale.subhead.lineHeight,
+                  color: colors.heading,
+                }}>
                   {current.title}
                 </h2>
-                {current.subtitle && <p className="mt-2 text-sm text-neutral-600">{current.subtitle}</p>}
+                {current.subtitle && <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body }}>{current.subtitle}</p>}
 
                 {/* Visual card grid */}
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div style={{ marginTop: '1.25rem', display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 14rem), 1fr))' }}>
                   {current.options.map((opt) => {
                     const selected = answers[current.id] === opt.id
                     return (
@@ -626,20 +677,37 @@ export default function ServiceQuizPage() {
                         key={opt.id}
                         type="button"
                         onClick={() => choose(current.id, opt.id)}
-                        className={[
-                          'w-full text-left rounded-2xl border p-4 transition shadow-sm',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500',
-                          selected ? 'border-emerald-300 bg-emerald-50' : 'border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300',
-                        ].join(' ')}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          borderRadius: '1rem',
+                          border: selected ? `2px solid ${colors.violet}` : `1px solid ${colors.stone}`,
+                          backgroundColor: selected ? `${colors.violet}08` : '#fff',
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          transition: 'border-color 0.15s, background-color 0.15s',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        }}
                         aria-pressed={selected}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded-2xl bg-neutral-900 text-white flex items-center justify-center text-lg">
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                          <div style={{
+                            height: '2.5rem',
+                            width: '2.5rem',
+                            borderRadius: '1rem',
+                            backgroundColor: colors.ink,
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.125rem',
+                            flexShrink: 0,
+                          }}>
                             {opt.emoji}
                           </div>
-                          <div className="flex-1">
-                            <div className="text-sm sm:text-base font-extrabold text-neutral-900">{opt.label}</div>
-                            <div className="mt-1 text-xs text-neutral-600">Tap to continue →</div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontFamily: fonts.body, fontWeight: 700, fontSize: '0.9375rem', color: colors.heading }}>{opt.label}</div>
+                            <div style={{ marginTop: '0.25rem', fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>Tap to continue &rarr;</div>
                           </div>
                         </div>
                       </button>
@@ -647,7 +715,7 @@ export default function ServiceQuizPage() {
                   })}
                 </div>
 
-                <div className="mt-5 flex items-center justify-between">
+                <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <button
                     type="button"
                     onClick={() => {
@@ -656,54 +724,109 @@ export default function ServiceQuizPage() {
                       trackEvent('service_back', { session_id: sessionId, to_step: Math.max(1, stepIndex) })
                     }}
                     disabled={stepIndex === 0}
-                    className={[
-                      'rounded-2xl px-4 py-3 text-sm font-semibold ring-1 transition min-h-[44px]',
-                      stepIndex === 0 ? 'ring-neutral-200 text-neutral-400 cursor-not-allowed' : 'ring-neutral-200 text-neutral-800 hover:bg-neutral-50',
-                    ].join(' ')}
+                    style={{
+                      borderRadius: '9999px',
+                      padding: '0.75rem 1rem',
+                      fontFamily: fonts.body,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      border: `1px solid ${colors.stone}`,
+                      backgroundColor: '#fff',
+                      color: stepIndex === 0 ? colors.muted : colors.heading,
+                      cursor: stepIndex === 0 ? 'not-allowed' : 'pointer',
+                      minHeight: '2.75rem',
+                    }}
                   >
                     Back
                   </button>
-
-                  <div className="text-xs text-neutral-500">
+                  <div style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>
                     No forms yet. Just a match.
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-5 sm:p-7">
-                <p className="text-[11px] tracking-widest uppercase text-neutral-500">Your match</p>
-                <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+              <div style={{ padding: '1.5rem' }}>
+                <p style={{
+                  fontFamily: fonts.body,
+                  fontSize: '0.6875rem',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: colors.muted,
+                }}>
+                  Your match
+                </p>
+                <h2 style={{
+                  marginTop: '0.5rem',
+                  fontFamily: fonts.display,
+                  fontSize: typeScale.sectionHeading.size,
+                  fontWeight: typeScale.sectionHeading.weight,
+                  lineHeight: typeScale.sectionHeading.lineHeight,
+                  color: colors.heading,
+                }}>
                   {persona.emoji} {persona.title}
                 </h2>
-                <p className="mt-2 text-neutral-700">{persona.vibe}</p>
+                <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, color: colors.body }}>{persona.vibe}</p>
 
                 {/* Recommended service */}
-                <div className="mt-6 rounded-3xl border border-neutral-200 overflow-hidden">
-                  <div className="grid sm:grid-cols-12">
-                    <div className="sm:col-span-5 bg-neutral-100">
+                <div style={{
+                  marginTop: '1.5rem',
+                  borderRadius: '1.5rem',
+                  border: `1px solid ${colors.stone}`,
+                  overflow: 'hidden',
+                }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 14rem), 1fr))' }}>
+                    <div style={{ backgroundColor: colors.cream }}>
                       <img
                         src={service?.image}
                         alt={service?.name}
-                        className="w-full h-full object-cover aspect-[4/3] sm:aspect-auto"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '4/3', display: 'block' }}
                         loading="eager"
                         onError={(e) => { e.currentTarget.style.display = 'none' }}
                       />
                     </div>
 
-                    <div className="sm:col-span-7 p-5 sm:p-6 bg-white">
-                      <p className="text-[11px] tracking-widest uppercase text-neutral-500">Best service to start with</p>
-                      <h3 className="mt-2 text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">
+                    <div style={{ padding: '1.5rem', backgroundColor: '#fff' }}>
+                      <p style={{
+                        fontFamily: fonts.body,
+                        fontSize: '0.6875rem',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: colors.muted,
+                      }}>
+                        Best service to start with
+                      </p>
+                      <h3 style={{
+                        marginTop: '0.5rem',
+                        fontFamily: fonts.display,
+                        fontSize: typeScale.subhead.size,
+                        fontWeight: typeScale.subhead.weight,
+                        color: colors.heading,
+                      }}>
                         {service?.name}
                       </h3>
-                      <p className="mt-1 text-sm text-neutral-600">{service?.price}</p>
-                      <p className="mt-3 text-neutral-700">{service?.blurb}</p>
+                      <p style={{ marginTop: '0.25rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>{service?.price}</p>
+                      <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, color: colors.body }}>{service?.blurb}</p>
 
                       {/* Two buttons, one CTA area */}
-                      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                      <div style={{ marginTop: '1.25rem', display: 'grid', gap: '0.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 12rem), 1fr))' }}>
                         <a
                           href={bookServiceHref}
                           onClick={() => trackEvent('service_book_click', { session_id: sessionId, service: service?.key })}
-                          className="rounded-2xl px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-black hover:from-emerald-400 hover:to-neutral-900 transition min-h-[48px] inline-flex items-center justify-center gap-2"
+                          style={{
+                            borderRadius: '9999px',
+                            padding: '0.75rem 1.5rem',
+                            fontFamily: fonts.body,
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: '#fff',
+                            background: gradients.primary,
+                            textDecoration: 'none',
+                            minHeight: '3rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                          }}
                         >
                           Book {service?.name} <Arrow />
                         </a>
@@ -711,26 +834,55 @@ export default function ServiceQuizPage() {
                         <a
                           href={consultHref}
                           onClick={() => trackEvent('service_getting_started_click', { session_id: sessionId })}
-                          className="rounded-2xl px-6 py-3 text-sm font-semibold ring-1 ring-neutral-200 text-neutral-900 hover:bg-neutral-50 transition min-h-[48px] inline-flex items-center justify-center"
+                          style={{
+                            borderRadius: '9999px',
+                            padding: '0.75rem 1.5rem',
+                            fontFamily: fonts.body,
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            border: `1px solid ${colors.stone}`,
+                            color: colors.heading,
+                            textDecoration: 'none',
+                            minHeight: '3rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#fff',
+                          }}
                         >
                           Getting Started with RELUXE
                         </a>
                       </div>
 
                       {/* Credit code display */}
-                      <div className="mt-4 rounded-2xl bg-neutral-50 border border-neutral-200 p-4">
-                        <p className="text-sm font-semibold text-neutral-900">Your {COUPON_COPY}</p>
-                        <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-neutral-200">
-                          <span className="text-xs text-neutral-500">Use code</span>
-                          <span className="text-sm font-extrabold tracking-widest">{COUPON_CODE}</span>
+                      <div style={{
+                        marginTop: '1rem',
+                        borderRadius: '1rem',
+                        backgroundColor: colors.cream,
+                        border: `1px solid ${colors.stone}`,
+                        padding: '1rem',
+                      }}>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.heading }}>Your {COUPON_COPY}</p>
+                        <div style={{
+                          marginTop: '0.5rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          borderRadius: '0.75rem',
+                          backgroundColor: '#fff',
+                          padding: '0.5rem 0.75rem',
+                          border: `1px solid ${colors.stone}`,
+                        }}>
+                          <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.muted }}>Use code</span>
+                          <span style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 800, letterSpacing: '0.12em' }}>{COUPON_CODE}</span>
                         </div>
-                        <p className="mt-2 text-[11px] text-neutral-500">
+                        <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
                           Apply at booking/checkout. One per new client. Terms may apply.
                         </p>
                       </div>
 
-                      <p className="mt-3 text-[11px] text-neutral-500">
-                        Completion emailed to the team: {completionSent ? '✅' : 'sending…'}
+                      <p style={{ marginTop: '0.75rem', fontFamily: fonts.body, fontSize: '0.6875rem', color: colors.muted }}>
+                        Completion emailed to the team: {completionSent ? 'sent' : 'sending\u2026'}
                       </p>
                     </div>
                   </div>
@@ -738,52 +890,95 @@ export default function ServiceQuizPage() {
 
                 {/* Lead capture AFTER value */}
                 {!leadCaptured && (
-                  <div className="mt-6 rounded-3xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
-                    <h4 className="text-lg sm:text-xl font-extrabold tracking-tight text-neutral-900">
+                  <div style={{
+                    marginTop: '1.5rem',
+                    borderRadius: '1.5rem',
+                    border: `1px solid ${colors.stone}`,
+                    backgroundColor: colors.cream,
+                    padding: '1.5rem',
+                  }}>
+                    <h4 style={{
+                      fontFamily: fonts.display,
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      color: colors.heading,
+                    }}>
                       Want to save your plan + routine + {COUPON_COPY}?
                     </h4>
-                    <p className="mt-2 text-sm text-neutral-600">
-                      We’ll send your recommendation + routine + code <strong>{COUPON_CODE}</strong>.
+                    <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body }}>
+                      We'll send your recommendation + routine + code <strong>{COUPON_CODE}</strong>.
                     </p>
 
-                    <div className="mt-4 grid sm:grid-cols-2 gap-2">
+                    <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 12rem), 1fr))', gap: '0.5rem' }}>
                       <button
                         type="button"
                         onClick={() => setLeadChannel('email')}
-                        className={`rounded-2xl border px-4 py-3 text-left transition ${leadChannel === 'email' ? 'border-emerald-300 bg-emerald-50' : 'border-neutral-200 hover:bg-white'}`}
+                        style={{
+                          borderRadius: '1rem',
+                          border: leadChannel === 'email' ? `2px solid ${colors.violet}` : `1px solid ${colors.stone}`,
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          backgroundColor: leadChannel === 'email' ? `${colors.violet}08` : '#fff',
+                        }}
                       >
-                        <p className="font-extrabold text-neutral-900">✉️ Email me</p>
-                        <p className="text-xs text-neutral-600 mt-1">Save it in your inbox.</p>
+                        <p style={{ fontFamily: fonts.body, fontWeight: 700, color: colors.heading }}>Email me</p>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.body, marginTop: '0.25rem' }}>Save it in your inbox.</p>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setLeadChannel('sms')}
-                        className={`rounded-2xl border px-4 py-3 text-left transition ${leadChannel === 'sms' ? 'border-emerald-300 bg-emerald-50' : 'border-neutral-200 hover:bg-white'}`}
+                        style={{
+                          borderRadius: '1rem',
+                          border: leadChannel === 'sms' ? `2px solid ${colors.violet}` : `1px solid ${colors.stone}`,
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          backgroundColor: leadChannel === 'sms' ? `${colors.violet}08` : '#fff',
+                        }}
                       >
-                        <p className="font-extrabold text-neutral-900">📲 Text me</p>
-                        <p className="text-xs text-neutral-600 mt-1">Fastest way to keep the code handy.</p>
+                        <p style={{ fontFamily: fonts.body, fontWeight: 700, color: colors.heading }}>Text me</p>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: colors.body, marginTop: '0.25rem' }}>Fastest way to keep the code handy.</p>
                       </button>
                     </div>
 
-                    <div className="mt-4 grid gap-3">
+                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div>
-                        <label className="text-sm font-semibold text-neutral-900">First name (optional)</label>
+                        <label style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.heading }}>First name (optional)</label>
                         <input
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          className="mt-1 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          style={{
+                            marginTop: '0.25rem',
+                            width: '100%',
+                            borderRadius: '9999px',
+                            border: `1px solid ${colors.stone}`,
+                            padding: '0.75rem 1rem',
+                            fontFamily: fonts.body,
+                            fontSize: '0.875rem',
+                            outline: 'none',
+                          }}
                           placeholder="Your name"
                         />
                       </div>
 
                       {leadChannel === 'email' && (
                         <div>
-                          <label className="text-sm font-semibold text-neutral-900">Email</label>
+                          <label style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.heading }}>Email</label>
                           <input
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            style={{
+                              marginTop: '0.25rem',
+                              width: '100%',
+                              borderRadius: '9999px',
+                              border: `1px solid ${colors.stone}`,
+                              padding: '0.75rem 1rem',
+                              fontFamily: fonts.body,
+                              fontSize: '0.875rem',
+                              outline: 'none',
+                            }}
                             placeholder="you@email.com"
                             inputMode="email"
                             autoComplete="email"
@@ -794,39 +989,64 @@ export default function ServiceQuizPage() {
                       {leadChannel === 'sms' && (
                         <>
                           <div>
-                            <label className="text-sm font-semibold text-neutral-900">Mobile number</label>
+                            <label style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.heading }}>Mobile number</label>
                             <input
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
-                              className="mt-1 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                              style={{
+                                marginTop: '0.25rem',
+                                width: '100%',
+                                borderRadius: '9999px',
+                                border: `1px solid ${colors.stone}`,
+                                padding: '0.75rem 1rem',
+                                fontFamily: fonts.body,
+                                fontSize: '0.875rem',
+                                outline: 'none',
+                              }}
                               placeholder="317-555-1234"
                               inputMode="tel"
                               autoComplete="tel"
                             />
                           </div>
 
-                          <label className="flex items-start gap-2 text-xs text-neutral-600">
+                          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontFamily: fonts.body, fontSize: '0.75rem', color: colors.body }}>
                             <input
                               type="checkbox"
                               checked={smsConsent}
                               onChange={(e) => setSmsConsent(e.target.checked)}
-                              className="mt-0.5 h-4 w-4 rounded border-neutral-300"
+                              style={{ marginTop: '0.125rem', height: '1rem', width: '1rem' }}
                             />
                             <span>
-                              Yes — text me my plan + {COUPON_COPY}. Msg &amp; data rates may apply. Reply STOP to opt out.
+                              Yes &mdash; text me my plan + {COUPON_COPY}. Msg &amp; data rates may apply. Reply STOP to opt out.
                             </span>
                           </label>
                         </>
                       )}
 
                       {leadStatus === 'error' && (
-                        <div className="rounded-2xl bg-rose-50 border border-rose-200 p-3 text-sm text-rose-800">
+                        <div style={{
+                          borderRadius: '1rem',
+                          backgroundColor: '#fef2f2',
+                          border: '1px solid #fecaca',
+                          padding: '0.75rem',
+                          fontFamily: fonts.body,
+                          fontSize: '0.875rem',
+                          color: '#991b1b',
+                        }}>
                           Please pick SMS or email and fill required fields (and consent for SMS).
                         </div>
                       )}
                       {leadStatus === 'ok' && (
-                        <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-900">
-                          ✅ Saved. Thank you!
+                        <div style={{
+                          borderRadius: '1rem',
+                          backgroundColor: '#ecfdf5',
+                          border: '1px solid #a7f3d0',
+                          padding: '0.75rem',
+                          fontFamily: fonts.body,
+                          fontSize: '0.875rem',
+                          color: '#065f46',
+                        }}>
+                          Saved. Thank you!
                         </div>
                       )}
 
@@ -834,13 +1054,24 @@ export default function ServiceQuizPage() {
                         type="button"
                         onClick={submitLead}
                         disabled={sendingLead}
-                        className={`rounded-2xl px-6 py-3 text-sm font-semibold text-white transition min-h-[48px] inline-flex items-center justify-center gap-2 ${
-                          sendingLead
-                            ? 'bg-neutral-300 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-emerald-500 to-black hover:from-emerald-400 hover:to-neutral-900'
-                        }`}
+                        style={{
+                          borderRadius: '9999px',
+                          padding: '0.75rem 1.5rem',
+                          fontFamily: fonts.body,
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#fff',
+                          background: sendingLead ? colors.muted : gradients.primary,
+                          border: 'none',
+                          cursor: sendingLead ? 'not-allowed' : 'pointer',
+                          minHeight: '3rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                        }}
                       >
-                        {sendingLead ? 'Sending…' : 'Send my plan + code'} <Arrow />
+                        {sendingLead ? 'Sending\u2026' : 'Send my plan + code'} <Arrow />
                       </button>
 
                       <button
@@ -849,7 +1080,17 @@ export default function ServiceQuizPage() {
                           setLeadCaptured(true)
                           trackEvent('service_lead_skip', { session_id: sessionId })
                         }}
-                        className="text-xs text-neutral-500 underline underline-offset-4 hover:text-neutral-700 text-left"
+                        style={{
+                          fontFamily: fonts.body,
+                          fontSize: '0.75rem',
+                          color: colors.muted,
+                          textDecoration: 'underline',
+                          textUnderlineOffset: '4px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
                       >
                         No thanks
                       </button>
@@ -857,11 +1098,22 @@ export default function ServiceQuizPage() {
                   </div>
                 )}
 
-                <div className="mt-6">
+                <div style={{ marginTop: '1.5rem' }}>
                   <button
                     type="button"
                     onClick={resetAll}
-                    className="w-full rounded-2xl px-6 py-3 text-sm font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition"
+                    style={{
+                      width: '100%',
+                      borderRadius: '9999px',
+                      padding: '0.75rem 1.5rem',
+                      fontFamily: fonts.body,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      border: `1px solid ${colors.stone}`,
+                      backgroundColor: '#fff',
+                      color: colors.heading,
+                      cursor: 'pointer',
+                    }}
                   >
                     Retake quiz
                   </button>
@@ -871,13 +1123,15 @@ export default function ServiceQuizPage() {
           </div>
         </div>
       </section>
-    </>
+    </BetaLayout>
   )
 }
 
+ServiceQuizPage.getLayout = (page) => page
+
 function Arrow() {
   return (
-    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+    <svg style={{ height: '1rem', width: '1rem' }} fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
       <path d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 11-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" />
     </svg>
   )

@@ -215,7 +215,7 @@ function TileCard({ tile, onTap, index = 0, animDelay = 0 }) {
       </p>
       <div className="flex items-center gap-2 mt-3">
         {tile.providerImage ? (
-          <img src={tile.providerImage} alt="" className="rounded-full object-cover" style={{ width: 28, height: 28 }} />
+          <img src={tile.providerImage} alt={tile.providerName} className="rounded-full object-cover" style={{ width: 28, height: 28 }} />
         ) : (
           <div className="rounded-full" style={{ width: 28, height: 28, background: gradients.primary }} />
         )}
@@ -370,7 +370,7 @@ function ProviderPicker({ locationKey, onSelect, onClose }) {
             onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             {p.image ? (
-              <img src={p.image} alt="" className="rounded-full object-cover" style={{ width: 40, height: 40 }} />
+              <img src={p.image} alt={p.name} className="rounded-full object-cover" style={{ width: 40, height: 40 }} />
             ) : (
               <div className="rounded-full" style={{ width: 40, height: 40, background: gradients.primary }} />
             )}
@@ -486,7 +486,7 @@ function BookingSheet({ tile, onClose, onSuccess, onSlotTaken, trackEvent }) {
             {/* Provider */}
             <div className="flex items-center gap-3 mb-4 pb-4" style={{ borderBottom: `1px solid ${colors.taupe}30` }}>
               {tile.providerImage ? (
-                <img src={tile.providerImage} alt="" className="rounded-full object-cover" style={{ width: 44, height: 44 }} />
+                <img src={tile.providerImage} alt={tile.providerName} className="rounded-full object-cover" style={{ width: 44, height: 44 }} />
               ) : (
                 <div className="rounded-full" style={{ width: 44, height: 44, background: gradients.primary }} />
               )}

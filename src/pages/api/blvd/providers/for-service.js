@@ -48,6 +48,7 @@ export default async function handler(req, res) {
       .select('slug, name, title, featured_image, boulevard_provider_id, boulevard_service_map, locations')
       .eq('status', 'published')
       .not('boulevard_provider_id', 'is', null)
+      .neq('allow_online_booking', false)
 
     if (!staff?.length) {
       const empty = []

@@ -2,9 +2,14 @@
 // The RELUXE Way — Tox Pricing (standalone spoke page in the RELUXE Way hub)
 
 /* eslint-disable @next/next/no-img-element */
-import Head from 'next/head'
-import { useEffect, useMemo, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useMemo, useState, useEffect } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -12,18 +17,18 @@ import HeaderTwo from '../../components/header/header-2'
 const PAGE_NAME = 'Tox Pricing — The RELUXE Way'
 const HUB_URL = '/reluxe-way'
 
-// ✅ Booking URLs
+// Booking URLs
 const BOOK_TOX_URL = '/book/tox'
 const BOOK_TOX_URL_WESTFIELD = '/book/tox?loc=westfield'
 const BOOK_TOX_URL_CARMEL = '/book/tox?loc=carmel'
 
-// ✅ Consult URLs
+// Consult URLs
 const CONSULT_URL = '/book/getting-started'
 const CONSULT_URL_WESTFIELD = '/book/getting-started?loc=westfield'
 const CONSULT_URL_CARMEL = '/book/getting-started?loc=carmel'
 const CONSULT_NAME = 'Getting Started with RELUXE'
 
-// ✅ Absolute URLs for social previews
+// Absolute URLs for social previews
 const SITE_URL = 'https://reluxemedspa.com'
 const PAGE_PATH = '/reluxe-way/tox-pricing'
 const CANONICAL_URL = `${SITE_URL}${PAGE_PATH}`
@@ -39,44 +44,44 @@ const FB_MSG_URL = 'https://m.me/reluxemedspa'
 
 /**
  * Pricing
- * NOTE: We’re adding `popularDose` so the page can anchor expectations
- * without implying “foundation” is the typical amount.
+ * NOTE: We're adding `popularDose` so the page can anchor expectations
+ * without implying "foundation" is the typical amount.
  */
 const TOX_PRICING = [
   {
     key: 'jeuveau',
-    name: 'Jeuveau®',
+    name: 'Jeuveau\u00AE',
     tagline: 'Best Value, Natural Results',
     foundation: { units: 20, price: 200, note: 'after $40 off w/ Evolus Rewards' },
     addOns: { new: 6, returning: 8 },
-    popularDose: 50, // ✅ most popular
+    popularDose: 50,
     popularLabel: 'Most popular visit',
   },
   {
     key: 'botox',
-    name: 'Botox®',
+    name: 'Botox\u00AE',
     tagline: 'Premium, Proven Results',
     foundation: { units: 20, price: 280, note: null },
     addOns: { new: 9, returning: 10 },
-    popularDose: 50, // ✅ most popular
+    popularDose: 50,
     popularLabel: 'Most popular visit',
   },
   {
     key: 'dysport',
-    name: 'Dysport®',
+    name: 'Dysport\u00AE',
     tagline: 'Fast-Acting, Great Coverage',
     foundation: { units: 50, price: 225, note: null },
     addOns: { new: 3, returning: 3.5 },
-    popularDose: 100, // ✅ most popular
+    popularDose: 100,
     popularLabel: 'Most popular visit',
   },
   {
     key: 'daxxify',
-    name: 'Daxxify®',
+    name: 'Daxxify\u00AE',
     tagline: 'Longest-Lasting, Premium Tox',
     foundation: { units: 40, price: 280, note: null },
     addOns: { new: 4, returning: 5 },
-    popularDose: 100, // ✅ most popular
+    popularDose: 100,
     popularLabel: 'Most popular visit',
   },
 ]
@@ -156,7 +161,7 @@ function getSchema() {
         url: CANONICAL_URL,
         name: 'Tox Pricing in Carmel & Westfield | Botox, Daxxify, Jeuveau, Dysport Pricing | RELUXE',
         description:
-          'Transparent tox pricing in Carmel & Westfield. View Botox®, Daxxify®, Jeuveau®, and Dysport® pricing with our foundation + right dosing model for new and returning patients at RELUXE Med Spa.',
+          'Transparent tox pricing in Carmel & Westfield. View Botox\u00AE, Daxxify\u00AE, Jeuveau\u00AE, and Dysport\u00AE pricing with our foundation + right dosing model for new and returning patients at RELUXE Med Spa.',
         isPartOf: { '@id': `${SITE_URL}#website` },
         about: [
           { '@type': 'Thing', name: 'Botox pricing' },
@@ -186,7 +191,7 @@ function getSchema() {
             acceptedAnswer: {
               '@type': 'Answer',
               text:
-                'Not usually. The foundation dose is the starting block that’s included in every visit, but most patients land at our most popular doses (for example, 50 units for Botox®/Jeuveau® and 100 units for Dysport®/Daxxify®). Your injector confirms the best plan for your face.',
+                'Not usually. The foundation dose is the starting block that\u2019s included in every visit, but most patients land at our most popular doses (for example, 50 units for Botox\u00AE/Jeuveau\u00AE and 100 units for Dysport\u00AE/Daxxify\u00AE). Your injector confirms the best plan for your face.',
             },
           },
           {
@@ -195,7 +200,7 @@ function getSchema() {
             acceptedAnswer: {
               '@type': 'Answer',
               text:
-                'No. This is our pricing model. Your visit includes a foundation dose at a standard price, and additional units switch to our Right Dosing rates so choosing the right plan doesn’t feel like an upsell.',
+                'No. This is our pricing model. Your visit includes a foundation dose at a standard price, and additional units switch to our Right Dosing rates so choosing the right plan doesn\u2019t feel like an upsell.',
             },
           },
           {
@@ -204,7 +209,7 @@ function getSchema() {
             acceptedAnswer: {
               '@type': 'Answer',
               text:
-                'Because expert dosing drives satisfaction and longevity. We want pricing to support the plan that delivers the best result—without pressure or surprise totals.',
+                'Because expert dosing drives satisfaction and longevity. We want pricing to support the plan that delivers the best result\u2014without pressure or surprise totals.',
             },
           },
           {
@@ -222,7 +227,7 @@ function getSchema() {
             acceptedAnswer: {
               '@type': 'Answer',
               text:
-                'Start with a consult with one of our nurse injectors. We’ll map movement, discuss your goals, and recommend the right plan and dose.',
+                'Start with a consult with one of our nurse injectors. We\u2019ll map movement, discuss your goals, and recommend the right plan and dose.',
             },
           },
         ],
@@ -246,33 +251,23 @@ function getSchema() {
 }
 
 export default function ReluxeWayToxPricingPage() {
-  const [showSticky, setShowSticky] = useState(false)
-
   // Calculator defaults
   const [calcTox, setCalcTox] = useState('jeuveau')
   const [calcType, setCalcType] = useState('new') // 'new' | 'returning'
   const [calcUnits, setCalcUnits] = useState(50)
 
-  useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 360)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  const smsBody = encodeURIComponent(`Hi RELUXE! I’d love to book a ${CONSULT_NAME}. Can you help?`)
+  const smsBody = encodeURIComponent(`Hi RELUXE! I'd love to book a ${CONSULT_NAME}. Can you help?`)
   const smsHref = `sms:${MARKETING_SMS}?&body=${smsBody}`
   const callHref = `tel:${PHONE_CALL}`
 
   const selected = useMemo(() => TOX_PRICING.find((t) => t.key === calcTox), [calcTox])
 
-  // ✅ When tox changes, default the slider to the most popular dose (not the foundation)
+  // When tox changes, default the slider to the most popular dose (not the foundation)
   useEffect(() => {
     const t = TOX_PRICING.find((x) => x.key === calcTox)
     if (!t) return
     const defaultUnits = t.popularDose || t.foundation.units
     setCalcUnits((prev) => {
-      // If user already moved it far from defaults, don’t override aggressively.
-      // But on tox change, set a sane default.
       if (prev === 0) return defaultUnits
       return defaultUnits
     })
@@ -285,7 +280,7 @@ export default function ReluxeWayToxPricingPage() {
 
   const pageTitle = 'Tox Pricing in Carmel & Westfield | Botox, Daxxify, Jeuveau, Dysport Pricing | RELUXE'
   const pageDescription =
-    'Transparent tox pricing in Carmel & Westfield. View Botox®, Daxxify®, Jeuveau®, and Dysport® pricing with our foundation + right dosing model for new and returning patients at RELUXE Med Spa.'
+    'Transparent tox pricing in Carmel & Westfield. View Botox, Daxxify, Jeuveau, and Dysport pricing with our foundation + right dosing model for new and returning patients at RELUXE Med Spa.'
 
   const snapshotRows = useMemo(() => {
     return TOX_PRICING.map((t) => {
@@ -304,73 +299,46 @@ export default function ReluxeWayToxPricingPage() {
   }, [])
 
   return (
-    <>
-      <Head>
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
-        <link rel="canonical" href={CANONICAL_URL} />
-        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-
-        {/* Open Graph */}
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content="RELUXE Tox Pricing — Botox, Daxxify, Jeuveau, Dysport (Carmel & Westfield)" />
-        <meta property="og:description" content="Transparent tox pricing in Carmel & Westfield. Foundation + Right Dosing pricing for new & returning patients." />
-        <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:image:secure_url" content={OG_IMAGE} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta
-          property="og:image:alt"
-          content="RELUXE Tox Pricing — Transparent pricing for Botox, Daxxify, Jeuveau, Dysport in Carmel & Westfield"
-        />
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="RELUXE Tox Pricing — Carmel & Westfield" />
-        <meta name="twitter:description" content="Transparent pricing for Botox®, Daxxify®, Jeuveau®, and Dysport® with our foundation + right dosing model." />
-        <meta name="twitter:image" content={OG_IMAGE} />
-
-        {/* Local */}
-        <meta name="geo.region" content="US-IN" />
-        <meta name="geo.placename" content="Carmel, IN; Westfield, IN" />
-
-        {/* JSON-LD */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(getSchema(), null, 2) }} />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={pageTitle}
+      description={pageDescription}
+      canonical={CANONICAL_URL}
+      ogImage={OG_IMAGE}
+      structuredData={getSchema()}
+    >
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.22),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
-          <div className="max-w-5xl text-white">
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative' }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="max-w-5xl" style={{ color: colors.white }}>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] tracking-widest uppercase text-neutral-400">The RELUXE Way</span>
-              <span className="text-neutral-600">•</span>
-              <span className="text-[11px] tracking-widest uppercase text-neutral-400">Carmel & Westfield</span>
-              <span className="text-neutral-600">•</span>
+              <span style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>The RELUXE Way</span>
+              <span style={{ color: colors.muted }}>&bull;</span>
+              <span style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Carmel & Westfield</span>
+              <span style={{ color: colors.muted }}>&bull;</span>
               <a
                 href={HUB_URL}
                 onClick={() => trackEvent('hub_click', { placement: 'hero_breadcrumb' })}
-                className="text-[11px] tracking-widest uppercase text-emerald-300 hover:text-emerald-200"
+                style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
               >
-                Back to the hub →
+                Back to the hub &rarr;
               </a>
             </div>
 
-            <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">Tox Pricing, Re-Invented.</h1>
+            <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight }} className="mt-3">
+              Tox Pricing,{' '}
+              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Re-Invented.</span>
+            </h1>
 
-            <p className="mt-4 text-neutral-200 text-base sm:text-lg leading-relaxed">
-              You told us you want <strong>certainty</strong>—not deal-chasing, not surprises, and not pricing that feels like a gimmick.
+            <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.85)' }} className="mt-4 text-base sm:text-lg leading-relaxed">
+              You told us you want <strong>certainty</strong>--not deal-chasing, not surprises, and not pricing that feels like a gimmick.
               So we built a model that protects quality and rewards what matters most: <strong>the right dose.</strong>
             </p>
 
-            <p className="mt-3 text-neutral-300 text-sm sm:text-base leading-relaxed">
-              The most common “sweet spot” we see: <strong>50 units for Botox® / Jeuveau®</strong> and <strong>100 units for Dysport® / Daxxify®</strong>.
-              Your injector confirms what’s right for your face.
+            <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-3 text-sm sm:text-base leading-relaxed">
+              The most common &ldquo;sweet spot&rdquo; we see: <strong>50 units for Botox&reg; / Jeuveau&reg;</strong> and <strong>100 units for Dysport&reg; / Daxxify&reg;</strong>.
+              Your injector confirms what&rsquo;s right for your face.
             </p>
 
             {/* CTAs */}
@@ -388,13 +356,13 @@ export default function ReluxeWayToxPricingPage() {
               </CTA>
             </div>
 
-            <div className="mt-5 rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+            <div style={{ borderRadius: '1rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)' }} className="mt-5 p-4">
               <div className="grid sm:grid-cols-3 gap-3">
                 <MiniStat label="Built for certainty" value="No bait & switch" />
                 <MiniStat label="Built for results" value="Right dose wins" />
                 <MiniStat label="Built for trust" value="Local, family-owned" />
               </div>
-              <p className="mt-3 text-[12px] text-neutral-400">
+              <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-3 text-[12px]">
                 Pricing shown is for tox injections only. Treatment plans and dosing are customized by your injector. Results vary.
               </p>
             </div>
@@ -402,125 +370,98 @@ export default function ReluxeWayToxPricingPage() {
         </div>
       </section>
 
-      {/* QUICK SNAPSHOT (NEW) */}
-      <section className="bg-white py-12 sm:py-14">
+      {/* QUICK SNAPSHOT */}
+      <section className="py-12 sm:py-14" style={{ background: '#fff' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Eyebrow>Quick pricing snapshot</Eyebrow>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
               Most popular dose, made simple.
             </h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed">
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
               We include a <strong>foundation dose</strong> in every visit (so quality is protected), then add-on units switch to <strong>Right Dosing</strong> pricing.
-              The foundation is a starting block—not a “typical amount.”
+              The foundation is a starting block--not a &ldquo;typical amount.&rdquo;
             </p>
           </div>
 
-          <div className="mt-8 rounded-3xl border border-neutral-200 overflow-hidden">
-            <div className="grid md:grid-cols-4 gap-0 bg-neutral-50 border-b border-neutral-200">
-              <div className="p-4 text-xs tracking-widest uppercase text-neutral-500 font-semibold">Tox</div>
-              <div className="p-4 text-xs tracking-widest uppercase text-neutral-500 font-semibold">Most popular dose</div>
-              <div className="p-4 text-xs tracking-widest uppercase text-neutral-500 font-semibold">New patient estimate</div>
-              <div className="p-4 text-xs tracking-widest uppercase text-neutral-500 font-semibold">Returning estimate</div>
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, overflow: 'hidden' }} className="mt-8">
+            <div className="grid md:grid-cols-4 gap-0" style={{ backgroundColor: colors.cream, borderBottom: `1px solid ${colors.stone}` }}>
+              <div className="p-4" style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted, fontWeight: 600 }}>Tox</div>
+              <div className="p-4" style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted, fontWeight: 600 }}>Most popular dose</div>
+              <div className="p-4" style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted, fontWeight: 600 }}>New patient estimate</div>
+              <div className="p-4" style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted, fontWeight: 600 }}>Returning estimate</div>
             </div>
 
             {snapshotRows.map((r) => (
-              <div key={r.key} className="grid md:grid-cols-4 gap-0 border-b border-neutral-200 last:border-b-0">
+              <div key={r.key} className="grid md:grid-cols-4 gap-0" style={{ borderBottom: `1px solid ${colors.stone}` }}>
                 <div className="p-4">
-                  <p className="font-extrabold text-neutral-900">{r.name}</p>
-                  <p className="text-xs text-neutral-600 mt-1">
+                  <p style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }}>{r.name}</p>
+                  <p style={{ fontFamily: fonts.body, color: colors.body }} className="text-xs mt-1">
                     Includes foundation ({r.baseUnits}u) + add-ons ({r.addUnits}u)
                   </p>
                 </div>
                 <div className="p-4 flex items-center">
-                  <span className="inline-flex items-center rounded-full bg-neutral-900 text-white px-3 py-1 text-sm font-semibold">
+                  <span style={{ borderRadius: '9999px', background: colors.ink, color: colors.white, fontFamily: fonts.body, fontWeight: 600 }} className="inline-flex items-center px-3 py-1 text-sm">
                     {r.popularUnits} units
                   </span>
                 </div>
                 <div className="p-4 flex items-center">
-                  <p className="text-xl font-extrabold text-neutral-900">{money(r.newTotal)}</p>
+                  <p style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-xl">{money(r.newTotal)}</p>
                 </div>
                 <div className="p-4 flex items-center">
-                  <p className="text-xl font-extrabold text-neutral-900">{money(r.returningTotal)}</p>
+                  <p style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-xl">{money(r.returningTotal)}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <p className="mt-4 text-[11px] text-neutral-500">
-            Estimates are transparent math based on the model below—not a quote. Your injector confirms the best dose and plan in the chair.
+          <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-4 text-[11px]">
+            Estimates are transparent math based on the model below--not a quote. Your injector confirms the best dose and plan in the chair.
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-2">
-            <a
-              href={CONSULT_URL}
-              onClick={() => trackEvent('consult_click', { placement: 'snapshot_primary_consult', location: 'any' })}
-              className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition w-full sm:w-auto"
-            >
-              Book a Consult
-            </a>
-            <a
-              href={BOOK_TOX_URL}
-              onClick={() => trackEvent('book_click', { placement: 'snapshot_secondary_book_tox', location: 'any' })}
-              className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition w-full sm:w-auto"
-            >
-              Book Tox
-            </a>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
           </div>
         </div>
       </section>
 
       {/* STORY */}
-      <section className="bg-white py-12 sm:py-14 border-t border-neutral-100">
+      <section className="py-12 sm:py-14" style={{ background: '#fff', borderTop: `1px solid ${colors.stone}` }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7">
               <Eyebrow>What we heard</Eyebrow>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
-                Patients don’t want “promos.” They want confidence.
+              <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Patients don&rsquo;t want &ldquo;promos.&rdquo; They want confidence.
               </h2>
-              <p className="mt-4 text-neutral-700 leading-relaxed">
+              <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
                 Over our first two years, we tried what most med spas try: new patient specials, rotating offers, monthly discounts. And we listened.
               </p>
 
               <div className="mt-5 grid sm:grid-cols-2 gap-4">
-                <QuoteCard title="“I just want to know what it’s going to cost.”" copy="Certainty beats surprise. Especially when it’s your face." />
-                <QuoteCard title="“I don’t want to hop around for deals.”" copy="You want a place you can trust, not a place you have to time." />
+                <QuoteCard title={'\u201CI just want to know what it\u2019s going to cost.\u201D'} copy="Certainty beats surprise. Especially when it's your face." />
+                <QuoteCard title={'\u201CI don\u2019t want to hop around for deals.\u201D'} copy="You want a place you can trust, not a place you have to time." />
               </div>
 
-              <p className="mt-5 text-neutral-700 leading-relaxed">
-                Many pricing models unintentionally reward under-dosing—because it looks cheaper in the moment. Long term, under-dosing is the fastest way to disappointment.
+              <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-5 leading-relaxed">
+                Many pricing models unintentionally reward under-dosing--because it looks cheaper in the moment. Long term, under-dosing is the fastest way to disappointment.
               </p>
             </div>
 
             <div className="lg:col-span-5">
               <StickySideCard>
-                <h3 className="text-lg sm:text-xl font-extrabold tracking-tight text-neutral-900">Our belief</h3>
-                <p className="mt-3 text-neutral-700 leading-relaxed">
+                <h3 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-lg sm:text-xl font-extrabold tracking-tight">Our belief</h3>
+                <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3 leading-relaxed">
                   <strong>Dosing determines duration.</strong>
                   <br />
                   <strong>Expert dosing determines satisfaction.</strong>
                 </p>
-                <p className="mt-3 text-sm text-neutral-600">
-                  Our pricing is designed to make it easy to say “yes” to the plan that delivers the best result.
+                <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3 text-sm">
+                  Our pricing is designed to make it easy to say &ldquo;yes&rdquo; to the plan that delivers the best result.
                 </p>
 
                 <div className="mt-5 flex flex-col gap-2">
-                  <a
-                    href={CONSULT_URL}
-                    onClick={() => trackEvent('consult_click', { placement: 'belief_card_primary_consult', location: 'any' })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
-                  >
-                    Book a Consult
-                  </a>
-
-                  <a
-                    href={BOOK_TOX_URL}
-                    onClick={() => trackEvent('book_click', { placement: 'belief_card_secondary_book_tox', location: 'any' })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition"
-                  >
-                    Book Tox
-                  </a>
+                  <GravityBookButton fontKey={FONT_KEY} size="hero" />
                 </div>
               </StickySideCard>
             </div>
@@ -529,17 +470,17 @@ export default function ReluxeWayToxPricingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="bg-neutral-50 border-y border-neutral-200 py-12 sm:py-14">
+      <section style={{ backgroundColor: colors.cream, borderTop: `1px solid ${colors.stone}`, borderBottom: `1px solid ${colors.stone}` }} className="py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Eyebrow>How it works</Eyebrow>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
               Foundation + Right Dosing
             </h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed">
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
               Every tox visit includes a <strong>foundation dose</strong> at a standard price. That foundation protects the experience (expert injectors, advanced technique, ongoing education, and a plan built around your anatomy).
               <span className="block mt-3">
-                Then, if your plan needs more units (which is common), add-ons switch to <strong>Right Dosing</strong> pricing—so the “most popular dose” stays straightforward.
+                Then, if your plan needs more units (which is common), add-ons switch to <strong>Right Dosing</strong> pricing--so the &ldquo;most popular dose&rdquo; stays straightforward.
               </span>
             </p>
           </div>
@@ -548,44 +489,31 @@ export default function ReluxeWayToxPricingPage() {
             <StepCard
               step="Step 1"
               title="Foundation is included"
-              copy="Your visit starts with a foundation dose that’s included in every appointment. It’s not the “typical amount”—it’s the starting block that protects quality."
+              copy={'Your visit starts with a foundation dose that\u2019s included in every appointment. It\u2019s not the \u201Ctypical amount\u201D\u2014it\u2019s the starting block that protects quality.'}
             />
             <StepCard
               step="Step 2"
               title="We map your movement"
-              copy="We listen to your goals, map expression, and design the plan for your face—often across multiple areas."
+              copy="We listen to your goals, map expression, and design the plan for your face--often across multiple areas."
             />
             <StepCard
               step="Step 3"
               title="Add-ons switch to Right Dosing"
-              copy="Units above foundation switch to our Right Dosing rates, so choosing the correct plan doesn’t feel like an upsell."
+              copy={'Units above foundation switch to our Right Dosing rates, so choosing the correct plan doesn\u2019t feel like an upsell.'}
             />
           </div>
 
-          <div className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-sm">
-            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">The RELUXE promise</h3>
-            <p className="mt-2 text-neutral-700 leading-relaxed">
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }} className="mt-8">
+            <h3 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-xl sm:text-2xl font-extrabold tracking-tight">The RELUXE promise</h3>
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 leading-relaxed">
               No bait & switch. No pressure. Just expert injectors + transparent pricing built for results.
             </p>
 
             <div className="mt-5 flex flex-col sm:flex-row gap-2">
-              <a
-                href={CONSULT_URL}
-                onClick={() => trackEvent('consult_click', { placement: 'promise_primary_consult', location: 'any' })}
-                className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition w-full sm:w-auto"
-              >
-                Book a Consult
-              </a>
-              <a
-                href={BOOK_TOX_URL}
-                onClick={() => trackEvent('book_click', { placement: 'promise_secondary_book_tox', location: 'any' })}
-                className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition w-full sm:w-auto"
-              >
-                Book Tox
-              </a>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
             </div>
 
-            <p className="mt-3 text-[11px] text-neutral-500">
+            <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-3 text-[11px]">
               Prefer Facebook?{' '}
               <a
                 href={FB_MSG_URL}
@@ -603,13 +531,13 @@ export default function ReluxeWayToxPricingPage() {
       </section>
 
       {/* PRICING GRID */}
-      <section className="bg-white py-12 sm:py-14">
+      <section className="py-12 sm:py-14" style={{ background: '#fff' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Eyebrow>Transparent pricing</Eyebrow>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">Choose your tox. See your pricing.</h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed">
-              Each option shows the foundation dose, add-on rates, and an easy “most popular dose” example so you can understand total cost without guessing.
+            <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">Choose your tox. See your pricing.</h2>
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
+              Each option shows the foundation dose, add-on rates, and an easy &ldquo;most popular dose&rdquo; example so you can understand total cost without guessing.
             </p>
           </div>
 
@@ -619,17 +547,18 @@ export default function ReluxeWayToxPricingPage() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-3xl border border-neutral-200 bg-neutral-50 p-6 sm:p-7">
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: colors.cream, padding: '1.75rem' }} className="mt-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h3 className="text-lg sm:text-xl font-extrabold tracking-tight text-neutral-900">Want help choosing?</h3>
-                <p className="mt-1 text-sm text-neutral-600">Tell us your goals and your timeline. We’ll point you to the best fit.</p>
+                <h3 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-lg sm:text-xl font-extrabold tracking-tight">Want help choosing?</h3>
+                <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-1 text-sm">Tell us your goals and your timeline. We&rsquo;ll point you to the best fit.</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <a
                   href={smsHref}
                   onClick={() => trackEvent('sms_click', { placement: 'pricing_help_sms', phone: MARKETING_SMS })}
-                  className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
+                  style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, background: colors.ink, color: colors.white }}
+                  className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-90"
                 >
                   Text Questions
                 </a>
@@ -638,7 +567,8 @@ export default function ReluxeWayToxPricingPage() {
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => trackEvent('instagram_dm_click', { placement: 'pricing_help_ig_dm' })}
-                  className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                  style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                  className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-80"
                 >
                   DM on Instagram
                 </a>
@@ -649,53 +579,23 @@ export default function ReluxeWayToxPricingPage() {
       </section>
 
       {/* CALCULATOR */}
-      <section className="bg-neutral-950 text-white py-12 sm:py-14">
+      <section style={{ background: colors.ink, color: colors.white }} className="py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-5">
               <Eyebrow dark>Quick estimate</Eyebrow>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">What would my appointment cost?</h2>
-              <p className="mt-4 text-neutral-200 leading-relaxed">
-                This is an estimate tool to keep pricing clear. We default to our <strong>most popular dose</strong> so you’re not stuck thinking “foundation = typical.”
+              <h2 style={{ fontFamily: fonts.display, fontWeight: typeScale.sectionHeading.weight }} className="mt-2 text-2xl sm:text-3xl tracking-tight">What would my appointment cost?</h2>
+              <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.85)' }} className="mt-4 leading-relaxed">
+                This is an estimate tool to keep pricing clear. We default to our <strong>most popular dose</strong> so you&rsquo;re not stuck thinking &ldquo;foundation = typical.&rdquo;
               </p>
 
-              <div className="mt-6 rounded-3xl bg-white/5 ring-1 ring-white/10 p-5">
-                <p className="text-sm font-semibold">Estimated total</p>
-                <p className="mt-2 text-4xl font-extrabold tracking-tight">{money(calcTotal)}</p>
-                <p className="mt-2 text-sm text-neutral-300">Includes foundation + add-on units at Right Dosing pricing.</p>
+              <div style={{ borderRadius: '1.5rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)' }} className="mt-6 p-5">
+                <p style={{ fontFamily: fonts.body, fontWeight: 600 }} className="text-sm">Estimated total</p>
+                <p style={{ fontFamily: fonts.display, fontWeight: 800 }} className="mt-2 text-4xl tracking-tight">{money(calcTotal)}</p>
+                <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-2 text-sm">Includes foundation + add-on units at Right Dosing pricing.</p>
 
-                <div className="mt-5 grid sm:grid-cols-2 gap-2">
-                  <a
-                    href={CONSULT_URL_WESTFIELD}
-                    onClick={() =>
-                      trackEvent('consult_click', {
-                        placement: 'calculator_consult',
-                        location: 'westfield',
-                        tox: calcTox,
-                        patient_type: calcType,
-                        units: calcUnits,
-                      })
-                    }
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-gradient-to-r from-emerald-500 to-black hover:from-emerald-400 hover:to-neutral-900 transition"
-                  >
-                    Book Westfield Consult
-                    <Arrow />
-                  </a>
-                  <a
-                    href={CONSULT_URL_CARMEL}
-                    onClick={() =>
-                      trackEvent('consult_click', {
-                        placement: 'calculator_consult',
-                        location: 'carmel',
-                        tox: calcTox,
-                        patient_type: calcType,
-                        units: calcUnits,
-                      })
-                    }
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-white/15 hover:bg-white/10 transition"
-                  >
-                    Book Carmel Consult
-                  </a>
+                <div className="mt-5">
+                  <GravityBookButton fontKey={FONT_KEY} size="hero" />
                 </div>
 
                 <div className="mt-3">
@@ -710,28 +610,30 @@ export default function ReluxeWayToxPricingPage() {
                         units: calcUnits,
                       })
                     }
-                    className="inline-flex items-center justify-center w-full rounded-2xl px-5 py-3 font-semibold ring-1 ring-white/15 hover:bg-white/10 transition"
+                    style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: '1px solid rgba(250,248,245,0.15)' }}
+                    className="inline-flex items-center justify-center w-full px-5 py-3 transition hover:bg-white/10"
                   >
                     Text Us This Estimate
                   </a>
                 </div>
 
-                <p className="mt-3 text-[11px] text-neutral-400">Transparent estimate tool, not a quote. Dosing and plan are customized by your injector.</p>
+                <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-3 text-[11px]">Transparent estimate tool, not a quote. Dosing and plan are customized by your injector.</p>
               </div>
             </div>
 
             <div className="lg:col-span-7">
-              <div className="rounded-3xl bg-white/5 ring-1 ring-white/10 p-6 sm:p-7">
+              <div style={{ borderRadius: '1.5rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)' }} className="p-6 sm:p-7">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs tracking-widest uppercase text-neutral-400">Choose your tox</label>
+                    <label style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Choose your tox</label>
                     <select
                       value={calcTox}
                       onChange={(e) => {
                         setCalcTox(e.target.value)
                         trackEvent('calculator_change', { field: 'tox', value: e.target.value })
                       }}
-                      className="mt-2 w-full rounded-2xl bg-neutral-900 ring-1 ring-white/10 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      style={{ borderRadius: '1rem', background: 'rgba(26,26,26,0.8)', border: '1px solid rgba(250,248,245,0.1)', color: colors.white, fontFamily: fonts.body }}
+                      className="mt-2 w-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500"
                     >
                       {TOX_PRICING.map((t) => (
                         <option key={t.key} value={t.key}>
@@ -740,18 +642,18 @@ export default function ReluxeWayToxPricingPage() {
                       ))}
                     </select>
 
-                    <p className="mt-3 text-sm text-neutral-300">
+                    <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-3 text-sm">
                       Foundation: <strong>{selected?.foundation.units} units</strong> for <strong>{money(selected?.foundation.price)}</strong>{' '}
-                      {selected?.foundation.note ? <span className="text-neutral-400">({selected.foundation.note})</span> : null}
+                      {selected?.foundation.note ? <span style={{ color: colors.muted }}>({selected.foundation.note})</span> : null}
                     </p>
 
-                    <p className="mt-2 text-sm text-neutral-300">
+                    <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-2 text-sm">
                       Most popular dose: <strong>{selected?.popularDose} units</strong>
                     </p>
                   </div>
 
                   <div>
-                    <label className="text-xs tracking-widest uppercase text-neutral-400">Patient type</label>
+                    <label style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Patient type</label>
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <Toggle
                         active={calcType === 'new'}
@@ -773,7 +675,7 @@ export default function ReluxeWayToxPricingPage() {
                       </Toggle>
                     </div>
 
-                    <p className="mt-3 text-sm text-neutral-300">
+                    <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-3 text-sm">
                       Add-on units:{' '}
                       <strong>{money2(calcType === 'returning' ? selected?.addOns.returning : selected?.addOns.new)}/unit</strong>
                     </p>
@@ -781,7 +683,7 @@ export default function ReluxeWayToxPricingPage() {
                 </div>
 
                 <div className="mt-6">
-                  <label className="text-xs tracking-widest uppercase text-neutral-400">Total units</label>
+                  <label style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Total units</label>
                   <div className="mt-2 flex items-center gap-3">
                     <input
                       type="range"
@@ -795,20 +697,20 @@ export default function ReluxeWayToxPricingPage() {
                       }}
                       className="w-full"
                     />
-                    <div className="min-w-[72px] text-right font-semibold">{calcUnits}</div>
+                    <div style={{ fontFamily: fonts.body, fontWeight: 600 }} className="min-w-[72px] text-right">{calcUnits}</div>
                   </div>
 
-                  <p className="mt-2 text-sm text-neutral-300">
-                    Tip: If you’re not sure, start at the most popular dose ({selected?.popularDose}u) and adjust.
+                  <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-2 text-sm">
+                    Tip: If you&rsquo;re not sure, start at the most popular dose ({selected?.popularDose}u) and adjust.
                   </p>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-neutral-900/60 ring-1 ring-white/10 p-4">
-                  <p className="text-sm font-semibold">How we calculated it</p>
-                  <p className="mt-2 text-sm text-neutral-300">Total = foundation price + (units above foundation × add-on per-unit rate)</p>
+                <div style={{ borderRadius: '1rem', background: 'rgba(26,26,26,0.6)', border: '1px solid rgba(250,248,245,0.1)' }} className="mt-6 p-4">
+                  <p style={{ fontFamily: fonts.body, fontWeight: 600 }} className="text-sm">How we calculated it</p>
+                  <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.7)' }} className="mt-2 text-sm">Total = foundation price + (units above foundation x add-on per-unit rate)</p>
                 </div>
 
-                <p className="mt-4 text-[11px] text-neutral-400">Dosing and plan are customized by your injector.</p>
+                <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-4 text-[11px]">Dosing and plan are customized by your injector.</p>
               </div>
             </div>
           </div>
@@ -816,47 +718,42 @@ export default function ReluxeWayToxPricingPage() {
       </section>
 
       {/* CONTACT / HUMAN ANSWER */}
-      <section className="bg-white py-12 sm:py-14">
+      <section className="py-12 sm:py-14" style={{ background: '#fff' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7">
               <Eyebrow>Why patients stay</Eyebrow>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
-                Because it feels straightforward—and the results feel right.
+              <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Because it feels straightforward--and the results feel right.
               </h2>
-              <p className="mt-4 text-neutral-700 leading-relaxed">
-                We’re local, family-owned, and relationship-driven. Our pricing model is built to make you feel confident before you book—and proud of your decision after you leave.
+              <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-4 leading-relaxed">
+                We&rsquo;re local, family-owned, and relationship-driven. Our pricing model is built to make you feel confident before you book--and proud of your decision after you leave.
               </p>
 
               <div className="mt-6 grid sm:grid-cols-2 gap-4">
-                <InfoCard title="No surprise pricing" copy="You’ll always know the foundation, and you’ll always know what add-on units cost." />
-                <InfoCard title="No pressure" copy="We educate, you choose. The goal is the right plan—not a bigger ticket." />
-                <InfoCard title="Better longevity" copy="Right dosing reduces the “it wore off too fast” frustration and helps you love your cadence." />
+                <InfoCard title="No surprise pricing" copy={'You\u2019ll always know the foundation, and you\u2019ll always know what add-on units cost.'} />
+                <InfoCard title="No pressure" copy="We educate, you choose. The goal is the right plan--not a bigger ticket." />
+                <InfoCard title="Better longevity" copy={'Right dosing reduces the \u201Cit wore off too fast\u201D frustration and helps you love your cadence.'} />
                 <InfoCard title="Consistency" copy="Your plan gets smarter over time. We learn what works best for your face." />
               </div>
             </div>
 
             <div className="lg:col-span-5">
-              <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-6 sm:p-7 shadow-sm">
-                <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">Want a human answer?</h3>
-                <p className="mt-3 text-neutral-700">
+              <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: colors.cream, padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <h3 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-xl sm:text-2xl font-extrabold tracking-tight">Want a human answer?</h3>
+                <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3">
                   The best place to start is a consult with one of our amazing nurse injectors. Have a question before you come or want help booking?
-                  Call, text, or DM us and we’re happy to help.
+                  Call, text, or DM us and we&rsquo;re happy to help.
                 </p>
 
                 <div className="mt-5 grid gap-2">
-                  <a
-                    href={CONSULT_URL}
-                    onClick={() => trackEvent('consult_click', { placement: 'contact_card_consult', location: 'any' })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
-                  >
-                    Book a Consult
-                  </a>
+                  <GravityBookButton fontKey={FONT_KEY} size="hero" />
 
                   <a
                     href={smsHref}
                     onClick={() => trackEvent('sms_click', { placement: 'contact_card_sms', phone: MARKETING_SMS })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                    style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                    className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-80"
                   >
                     Text Us
                   </a>
@@ -864,7 +761,8 @@ export default function ReluxeWayToxPricingPage() {
                   <a
                     href={callHref}
                     onClick={() => trackEvent('call_click', { placement: 'contact_card_call', phone: PHONE_CALL })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                    style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                    className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-80"
                   >
                     Call {DISPLAY_PHONE}
                   </a>
@@ -874,14 +772,15 @@ export default function ReluxeWayToxPricingPage() {
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => trackEvent('instagram_click', { placement: 'contact_card_instagram' })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                    style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+                    className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-80"
                   >
                     Follow @reluxemedspa
                   </a>
                 </div>
 
-                <p className="mt-4 text-[11px] text-neutral-500">
-                  DM links work best on mobile and when you’re logged in:{' '}
+                <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-4 text-[11px]">
+                  DM links work best on mobile and when you&rsquo;re logged in:{' '}
                   <a
                     href={IG_DM_URL}
                     target="_blank"
@@ -891,7 +790,7 @@ export default function ReluxeWayToxPricingPage() {
                   >
                     Instagram DM
                   </a>{' '}
-                  •{' '}
+                  &bull;{' '}
                   <a
                     href={FB_MSG_URL}
                     target="_blank"
@@ -909,67 +808,69 @@ export default function ReluxeWayToxPricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-neutral-50 border-t border-neutral-200 py-12 sm:py-14">
+      <section style={{ backgroundColor: colors.cream, borderTop: `1px solid ${colors.stone}` }} className="py-12 sm:py-14">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center text-neutral-900">Tox Pricing FAQ</h2>
+          <h2 style={{ fontFamily: fonts.display, color: colors.heading }} className="text-2xl sm:text-3xl font-extrabold tracking-tight text-center">Tox Pricing FAQ</h2>
 
-          <div className="mt-7 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
+          <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff' }} className="mt-7">
             <FaqItem
               q="Is the foundation dose what most people get?"
-              a="Not usually. The foundation dose is included in every visit, but most patients land closer to our most popular doses (50 units for Botox®/Jeuveau® and 100 units for Dysport®/Daxxify®). Your injector confirms what’s right for your face."
+              a="Not usually. The foundation dose is included in every visit, but most patients land closer to our most popular doses (50 units for Botox/Jeuveau and 100 units for Dysport/Daxxify). Your injector confirms what's right for your face."
             />
             <FaqItem
               q="Is this a discount or promo?"
-              a="No. This is our pricing model. Your visit includes a foundation dose at a standard price, and additional units switch to our Right Dosing rates so choosing the right plan doesn’t feel like an upsell."
+              a="No. This is our pricing model. Your visit includes a foundation dose at a standard price, and additional units switch to our Right Dosing rates so choosing the right plan doesn't feel like an upsell."
             />
             <FaqItem
               q="Why do you price it this way?"
-              a="Because expert dosing drives satisfaction and longevity. We want it to be easy to choose the plan that delivers the best result—without pressure or surprise totals."
+              a="Because expert dosing drives satisfaction and longevity. We want it to be easy to choose the plan that delivers the best result--without pressure or surprise totals."
             />
             <FaqItem q="Do you use premium brands?" a="Yes. We only use premium, reputable neurotoxin brands and follow best practices for storage, handling, and technique." />
             <FaqItem
               q="How do I know which tox is right for me?"
-              a="Start with a consult with one of our nurse injectors. We’ll map movement, discuss your goals, and recommend the right plan and dose."
+              a="Start with a consult with one of our nurse injectors. We'll map movement, discuss your goals, and recommend the right plan and dose."
             />
           </div>
 
           <div className="mt-8 text-center">
-            <a
-              href={CONSULT_URL}
-              onClick={() => trackEvent('consult_click', { placement: 'faq_primary_consult', location: 'any' })}
-              className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold bg-gradient-to-r from-emerald-500 to-black text-white hover:from-emerald-400 hover:to-neutral-900 transition"
-            >
-              Book a Consult
-              <Arrow />
-            </a>
-            <p className="mt-2 text-xs text-neutral-500">Dosing and treatment plan are customized by your injector. Results vary.</p>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
+            <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-2 text-xs">Dosing and treatment plan are customized by your injector. Results vary.</p>
           </div>
         </div>
       </section>
-
-      {/* MOBILE STICKY CTA */}
-      {showSticky && <StickyCTA title="Book a Consult" subtitle={CONSULT_NAME} href={CONSULT_URL} />}
-    </>
+    </BetaLayout>
   )
 }
+
+ReluxeWayToxPricingPage.getLayout = (page) => page
 
 /* -----------------------------
    Components
 ------------------------------ */
 
 function CTA({ href, children, primary, external, trackName, trackParams }) {
-  const base =
-    'inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
-  const styles = primary
-    ? 'text-white w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-black shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-neutral-900'
-    : 'text-white/90 w-full sm:w-auto ring-1 ring-white/20 hover:bg-white/10'
+  const baseStyle = {
+    borderRadius: '9999px',
+    fontFamily: fonts.body,
+    fontWeight: 600,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.75rem 1.5rem',
+    minHeight: '48px',
+    transition: 'all 0.2s',
+  }
+  const primaryStyle = primary
+    ? { background: gradients.primary, color: '#fff', boxShadow: '0 4px 14px rgba(124,58,237,0.25)' }
+    : { border: '1px solid rgba(250,248,245,0.2)', color: 'rgba(250,248,245,0.9)' }
 
   return (
     <a
       href={href}
       target={external ? '_blank' : undefined}
       rel={external ? 'noreferrer' : 'noopener'}
-      className={`${base} ${styles} group`}
+      style={{ ...baseStyle, ...primaryStyle }}
+      className="w-full sm:w-auto group"
       onClick={() => {
         if (trackName) trackEvent(trackName, trackParams || {})
       }}
@@ -982,22 +883,24 @@ function CTA({ href, children, primary, external, trackName, trackParams }) {
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-2xl bg-black/20 ring-1 ring-white/10 p-3">
-      <p className="text-[11px] tracking-widest uppercase text-neutral-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
+    <div style={{ borderRadius: '1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(250,248,245,0.08)', padding: '0.75rem' }}>
+      <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>{label}</p>
+      <p style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.white }} className="mt-1 text-sm">{value}</p>
     </div>
   )
 }
 
 function Eyebrow({ children, dark }) {
-  return <p className={`text-[11px] tracking-widest uppercase ${dark ? 'text-neutral-400' : 'text-neutral-500'}`}>{children}</p>
+  return (
+    <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: dark ? colors.muted : colors.muted }}>{children}</p>
+  )
 }
 
 function QuoteCard({ title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm">
-      <p className="text-sm font-semibold text-neutral-900">{title}</p>
-      <p className="mt-2 text-sm text-neutral-600">{copy}</p>
+    <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: colors.cream, padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <p style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading }} className="text-sm">{title}</p>
+      <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 text-sm">{copy}</p>
     </div>
   )
 }
@@ -1005,30 +908,30 @@ function QuoteCard({ title, copy }) {
 function StickySideCard({ children }) {
   return (
     <div className="lg:sticky lg:top-24">
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-sm">{children}</div>
+      <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>{children}</div>
     </div>
   )
 }
 
 function StepCard({ step, title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 sm:p-6 shadow-sm">
+    <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.25rem 1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <div className="flex items-center gap-3">
-        <div className="h-10 min-w-[88px] px-3 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900 text-white font-bold text-[11px] tracking-tight flex items-center justify-center">
+        <div style={{ borderRadius: '0.75rem', background: gradients.primary, color: '#fff', fontFamily: fonts.body, fontWeight: 700, fontSize: '11px', letterSpacing: '-0.01em', height: '2.5rem', minWidth: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.75rem' }}>
           {step}
         </div>
-        <h3 className="text-sm sm:text-base font-extrabold tracking-tight text-neutral-900">{title}</h3>
+        <h3 style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-sm sm:text-base tracking-tight">{title}</h3>
       </div>
-      <p className="mt-3 text-neutral-700 text-sm sm:text-base">{copy}</p>
+      <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-3 text-sm sm:text-base">{copy}</p>
     </div>
   )
 }
 
 function InfoCard({ title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-neutral-900">{title}</p>
-      <p className="mt-2 text-sm text-neutral-600">{copy}</p>
+    <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <p style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading }} className="text-sm">{title}</p>
+      <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 text-sm">{copy}</p>
     </div>
   )
 }
@@ -1038,9 +941,18 @@ function Toggle({ active, children, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
-        active ? 'bg-emerald-500 text-black' : 'bg-neutral-900 text-white ring-1 ring-white/10 hover:bg-neutral-800'
-      }`}
+      style={{
+        borderRadius: '9999px',
+        fontFamily: fonts.body,
+        fontWeight: 600,
+        padding: '0.75rem 1rem',
+        fontSize: '0.875rem',
+        transition: 'all 0.2s',
+        ...(active
+          ? { background: gradients.primary, color: '#fff' }
+          : { background: 'rgba(26,26,26,0.8)', color: colors.white, border: '1px solid rgba(250,248,245,0.1)' }),
+      }}
+      className="focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
     >
       {children}
     </button>
@@ -1051,76 +963,76 @@ function ToxPricingCard({ tox }) {
   const p = computePopularTotals(tox)
 
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+    <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
       <div className="p-6 sm:p-7">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">{tox.name}</h3>
-            <p className="mt-1 text-sm text-neutral-600">{tox.tagline}</p>
+            <h3 style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-xl sm:text-2xl tracking-tight">{tox.name}</h3>
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-1 text-sm">{tox.tagline}</p>
           </div>
-          <span className="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+          <span style={{ borderRadius: '9999px', backgroundColor: colors.cream, fontFamily: fonts.body, fontWeight: 600, color: colors.body }} className="inline-flex items-center px-3 py-1 text-xs">
             Foundation + Add-Ons
           </span>
         </div>
 
-        {/* Most popular (NEW) */}
-        <div className="mt-5 rounded-3xl bg-neutral-900 text-white p-5">
+        {/* Most popular */}
+        <div style={{ borderRadius: '1.5rem', background: colors.ink, color: colors.white, padding: '1.25rem' }} className="mt-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs tracking-widest uppercase text-white/70">{tox.popularLabel || 'Most popular visit'}</p>
-            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-sm font-semibold">
+            <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: 'rgba(250,248,245,0.6)' }}>{tox.popularLabel || 'Most popular visit'}</p>
+            <span style={{ borderRadius: '9999px', background: 'rgba(250,248,245,0.1)', fontFamily: fonts.body, fontWeight: 600 }} className="inline-flex items-center px-3 py-1 text-sm">
               {p.popularUnits} units
             </span>
           </div>
 
           <div className="mt-3 grid sm:grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
-              <p className="text-xs tracking-widest uppercase text-white/60">New patient estimate</p>
-              <p className="mt-1 text-3xl font-extrabold">{money(p.newTotal)}</p>
-              <p className="mt-1 text-xs text-white/60">
+            <div style={{ borderRadius: '1rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)', padding: '1rem' }}>
+              <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: 'rgba(250,248,245,0.5)' }}>New patient estimate</p>
+              <p style={{ fontFamily: fonts.display, fontWeight: 800 }} className="mt-1 text-3xl">{money(p.newTotal)}</p>
+              <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.5)' }} className="mt-1 text-xs">
                 Includes foundation ({p.baseUnits}u) + add-ons ({p.addUnits}u)
               </p>
             </div>
-            <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
-              <p className="text-xs tracking-widest uppercase text-white/60">Returning estimate</p>
-              <p className="mt-1 text-3xl font-extrabold">{money(p.returningTotal)}</p>
-              <p className="mt-1 text-xs text-white/60">
+            <div style={{ borderRadius: '1rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)', padding: '1rem' }}>
+              <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: 'rgba(250,248,245,0.5)' }}>Returning estimate</p>
+              <p style={{ fontFamily: fonts.display, fontWeight: 800 }} className="mt-1 text-3xl">{money(p.returningTotal)}</p>
+              <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.5)' }} className="mt-1 text-xs">
                 Includes foundation ({p.baseUnits}u) + add-ons ({p.addUnits}u)
               </p>
             </div>
           </div>
 
-          <p className="mt-3 text-[11px] text-white/60">
-            Not a quote—just transparent math. Your injector confirms dose and plan.
+          <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.5)' }} className="mt-3 text-[11px]">
+            Not a quote--just transparent math. Your injector confirms dose and plan.
           </p>
         </div>
 
         {/* Foundation */}
-        <div className="mt-5 rounded-2xl bg-neutral-50 ring-1 ring-neutral-200 p-4">
-          <p className="text-xs tracking-widest uppercase text-neutral-500">Foundation (included in every visit)</p>
+        <div style={{ borderRadius: '1rem', backgroundColor: colors.cream, border: `1px solid ${colors.stone}`, padding: '1rem' }} className="mt-5">
+          <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Foundation (included in every visit)</p>
           <div className="mt-2 flex items-end justify-between gap-3">
-            <p className="text-sm sm:text-base text-neutral-800">
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="text-sm sm:text-base">
               <strong>{tox.foundation.units} Units</strong>
-              <span className="text-neutral-500"> (starting block)</span>
+              <span style={{ color: colors.muted }}> (starting block)</span>
             </p>
-            <p className="text-lg sm:text-xl font-extrabold text-neutral-900">{money(tox.foundation.price)}</p>
+            <p style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="text-lg sm:text-xl">{money(tox.foundation.price)}</p>
           </div>
-          {tox.foundation.note ? <p className="mt-2 text-xs text-neutral-600">{tox.foundation.note}</p> : <p className="mt-2 text-xs text-neutral-500">Standard foundation pricing.</p>}
-          <p className="mt-2 text-xs text-neutral-600">
+          {tox.foundation.note ? <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 text-xs">{tox.foundation.note}</p> : <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-2 text-xs">Standard foundation pricing.</p>}
+          <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 text-xs">
             Most patients add units beyond foundation to reach their ideal plan.
           </p>
         </div>
 
         {/* Add-ons */}
         <div className="mt-4 grid sm:grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-neutral-200 p-4">
-            <p className="text-xs tracking-widest uppercase text-neutral-500">Add-on Units</p>
-            <p className="mt-2 text-sm text-neutral-700">New Patients</p>
-            <p className="mt-1 text-2xl font-extrabold text-neutral-900">{money2(tox.addOns.new)}/unit</p>
+          <div style={{ borderRadius: '1rem', border: `1px solid ${colors.stone}`, padding: '1rem' }}>
+            <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Add-on Units</p>
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 text-sm">New Patients</p>
+            <p style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="mt-1 text-2xl">{money2(tox.addOns.new)}/unit</p>
           </div>
-          <div className="rounded-2xl border border-neutral-200 p-4">
-            <p className="text-xs tracking-widest uppercase text-neutral-500">Add-on Units</p>
-            <p className="mt-2 text-sm text-neutral-700">Returning Patients</p>
-            <p className="mt-1 text-2xl font-extrabold text-neutral-900">{money2(tox.addOns.returning)}/unit</p>
+          <div style={{ borderRadius: '1rem', border: `1px solid ${colors.stone}`, padding: '1rem' }}>
+            <p style={{ fontFamily: fonts.body, fontSize: typeScale.label.size, letterSpacing: typeScale.label.tracking, textTransform: 'uppercase', color: colors.muted }}>Add-on Units</p>
+            <p style={{ fontFamily: fonts.body, color: colors.body }} className="mt-2 text-sm">Returning Patients</p>
+            <p style={{ fontFamily: fonts.display, fontWeight: 800, color: colors.heading }} className="mt-1 text-2xl">{money2(tox.addOns.returning)}/unit</p>
           </div>
         </div>
 
@@ -1129,20 +1041,22 @@ function ToxPricingCard({ tox }) {
           <a
             href={CONSULT_URL_WESTFIELD}
             onClick={() => trackEvent('consult_click', { placement: 'tox_card_consult', tox: tox.key, location: 'westfield' })}
-            className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition w-full sm:w-auto"
+            style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, background: colors.ink, color: colors.white }}
+            className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-90 w-full sm:w-auto"
           >
             Book at Westfield
           </a>
           <a
             href={CONSULT_URL_CARMEL}
             onClick={() => trackEvent('consult_click', { placement: 'tox_card_consult', tox: tox.key, location: 'carmel' })}
-            className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition w-full sm:w-auto"
+            style={{ borderRadius: '9999px', fontFamily: fonts.body, fontWeight: 600, border: `1px solid ${colors.stone}` }}
+            className="inline-flex items-center justify-center px-5 py-3 transition hover:opacity-80 w-full sm:w-auto"
           >
             Book at Carmel
           </a>
         </div>
 
-        <p className="mt-3 text-[11px] text-neutral-500">
+        <p style={{ fontFamily: fonts.body, color: colors.muted }} className="mt-3 text-[11px]">
           Foundation is included in every visit. Add-on units apply only beyond the foundation dose.
         </p>
       </div>
@@ -1153,15 +1067,10 @@ function ToxPricingCard({ tox }) {
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
-    <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group">
-      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 font-semibold flex items-center justify-between">
-        <span className="text-sm sm:text-base text-neutral-900">{q}</span>
-        <svg
-          className={`h-5 w-5 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`}
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
+    <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group" style={{ borderBottom: `1px solid ${colors.stone}` }}>
+      <summary className="cursor-pointer list-none px-4 sm:px-6 py-4 flex items-center justify-between" style={{ fontFamily: fonts.body, fontWeight: 600 }}>
+        <span style={{ color: colors.heading }} className="text-sm sm:text-base">{q}</span>
+        <svg className={`h-5 w-5 transition-transform ${open ? 'rotate-180' : ''}`} style={{ color: colors.muted }} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path
             fillRule="evenodd"
             d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.188l3.71-3.957a.75.75 0 1 1 1.08 1.04l-4.24 4.52a.75.75 0 0 1-1.08 0L5.25 8.27a.75.75 0 0 1-.02-1.06Z"
@@ -1169,7 +1078,7 @@ function FaqItem({ q, a }) {
           />
         </svg>
       </summary>
-      <div className="px-4 sm:px-6 pb-5 text-neutral-700 text-sm sm:text-base">{a}</div>
+      <div style={{ fontFamily: fonts.body, color: colors.body }} className="px-4 sm:px-6 pb-5 text-sm sm:text-base">{a}</div>
     </details>
   )
 }
@@ -1179,26 +1088,5 @@ function Arrow() {
     <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
       <path d="M12.293 5.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 1 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-2.293-2.293a1 1 0 0 1 0-1.414z" />
     </svg>
-  )
-}
-
-function StickyCTA({ title, subtitle, href }) {
-  return (
-    <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-[calc(100%-24px)] sm:w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="text-[11px] text-neutral-400">{subtitle}</p>
-        </div>
-        <a
-          href={href}
-          className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-black active:scale-[.99] touch-manipulation"
-          onClick={() => trackEvent('consult_click', { placement: 'sticky_cta', location: 'any' })}
-        >
-          Book
-        </a>
-      </div>
-    </div>
   )
 }

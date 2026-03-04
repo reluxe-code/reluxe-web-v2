@@ -436,7 +436,7 @@ function DashboardCard({ fonts, member, profile }) {
             <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.violet, marginBottom: 6 }}>Next Appointment</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {upcoming.providerImage && (
-                <img src={upcoming.providerImage} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                <img src={upcoming.providerImage} alt={upcoming.providerName} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
               )}
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>
@@ -481,7 +481,7 @@ function DashboardCard({ fonts, member, profile }) {
             <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(250,248,245,0.35)', marginBottom: 8 }}>Last Treatment</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {lastService.provider?.image && (
-                <img src={lastService.provider.image} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                <img src={lastService.provider.image} alt={lastService.provider.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
               )}
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>{lastService.name}</p>

@@ -255,14 +255,14 @@ function ServicesPage({ fontKey, fonts, services, testimonials }) {
               <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1.25rem' }}>
                 Our Treatments
               </p>
-              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.25rem' }}>
+              <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.25rem' }}>
                 Expert Treatments.<br />
                 <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   Real Results.
                 </span>
               </h1>
               <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginBottom: '2rem' }}>
-                40+ FDA-approved treatments delivered by NPs, PAs, and licensed aestheticians. No assembly lines, no upselling &mdash; just honest expert care.
+                40+ FDA-approved treatments delivered by NPs, RNs, and licensed aestheticians. No assembly lines, no upselling &mdash; just honest expert care.
               </p>
 
               <div className="flex flex-wrap items-center gap-4 mb-10">

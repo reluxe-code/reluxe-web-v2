@@ -38,7 +38,7 @@ function VisitsSection({ visits, fonts, onRebook, hasUpcoming, onNavigate }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {svc?.provider?.image && <img src={svc.provider.image} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />}
+                {svc?.provider?.image && <img src={svc.provider.image} alt={svc.provider.name || 'Provider'} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />}
                 <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)' }}>
                   {svc?.provider?.name || 'Provider'} · {visit.location === 'westfield' ? 'Westfield' : 'Carmel'}
                 </span>
@@ -99,7 +99,7 @@ function UpcomingSection({ appointments, fonts, onNavigate, member }) {
             <span style={{ fontFamily: fonts.body, fontSize: '0.6875rem', fontWeight: 500, color: colors.violet, flexShrink: 0, marginLeft: 8 }}>{formatDateTime(appt.date)}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {appt.providerImage && <img src={appt.providerImage} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />}
+            {appt.providerImage && <img src={appt.providerImage} alt={appt.provider || 'Provider'} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />}
             <span style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.5)' }}>
               {appt.provider || 'Provider'} · {appt.location_key === 'westfield' ? 'Westfield' : 'Carmel'}
             </span>
@@ -294,7 +294,7 @@ function ToxSection({ toxStatus, fonts, onRebook, member }) {
       {/* Provider */}
       {toxStatus.last_provider && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0.75rem 1rem', borderRadius: '0.75rem', background: 'rgba(250,248,245,0.03)', border: '1px solid rgba(250,248,245,0.06)' }}>
-          {toxStatus.last_provider.image && <img src={toxStatus.last_provider.image} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />}
+          {toxStatus.last_provider.image && <img src={toxStatus.last_provider.image} alt={toxStatus.last_provider.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />}
           <div>
             <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.white }}>Your tox provider</p>
             <p style={{ fontFamily: fonts.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)' }}>{toxStatus.last_provider.name}</p>
@@ -329,7 +329,7 @@ function ProvidersSection({ providers, fonts }) {
       {providers.map((p, i) => (
         <a key={p.slug || i} href={`/team/${p.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0.875rem 1rem', borderRadius: '0.75rem', background: i === 0 ? `${colors.violet}08` : 'rgba(250,248,245,0.03)', border: `1px solid ${i === 0 ? `${colors.violet}20` : 'rgba(250,248,245,0.06)'}`, textDecoration: 'none' }}>
           {p.image
-            ? <img src={p.image} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+            ? <img src={p.image} alt={p.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
             : <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(250,248,245,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(250,248,245,0.3)' }}>{(p.name || '?')[0]}</div>
           }
           <div style={{ flex: 1 }}>
@@ -812,7 +812,7 @@ function OverviewSection({ member, profile, stats, fonts, onNavigate, onSignOut 
           {primaryProvider && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => onNavigate('providers')}>
               {primaryProvider.image
-                ? <img src={primaryProvider.image} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                ? <img src={primaryProvider.image} alt={primaryProvider.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
                 : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(250,248,245,0.06)' }} />
               }
               <div style={{ flex: 1 }}>

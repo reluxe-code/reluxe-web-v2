@@ -363,6 +363,13 @@ export default function AdminStaffEdit() {
           <div><label className="block text-sm font-medium mb-1">Sort Order</label><input type="number" value={staff.sort_order} onChange={e => update('sort_order', parseInt(e.target.value) || 0)} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
           <div><label className="block text-sm font-medium mb-1">Status</label><select value={staff.status} onChange={e => update('status', e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm"><option value="published">Published</option><option value="draft">Draft</option></select></div>
         </div>
+        <div className="flex items-center gap-3 py-2">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" checked={staff.allow_online_booking !== false} onChange={e => update('allow_online_booking', e.target.checked)} className="sr-only peer" />
+            <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+          </label>
+          <span className="text-sm font-medium">Allow Online Booking</span>
+        </div>
         <div className="flex items-center gap-4">
           <button type="submit" disabled={saving} className="px-6 py-2 bg-black text-white rounded-lg font-semibold hover:bg-neutral-800 disabled:opacity-50 transition">{saving ? 'Saving...' : 'Save'}</button>
           {message && <span className={`text-sm ${message.startsWith('Error') ? 'text-red-500' : 'text-emerald-600'}`}>{message}</span>}

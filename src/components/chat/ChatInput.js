@@ -1,13 +1,18 @@
 // src/components/chat/ChatInput.js
 // Text input + send button
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 const MAX_CHARS = 800
 
 export default function ChatInput({ onSend, disabled }) {
   const [value, setValue] = useState('')
   const inputRef = useRef(null)
+
+  // Refocus input when it becomes enabled (after bot responds)
+  useEffect(() => {
+    if (!disabled) inputRef.current?.focus()
+  }, [disabled])
 
   function handleSubmit(e) {
     e.preventDefault()

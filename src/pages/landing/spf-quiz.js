@@ -1,10 +1,15 @@
 // pages/landing/spf-quiz.js
 // RELUXE • Colorescience SPF Finder Quiz (high-end interactive, GA4/Meta tracked)
 
-import Head from 'next/head'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 import { AnimatePresence, motion } from 'framer-motion'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -719,38 +724,33 @@ export default function SpfQuizLandingPage() {
         : 0
 
   return (
-    <>
-      <Head>
-        <title>{PAGE_NAME} | {BRAND}</title>
-        <meta
-          name="description"
-          content="A fun, fast SPF quiz that matches you to the right Colorescience sunscreen format — daily, travel, outdoor, family, and more."
-        />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-        <meta property="og:title" content={`${PAGE_NAME} | ${BRAND}`} />
-        <meta property="og:description" content="Find your SPF match in under 45 seconds." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://reluxemedspa.com${PAGE_PATH}`} />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={`${PAGE_NAME} | ${BRAND}`}
+      description="A fun, fast SPF quiz that matches you to the right Colorescience sunscreen format — daily, travel, outdoor, family, and more."
+      canonical={`https://reluxemedspa.com${PAGE_PATH}`}
+    >
       {/* Compact Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.20),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
-            <div className="max-w-4xl text-white">
-            <p className="text-[11px] sm:text-xs tracking-widest uppercase text-neutral-400">
-                {BRAND} • {LOCATION_TAGLINE}
+      <section style={{
+        position: 'relative', overflow: 'hidden', backgroundColor: colors.ink,
+        backgroundImage: `${grain}, radial-gradient(60% 60% at 50% 0%, rgba(16,185,129,0.15), transparent 60%)`,
+      }}>
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
+          <div style={{ maxWidth: '56rem' }}>
+            <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: colors.muted }}>
+              {BRAND} &middot; {LOCATION_TAGLINE}
             </p>
-            <h1 className="mt-1 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
-                Which SPF is right for you?
+            <h1 style={{
+              marginTop: '0.25rem', fontFamily: fonts.display,
+              fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight,
+              lineHeight: typeScale.sectionHeading.lineHeight, color: colors.white,
+            }}>
+              Which SPF is{' '}
+              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>right for you?</span>
             </h1>
-            <p className="mt-2 text-neutral-300 text-sm sm:text-base">
-                45 seconds. Fun. Personalized. <span className="text-neutral-400">{PARTNER_NOTE}</span>
+            <p style={{ marginTop: '0.5rem', fontFamily: fonts.body, fontSize: '0.9375rem', color: 'rgba(250,248,245,0.6)' }}>
+              45 seconds. Fun. Personalized. <span style={{ color: colors.muted }}>{PARTNER_NOTE}</span>
             </p>
-            </div>
+          </div>
         </div>
         </section>
 
@@ -1052,9 +1052,11 @@ export default function SpfQuizLandingPage() {
 
         </div>
       </section>
-    </>
+    </BetaLayout>
   )
 }
+
+SpfQuizLandingPage.getLayout = (page) => page
 
 /** =========================
  * Components

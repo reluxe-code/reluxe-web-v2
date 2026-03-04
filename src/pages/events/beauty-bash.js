@@ -1,18 +1,22 @@
 // pages/events/beauty-bash.js
-import Head from 'next/head'
-import HeaderTwo from '../../components/header/header-2'
+import Link from 'next/link'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
 import EventInquiryForm from '@/components/events/EventInquiryForm'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 
-const BOOK_URL = '/book/'
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 // ---- Galleries you can extend easily ---------------------------------------
 const GALLERY_2025 = [
-  { src: '/images/events/beauty-bash/2025/1.jpg', alt: 'Beauty Bash 2025 main stage', caption: 'Main stage demos • Carmel & Westfield community' },
+  { src: '/images/events/beauty-bash/2025/1.jpg', alt: 'Beauty Bash 2025 main stage', caption: 'Main stage demos - Carmel & Westfield community' },
   { src: '/images/events/beauty-bash/2025/2.jpg', alt: 'Live skincare demos', caption: 'Live skincare + device demos with our providers' },
   { src: '/images/events/beauty-bash/2025/3.jpg', alt: 'Guest stations and sampling', caption: 'Guest stations, sampling, and prizes' },
   { src: '/images/events/beauty-bash/2025/4.jpg', alt: 'Before-and-after wall', caption: 'Before & After inspiration wall' },
   { src: '/images/events/beauty-bash/2025/5.jpg', alt: 'Partner brands table', caption: 'Partner brands on-site (skincare & wellness)' },
-  { src: '/images/events/beauty-bash/2025/6.jpg', alt: 'Photo moment', caption: 'Photo moment—bring a friend!' },
+  { src: '/images/events/beauty-bash/2025/6.jpg', alt: 'Photo moment', caption: 'Photo moment — bring a friend!' },
 ]
 
 const GALLERY_2024 = [
@@ -24,64 +28,61 @@ const GALLERY_2024 = [
   { src: '/images/events/beauty-bash/2024/6.jpg', alt: 'Community vibes', caption: 'Great vibes, better glow' },
 ]
 
+// Simple JSON-LD for an event series page (no specific dates fabricated)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'Beauty Bash | RELUXE Med Spa (Carmel & Westfield)',
+  url: 'https://reluxemedspa.com/events/beauty-bash',
+  description:
+    'RELUXE Beauty Bash: our signature event with live demos, giveaways, and one-night-only bundles in Carmel & Westfield, IN.',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Beauty Bash 2025' },
+      { '@type': 'ListItem', position: 2, name: 'Beauty Bash 2024' },
+    ],
+  },
+}
+
 export default function BeautyBashPage() {
-  // Simple JSON-LD for an event series page (no specific dates fabricated)
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: 'Beauty Bash | RELUXE Med Spa (Carmel & Westfield)',
-    url: 'https://reluxemedspa.com/events/beauty-bash',
-    description:
-      'RELUXE Beauty Bash: our signature event with live demos, giveaways, and one-night-only bundles in Carmel & Westfield, IN.',
-    mainEntity: {
-      '@type': 'ItemList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Beauty Bash 2025' },
-        { '@type': 'ListItem', position: 2, name: 'Beauty Bash 2024' },
-      ],
-    },
-  }
-
   return (
-    <>
-      <Head>
-        <title>Beauty Bash | Carmel & Westfield, IN | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="RELUXE Beauty Bash: live demos, giveaways, bundles, and community. Explore 2024 & 2025 galleries and get updates for the next event."
-        />
-        <link rel="canonical" href="https://reluxemedspa.com/events/beauty-bash" />
-        <meta property="og:title" content="RELUXE Beauty Bash" />
-        <meta property="og:description" content="Our signature event with live demos, prizes, and one-night-only savings." />
-        <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Beauty Bash | Carmel & Westfield, IN"
+      description="RELUXE Beauty Bash: live demos, giveaways, bundles, and community. Explore 2024 & 2025 galleries and get updates for the next event."
+      canonical="https://reluxemedspa.com/events/beauty-bash"
+      ogImage="https://reluxemedspa.com/images/og/new-default-1200x630.png"
+      structuredData={jsonLd}
+    >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.28),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '4rem 1.5rem 5rem' }}>
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-8">
-              <p className="text-[11px] tracking-widest uppercase text-white/60">RELUXE • Events</p>
-              <h1 className="mt-2 text-4xl md:text-5xl font-extrabold tracking-tight">RELUXE Beauty Bash</h1>
-              <p className="mt-4 text-neutral-300 text-lg">
-                Our signature celebration of beauty, skincare, and community—featuring live demos, giveaways, and one-night-only bundles. Hosted in Carmel & Westfield, IN.
+              <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+                RELUXE &middot; Events
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition">
-                  Book a Consult
-                </a>
-                <a href="/join-texts" className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15 hover:ring-white/30 transition">
+              <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, color: colors.white, marginTop: '0.5rem' }}>
+                RELUXE{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Beauty Bash.
+                </span>
+              </h1>
+              <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '36rem', marginTop: '1.5rem' }}>
+                Our signature celebration of beauty, skincare, and community — featuring live demos, giveaways, and one-night-only bundles. Hosted in Carmel &amp; Westfield, IN.
+              </p>
+              <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
+                <a href="/join-texts" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '9999px', padding: '0.75rem 1.5rem', fontWeight: 600, fontFamily: fonts.body, color: 'rgba(250,248,245,0.9)', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', textDecoration: 'none' }}>
                   Get Event Updates
                 </a>
               </div>
             </div>
             <div className="lg:col-span-4">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl">
-                <img src="/images/events/beauty-bash/hero.jpg" alt="Beauty Bash at RELUXE" className="h-full w-full object-cover" />
+              <div style={{ position: 'relative', aspectRatio: '4/5', width: '100%', overflow: 'hidden', borderRadius: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <img src="/images/events/beauty-bash/hero.jpg" alt="Beauty Bash at RELUXE" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
               </div>
             </div>
           </div>
@@ -89,38 +90,52 @@ export default function BeautyBashPage() {
       </section>
 
       {/* Event Inquiry */}
-      <section className="bg-gradient-to-b from-black to-neutral-950 py-16">
-        <div className="mx-auto max-w-2xl px-4 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Interested in Hosting an Event?</h2>
-          <p className="mt-3 text-neutral-400">Tell us about your event and we&apos;ll help you plan something amazing.</p>
-          <div className="mt-8">
+      <section style={{ background: `linear-gradient(to bottom, ${colors.ink}, ${colors.charcoal})`, padding: '4rem 0' }}>
+        <div style={{ maxWidth: '42rem', margin: '0 auto', padding: '0 1rem', textAlign: 'center', color: colors.white }}>
+          <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight }}>
+            Interested in Hosting an Event?
+          </h2>
+          <p style={{ marginTop: '0.75rem', color: colors.muted, fontFamily: fonts.body }}>
+            Tell us about your event and we&apos;ll help you plan something amazing.
+          </p>
+          <div style={{ marginTop: '2rem' }}>
             <EventInquiryForm defaultEventType="Other" />
           </div>
         </div>
       </section>
 
       {/* About */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14">
+      <section style={{ maxWidth: '72rem', margin: '0 auto', padding: '3.5rem 1.5rem' }}>
         <div className="grid lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-7">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">What is the Beauty Bash?</h2>
-            <p className="mt-3 text-neutral-700">
-              A high-energy evening where we open the doors for demos, pro skincare coaching, and event-only savings. Meet our team, explore treatment pairings, and preview what’s next at RELUXE.
+            <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>
+              What is the Beauty Bash?
+            </h2>
+            <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body, lineHeight: 1.625 }}>
+              A high-energy evening where we open the doors for demos, pro skincare coaching, and event-only savings. Meet our team, explore treatment pairings, and preview what&apos;s next at RELUXE.
             </p>
-            <ul className="mt-5 space-y-2 text-neutral-700">
-              <li>• Live treatment & skincare demos</li>
-              <li>• Exclusive bundles & giveaways</li>
-              <li>• Partner brand pop-ups</li>
-              <li>• Photo ops & community vibes</li>
+            <ul style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: colors.body, fontFamily: fonts.body }}>
+              <li>&bull; Live treatment &amp; skincare demos</li>
+              <li>&bull; Exclusive bundles &amp; giveaways</li>
+              <li>&bull; Partner brand pop-ups</li>
+              <li>&bull; Photo ops &amp; community vibes</li>
             </ul>
           </div>
           <div className="lg:col-span-5">
-            <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-extrabold tracking-tight">Be First to Know</h3>
-              <p className="mt-2 text-neutral-700">We release tickets, bundles, and schedules to our text list first.</p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <a href="/join-texts" className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white bg-neutral-900 hover:bg-black">Join Text List</a>
-                <a href="/events" className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold ring-1 ring-neutral-300 hover:bg-neutral-50">See All Events</a>
+            <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff', padding: '1.5rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+              <h3 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>
+                Be First to Know
+              </h3>
+              <p style={{ marginTop: '0.5rem', color: colors.body, fontFamily: fonts.body }}>
+                We release tickets, bundles, and schedules to our text list first.
+              </p>
+              <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <a href="/join-texts" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '9999px', padding: '0.625rem 1.25rem', fontWeight: 600, fontFamily: fonts.body, color: colors.white, background: colors.ink, textDecoration: 'none', fontSize: '0.875rem' }}>
+                  Join Text List
+                </a>
+                <a href="/events" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '9999px', padding: '0.625rem 1.25rem', fontWeight: 600, fontFamily: fonts.body, border: `1px solid ${colors.stone}`, color: colors.heading, textDecoration: 'none', fontSize: '0.875rem', background: 'transparent' }}>
+                  See All Events
+                </a>
               </div>
             </div>
           </div>
@@ -131,41 +146,48 @@ export default function BeautyBashPage() {
       <YearGallery year="2025" items={GALLERY_2025} subtitle="Highlights from our most recent Beauty Bash" />
 
       {/* 2024 Gallery */}
-      <YearGallery year="2024" items={GALLERY_2024} subtitle="Moments from last year’s event" />
+      <YearGallery year="2024" items={GALLERY_2024} subtitle="Moments from last year's event" />
 
       {/* CTA */}
-      <section className="relative bg-neutral-50 py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl md:text-4xl font-extrabold tracking-tight">See You at the Next Beauty Bash</h3>
-          <p className="mt-3 text-neutral-700">Grab a friend and come glow with us—tickets and details drop to our text list first.</p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <a href="/join-texts" className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black hover:from-violet-500 hover:to-neutral-900 transition">
+      <section style={{ backgroundColor: colors.cream, padding: '3.5rem 0' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1.5rem', textAlign: 'center' }}>
+          <h3 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>
+            See You at the Next Beauty Bash
+          </h3>
+          <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>
+            Grab a friend and come glow with us — tickets and details drop to our text list first.
+          </p>
+          <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+            <a href="/join-texts" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '9999px', padding: '0.75rem 1.5rem', fontWeight: 600, fontFamily: fonts.body, color: colors.white, background: gradients.primary, textDecoration: 'none' }}>
               Get Event Updates
             </a>
-            <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold ring-1 ring-neutral-300 hover:bg-neutral-50">
-              Book a Consult
-            </a>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
           </div>
         </div>
       </section>
-    </>
+    </BetaLayout>
   )
 }
 
+BeautyBashPage.getLayout = (page) => page
+
+// --- Components ---
 function YearGallery({ year, items = [], subtitle }) {
   return (
-    <section id={year} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
-      <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Beauty Bash {year}</h2>
-        {subtitle && <p className="mt-3 text-neutral-600">{subtitle}</p>}
+    <section id={year} style={{ maxWidth: '80rem', margin: '0 auto', padding: '3.5rem 1.5rem' }}>
+      <div style={{ maxWidth: '48rem', margin: '0 auto', textAlign: 'center' }}>
+        <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>
+          Beauty Bash {year}
+        </h2>
+        {subtitle && <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>{subtitle}</p>}
       </div>
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ marginTop: '2.5rem' }}>
         {items.map((img, i) => (
-          <figure key={i} className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-            <div className="aspect-[4/3] overflow-hidden">
-              <img src={img.src} alt={img.alt} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <figure key={i} style={{ overflow: 'hidden', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+              <img src={img.src} alt={img.alt} style={{ height: '100%', width: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
             </div>
-            <figcaption className="p-4 text-sm text-neutral-700">{img.caption}</figcaption>
+            <figcaption style={{ padding: '1rem', fontSize: '0.875rem', color: colors.body, fontFamily: fonts.body }}>{img.caption}</figcaption>
           </figure>
         ))}
       </div>

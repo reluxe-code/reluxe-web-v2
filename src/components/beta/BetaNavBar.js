@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { colors, gradients, fontPairings } from '@/components/preview/tokens';
 import GravityBookButton from '@/components/beta/GravityBookButton';
 import { useMember } from '@/context/MemberContext';
+import { useSearch } from '@/context/SearchContext';
 import { supabase } from '@/lib/supabase';
 import { formatPhone, isValidPhone } from '@/lib/phoneUtils';
 import { isValidEmail } from '@/lib/emailUtils';
@@ -293,11 +294,22 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
   const [loginOpen, setLoginOpen] = useState(false);
   const [mobileLoginOpen, setMobileLoginOpen] = useState(false);
   const { member, isAuthenticated, openDrawer } = useMember();
+  const { openSearch } = useSearch();
 
   // Close login popover when user authenticates
   useEffect(() => {
     if (isAuthenticated) { setLoginOpen(false); setMobileLoginOpen(false) }
   }, [isAuthenticated]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = '' };
+  }, [mobileOpen]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -381,6 +393,24 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
 
         {/* Desktop CTA */}
         <div className="hidden lg:flex items-center gap-3">
+          <button
+            onClick={() => openSearch('nav_icon')}
+            title="Search (⌘K)"
+            style={{
+              width: 34, height: 34, borderRadius: '50%',
+              border: '1.5px solid rgba(250,248,245,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', background: 'none',
+              transition: 'border-color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(250,248,245,0.6)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(250,248,245,0.3)'}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(250,248,245,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
           <GravityBookButton fontKey={fontKey} size="nav" />
           {isAuthenticated && member ? (
             <button
@@ -464,9 +494,30 @@ export default function BetaNavBar({ fontKey = 'bold' }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 lg:hidden flex flex-col items-center justify-center gap-6"
-            style={{ backgroundColor: 'rgba(26,26,26,0.96)', backdropFilter: 'blur(24px)' }}
+            className="fixed inset-0 z-40 lg:hidden flex flex-col items-center gap-6"
+            style={{ backgroundColor: 'rgba(26,26,26,0.96)', backdropFilter: 'blur(24px)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 80, paddingBottom: 40 }}
           >
+            {/* Mobile search button */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0 }}
+              onClick={() => { setMobileOpen(false); openSearch('nav_icon') }}
+              style={{
+                fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 500,
+                color: 'rgba(250,248,245,0.5)',
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'none', border: '1px solid rgba(250,248,245,0.1)',
+                borderRadius: 999, padding: '8px 20px',
+                cursor: 'pointer', marginBottom: 8,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(250,248,245,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              Search
+            </motion.button>
             {navLinks.map((link, i) => (
               <div key={link.label} className="text-center">
                 <motion.a

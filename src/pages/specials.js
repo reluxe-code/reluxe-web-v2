@@ -1,16 +1,16 @@
 // src/pages/specials.js
-import Head from 'next/head';
 import useSWR from 'swr';
-import HeaderTwo from '@/components/header/header-2';
+import BetaLayout from '@/components/beta/BetaLayout';
+import GravityBookButton from '@/components/beta/GravityBookButton';
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens';
 import { getDealsSSR, getDealsClient } from '@/lib/deals';
 import DealsGrid from '@/components/deals/DealsGrid';
 
-const SITE = 'https://reluxemedspa.com';
-const title = 'Quarterly Specials | RELUXE Med Spa';
-const description =
-  'Current specials and quarterly promotions at RELUXE Med Spa—limited-time offers on injectables, skin, laser, and more.';
+const FONT_KEY = 'bold';
+const fonts = fontPairings[FONT_KEY];
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
 
-const ogImage = `${SITE}/images/og/new-default-1200x630.png`;
+const SITE = 'https://reluxemedspa.com';
 
 // -------------------------------
 // Page Feature Flags
@@ -32,13 +32,28 @@ function BookButtons({
   const showCarmel = locations.includes('carmel');
 
   return (
-    <div className="mt-5">
-      <div className="flex flex-wrap gap-3">
+    <div style={{ marginTop: '1.25rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
         {showWestfield ? (
           <a
             href={href}
             data-book-loc="westfield"
-            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-violet-600 to-black px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.18em] text-white hover:opacity-90 transition-opacity"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '9999px',
+              background: gradients.primary,
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontFamily: fonts.body,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+              color: '#fff',
+              textDecoration: 'none',
+              transition: 'opacity 0.2s',
+            }}
           >
             Book at Westfield
           </a>
@@ -48,14 +63,33 @@ function BookButtons({
           <a
             href={href}
             data-book-loc="carmel"
-            className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.18em] text-neutral-800 hover:bg-neutral-100 transition-colors"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '9999px',
+              border: `1px solid ${colors.taupe}`,
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontFamily: fonts.body,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.18em',
+              color: colors.heading,
+              textDecoration: 'none',
+              transition: 'background-color 0.2s',
+            }}
           >
             Book at Carmel
           </a>
         ) : null}
       </div>
 
-      {note ? <p className="mt-3 text-xs text-neutral-500">{note}</p> : null}
+      {note ? (
+        <p style={{ marginTop: '0.75rem', fontSize: '0.75rem', fontFamily: fonts.body, color: colors.muted }}>
+          {note}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -111,7 +145,7 @@ const TOX_SPECIALS = [
 ];
 
 // -------------------------------
-// Q1 Specials Content (Jan\u2013Mar)
+// Q1 Specials Content (Jan-Mar)
 // -------------------------------
 const Q1_SPECIALS = [
   {
@@ -225,126 +259,156 @@ export default function SpecialsPage({ initial }) {
     };
   });
 
+  const specialsTitle = SHOW_Q1_EVENT
+    ? 'Q1 2026 Specials'
+    : 'Quarterly Specials';
+
+  const specialsDescription = SHOW_Q1_EVENT
+    ? "Q1 2026 specials at RELUXE Med Spa\u2014skin resets, tox specials, and membership kickoff in Carmel & Westfield. Book a consultation to build your plan."
+    : 'Current specials and quarterly promotions at RELUXE Med Spa\u2014limited-time offers on injectables, skin, laser, and more.';
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: itemList,
+  };
+
   return (
-    <>
-      <Head>
-        <title>
-          {SHOW_Q1_EVENT
-            ? 'Q1 2026 Specials | RELUXE Med Spa Westfield, Carmel, Indianapolis, IN'
-            : `${title} | RELUXE Med Spa Westfield, Carmel, Indianapolis, IN`}
-        </title>
-
-        <meta
-          name="description"
-          content={
-            SHOW_Q1_EVENT
-              ? "Q1 2026 specials at RELUXE Med Spa\u2014skin resets, tox specials, and membership kickoff in Carmel & Westfield. Book a consultation to build your plan."
-              : description
-          }
-        />
-
-        <link rel="canonical" href={`${SITE}/specials`} />
-
-        <meta key="ogimage" property="og:image" content={ogImage} />
-        <meta key="ogimage:secure" property="og:image:secure_url" content={ogImage} />
-        <meta property="og:image:type" content="image/png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="RELUXE Med Spa Specials" />
-
-        <meta
-          property="og:title"
-          content={SHOW_Q1_EVENT ? 'Q1 2026 Specials | RELUXE Med Spa' : title}
-        />
-        <meta
-          property="og:description"
-          content={
-            SHOW_Q1_EVENT
-              ? "Q1 skin resets + tox specials\u2014built to help you hit your resolutions and get the best skin of your life."
-              : description
-          }
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${SITE}/specials`} />
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content={SHOW_Q1_EVENT ? 'Q1 2026 Specials | RELUXE Med Spa' : title}
-        />
-        <meta
-          name="twitter:description"
-          content={
-            SHOW_Q1_EVENT
-              ? "Q1 skin resets + tox specials at RELUXE Med Spa in Carmel & Westfield."
-              : description
-          }
-        />
-        <meta name="twitter:image" content={ogImage} />
-        <meta name="twitter:image:alt" content="RELUXE Med Spa Specials" />
-
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'ItemList',
-              itemListElement: itemList,
-            }),
-          }}
-        />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={specialsTitle}
+      description={specialsDescription}
+      canonical={`${SITE}/specials`}
+      structuredData={structuredData}
+    >
       {SHOW_Q1_EVENT ? (
         <>
           {/* Hero */}
-          <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white">
-            <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.25),transparent_60%)]" />
-            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs tracking-widest uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+          <section
+            className="relative"
+            style={{
+              backgroundColor: colors.ink,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Grain overlay */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: grain,
+                backgroundRepeat: 'repeat',
+                opacity: 0.5,
+                pointerEvents: 'none',
+              }}
+            />
+            {/* Radial gradient glow */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.25,
+                background: `radial-gradient(60% 60% at 50% 0%, ${colors.violet}40, transparent 60%)`,
+                pointerEvents: 'none',
+              }}
+            />
+
+            <div
+              className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+              style={{ paddingTop: '5rem', paddingBottom: '5rem' }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderRadius: '9999px',
+                  background: 'rgba(250,248,245,0.1)',
+                  padding: '0.25rem 0.75rem',
+                  fontFamily: fonts.body,
+                  ...typeScale.label,
+                  color: 'rgba(250,248,245,0.7)',
+                }}
+              >
+                <span
+                  style={{
+                    height: 6,
+                    width: 6,
+                    borderRadius: '50%',
+                    backgroundColor: colors.violet,
+                    animation: 'pulse 2s infinite',
+                  }}
+                />
                 <span>Q1 2026 Specials</span>
               </div>
 
-              <h1 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight">
-                New Year. New You.
+              <h1
+                style={{
+                  marginTop: '1.25rem',
+                  fontFamily: fonts.display,
+                  fontSize: typeScale.hero.size,
+                  fontWeight: typeScale.hero.weight,
+                  lineHeight: typeScale.hero.lineHeight,
+                  color: colors.white,
+                }}
+              >
+                New Year.{' '}
+                <span
+                  style={{
+                    background: gradients.primary,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  New You.
+                </span>
               </h1>
 
-              <p className="mt-4 max-w-2xl text-neutral-300 text-lg leading-relaxed">
+              <p
+                style={{
+                  marginTop: '1rem',
+                  maxWidth: '42rem',
+                  fontFamily: fonts.body,
+                  fontSize: '1.125rem',
+                  lineHeight: 1.6,
+                  color: 'rgba(250,248,245,0.55)',
+                }}
+              >
                 Start off 2026 right! We&apos;ve built our Q1 specials to help you hit your
                 resolutions &amp; have the best skin of your life. Want to know where to start?
                 Book a consult!
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
                 <a
                   href="#specials"
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '9999px',
+                    padding: '0.75rem 1.5rem',
+                    fontFamily: fonts.body,
+                    fontWeight: 600,
+                    color: '#fff',
+                    background: gradients.primary,
+                    textDecoration: 'none',
+                    transition: 'opacity 0.2s',
+                  }}
                 >
                   See Q1 Specials
                 </a>
 
-                <a
-                  href={BOOK_CONSULT}
-                  data-book-loc="westfield"
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15 hover:bg-white/5 transition-colors"
-                >
-                  Book a Consult &mdash; Westfield
-                </a>
-
-                <a
-                  href={BOOK_CONSULT}
-                  data-book-loc="carmel"
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15 hover:bg-white/5 transition-colors"
-                >
-                  Book a Consult &mdash; Carmel
-                </a>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
               </div>
 
-              <p className="mt-6 text-sm text-neutral-400">
+              <p
+                style={{
+                  marginTop: '1.5rem',
+                  fontFamily: fonts.body,
+                  fontSize: '0.875rem',
+                  color: 'rgba(250,248,245,0.4)',
+                }}
+              >
                 Serving <strong>Westfield</strong>, <strong>Carmel</strong>, Zionsville &amp; North Indianapolis.
               </p>
             </div>
@@ -352,18 +416,49 @@ export default function SpecialsPage({ initial }) {
 
           <main
             id="specials"
-            className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 space-y-16"
+            className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+            style={{ paddingTop: '4rem', paddingBottom: '4rem' }}
           >
             {/* Tox Specials */}
             <section id="tox-specials">
-              <div className="mb-8">
-                <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-black px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white">
+              <div style={{ marginBottom: '2rem' }}>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    borderRadius: '9999px',
+                    background: gradients.primary,
+                    padding: '0.375rem 1rem',
+                    fontFamily: fonts.body,
+                    ...typeScale.label,
+                    color: '#fff',
+                  }}
+                >
                   2026 Tox Pricing
                 </div>
-                <h2 className="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight">
+                <h2
+                  style={{
+                    marginTop: '1rem',
+                    fontFamily: fonts.display,
+                    fontSize: typeScale.sectionHeading.size,
+                    fontWeight: typeScale.sectionHeading.weight,
+                    lineHeight: typeScale.sectionHeading.lineHeight,
+                    color: colors.heading,
+                  }}
+                >
                   Tox Specials
                 </h2>
-                <p className="mt-3 text-neutral-600 max-w-3xl">
+                <p
+                  style={{
+                    marginTop: '0.75rem',
+                    fontFamily: fonts.body,
+                    fontSize: typeScale.body.size,
+                    lineHeight: typeScale.body.lineHeight,
+                    color: colors.body,
+                    maxWidth: '48rem',
+                  }}
+                >
                   Simple foundation pricing + the best rates on additional units so you can get to the
                   right dose (and add new areas) without feeling punished for needing more.
                 </p>
@@ -373,19 +468,59 @@ export default function SpecialsPage({ initial }) {
                 {TOX_SPECIALS.map((t) => (
                   <div
                     key={t.id}
-                    className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                    style={{
+                      borderRadius: '1.5rem',
+                      border: `1px solid ${colors.taupe}`,
+                      backgroundColor: '#fff',
+                      padding: '1.5rem',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                      transition: 'box-shadow 0.2s',
+                    }}
                   >
-                    <h3 className="text-xl font-bold tracking-tight">
+                    <h3
+                      style={{
+                        fontFamily: fonts.display,
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        color: colors.heading,
+                      }}
+                    >
                       {t.name}{' '}
-                      <span className="text-sm font-semibold text-neutral-500">
+                      <span
+                        style={{
+                          fontFamily: fonts.body,
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: colors.muted,
+                        }}
+                      >
                         &mdash; {t.tagline}
                       </span>
                     </h3>
 
-                    <ul className="mt-4 space-y-2.5 text-sm text-neutral-700">
+                    <ul style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                       {t.lines.map((line, idx) => (
-                        <li key={idx} className="flex gap-2.5">
-                          <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
+                        <li
+                          key={idx}
+                          style={{
+                            display: 'flex',
+                            gap: '0.625rem',
+                            fontFamily: fonts.body,
+                            fontSize: '0.875rem',
+                            color: colors.body,
+                            listStyle: 'none',
+                          }}
+                        >
+                          <span
+                            style={{
+                              marginTop: '0.35rem',
+                              height: 6,
+                              width: 6,
+                              flexShrink: 0,
+                              borderRadius: '50%',
+                              backgroundColor: colors.violet,
+                            }}
+                          />
                           <span>{line}</span>
                         </li>
                       ))}
@@ -396,21 +531,58 @@ export default function SpecialsPage({ initial }) {
                 ))}
               </div>
 
-              <p className="mt-6 text-sm text-neutral-600">
+              <p
+                style={{
+                  marginTop: '1.5rem',
+                  fontFamily: fonts.body,
+                  fontSize: '0.875rem',
+                  color: colors.body,
+                }}
+              >
                 Not sure which tox is best for you? No problem &mdash; your injector will help you decide at your appointment.
               </p>
             </section>
 
             {/* Q1 Specials Grid */}
-            <section>
-              <div className="mb-8">
-                <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-black px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white">
+            <section style={{ marginTop: '4rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    borderRadius: '9999px',
+                    background: gradients.primary,
+                    padding: '0.375rem 1rem',
+                    fontFamily: fonts.body,
+                    ...typeScale.label,
+                    color: '#fff',
+                  }}
+                >
                   Q1 Specials (Jan&ndash;Mar)
                 </div>
-                <h2 className="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight">
+                <h2
+                  style={{
+                    marginTop: '1rem',
+                    fontFamily: fonts.display,
+                    fontSize: typeScale.sectionHeading.size,
+                    fontWeight: typeScale.sectionHeading.weight,
+                    lineHeight: typeScale.sectionHeading.lineHeight,
+                    color: colors.heading,
+                  }}
+                >
                   Skin Resets + Membership Kickoff
                 </h2>
-                <p className="mt-3 text-neutral-600 max-w-3xl">
+                <p
+                  style={{
+                    marginTop: '0.75rem',
+                    fontFamily: fonts.body,
+                    fontSize: typeScale.body.size,
+                    lineHeight: typeScale.body.lineHeight,
+                    color: colors.body,
+                    maxWidth: '48rem',
+                  }}
+                >
                   Q1 is when we get aggressive&mdash;commit to a plan, get better results, and earn maintenance bonuses when you complete your plan in 2026.
                 </p>
               </div>
@@ -420,27 +592,78 @@ export default function SpecialsPage({ initial }) {
                   <div
                     key={d.id}
                     id={`special-${d.id}`}
-                    className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+                    style={{
+                      borderRadius: '1.5rem',
+                      border: `1px solid ${colors.taupe}`,
+                      backgroundColor: '#fff',
+                      padding: '1.5rem',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                      transition: 'box-shadow 0.2s',
+                    }}
                   >
                     {d.badge ? (
-                      <div className="inline-flex rounded-full bg-gradient-to-r from-violet-600 to-black px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white">
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          borderRadius: '9999px',
+                          background: gradients.primary,
+                          padding: '0.25rem 0.75rem',
+                          fontFamily: fonts.body,
+                          ...typeScale.label,
+                          color: '#fff',
+                        }}
+                      >
                         {d.badge}
                       </div>
                     ) : null}
 
-                    <h3 className="mt-3 text-xl md:text-2xl font-bold tracking-tight">
+                    <h3
+                      style={{
+                        marginTop: '0.75rem',
+                        fontFamily: fonts.display,
+                        fontSize: 'clamp(1.25rem, 2vw, 1.5rem)',
+                        fontWeight: 700,
+                        color: colors.heading,
+                      }}
+                    >
                       {d.title}
                     </h3>
 
-                    <p className="mt-3 text-lg font-semibold">{d.price}</p>
+                    <p
+                      style={{
+                        marginTop: '0.75rem',
+                        fontFamily: fonts.body,
+                        fontSize: '1.125rem',
+                        fontWeight: 600,
+                        color: colors.heading,
+                      }}
+                    >
+                      {d.price}
+                    </p>
 
                     {d.finePrint ? (
-                      <p className="mt-2 text-sm text-neutral-600">{d.finePrint}</p>
+                      <p
+                        style={{
+                          marginTop: '0.5rem',
+                          fontFamily: fonts.body,
+                          fontSize: '0.875rem',
+                          color: colors.body,
+                        }}
+                      >
+                        {d.finePrint}
+                      </p>
                     ) : null}
 
                     {d.why ? (
-                      <p className="mt-4 text-sm text-neutral-600">
-                        <span className="font-semibold text-neutral-800">Why it works:</span> {d.why}
+                      <p
+                        style={{
+                          marginTop: '1rem',
+                          fontFamily: fonts.body,
+                          fontSize: '0.875rem',
+                          color: colors.body,
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, color: colors.heading }}>Why it works:</span> {d.why}
                       </p>
                     ) : null}
 
@@ -450,7 +673,14 @@ export default function SpecialsPage({ initial }) {
                       note={d.locationNote}
                     />
 
-                    <p className="mt-4 text-xs text-neutral-400">
+                    <p
+                      style={{
+                        marginTop: '1rem',
+                        fontFamily: fonts.body,
+                        fontSize: '0.75rem',
+                        color: colors.muted,
+                      }}
+                    >
                       Limited-time Q1 special. Terms apply.
                     </p>
                   </div>
@@ -460,15 +690,30 @@ export default function SpecialsPage({ initial }) {
 
             {/* Optional: WP Deals Grid */}
             {SHOW_MORE_PROMOTIONS ? (
-              <section>
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-2xl font-bold tracking-tight">More Specials</h2>
-                  <p className="text-sm text-neutral-600">
+              <section style={{ marginTop: '4rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                  <h2
+                    style={{
+                      fontFamily: fonts.display,
+                      fontSize: typeScale.subhead.size,
+                      fontWeight: typeScale.subhead.weight,
+                      color: colors.heading,
+                    }}
+                  >
+                    More Specials
+                  </h2>
+                  <p
+                    style={{
+                      fontFamily: fonts.body,
+                      fontSize: '0.875rem',
+                      color: colors.body,
+                    }}
+                  >
                     Additional specials from our live promotions feed
                   </p>
                 </div>
 
-                <div className="mt-6">
+                <div style={{ marginTop: '1.5rem' }}>
                   <DealsGrid deals={data || []} />
                 </div>
               </section>
@@ -478,30 +723,100 @@ export default function SpecialsPage({ initial }) {
       ) : (
         <>
           {/* Default Specials Page */}
-          <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white">
-            <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.25),transparent_60%)]" />
-            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs tracking-widest uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+          <section
+            className="relative"
+            style={{
+              backgroundColor: colors.ink,
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: grain,
+                backgroundRepeat: 'repeat',
+                opacity: 0.5,
+                pointerEvents: 'none',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.25,
+                background: `radial-gradient(60% 60% at 50% 0%, ${colors.violet}40, transparent 60%)`,
+                pointerEvents: 'none',
+              }}
+            />
+            <div
+              className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+              style={{ paddingTop: '5rem', paddingBottom: '7rem' }}
+            >
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderRadius: '9999px',
+                  background: 'rgba(250,248,245,0.1)',
+                  padding: '0.25rem 0.75rem',
+                  fontFamily: fonts.body,
+                  ...typeScale.label,
+                  color: 'rgba(250,248,245,0.7)',
+                }}
+              >
+                <span
+                  style={{
+                    height: 6,
+                    width: 6,
+                    borderRadius: '50%',
+                    backgroundColor: colors.violet,
+                    animation: 'pulse 2s infinite',
+                  }}
+                />
                 <span>Current Specials</span>
               </div>
-              <h1 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight">
+              <h1
+                style={{
+                  marginTop: '1.25rem',
+                  fontFamily: fonts.display,
+                  fontSize: typeScale.hero.size,
+                  fontWeight: typeScale.hero.weight,
+                  lineHeight: typeScale.hero.lineHeight,
+                  color: colors.white,
+                }}
+              >
                 Specials
               </h1>
-              <p className="mt-4 max-w-2xl text-neutral-300 text-lg">
+              <p
+                style={{
+                  marginTop: '1rem',
+                  maxWidth: '42rem',
+                  fontFamily: fonts.body,
+                  fontSize: '1.125rem',
+                  lineHeight: 1.6,
+                  color: 'rgba(250,248,245,0.55)',
+                }}
+              >
                 Fresh specials curated by our team. These are limited-time&mdash;book while they last.
               </p>
             </div>
           </section>
 
-          <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+          <main
+            className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+            style={{ paddingTop: '4rem', paddingBottom: '4rem' }}
+          >
             <DealsGrid deals={data || []} />
           </main>
         </>
       )}
-    </>
+    </BetaLayout>
   );
 }
+
+SpecialsPage.getLayout = (page) => page;
 
 export async function getStaticProps() {
   const initial = await getDealsSSR().catch(() => []);

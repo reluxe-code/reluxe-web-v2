@@ -2,9 +2,16 @@
 // Brand hub page — DB-driven, replaces static brand pages
 
 import Link from 'next/link'
-import HeaderTwo from '@/components/header/header-2'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
 import BrandSEO from '@/components/seo/BrandSEO'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 import { getServiceClient } from '@/lib/supabase'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 export async function getStaticPaths() {
   const db = getServiceClient()
@@ -54,160 +61,198 @@ export default function BrandHubPage({ brand, products }) {
     if (p.staff_picks?.carmel) staffPicks.carmel.push({ name: p.name, reason: p.staff_picks.carmel })
   }
 
-  // Treatment pairings
-  const pairings = products.filter(p => p.post_procedure || p.related_services?.length > 0)
-
   return (
     <>
       <BrandSEO brand={b} products={products} />
-      <HeaderTwo />
+      <BetaLayout title={b.name} description={b.description || b.tagline}>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-white">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.28),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-7">
-              <p className="text-[11px] tracking-widest uppercase text-white/60">RELUXE • Skincare</p>
-              <h1 className="mt-2 text-4xl md:text-5xl font-extrabold tracking-tight">{b.name}</h1>
-              {b.description && (
-                <p className="mt-4 text-neutral-300 text-lg leading-relaxed brand-description">{b.description}</p>
-              )}
-              <div className="mt-6 flex flex-wrap gap-3">
-                {canBuyOnline && b.affiliate_url && (
-                  <a
-                    href={b.affiliate_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black shadow-lg shadow-violet-600/30 hover:from-violet-500 hover:to-neutral-900 transition"
-                  >
-                    Buy Online
-                  </a>
+        {/* Hero */}
+        <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+          <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '4rem 1.5rem 5rem' }}>
+            <div className="grid lg:grid-cols-12 gap-10 items-center">
+              <div className="lg:col-span-7">
+                <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+                  RELUXE &middot; Skincare
+                </p>
+                <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, color: colors.white, marginTop: '0.75rem' }}>
+                  {b.name}
+                </h1>
+                {b.description && (
+                  <p className="brand-description" style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginTop: '1.5rem' }}>
+                    {b.description}
+                  </p>
                 )}
-                <a
-                  href="/book/consult"
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15 hover:ring-white/30 transition"
-                >
-                  Build My Routine
-                </a>
+                <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  {canBuyOnline && b.affiliate_url && (
+                    <a
+                      href={b.affiliate_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                        fontFamily: fonts.body, fontWeight: 600, fontSize: '0.9375rem',
+                        color: '#fff', background: gradients.primary, textDecoration: 'none',
+                      }}
+                    >
+                      Buy Online
+                    </a>
+                  )}
+                  <GravityBookButton fontKey={FONT_KEY} size="hero" />
+                </div>
+              </div>
+              <div className="lg:col-span-5">
+                {b.hero_image ? (
+                  <div style={{ position: 'relative', aspectRatio: '4/5', width: '100%', overflow: 'hidden', borderRadius: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                    <img src={b.hero_image} alt={`${b.name} products`} style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                  </div>
+                ) : b.logo_url ? (
+                  <div style={{ position: 'relative', aspectRatio: '4/5', width: '100%', overflow: 'hidden', borderRadius: '1.5rem', backgroundColor: colors.charcoal, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={b.logo_url} alt={b.name} style={{ height: '4rem', objectFit: 'contain' }} />
+                  </div>
+                ) : null}
               </div>
             </div>
-            <div className="lg:col-span-5">
-              {b.hero_image ? (
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl">
-                  <img src={b.hero_image} alt={`${b.name} products`} className="h-full w-full object-cover" />
-                </div>
-              ) : b.logo_url ? (
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl ring-1 ring-white/10 bg-neutral-800 flex items-center justify-center">
-                  <img src={b.logo_url} alt={b.name} className="h-16 object-contain" />
-                </div>
-              ) : null}
+          </div>
+        </section>
+
+        {/* Colorescience Anniversary Sale Banner */}
+        {b.slug === 'colorescience' && (
+          <div style={{ padding: '1.25rem 1rem', background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
+            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
+              <div className="flex-1">
+                <p style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#CF7155', fontFamily: fonts.body }}>Limited Time &middot; March 5&ndash;22</p>
+                <p style={{ fontSize: '1.125rem', fontWeight: 700, marginTop: '0.125rem', color: '#CF7155', fontStyle: 'italic', fontFamily: fonts.display }}>Anniversary Sale: 20% Off Sitewide + Free Shipping</p>
+                <p style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: colors.body, fontFamily: fonts.body }}>No exclusions. Free gifts at $125+ and $250+.</p>
+              </div>
+              <a
+                href="https://colorescience.com/reluxe-med-spa"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '9999px', padding: '0.625rem 1.5rem',
+                  fontSize: '0.875rem', fontWeight: 600, fontFamily: fonts.body,
+                  color: '#fff', whiteSpace: 'nowrap',
+                  background: 'linear-gradient(135deg, #CF7155, #B85A40)',
+                  textDecoration: 'none',
+                }}
+              >
+                Shop the Sale &rarr;
+              </a>
             </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Colorescience Anniversary Sale Banner */}
-      {b.slug === 'colorescience' && (
-        <div className="py-5 px-4" style={{ background: 'linear-gradient(135deg, #FDF6F0 0%, #FFF5EE 50%, #FDF6F0 100%)' }}>
-          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
-            <div className="flex-1">
-              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#CF7155' }}>Limited Time &middot; March 5–22</p>
-              <p className="text-lg font-bold mt-0.5" style={{ color: '#CF7155', fontStyle: 'italic', fontFamily: 'Playfair Display, serif' }}>Anniversary Sale: 20% Off Sitewide + Free Shipping</p>
-              <p className="mt-1 text-sm text-neutral-600">No exclusions. Free gifts at $125+ and $250+.</p>
-            </div>
-            <a
-              href="https://colorescience.com/reluxe-med-spa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-semibold text-white whitespace-nowrap hover:opacity-90 transition"
-              style={{ background: 'linear-gradient(135deg, #CF7155, #B85A40)' }}>
-              Shop the Sale &rarr;
-            </a>
-          </div>
-        </div>
-      )}
+        <main style={{ maxWidth: '72rem', margin: '0 auto', padding: '3rem 1.5rem' }}>
+          {/* Bestsellers */}
+          {bestsellers.length > 0 && (
+            <section>
+              <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>Bestsellers</h2>
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {bestsellers.map(p => (
+                  <ProductCard key={p.slug} product={p} brand={b} />
+                ))}
+              </div>
+            </section>
+          )}
 
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-        {/* Bestsellers */}
-        {bestsellers.length > 0 && (
-          <section className="brand-products">
-            <h2 className="text-2xl font-extrabold tracking-tight">Bestsellers</h2>
+          {/* All Products */}
+          <section style={{ marginTop: bestsellers.length > 0 ? '3.5rem' : 0 }}>
+            <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>
+              {bestsellers.length > 0 ? `All ${b.name} Products` : `Top ${b.name} Products`}
+            </h2>
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {bestsellers.map(p => (
+              {allProducts.map(p => (
                 <ProductCard key={p.slug} product={p} brand={b} />
               ))}
             </div>
           </section>
-        )}
 
-        {/* All Products */}
-        <section className={bestsellers.length > 0 ? 'mt-14' : ''}>
-          <h2 className="text-2xl font-extrabold tracking-tight">
-            {bestsellers.length > 0 ? `All ${b.name} Products` : `Top ${b.name} Products`}
-          </h2>
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {allProducts.map(p => (
-              <ProductCard key={p.slug} product={p} brand={b} />
-            ))}
+          {/* Staff Picks */}
+          {(staffPicks.westfield.length > 0 || staffPicks.carmel.length > 0) && (
+            <section style={{ marginTop: '3.5rem' }}>
+              <div className="grid gap-8 md:grid-cols-2">
+                {staffPicks.westfield.length > 0 && (
+                  <StaffColumn title="Staff Picks — Westfield" items={staffPicks.westfield} />
+                )}
+                {staffPicks.carmel.length > 0 && (
+                  <StaffColumn title="Staff Picks — Carmel" items={staffPicks.carmel} />
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Back nav */}
+          <div style={{ marginTop: '3.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <Link
+              href="/skincare"
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: '9999px', padding: '0.5rem 1rem',
+                fontFamily: fonts.body, fontWeight: 600,
+                border: `1px solid ${colors.taupe}`, color: colors.heading, textDecoration: 'none',
+              }}
+            >
+              &larr; Skincare Hub
+            </Link>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
           </div>
-        </section>
-
-        {/* Staff Picks */}
-        {(staffPicks.westfield.length > 0 || staffPicks.carmel.length > 0) && (
-          <section className="mt-14">
-            <div className="grid gap-8 md:grid-cols-2">
-              {staffPicks.westfield.length > 0 && (
-                <StaffColumn title="Staff Picks — Westfield" items={staffPicks.westfield} />
-              )}
-              {staffPicks.carmel.length > 0 && (
-                <StaffColumn title="Staff Picks — Carmel" items={staffPicks.carmel} />
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* Back nav */}
-        <div className="mt-14 flex flex-wrap gap-3">
-          <Link href="/skincare" className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-semibold ring-1 ring-neutral-300 hover:bg-neutral-50">
-            ← Skincare Hub
-          </Link>
-          <a href="/book/consult" className="inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white bg-neutral-900 hover:bg-black transition">
-            Book Skincare Consult
-          </a>
-        </div>
-      </main>
+        </main>
+      </BetaLayout>
     </>
   )
 }
+
+BrandHubPage.getLayout = (page) => page
 
 function ProductCard({ product: p, brand: b }) {
   const pType = p.purchase_type || b.purchase_type || 'in_clinic'
   const canBuy = pType === 'affiliate' || pType === 'direct'
 
   return (
-    <Link href={`/skincare/${b.slug}/${p.slug}`} className="group">
-      <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-        <h4 className="font-bold group-hover:text-violet-600 transition-colors">{p.name}</h4>
-        {p.subtitle && <p className="text-sm text-violet-600 mt-0.5">{p.subtitle}</p>}
-        {p.short_description && <p className="mt-2 text-neutral-700 text-sm">{p.short_description}</p>}
-        <div className="mt-4 flex items-center gap-2">
+    <Link href={`/skincare/${b.slug}/${p.slug}`} className="group" style={{ textDecoration: 'none' }}>
+      <div style={{
+        borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff',
+        padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        transition: 'box-shadow 0.3s',
+      }}
+      className="hover:shadow-md"
+      >
+        <h4 style={{ fontFamily: fonts.display, fontWeight: 700, color: colors.heading }} className="group-hover:text-violet-600 transition-colors">{p.name}</h4>
+        {p.subtitle && <p style={{ fontSize: '0.875rem', color: colors.violet, marginTop: '0.125rem', fontFamily: fonts.body }}>{p.subtitle}</p>}
+        {p.short_description && <p style={{ marginTop: '0.5rem', color: colors.body, fontSize: '0.875rem', fontFamily: fonts.body }}>{p.short_description}</p>}
+        <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {p.is_bestseller && (
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700">
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+              padding: '0.125rem 0.5rem', fontSize: '0.625rem', fontWeight: 600, fontFamily: fonts.body,
+              backgroundColor: 'rgba(245,158,11,0.1)', color: '#b45309',
+            }}>
               Bestseller
             </span>
           )}
           {p.is_new && (
-            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700">
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+              padding: '0.125rem 0.5rem', fontSize: '0.625rem', fontWeight: 600, fontFamily: fonts.body,
+              backgroundColor: 'rgba(16,185,129,0.1)', color: '#047857',
+            }}>
               New
             </span>
           )}
           {canBuy ? (
-            <span className="inline-flex items-center text-xs font-semibold text-violet-600">
-              Shop Online →
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body, color: colors.violet }}>
+              Shop Online &rarr;
             </span>
           ) : (
-            <span className="inline-flex items-center rounded-xl px-3 py-1 text-xs font-semibold bg-neutral-100 text-neutral-700">
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', borderRadius: '9999px',
+              padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, fontFamily: fonts.body,
+              backgroundColor: colors.stone, color: colors.body,
+            }}>
               In-Clinic Only
             </span>
           )}
@@ -219,13 +264,16 @@ function ProductCard({ product: p, brand: b }) {
 
 function StaffColumn({ title, items }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h4 className="text-lg font-extrabold tracking-tight">{title}</h4>
-      <ul className="mt-3 space-y-2">
+    <div style={{
+      borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff',
+      padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    }}>
+      <h4 style={{ fontFamily: fonts.display, fontSize: '1.125rem', fontWeight: 700, color: colors.heading }}>{title}</h4>
+      <ul style={{ marginTop: '0.75rem', listStyle: 'none', padding: 0 }}>
         {items.map(it => (
-          <li key={it.name}>
-            <p className="font-semibold">{it.name}</p>
-            <p className="text-neutral-700 text-sm">{it.reason}</p>
+          <li key={it.name} style={{ marginBottom: '0.5rem' }}>
+            <p style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading }}>{it.name}</p>
+            <p style={{ color: colors.body, fontSize: '0.875rem', fontFamily: fonts.body }}>{it.reason}</p>
           </li>
         ))}
       </ul>

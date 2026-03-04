@@ -79,6 +79,7 @@ function AllServiceCard({ item }) {
         <Link
           href={`/services/${serviceSlug}`}
           className="inline-block text-[11px] font-semibold px-3.5 py-1.5 rounded-full border border-gray-200 text-gray-700 hover:border-gray-900 hover:text-gray-900 transition"
+          aria-label={`Learn more about ${item.title}`}
         >
           Learn More
         </Link>

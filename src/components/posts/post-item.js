@@ -22,7 +22,8 @@ function PostItem({ posts }) {
                         alt={posts?.title}
                         width={374}
                         height={303}
-                        layout="responsive"
+                        sizes="(max-width: 768px) 100vw, 374px"
+                        style={{ width: '100%', height: 'auto' }}
                         quality={60}
                         priority
                     />

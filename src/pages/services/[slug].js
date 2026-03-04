@@ -11,6 +11,26 @@ import { getServicesList } from '@/data/servicesList';
 import { getServiceClient } from '@/lib/supabase';
 import { transformCmsToServiceObject } from '@/lib/cmsTransform';
 
+/* ─── Boulevard slug mapping ─── */
+// Maps service page slugs to the boulevard_service_map keys used on staff rows.
+// Any slug not listed here is checked as-is against the map keys.
+const PAGE_TO_BOULEVARD_SLUGS = {
+  botox: ['tox'], dysport: ['tox'], jeuveau: ['tox'], daxxify: ['tox'],
+  juvederm: ['filler'], restylane: ['filler'], rha: ['filler'], versa: ['filler'], dissolving: ['filler'],
+  micropeels: ['peels'],
+  injectables: ['tox', 'filler', 'facial-balancing', 'sculptra'],
+  men: ['tox', 'filler', 'facials', 'massage', 'morpheus8', 'skinpen'],
+  laserhair: ['laser-hair-removal'],
+  saltsauna: ['salt-sauna'],
+  skiniq: ['skin-iq'],
+  consultations: ['consultations', 'consult'],
+};
+
+function getBoulevardSlugs(pageSlug) {
+  if (PAGE_TO_BOULEVARD_SLUGS[pageSlug]) return PAGE_TO_BOULEVARD_SLUGS[pageSlug];
+  return [pageSlug];
+}
+
 /* ─── SSG ─── */
 const USE_CMS = process.env.NEXT_PUBLIC_USE_SERVICE_CMS === 'true';
 
@@ -91,25 +111,31 @@ export async function getStaticProps({ params }) {
 
   if (!service) return { notFound: true };
 
-  // Fetch staff (all providers from staff table)
+  // Fetch staff filtered to providers who offer this service
   let staff = [];
   try {
     const sb = getServiceClient();
     const { data } = await sb
       .from('staff')
-      .select('name, title, featured_image, bio, specialties, slug')
+      .select('name, title, featured_image, specialties, slug, boulevard_service_map')
       .eq('status', 'published')
       .order('sort_order', { ascending: true });
-    staff = (data || []).map((p) => ({
-      name: p.name,
-      title: p.title || '',
-      headshotUrl: p.featured_image || null,
-      bio: p.bio || '',
-      specialties: Array.isArray(p.specialties)
-        ? p.specialties.map((s) => (typeof s === 'string' ? s : s.specialty || s.name || ''))
-        : [],
-      href: `/team/${p.slug}`,
-    }));
+
+    const blvdSlugs = getBoulevardSlugs(slug);
+    staff = (data || [])
+      .filter((p) => {
+        const map = p.boulevard_service_map || {};
+        return blvdSlugs.some((s) => s in map);
+      })
+      .map((p) => ({
+        name: p.name,
+        title: p.title || '',
+        headshotUrl: p.featured_image || null,
+        specialties: Array.isArray(p.specialties)
+          ? p.specialties.map((s) => (typeof s === 'string' ? s : s.specialty || s.name || ''))
+          : [],
+        href: `/team/${p.slug}`,
+      }));
   } catch {}
 
   // Fetch testimonials from Supabase (prefer service-matched)
@@ -683,7 +709,6 @@ function ProvidersBlock({ providers, s, fonts }) {
               <div className="p-5">
                 <h3 style={{ fontFamily: fonts.display, fontSize: '1.0625rem', fontWeight: 600, color: colors.heading, marginBottom: '0.125rem' }}>{p.name}</h3>
                 {p.title && <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', fontWeight: 500, color: colors.violet, marginBottom: '0.5rem' }}>{p.title}</p>}
-                {p.bio && <p style={{ fontFamily: fonts.body, fontSize: typeScale.caption.size, color: colors.body, lineHeight: 1.5, marginBottom: '0.75rem' }}>{p.bio}</p>}
                 {p.specialties?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {p.specialties.map((sp, j) => (

@@ -1,9 +1,14 @@
 // pages/reluxe-way/index.js
 // The RELUXE Way — Hub Page (spokes + story + CTAs)
 
-import Head from 'next/head'
-import { useEffect, useMemo, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useMemo } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 /** =========================
  *  EDIT THESE CONSTANTS
@@ -28,7 +33,6 @@ const IG_DM_URL = 'https://ig.me/m/reluxemedspa'
 const FB_MSG_URL = 'https://m.me/reluxemedspa'
 
 // Primary CTAs
-const BOOK_URL = '/book/tox' // hub-level “book” (change if desired)
 const START_URL = '/reluxe-way/tox-pricing' // first spoke
 
 const SPOKES = [
@@ -65,7 +69,7 @@ const SPOKES = [
     eyebrow: 'Guidance',
     title: 'Choosing the Right Tox',
     desc:
-      'Botox®, Jeuveau®, Dysport®, Daxxify®—each has a role. We choose based on your face, movement, and goals.',
+      'Botox\u00AE, Jeuveau\u00AE, Dysport\u00AE, Daxxify\u00AE\u2014each has a role. We choose based on your face, movement, and goals.',
     uses: 'Pre-consult • Upsell (no pressure)',
     icon: 'compare',
   },
@@ -74,7 +78,7 @@ const SPOKES = [
     eyebrow: 'Experience',
     title: 'Your Consultation',
     desc:
-      'You’re not a template. What actually happens in the chair at RELUXE—and why patients feel confident saying yes.',
+      "You\u2019re not a template. What actually happens in the chair at RELUXE\u2014and why patients feel confident saying yes.",
     uses: 'First-timers • Anxiety reducers',
     icon: 'consult',
   },
@@ -90,7 +94,7 @@ const SPOKES = [
   {
     href: '/reluxe-way/local-on-purpose',
     eyebrow: 'Community',
-    title: 'Local—On Purpose',
+    title: 'Local\u2014On Purpose',
     desc:
       'We answer to patients, not shareholders. Why independence shapes how we price, plan, and care.',
     uses: 'Local SEO • Brand affinity',
@@ -101,7 +105,7 @@ const SPOKES = [
     eyebrow: 'Fit',
     title: 'Not for Everyone',
     desc:
-      'If you want the cheapest option, we may not be your place. If you value results, trust, and guidance—welcome.',
+      'If you want the cheapest option, we may not be your place. If you value results, trust, and guidance\u2014welcome.',
     uses: 'Qualification • Premium positioning',
     icon: 'fit',
   },
@@ -185,18 +189,10 @@ function getSchema() {
 }
 
 export default function ReluxeWayHub() {
-  const [showSticky, setShowSticky] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 340)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   const smsBody = useMemo(
     () =>
       encodeURIComponent(
-        `Hi RELUXE! I’m reading “The RELUXE Way” and have a quick question. Can you help?`
+        `Hi RELUXE! I'm reading "The RELUXE Way" and have a quick question. Can you help?`
       ),
     []
   )
@@ -204,144 +200,104 @@ export default function ReluxeWayHub() {
   const callHref = `tel:${PHONE_CALL}`
 
   return (
-    <>
-      <Head>
-        <title>{PAGE_TITLE}</title>
-        <meta name="description" content={PAGE_DESCRIPTION} />
-
-        <link rel="canonical" href={CANONICAL_URL} />
-        <meta
-          name="robots"
-          content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
-        />
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-
-        {/* Open Graph */}
-        <meta property="og:site_name" content="RELUXE Med Spa" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={CANONICAL_URL} />
-        <meta property="og:title" content={PAGE_TITLE} />
-        <meta property="og:description" content={PAGE_DESCRIPTION} />
-        <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:image:secure_url" content={OG_IMAGE} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta
-          property="og:image:alt"
-          content="The RELUXE Way — why patients choose RELUXE in Carmel & Westfield"
-        />
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={PAGE_TITLE} />
-        <meta name="twitter:description" content={PAGE_DESCRIPTION} />
-        <meta name="twitter:image" content={OG_IMAGE} />
-
-        {/* Local relevance helpers */}
-        <meta name="geo.region" content="US-IN" />
-        <meta name="geo.placename" content="Carmel, IN; Westfield, IN" />
-
-        {/* JSON-LD */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(getSchema(), null, 2) }}
-        />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title={PAGE_TITLE}
+      description={PAGE_DESCRIPTION}
+      canonical={CANONICAL_URL}
+      ogImage={OG_IMAGE}
+      structuredData={getSchema()}
+    >
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(16,185,129,0.22),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-          <div className="max-w-4xl text-white">
-            <p className="text-[11px] sm:text-xs tracking-widest uppercase text-neutral-400">
-              RELUXE • Carmel & Westfield
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative' }} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="max-w-4xl" style={{ color: colors.white }}>
+            <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+              RELUXE &middot; Carmel & Westfield
             </p>
 
-            <h1 className="mt-3 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
-              The RELUXE Way
+            <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, marginTop: '0.75rem' }}>
+              The{' '}
+              <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                RELUXE Way.
+              </span>
             </h1>
 
-            <p className="mt-4 text-neutral-200 text-base sm:text-lg leading-relaxed">
-              RELUXE wasn’t built to be the cheapest med spa. It was built to be the one patients trust—
+            <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.7)', marginTop: '1.5rem' }}>
+              RELUXE wasn't built to be the cheapest med spa. It was built to be the one patients trust—
               <strong> visit after visit, year after year.</strong>
             </p>
 
-            <p className="mt-3 text-neutral-300 text-sm sm:text-base leading-relaxed">
+            <p style={{ fontFamily: fonts.body, fontSize: 'clamp(0.875rem, 1.2vw, 1rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', marginTop: '1rem' }}>
               This is our hub for how we price, treat, and care—so you can book with confidence.
-              If you’re looking for <strong>Botox pricing</strong>, <strong>Daxxify pricing</strong>,{' '}
+              If you're looking for <strong>Botox pricing</strong>, <strong>Daxxify pricing</strong>,{' '}
               <strong>Jeuveau pricing</strong>, or <strong>Dysport pricing</strong> in{' '}
               <strong>Carmel</strong> or <strong>Westfield</strong>, start with our pricing philosophy.
             </p>
 
-            <div className="mt-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-              <CTA
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 items-start">
+              <a
                 href={START_URL}
-                primary
-                trackName="hub_start_click"
-                trackParams={{ placement: 'hero_primary', target: START_URL }}
+                onClick={() => trackEvent('hub_start_click', { placement: 'hero_primary', target: START_URL })}
+                style={{ fontFamily: fonts.body, fontWeight: 600, background: gradients.primary, color: '#fff', padding: '0.75rem 1.5rem', borderRadius: '9999px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
               >
                 Start with Tox Pricing
-              </CTA>
+                <Arrow />
+              </a>
 
-              <CTA
-                href={BOOK_URL}
-                trackName="book_click"
-                trackParams={{ placement: 'hero_book', location: 'any' }}
-              >
-                Book Now
-              </CTA>
+              <GravityBookButton fontKey={FONT_KEY} size="hero" />
 
-              <CTA
+              <a
                 href={smsHref}
-                trackName="sms_click"
-                trackParams={{ placement: 'hero_sms', phone: MARKETING_SMS }}
+                onClick={() => trackEvent('sms_click', { placement: 'hero_sms', phone: MARKETING_SMS })}
+                style={{ fontFamily: fonts.body, fontWeight: 600, color: 'rgba(250,248,245,0.8)', padding: '0.75rem 1.5rem', borderRadius: '9999px', border: '1px solid rgba(250,248,245,0.15)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
               >
                 Text a Question
-              </CTA>
+              </a>
             </div>
 
-            <div className="mt-5 rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+            <div style={{ marginTop: '2rem', borderRadius: '1rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)', padding: '1.25rem' }}>
               <div className="grid sm:grid-cols-3 gap-3">
                 <MiniStat label="Built for certainty" value="No bait & switch" />
                 <MiniStat label="Built for results" value="Right plan wins" />
                 <MiniStat label="Built for trust" value="Local, family-owned" />
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-neutral-400">
+              <div className="mt-3 flex flex-wrap items-center gap-2" style={{ fontSize: '0.75rem', color: 'rgba(250,248,245,0.35)', fontFamily: fonts.body }}>
                 <a
                   href={IG_URL}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => trackEvent('instagram_click', { placement: 'hero_instagram' })}
-                  className="underline hover:text-neutral-200"
+                  className="underline hover:text-white/60"
                 >
                   @reluxemedspa
                 </a>
-                <span className="text-neutral-600">•</span>
+                <span>&middot;</span>
                 <a
                   href={IG_DM_URL}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => trackEvent('instagram_dm_click', { placement: 'hero_ig_dm' })}
-                  className="underline hover:text-neutral-200"
+                  className="underline hover:text-white/60"
                 >
                   DM us
                 </a>
-                <span className="text-neutral-600">•</span>
+                <span>&middot;</span>
                 <a
                   href={FB_MSG_URL}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => trackEvent('facebook_message_click', { placement: 'hero_fb_msg' })}
-                  className="underline hover:text-neutral-200"
+                  className="underline hover:text-white/60"
                 >
                   Message us
                 </a>
-                <span className="text-neutral-600">•</span>
+                <span>&middot;</span>
                 <a
                   href={callHref}
                   onClick={() => trackEvent('call_click', { placement: 'hero_call', phone: PHONE_CALL })}
-                  className="underline hover:text-neutral-200"
+                  className="underline hover:text-white/60"
                 >
                   Call {DISPLAY_PHONE}
                 </a>
@@ -352,19 +308,19 @@ export default function ReluxeWayHub() {
       </section>
 
       {/* WHAT MAKES RELUXE DIFFERENT */}
-      <section className="bg-white py-12 sm:py-14">
+      <section style={{ background: '#fff', padding: '4rem 0' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7">
               <Eyebrow>What makes RELUXE different</Eyebrow>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+              <h2 style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: typeScale.sectionHeading.size, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading, marginTop: '0.5rem' }}>
                 Not just what we do — how and why we do it.
               </h2>
-              <p className="mt-4 text-neutral-700 leading-relaxed">
-                Anyone can offer tox. What matters is how it’s priced, how it’s dosed, who injects it,
+              <p style={{ fontFamily: fonts.body, color: colors.body, lineHeight: 1.6, marginTop: '1rem' }}>
+                Anyone can offer tox. What matters is how it's priced, how it's dosed, who injects it,
                 and how results are planned over time.
               </p>
-              <p className="mt-4 text-neutral-700 leading-relaxed">
+              <p style={{ fontFamily: fonts.body, color: colors.body, lineHeight: 1.6, marginTop: '1rem' }}>
                 The RELUXE Way is built around a few core beliefs:
               </p>
 
@@ -377,20 +333,20 @@ export default function ReluxeWayHub() {
             </div>
 
             <div className="lg:col-span-5">
-              <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-6 sm:p-7 shadow-sm">
-                <h3 className="text-lg sm:text-xl font-extrabold tracking-tight text-neutral-900">
+              <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: colors.cream, padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <h3 style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: '1.25rem', color: colors.heading }}>
                   Not sure where to start?
                 </h3>
-                <p className="mt-3 text-neutral-700">
-                  Most patients begin with pricing. If your question is “how much?”—start there. If your question is
-                  “why RELUXE?”—pick any spoke below.
+                <p style={{ fontFamily: fonts.body, color: colors.body, marginTop: '0.75rem' }}>
+                  Most patients begin with pricing. If your question is "how much?"—start there. If your question is
+                  "why RELUXE?"—pick any spoke below.
                 </p>
 
                 <div className="mt-5 flex flex-col gap-2">
                   <a
                     href={START_URL}
                     onClick={() => trackEvent('hub_start_click', { placement: 'start_card_primary', target: START_URL })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
+                    style={{ fontFamily: fonts.body, fontWeight: 600, background: colors.ink, color: colors.white, padding: '0.75rem 1.25rem', borderRadius: '9999px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                   >
                     Start with Tox Pricing
                     <Arrow />
@@ -399,7 +355,7 @@ export default function ReluxeWayHub() {
                   <a
                     href={smsHref}
                     onClick={() => trackEvent('sms_click', { placement: 'start_card_sms', phone: MARKETING_SMS })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                    style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading, padding: '0.75rem 1.25rem', borderRadius: '9999px', border: `1px solid ${colors.stone}`, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     Text a Question
                   </a>
@@ -409,12 +365,12 @@ export default function ReluxeWayHub() {
                     target="_blank"
                     rel="noreferrer"
                     onClick={() => trackEvent('instagram_click', { placement: 'start_card_ig' })}
-                    className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-white transition"
+                    style={{ fontFamily: fonts.body, fontWeight: 600, color: colors.heading, padding: '0.75rem 1.25rem', borderRadius: '9999px', border: `1px solid ${colors.stone}`, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     See Results on Instagram
                   </a>
 
-                  <p className="mt-3 text-[11px] text-neutral-500">
+                  <p style={{ marginTop: '0.75rem', fontSize: '0.6875rem', color: colors.muted, fontFamily: fonts.body }}>
                     DM links work best on mobile:{" "}
                     <a
                       href={IG_DM_URL}
@@ -425,7 +381,7 @@ export default function ReluxeWayHub() {
                     >
                       Instagram DM
                     </a>{" "}
-                    •{" "}
+                    &middot;{" "}
                     <a
                       href={FB_MSG_URL}
                       target="_blank"
@@ -439,9 +395,9 @@ export default function ReluxeWayHub() {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-sm">
-                <p className="text-[11px] tracking-widest uppercase text-neutral-500">One line summary</p>
-                <p className="mt-2 text-neutral-800 leading-relaxed">
+              <div style={{ marginTop: '1rem', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <p style={{ ...typeScale.label, color: colors.muted, fontFamily: fonts.body }}>One line summary</p>
+                <p style={{ fontFamily: fonts.body, color: colors.body, lineHeight: 1.6, marginTop: '0.5rem' }}>
                   We price with one goal in mind:{" "}
                   <strong>exceptional results that earn your trust—every visit.</strong>
                 </p>
@@ -452,14 +408,14 @@ export default function ReluxeWayHub() {
       </section>
 
       {/* SPOKES GRID */}
-      <section className="bg-neutral-50 border-y border-neutral-200 py-12 sm:py-14">
+      <section style={{ backgroundColor: colors.cream, borderTop: `1px solid ${colors.stone}`, borderBottom: `1px solid ${colors.stone}`, padding: '4rem 0' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <Eyebrow>Explore the RELUXE Way</Eyebrow>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
+            <h2 style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: typeScale.sectionHeading.size, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading, marginTop: '0.5rem' }}>
               Each spoke stands alone — together they tell the whole story.
             </h2>
-            <p className="mt-4 text-neutral-700 leading-relaxed">
+            <p style={{ fontFamily: fonts.body, color: colors.body, lineHeight: 1.6, marginTop: '1rem' }}>
               Click any topic below. Every page is built to be shareable via SMS, social, or as part of your consult
               journey.
             </p>
@@ -471,14 +427,14 @@ export default function ReluxeWayHub() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-3xl bg-white ring-1 ring-neutral-200 p-6 sm:p-7">
+          <div style={{ marginTop: '2rem', borderRadius: '1.5rem', background: '#fff', border: `1px solid ${colors.stone}`, padding: '1.75rem 2rem' }}>
             <div className="grid lg:grid-cols-12 gap-6 items-center">
               <div className="lg:col-span-7">
-                <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-900">
+                <h3 style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: '1.375rem', color: colors.heading }}>
                   Want help choosing what to read?
                 </h3>
-                <p className="mt-2 text-neutral-700">
-                  Text us what you’re looking for—price, longevity, first time tox, a natural look—and we’ll point you
+                <p style={{ fontFamily: fonts.body, color: colors.body, marginTop: '0.5rem' }}>
+                  Text us what you're looking for—price, longevity, first time tox, a natural look—and we'll point you
                   to the best page (or just book you).
                 </p>
               </div>
@@ -486,17 +442,11 @@ export default function ReluxeWayHub() {
                 <a
                   href={smsHref}
                   onClick={() => trackEvent('sms_click', { placement: 'mid_help_sms', phone: MARKETING_SMS })}
-                  className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition"
+                  style={{ fontFamily: fonts.body, fontWeight: 600, background: colors.ink, color: colors.white, padding: '0.75rem 1.25rem', borderRadius: '9999px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   Text a Question
                 </a>
-                <a
-                  href={BOOK_URL}
-                  onClick={() => trackEvent('book_click', { placement: 'mid_help_book' })}
-                  className="inline-flex items-center justify-center rounded-2xl px-5 py-3 font-semibold ring-1 ring-neutral-200 hover:bg-neutral-50 transition"
-                >
-                  Book Now
-                </a>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
               </div>
             </div>
           </div>
@@ -504,34 +454,31 @@ export default function ReluxeWayHub() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="bg-white py-12 sm:py-14">
+      <section style={{ background: '#fff', padding: '4rem 0' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-black ring-1 ring-neutral-800 p-7 sm:p-10 text-white overflow-hidden relative">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(60%_60%_at_10%_20%,rgba(16,185,129,0.25),transparent_60%)]" />
-            <div className="relative max-w-3xl">
-              <p className="text-[11px] tracking-widest uppercase text-neutral-400">Ready when you are</p>
-              <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
-                Book with confidence.
+          <div style={{ borderRadius: '1.5rem', background: colors.ink, padding: '2.5rem', color: colors.white, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.2, background: 'radial-gradient(60% 60% at 10% 20%, rgba(124,58,237,0.25), transparent 60%)' }} />
+            <div style={{ position: 'relative' }} className="max-w-3xl">
+              <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>Ready when you are</p>
+              <h2 style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: typeScale.sectionHeading.size, lineHeight: typeScale.sectionHeading.lineHeight, marginTop: '0.5rem' }}>
+                Book with{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  confidence.
+                </span>
               </h2>
-              <p className="mt-4 text-neutral-200 leading-relaxed">
+              <p style={{ fontFamily: fonts.body, color: 'rgba(250,248,245,0.6)', lineHeight: 1.6, marginTop: '1rem' }}>
                 We believe informed patients make confident decisions—and confident decisions lead to better results.
                 Explore the RELUXE Way, then book when it feels right.
               </p>
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-                <a
-                  href={BOOK_URL}
-                  onClick={() => trackEvent('book_click', { placement: 'final_primary_book' })}
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold bg-gradient-to-r from-emerald-500 to-black hover:from-emerald-400 hover:to-neutral-900 transition"
-                >
-                  Book Your Appointment
-                  <Arrow />
-                </a>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 items-start">
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
 
                 <a
                   href={START_URL}
                   onClick={() => trackEvent('hub_start_click', { placement: 'final_start', target: START_URL })}
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold ring-1 ring-white/15 hover:bg-white/10 transition"
+                  style={{ fontFamily: fonts.body, fontWeight: 600, color: 'rgba(250,248,245,0.8)', padding: '0.75rem 1.5rem', borderRadius: '9999px', border: '1px solid rgba(250,248,245,0.15)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
                 >
                   Start with Pricing
                 </a>
@@ -539,13 +486,13 @@ export default function ReluxeWayHub() {
                 <a
                   href={smsHref}
                   onClick={() => trackEvent('sms_click', { placement: 'final_sms', phone: MARKETING_SMS })}
-                  className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold ring-1 ring-white/15 hover:bg-white/10 transition"
+                  style={{ fontFamily: fonts.body, fontWeight: 600, color: 'rgba(250,248,245,0.8)', padding: '0.75rem 1.5rem', borderRadius: '9999px', border: '1px solid rgba(250,248,245,0.15)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
                 >
                   Text Us
                 </a>
               </div>
 
-              <p className="mt-4 text-[11px] text-neutral-400">
+              <p style={{ marginTop: '1rem', fontSize: '0.6875rem', color: 'rgba(250,248,245,0.35)', fontFamily: fonts.body }}>
                 Prefer a message?{" "}
                 <a
                   href={IG_DM_URL}
@@ -556,7 +503,7 @@ export default function ReluxeWayHub() {
                 >
                   Instagram DM
                 </a>{" "}
-                •{" "}
+                &middot;{" "}
                 <a
                   href={FB_MSG_URL}
                   target="_blank"
@@ -571,97 +518,69 @@ export default function ReluxeWayHub() {
           </div>
         </div>
       </section>
-
-      {/* MOBILE STICKY CTA */}
-      {showSticky && (
-        <StickyCTA
-          title="The RELUXE Way"
-          subtitle="Start with transparent tox pricing"
-          href={START_URL}
-        />
-      )}
-    </>
+    </BetaLayout>
   )
 }
+
+ReluxeWayHub.getLayout = (page) => page
 
 /* -----------------------------
    Components
 ------------------------------ */
 
-function CTA({ href, children, primary, trackName, trackParams }) {
-  const base =
-    'inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold min-h-[48px] touch-manipulation transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500'
-  const styles = primary
-    ? 'text-white w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-black shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-neutral-900'
-    : 'text-white/90 w-full sm:w-auto ring-1 ring-white/20 hover:bg-white/10'
-
-  return (
-    <a
-      href={href}
-      className={`${base} ${styles} group`}
-      rel="noopener"
-      onClick={() => {
-        if (trackName) trackEvent(trackName, trackParams || {})
-      }}
-    >
-      {children}
-      {primary ? <Arrow /> : null}
-    </a>
-  )
-}
-
 function Eyebrow({ children }) {
-  return <p className="text-[11px] tracking-widest uppercase text-neutral-500">{children}</p>
+  return <p style={{ ...typeScale.label, color: colors.muted, fontFamily: fonts.body }}>{children}</p>
 }
 
 function MiniStat({ label, value }) {
   return (
-    <div className="rounded-2xl bg-black/20 ring-1 ring-white/10 p-3">
-      <p className="text-[11px] tracking-widest uppercase text-neutral-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
+    <div style={{ borderRadius: '0.75rem', background: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.08)', padding: '0.75rem' }}>
+      <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>{label}</p>
+      <p style={{ fontFamily: fonts.body, fontWeight: 600, fontSize: '0.875rem', color: colors.white, marginTop: '0.25rem' }}>{value}</p>
     </div>
   )
 }
 
 function BeliefCard({ title, copy }) {
   return (
-    <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-semibold text-neutral-900">{title}</p>
-      <p className="mt-2 text-sm text-neutral-600">{copy}</p>
+    <div style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <p style={{ fontFamily: fonts.display, fontWeight: 600, fontSize: '0.9375rem', color: colors.heading }}>{title}</p>
+      <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.body, marginTop: '0.5rem' }}>{copy}</p>
     </div>
   )
 }
 
 function SpokeCard({ spoke }) {
-  const featured =
-    spoke.featured &&
-    'ring-2 ring-emerald-500/30 shadow-[0_0_0_1px_rgba(16,185,129,0.15)]'
+  const featuredStyle = spoke.featured
+    ? { boxShadow: `0 0 0 2px rgba(124,58,237,0.25)` }
+    : {}
 
   return (
     <a
       href={spoke.href}
       onClick={() => trackEvent('spoke_click', { placement: 'spoke_grid', href: spoke.href, title: spoke.title })}
-      className={`group rounded-3xl border border-neutral-200 bg-white p-6 sm:p-7 shadow-sm hover:shadow-md transition ${featured || ''}`}
+      className="group"
+      style={{ borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, background: '#fff', padding: '1.75rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', textDecoration: 'none', display: 'block', transition: 'box-shadow 0.2s', ...featuredStyle }}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] tracking-widest uppercase text-neutral-500">{spoke.eyebrow}</p>
-          <h3 className="mt-2 text-lg sm:text-xl font-extrabold tracking-tight text-neutral-900">
+          <p style={{ ...typeScale.label, color: colors.muted, fontFamily: fonts.body }}>{spoke.eyebrow}</p>
+          <h3 style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: '1.25rem', color: colors.heading, marginTop: '0.5rem' }}>
             {spoke.title}
           </h3>
         </div>
 
-        <div className="h-11 w-11 rounded-2xl bg-neutral-950 text-white flex items-center justify-center ring-1 ring-neutral-800">
+        <div style={{ height: 44, width: 44, borderRadius: '0.75rem', background: colors.ink, color: colors.white, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${colors.charcoal}` }}>
           <Icon name={spoke.icon} />
         </div>
       </div>
 
-      <p className="mt-3 text-neutral-700 leading-relaxed">{spoke.desc}</p>
+      <p style={{ fontFamily: fonts.body, color: colors.body, lineHeight: 1.6, marginTop: '0.75rem' }}>{spoke.desc}</p>
 
       <div className="mt-5 flex items-center justify-between gap-3">
-        <span className="text-[11px] tracking-widest uppercase text-neutral-500">{spoke.uses}</span>
-        <span className="text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">
-          Explore <span className="ml-1">→</span>
+        <span style={{ ...typeScale.label, color: colors.muted, fontFamily: fonts.body }}>{spoke.uses}</span>
+        <span style={{ fontFamily: fonts.body, fontWeight: 600, fontSize: '0.875rem', color: colors.violet }}>
+          Explore <span style={{ marginLeft: '0.25rem' }}>&rarr;</span>
         </span>
       </div>
     </a>
@@ -669,149 +588,67 @@ function SpokeCard({ spoke }) {
 }
 
 function Icon({ name }) {
-  // Simple inline icons so you don’t need extra deps
   const common = 'h-5 w-5'
   switch (name) {
     case 'pricing':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M7 7h10M7 12h10M7 17h6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M5 4h14a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M5 4h14a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       )
     case 'results':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M4 17l5-5 4 4 7-7"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M20 7v6h-6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="M4 17l5-5 4 4 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M20 7v6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )
     case 'standard':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       )
     case 'compare':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M10 4H6a2 2 0 0 0-2 2v14h6V4Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M20 10h-6v10h4a2 2 0 0 0 2-2V10Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M14 4h4a2 2 0 0 1 2 2v4h-6V4Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M10 4H6a2 2 0 0 0-2 2v14h6V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M20 10h-6v10h4a2 2 0 0 0 2-2V10Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M14 4h4a2 2 0 0 1 2 2v4h-6V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       )
     case 'consult':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M20 7a4 4 0 0 1-4 4H8l-4 4V7a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M8 7h8M8 10h5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+          <path d="M20 7a4 4 0 0 1-4 4H8l-4 4V7a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M8 7h8M8 10h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       )
     case 'stay':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 21s-7-4.4-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.6-9.5 9-9.5 9Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M12 21s-7-4.4-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.6-9.5 9-9.5 9Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       )
     case 'local':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M12 11.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M12 11.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       )
     case 'fit':
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"
-            stroke="currentColor"
-            strokeWidth="2"
-          />
-          <path
-            d="M8 12h8"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
+          <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" strokeWidth="2" />
+          <path d="M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       )
     default:
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 21s-7-4.4-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.6-9.5 9-9.5 9Z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
+          <path d="M12 21s-7-4.4-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.6-9.5 9-9.5 9Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
         </svg>
       )
   }
@@ -819,29 +656,8 @@ function Icon({ name }) {
 
 function Arrow() {
   return (
-    <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+    <svg className="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
       <path d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 11-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" />
     </svg>
-  )
-}
-
-function StickyCTA({ title, subtitle, href }) {
-  return (
-    <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-[calc(100%-24px)] sm:w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-neutral-900" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="text-[11px] text-neutral-400">{subtitle}</p>
-        </div>
-        <a
-          href={href}
-          className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-black active:scale-[.99] touch-manipulation"
-          onClick={() => trackEvent('hub_start_click', { placement: 'sticky_cta', target: href })}
-        >
-          Start
-        </a>
-      </div>
-    </div>
   )
 }

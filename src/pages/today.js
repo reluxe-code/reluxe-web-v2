@@ -292,7 +292,7 @@ function BookedCard({ opening, animDelay = 0 }) {
       </div>
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
         {providerImage ? (
-          <img src={providerImage} alt="" loading="lazy"
+          <img src={providerImage} alt={opening.provider.name} loading="lazy"
             style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', objectPosition: 'top center', opacity: 0.4, filter: 'grayscale(0.5)' }}
           />
         ) : (

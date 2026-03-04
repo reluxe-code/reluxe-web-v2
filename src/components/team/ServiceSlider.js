@@ -21,7 +21,8 @@ export default function ServiceSlider({ brandItems = [], settings }) {
                         alt={brandItem.title}
                         width={210}
                         height={70}
-                        layout="responsive"
+                        sizes="210px"
+                        style={{ width: '100%', height: 'auto' }}
                         quality={70}
                       />
 

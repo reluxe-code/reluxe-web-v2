@@ -176,7 +176,9 @@ export default function StoryDetail({ story }) {
   const { openBookingModal } = useMember()
   const treatments = story?.treatments || []
   const socialEmbeds = story?.social_embeds || []
-  const gallery = story?.gallery || []
+  const allGallery = story?.gallery || []
+  const lifestyleGallery = allGallery.filter((g) => g.type === 'lifestyle')
+  const journeyGallery = allGallery.filter((g) => g.type !== 'lifestyle')
 
   // Collect all embeds (page-level + nested in treatments) for script loading
   const treatmentEmbeds = treatments.flatMap((t) => t.embeds || [])
@@ -257,6 +259,54 @@ export default function StoryDetail({ story }) {
                     </p>
                   </div>
                 </motion.div>
+              </div>
+            </section>
+          )}
+
+          {/* ─── Lifestyle Gallery — Who is this person ─── */}
+          {lifestyleGallery.length > 0 && (
+            <section style={{ backgroundColor: colors.ink }}>
+              <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
+                <motion.div
+                  className="text-center mb-16"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>
+                    {story.lifestyle_label || `Meet ${story.person_name?.split(' ')[0] || 'Them'}`}
+                  </p>
+                  <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.white }}>
+                    {story.lifestyle_heading || 'Life Beyond the Treatment Room'}
+                  </h2>
+                </motion.div>
+
+                <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+                  {lifestyleGallery.map((img, i) => (
+                    <motion.div
+                      key={i}
+                      className="break-inside-avoid mb-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: i * 0.05 }}
+                    >
+                      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(250,248,245,0.06)' }}>
+                        {isVideoUrl(img.url) ? (
+                          <video src={img.url} controls playsInline preload="metadata" style={{ width: '100%', display: 'block' }} />
+                        ) : (
+                          <img src={img.url} alt={img.alt || img.caption || `${story.person_name}`} style={{ width: '100%', display: 'block' }} />
+                        )}
+                        {img.caption && (
+                          <div style={{ padding: '0.75rem 1rem', background: 'rgba(250,248,245,0.03)' }}>
+                            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)' }}>{img.caption}</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </section>
           )}
@@ -402,8 +452,8 @@ export default function StoryDetail({ story }) {
             </section>
           )}
 
-          {/* ─── Gallery ─── */}
-          {gallery.length > 0 && (
+          {/* ─── RELUXE Journey Gallery ─── */}
+          {journeyGallery.length > 0 && (
             <section style={{ backgroundColor: colors.ink }}>
               <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
                 <motion.div
@@ -414,15 +464,15 @@ export default function StoryDetail({ story }) {
                   transition={{ duration: 0.6 }}
                 >
                   <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1rem' }}>
-                    Gallery
+                    The Results
                   </p>
                   <h2 style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.white }}>
-                    The Journey in Photos
+                    {story.person_name?.split(' ')[0]}&rsquo;s RELUXE Journey
                   </h2>
                 </motion.div>
 
                 <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-                  {gallery.map((img, i) => (
+                  {journeyGallery.map((img, i) => (
                     <motion.div
                       key={i}
                       className="break-inside-avoid mb-4"
@@ -433,25 +483,13 @@ export default function StoryDetail({ story }) {
                     >
                       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(250,248,245,0.06)' }}>
                         {isVideoUrl(img.url) ? (
-                          <video
-                            src={img.url}
-                            controls
-                            playsInline
-                            preload="metadata"
-                            style={{ width: '100%', display: 'block' }}
-                          />
+                          <video src={img.url} controls playsInline preload="metadata" style={{ width: '100%', display: 'block' }} />
                         ) : (
-                          <img
-                            src={img.url}
-                            alt={img.alt || img.caption || `${story.person_name} gallery`}
-                            style={{ width: '100%', display: 'block' }}
-                          />
+                          <img src={img.url} alt={img.alt || img.caption || `${story.person_name} RELUXE journey`} style={{ width: '100%', display: 'block' }} />
                         )}
                         {img.caption && (
                           <div style={{ padding: '0.75rem 1rem', background: 'rgba(250,248,245,0.03)' }}>
-                            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)' }}>
-                              {img.caption}
-                            </p>
+                            <p style={{ fontFamily: fonts.body, fontSize: '0.8125rem', color: 'rgba(250,248,245,0.5)' }}>{img.caption}</p>
                           </div>
                         )}
                       </div>

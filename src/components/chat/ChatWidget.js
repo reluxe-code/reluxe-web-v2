@@ -12,8 +12,15 @@ import ChatInput from './ChatInput'
 const WELCOME_MESSAGE = {
   role: 'assistant',
   content:
-    "Hi! I'm RELUXE's AI assistant. I can help you with services, pricing, and booking appointments. I'm not a medical professional \u2014 for personalized treatment advice, our providers are happy to help during a consultation.\n\nWhat can I help you with?",
+    "Hi! I'm RELUXE's AI assistant. I can help you with services, pricing, and booking appointments. I'm not a medical professional \u2014 for personalized treatment advice, our providers are happy to help during a consultation.\n\nWhat can I help you with? Try one of the suggestions below, or just type your question!",
 }
+
+const STARTER_PROMPTS = [
+  'Book a massage this Friday',
+  'Botox appointment next week',
+  'What facials do you offer?',
+  'Book a free consultation',
+]
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000 // 30 min
 
@@ -153,7 +160,12 @@ export default function ChatWidget() {
             }}
           >
             <ChatHeader onClose={toggleChat} />
-            <ChatMessages messages={messages} isLoading={isLoading} />
+            <ChatMessages
+              messages={messages}
+              isLoading={isLoading}
+              starters={messages.length <= 1 && !isLoading ? STARTER_PROMPTS : null}
+              onStarterClick={sendMessage}
+            />
 
             {/* Error bar */}
             {error && (

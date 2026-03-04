@@ -1,102 +1,117 @@
-import Head from 'next/head'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import HeaderTwo from '../../components/header/header-2'
+import { useState } from 'react'
+import BetaLayout from '@/components/beta/BetaLayout'
+import GravityBookButton from '@/components/beta/GravityBookButton'
 import EventInquiryForm from '@/components/events/EventInquiryForm'
+import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
 
-const BOOK_URL = '/book/'
+const FONT_KEY = 'bold'
+const fonts = fontPairings[FONT_KEY]
+
+const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`
 
 export default function CorporatePrepPage() {
-  const [showStickyCta, setShowStickyCta] = useState(false)
-  useEffect(() => {
-    const onScroll = () => setShowStickyCta(window.scrollY > 300)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
-    <>
-      <Head>
-        <title>Corporate & Speaking Engagement Prep | Carmel & Westfield | RELUXE Med Spa</title>
-        <meta
-          name="description"
-          content="Conference and speaking engagement prep in Carmel & Westfield. Camera-smart facials, injectables, dermaplane, and stress resets for stage or Zoom."
-        />
-        <link rel="canonical" href="https://reluxemedspa.com/events/corporate-prep" />
-      </Head>
-
-      <HeaderTwo />
-
+    <BetaLayout
+      title="Corporate & Speaking Engagement Prep | Carmel & Westfield"
+      description="Conference and speaking engagement prep in Carmel & Westfield. Camera-smart facials, injectables, dermaplane, and stress resets for stage or Zoom."
+      canonical="https://reluxemedspa.com/events/corporate-prep"
+    >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-neutral-950 via-neutral-900 to-black">
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(60%_60%_at_50%_0%,rgba(168,85,247,0.25),transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-white">
+      <section style={{ position: 'relative', overflow: 'hidden', background: colors.ink, color: colors.white }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, opacity: 0.5 }} />
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.25, background: 'radial-gradient(60% 60% at 50% 0%, rgba(124,58,237,0.28), transparent 60%)' }} />
+        <div style={{ position: 'relative', maxWidth: '80rem', margin: '0 auto', padding: '5rem 1.5rem' }}>
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7">
-              <p className="text-xs tracking-widest uppercase text-neutral-400">RELUXE • Corporate & Speaking</p>
-              <h1 className="mt-3 text-4xl md:text-5xl font-extrabold tracking-tight">Conference & Camera-Ready Skin</h1>
-              <p className="mt-4 text-neutral-300 text-lg leading-relaxed">
-                Panels, keynotes, media days, or high-stakes Zoom—show up clear, polished, and confident with a plan built for bright lights and HD cameras.
+              <p style={{ ...typeScale.label, color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+                RELUXE &middot; Corporate &amp; Speaking
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black">Book Corporate Prep</a>
-                <a href="#timing" className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white/90 ring-1 ring-white/15">Timing Guide</a>
+              <h1 style={{ fontFamily: fonts.display, fontSize: typeScale.hero.size, fontWeight: typeScale.hero.weight, lineHeight: typeScale.hero.lineHeight, color: colors.white, marginTop: '0.75rem' }}>
+                Conference &amp; Camera-Ready{' '}
+                <span style={{ background: gradients.primary, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Skin.
+                </span>
+              </h1>
+              <p style={{ fontFamily: fonts.body, fontSize: 'clamp(1rem, 1.5vw, 1.125rem)', lineHeight: 1.6, color: 'rgba(250,248,245,0.5)', maxWidth: '32rem', marginTop: '1.5rem' }}>
+                Panels, keynotes, media days, or high-stakes Zoom &mdash; show up clear, polished, and confident with a plan built for bright lights and HD cameras.
+              </p>
+              <div style={{ marginTop: '2rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+                <GravityBookButton fontKey={FONT_KEY} size="hero" />
+                <a
+                  href="#timing"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: '9999px', padding: '0.75rem 1.5rem',
+                    fontWeight: 600, fontFamily: fonts.body,
+                    color: 'rgba(250,248,245,0.9)', border: '1px solid rgba(250,248,245,0.15)',
+                    textDecoration: 'none', fontSize: '0.9375rem',
+                  }}
+                >
+                  Timing Guide
+                </a>
               </div>
             </div>
             <div className="lg:col-span-5">
-              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl ring-1 ring-white/10 shadow-2xl">
-                <img src="/images/treatments/corporate.jpg" alt="Corporate & speaking engagement prep Carmel Westfield" className="h-full w-full object-cover" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-                  <p className="text-xs text-neutral-200">Images represent service categories available at RELUXE.</p>
+              <div style={{ position: 'relative', aspectRatio: '4/5', width: '100%', overflow: 'hidden', borderRadius: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', border: '1px solid rgba(250,248,245,0.1)' }}>
+                <img src="/images/treatments/corporate.jpg" alt="Corporate & speaking engagement prep Carmel Westfield" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'rgba(250,248,245,0.7)', fontFamily: fonts.body }}>Images represent service categories available at RELUXE.</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Local SEO */}
-          <div className="mt-6 text-sm text-neutral-400">
-            Serving <strong>Carmel</strong>, <strong>Westfield</strong>, Zionsville, and North Indianapolis.
-          </div>
+          <p style={{ marginTop: '1.5rem', fontSize: '0.875rem', color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>
+            Serving <strong style={{ color: 'rgba(250,248,245,0.6)' }}>Carmel</strong>, <strong style={{ color: 'rgba(250,248,245,0.6)' }}>Westfield</strong>, Zionsville, and North Indianapolis.
+          </p>
         </div>
       </section>
 
       {/* Event Inquiry */}
-      <section className="bg-gradient-to-b from-black to-neutral-950 py-16">
-        <div className="mx-auto max-w-2xl px-4 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Interested in Corporate Prep?</h2>
-          <p className="mt-3 text-neutral-400">Tell us about your event and we&apos;ll create a custom plan.</p>
-          <div className="mt-8">
+      <section style={{ background: `linear-gradient(to bottom, ${colors.ink}, #111)`, padding: '4rem 0' }}>
+        <div style={{ maxWidth: '42rem', margin: '0 auto', padding: '0 1rem', textAlign: 'center', color: colors.white }}>
+          <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.white }}>
+            Interested in Corporate Prep?
+          </h2>
+          <p style={{ marginTop: '0.75rem', color: 'rgba(250,248,245,0.4)', fontFamily: fonts.body }}>Tell us about your event and we&apos;ll create a custom plan.</p>
+          <div style={{ marginTop: '2rem' }}>
             <EventInquiryForm defaultEventType="Corporate / Speaking" />
           </div>
         </div>
       </section>
 
       {/* Timing Guide */}
-      <section id="timing" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Camera-Ready Timing Guide</h2>
-          <p className="mt-3 text-neutral-600">Designed for boardrooms and ballrooms—polished without looking “done.”</p>
+      <section id="timing" style={{ maxWidth: '80rem', margin: '0 auto', padding: '4rem 1.5rem' }}>
+        <div style={{ maxWidth: '48rem', margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>
+            Camera-Ready Timing Guide
+          </h2>
+          <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>
+            Designed for boardrooms and ballrooms &mdash; polished without looking &ldquo;done.&rdquo;
+          </p>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginTop: '2.5rem' }}>
           <TimingCard
-            when="4–6 Weeks Out"
+            when="4-6 Weeks Out"
             items={[
-              'Neurotoxins for smooth expressions (Botox®, Dysport®, Jeuveau®, Daxxify®)',
+              'Neurotoxins for smooth expressions (Botox, Dysport, Jeuveau, Daxxify)',
               'Filler refinement if needed (cheeks/chin/jawline)',
-              'Start SkinPen® or light laser if timeline allows',
+              'Start SkinPen or light laser if timeline allows',
             ]}
           />
           <TimingCard
-            when="2–3 Weeks Out"
+            when="2-3 Weeks Out"
             items={[
-              'HydraFacial® or Glo2Facial® for clarity & hydration',
+              'HydraFacial or Glo2Facial for clarity & hydration',
               'Light peel (case-by-case) to brighten tone',
               'Settle on a simple, camera-friendly skincare routine',
             ]}
           />
           <TimingCard
-            when="5–7 Days Out"
+            when="5-7 Days Out"
             items={[
               'Dermaplane for smooth makeup and reduced shine',
               'Signature facial + Hydrinity hydration',
@@ -104,7 +119,7 @@ export default function CorporatePrepPage() {
             ]}
           />
           <TimingCard
-            when="1–2 Days Out"
+            when="1-2 Days Out"
             items={[
               'Keep products gentle; avoid actives',
               'Hydrate, rest, and plan touch-ups (powder, balm, blot)',
@@ -113,113 +128,111 @@ export default function CorporatePrepPage() {
           />
         </div>
 
-        <div className="mt-10 text-center">
-          <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black">
-            Start My Corporate Plan
-          </a>
+        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+          <GravityBookButton fontKey={FONT_KEY} size="hero" />
         </div>
       </section>
 
       {/* Services */}
-      <section id="services" className="bg-neutral-50 py-16">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Boardroom-Ready Services</h2>
-            <p className="mt-3 text-neutral-600">Subtle, natural upgrades that play nicely with cameras and long days.</p>
+      <section id="services" style={{ backgroundColor: colors.cream, padding: '4rem 0' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1.5rem' }}>
+          <div style={{ maxWidth: '48rem', margin: '0 auto', textAlign: 'center' }}>
+            <h2 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading }}>
+              Boardroom-Ready Services
+            </h2>
+            <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>Subtle, natural upgrades that play nicely with cameras and long days.</p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ marginTop: '2.5rem' }}>
             <ServiceCard title="Injectables" subtitle="Neurotoxins" copy="Soften lines without freezing expression. Present polished, not altered." image="/images/treatments/injectables.jpg" href="/book/tox/" />
-            <ServiceCard title="HydraFacial® / Glo2Facial®" subtitle="No-downtime clarity" copy="Controls shine, refines pores, and boosts hydration—great for HD." image="/images/treatments/facials.jpg" href="/book/facials/" />
+            <ServiceCard title="HydraFacial / Glo2Facial" subtitle="No-downtime clarity" copy="Controls shine, refines pores, and boosts hydration -- great for HD." image="/images/treatments/facials.jpg" href="/book/facials/" />
             <ServiceCard title="Dermaplane + Light Peel" subtitle="Makeup-ready" copy="Smooth texture and even tone so powder and concealer sit flawlessly." image="/images/treatments/dermaplane.jpg" href="/book/facials/" />
-            <ServiceCard title="SkinPen® Microneedling" subtitle="Texture & scars" copy="If you have runway, improve texture gradually with a series." image="/images/treatments/skinpen.jpg" href="/book/microneedling/" />
-            <ServiceCard title="Laser & RF" subtitle="Opus • ClearLift • IPL" copy="Tighten and refine with recovery windows we’ll plan around meetings." image="/images/treatments/laser.jpg" href="/book/laser/" />
+            <ServiceCard title="SkinPen Microneedling" subtitle="Texture & scars" copy="If you have runway, improve texture gradually with a series." image="/images/treatments/skinpen.jpg" href="/book/microneedling/" />
+            <ServiceCard title="Laser & RF" subtitle="Opus - ClearLift - IPL" copy="Tighten and refine with recovery windows we'll plan around meetings." image="/images/treatments/laser.jpg" href="/book/laser/" />
             <ServiceCard title="Massage Therapy" subtitle="Stress reset" copy="Lower tension and show up energized for long conference days." image="/images/treatments/massage.jpg" href="/book/massage/" />
           </div>
 
-          <div className="mt-10 text-center">
-            <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black">
-              Book Corporate Services
-            </a>
+          <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+            <GravityBookButton fontKey={FONT_KEY} size="hero" />
           </div>
         </div>
       </section>
 
       {/* FAQs */}
-      <section id="faq" className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16">
-        <h4 className="text-2xl md:text-3xl font-extrabold tracking-tight text-center">Corporate Prep FAQs</h4>
-        <div className="mt-8 divide-y divide-neutral-200 rounded-3xl border border-neutral-200 bg-white">
-          <FaqItem q="I present next week—what’s safe?" a="Dermaplane + signature facial + hydration. Skip aggressive peels or new actives." />
-          <FaqItem q="Can you prep our executive team?" a="Yes—coordinated schedules and simple, camera-friendly skincare for consistent results." />
-          <FaqItem q="How do I manage shine on stage?" a="We’ll prep with hydrating, non-greasy finishes and share touch-up tips (blot papers, mineral powder)." />
+      <section id="faq" style={{ maxWidth: '64rem', margin: '0 auto', padding: '4rem 1.5rem' }}>
+        <h4 style={{ fontFamily: fonts.display, ...typeScale.sectionHeading, color: colors.heading, textAlign: 'center' }}>
+          Corporate Prep FAQs
+        </h4>
+        <div style={{ marginTop: '2rem', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`, backgroundColor: '#fff', overflow: 'hidden' }}>
+          <FaqItem q="I present next week -- what's safe?" a="Dermaplane + signature facial + hydration. Skip aggressive peels or new actives." />
+          <FaqItem q="Can you prep our executive team?" a="Yes -- coordinated schedules and simple, camera-friendly skincare for consistent results." />
+          <FaqItem q="How do I manage shine on stage?" a="We'll prep with hydrating, non-greasy finishes and share touch-up tips (blot papers, mineral powder)." />
         </div>
 
-        <div className="mt-8 text-center">
-          <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-2xl px-6 py-3 font-semibold text-white bg-gradient-to-r from-violet-600 to-black">
-            Book a Carmel/Westfield Consult
-          </a>
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <GravityBookButton fontKey={FONT_KEY} size="hero" />
         </div>
       </section>
-
-      {/* Sticky CTA */}
-      {showStickyCta && (
-        <div className="fixed inset-x-0 bottom-3 z-50 mx-auto w-full max-w-md rounded-2xl bg-neutral-900/95 px-3 py-3 shadow-2xl ring-1 ring-white/10 backdrop-blur md:hidden">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-500" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-white">Book Corporate Prep</p>
-              <p className="text-[11px] text-neutral-400">Carmel & Westfield</p>
-            </div>
-            <a href={BOOK_URL} className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-violet-600 to-black">
-              Book
-            </a>
-          </div>
-        </div>
-      )}
-    </>
+    </BetaLayout>
   )
 }
 
 // --- Components ---
 function TimingCard({ when, items }) {
   return (
-    <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-      <div className="p-6">
-        <h3 className="text-xl font-bold tracking-tight">{when}</h3>
-        <ul className="mt-3 list-disc pl-6 space-y-1 text-neutral-700">
+    <div style={{
+      overflow: 'hidden', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`,
+      backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      transition: 'box-shadow 0.3s',
+    }}
+    className="hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]"
+    >
+      <div style={{ padding: '1.5rem' }}>
+        <h3 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>{when}</h3>
+        <ul style={{ marginTop: '0.75rem', paddingLeft: '1.5rem', listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: '0.25rem', color: colors.body, fontFamily: fonts.body }}>
           {items.map((t, i) => <li key={i}>{t}</li>)}
         </ul>
       </div>
     </div>
   )
 }
+
 function ServiceCard({ title, subtitle, copy, image, href }) {
   return (
-    <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-      <div className="aspect-[4/3] w-full overflow-hidden">
-        <img src={image} alt={title} className="h-full w-full object-cover" />
+    <div style={{
+      overflow: 'hidden', borderRadius: '1.5rem', border: `1px solid ${colors.stone}`,
+      backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      transition: 'box-shadow 0.3s',
+    }}
+    className="group hover:shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)]"
+    >
+      <div style={{ aspectRatio: '4/3', width: '100%', overflow: 'hidden' }}>
+        <img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
       </div>
-      <div className="p-6">
-        <h4 className="text-xl font-bold tracking-tight">{title}</h4>
-        {subtitle && <p className="mt-1 text-sm text-neutral-500">{subtitle}</p>}
-        <p className="mt-3 text-neutral-700">{copy}</p>
-        <div className="mt-5 flex items-center justify-between">
-          <a href={href} className="text-violet-700 hover:text-violet-600 font-semibold">Book Now →</a>
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600/20 to-fuchsia-500/20 ring-1 ring-violet-200" />
+      <div style={{ padding: '1.5rem' }}>
+        <h4 style={{ fontFamily: fonts.display, fontSize: '1.25rem', fontWeight: 700, color: colors.heading }}>{title}</h4>
+        {subtitle && <p style={{ marginTop: '0.25rem', fontSize: '0.875rem', color: colors.muted, fontFamily: fonts.body }}>{subtitle}</p>}
+        <p style={{ marginTop: '0.75rem', color: colors.body, fontFamily: fonts.body }}>{copy}</p>
+        <div style={{ marginTop: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <a href={href} style={{ color: colors.violet, fontWeight: 600, fontFamily: fonts.body, textDecoration: 'none' }}>Book Now &rarr;</a>
+          <div style={{ height: '2rem', width: '2rem', borderRadius: '0.75rem', background: gradients.subtle, border: `1px solid rgba(124,58,237,0.15)` }} />
         </div>
       </div>
     </div>
   )
 }
+
 function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
-    <details open={open} onToggle={(e) => setOpen(e.target.open)} className="group">
-      <summary className="cursor-pointer list-none px-6 py-4 font-semibold flex items-center justify-between">
+    <details open={open} onToggle={(e) => setOpen(e.target.open)} style={{ borderBottom: `1px solid ${colors.stone}` }}>
+      <summary style={{ cursor: 'pointer', listStyle: 'none', padding: '1rem 1.5rem', fontWeight: 600, fontFamily: fonts.body, color: colors.heading, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span>{q}</span>
-        <svg className={`h-5 w-5 text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.188l3.71-3.957a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd"/></svg>
+        <svg style={{ height: '1.25rem', width: '1.25rem', color: colors.muted, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.188l3.71-3.957a.75.75 0 111.08 1.04l-4.24 4.52a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z" clipRule="evenodd"/></svg>
       </summary>
-      <div className="px-6 pb-5 text-neutral-700">{a}</div>
+      <div style={{ padding: '0 1.5rem 1.25rem', color: colors.body, fontFamily: fonts.body }}>{a}</div>
     </details>
   )
 }
+
+CorporatePrepPage.getLayout = (page) => page
