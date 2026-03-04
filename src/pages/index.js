@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import BetaLayout from '@/components/beta/BetaLayout';
 import { colors, gradients, typeScale } from '@/components/preview/tokens';
@@ -164,10 +165,13 @@ function ProviderCutout({ member, fonts, index, scrollProgress, totalCount }) {
       <a href={`/team/${member.slug}`} className="block" style={{ textDecoration: 'none' }}>
         <div className="relative rounded-t-3xl overflow-hidden" style={{ width: 'clamp(100px, 12vw, 160px)', height: style.height, background: gradientColors[index % 4] }}>
           {hasImage ? (
-            <img
+            <Image
               src={member.transparent_bg || member.featured_image}
               alt={member.name}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+              fill
+              sizes="(max-width: 768px) 100px, 160px"
+              priority={index < 3}
+              style={{ objectFit: 'cover', objectPosition: 'top center' }}
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
@@ -402,7 +406,7 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
           <section className="relative min-h-screen flex items-center" style={{ backgroundColor: colors.ink }}>
             <div className="max-w-7xl mx-auto px-6 w-full">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-24 lg:py-0">
-                <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}>
+                <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}>
                   <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1.5rem' }}>Westfield &amp; Carmel, Indiana</p>
                   <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.5rem' }}>
                     Your Skin.{' '}
@@ -423,7 +427,7 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
                   </div>
                 </motion.div>
 
-                <motion.div className="relative" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.15 }}>
+                <motion.div className="relative" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.05 }}>
                   <HeroIdentityCard fonts={fonts} />
                 </motion.div>
               </div>
@@ -616,10 +620,12 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
                     >
                       <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: '3/4', background: 'rgba(250,248,245,0.04)' }}>
                         {(story.hero_image || story.person_image) ? (
-                          <img
+                          <Image
                             src={story.hero_image || story.person_image}
                             alt={story.person_name}
-                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
                             className="group-hover:scale-105"
                           />
                         ) : (
