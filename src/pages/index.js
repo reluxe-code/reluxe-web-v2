@@ -405,7 +405,7 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
           {/* ─── HERO: Split Layout ─── */}
           <section className="relative min-h-screen flex items-center" style={{ backgroundColor: colors.ink }}>
             <div className="max-w-7xl mx-auto px-6 w-full">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-24 lg:py-0">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center pt-28 pb-24 lg:pt-32 lg:pb-16">
                 <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}>
                   <p style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet, marginBottom: '1.5rem' }}>Westfield &amp; Carmel, Indiana</p>
                   <h1 style={{ fontFamily: fonts.display, fontSize: 'clamp(2.5rem, 6vw, 5rem)', fontWeight: 700, lineHeight: 1.05, color: colors.white, marginBottom: '1.5rem' }}>

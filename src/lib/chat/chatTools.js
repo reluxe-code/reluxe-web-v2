@@ -816,7 +816,7 @@ async function resolveProvider(name) {
     .select('name, title, boulevard_provider_id, boulevard_service_map, locations')
     .eq('status', 'published')
     .not('boulevard_provider_id', 'is', null)
-    .neq('allow_online_booking', false)
+    .or('allow_online_booking.is.null,allow_online_booking.eq.true')
 
   if (error || !staff?.length) return null
 
@@ -871,7 +871,7 @@ async function getServiceLocations(serviceSlug) {
     .select('boulevard_service_map')
     .eq('status', 'published')
     .not('boulevard_provider_id', 'is', null)
-    .neq('allow_online_booking', false)
+    .or('allow_online_booking.is.null,allow_online_booking.eq.true')
 
   if (error || !staff?.length) return ['westfield', 'carmel'] // fail open
 
@@ -895,7 +895,7 @@ async function resolveProviders(locationKey, serviceSlug) {
     .select('name, title, boulevard_provider_id, boulevard_service_map, locations')
     .eq('status', 'published')
     .not('boulevard_provider_id', 'is', null)
-    .neq('allow_online_booking', false)
+    .or('allow_online_booking.is.null,allow_online_booking.eq.true')
 
   if (error || !staff?.length) return []
 

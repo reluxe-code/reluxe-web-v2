@@ -55,17 +55,17 @@ export default function PrivacyPolicyPage() {
                   ['#use', '2. How We Use Your Information'],
                   ['#sharing', '3. Information Sharing'],
                   ['#cookies', '4. Cookies & Tracking'],
-                  [‘#marketing’, ‘5. Marketing Communications’],
-                  [‘#otp’, ‘6. Account Authentication Messages’],
-                  [‘#payments’, ‘7. Payment Information’],
-                  [‘#retention’, ‘8. Data Retention’],
-                  [‘#security’, ‘9. Security’],
-                  [‘#children’, ‘10. Children\u2019s Privacy’],
-                  [‘#international’, ‘11. International Visitors’],
-                  [‘#rights’, ‘12. Your Rights’],
-                  [‘#links’, ‘13. Links to Other Websites’],
-                  [‘#changes’, ‘14. Changes to this Policy’],
-                  [‘#contact’, ‘15. Contact Us’],
+                  ['#marketing', '5. Marketing Communications'],
+                  ['#otp', '6. Account Authentication Messages'],
+                  ['#payments', '7. Payment Information'],
+                  ['#retention', '8. Data Retention'],
+                  ['#security', '9. Security'],
+                  ['#children', '10. Children\u2019s Privacy'],
+                  ['#international', '11. International Visitors'],
+                  ['#rights', '12. Your Rights'],
+                  ['#links', '13. Links to Other Websites'],
+                  ['#changes', '14. Changes to this Policy'],
+                  ['#contact', '15. Contact Us'],
                 ].map(([href, label]) => (
                   <div key={href}>
                     <a href={href} className="text-neutral-700 hover:text-neutral-900 underline decoration-neutral-300 hover:decoration-neutral-500">
@@ -81,7 +81,7 @@ export default function PrivacyPolicyPage() {
           <section className="lg:col-span-8">
             <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm p-6 sm:p-10 leading-relaxed text-neutral-800">
               <p id="intro" className="mb-6">
-                Thank you for visiting RELUXE Med Spa’s website. This Privacy Policy explains how we collect,
+                Thank you for visiting RELUXE Med Spa's website. This Privacy Policy explains how we collect,
                 use, disclose, and safeguard your information. By using our website, services, or communication
                 channels, you agree to this Privacy Policy.
               </p>

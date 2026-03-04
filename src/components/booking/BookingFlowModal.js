@@ -1129,6 +1129,7 @@ function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, pr
 
   const tabs = [
     { key: 'treat', label: 'What to Treat' },
+    { key: 'services', label: 'All Services' },
     ...(isAuthenticated && profile ? [{ key: 'foryou', label: 'For You' }] : []),
     { key: 'providers', label: 'Providers' },
   ]
@@ -1242,6 +1243,25 @@ function AnonHome({ tab, onTabChange, menuData, menuLoading, locationBundles, pr
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* All Services tab — full category browse */}
+      {tab === 'services' && (
+        <div>
+          <p style={{ fontFamily: fonts?.display, fontSize: '1.125rem', fontWeight: 700, color: colors.white, marginBottom: 4 }}>
+            Browse All Services
+          </p>
+          <p style={{ fontFamily: fonts?.body, fontSize: '0.75rem', color: 'rgba(250,248,245,0.45)', marginBottom: 16 }}>
+            Choose a category, then pick your service and time.
+          </p>
+          {menuLoading ? <LoadingSkeleton count={6} /> : (
+            <CategoryList
+              categories={menuData?.categories || []}
+              fonts={fonts}
+              onSelectCategory={onSelectCategory}
+            />
+          )}
         </div>
       )}
 

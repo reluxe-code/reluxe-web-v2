@@ -53,8 +53,8 @@ export async function cachedFetch(url, options = {}) {
       if (res.ok) {
         const data = await res.json()
 
-        // Don't cache degraded responses
-        if (!data.degraded) {
+        // Don't cache degraded or empty responses
+        if (!data.degraded && !(Array.isArray(data) && data.length === 0)) {
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify({ data, ts: Date.now() }))
           } catch {

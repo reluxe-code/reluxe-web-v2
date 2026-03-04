@@ -952,7 +952,7 @@ export async function getStaticProps({ params }) {
 
   const [{ data: locRows }, { data: staffRows }, { data: configRow }] = await Promise.all([
     sb.from('locations').select('*').eq('slug', pageSlug).limit(1),
-    sb.from('staff').select('*').eq('status', 'published').neq('allow_online_booking', false).order('sort_order').order('name'),
+    sb.from('staff').select('*').eq('status', 'published').or('allow_online_booking.is.null,allow_online_booking.eq.true').order('sort_order').order('name'),
     sb.from('site_config').select('value').eq('key', 'treatment_bundles').limit(1).single(),
   ]);
 
