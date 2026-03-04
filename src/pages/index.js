@@ -927,8 +927,10 @@ export async function getStaticProps() {
         .from('testimonials')
         .select('id, author_name, quote, rating, service, location, provider')
         .eq('status', 'published')
-        .eq('featured', true)
-        .order('rating', { ascending: false })
+        .eq('rating', 5)
+        .neq('quote', '')
+        .not('quote', 'is', null)
+        .order('created_at', { ascending: false })
         .limit(6),
       sb
         .from('staff')
