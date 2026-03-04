@@ -14,12 +14,24 @@ export default function StartPageLayout({ children }) {
         backgroundColor: '#000',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '12px 0',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
       }}>
-        <Link href="https://reluxemedspa.com" style={{ display: 'inline-flex' }}>
-          <Image src="/images/logo/logo.png" alt="RELUXE Med Spa" width={160} height={53} priority />
+        <Link
+          href="https://reluxemedspa.com"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            fontFamily: 'Poppins, system-ui, sans-serif', fontSize: '0.75rem', fontWeight: 500,
+            color: 'rgba(255,255,255,0.5)', textDecoration: 'none',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Return Home
         </Link>
+        <Link href="https://reluxemedspa.com" style={{ display: 'inline-flex' }}>
+          <Image src="/images/logo/logo.png" alt="RELUXE Med Spa" width={140} height={47} priority />
+        </Link>
+        <div style={{ width: '95px' }} />
       </header>
 
       {/* Main content */}
@@ -35,12 +47,42 @@ export default function StartPageLayout({ children }) {
         bottom: 0,
         zIndex: 50,
         backgroundColor: '#000',
-        padding: '10px 0',
-        textAlign: 'center',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        padding: '10px 16px',
       }}>
-        <span style={{ fontFamily: 'Poppins, system-ui, sans-serif', fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em' }}>
-          RELUXE Med Spa &nbsp;·&nbsp; <a href="tel:+13177631142" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>(317) 763-1142</a>
-        </span>
+        <div style={{ maxWidth: '42rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: 'Poppins, system-ui, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.02em' }}>
+            Prefer to book another way or have questions?
+          </span>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <a
+              href="tel:+13177631142"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                fontFamily: 'Poppins, system-ui, sans-serif', fontSize: '0.68rem', fontWeight: 600,
+                color: '#fff', backgroundColor: 'rgba(124,58,237,0.25)', border: '1px solid rgba(124,58,237,0.4)',
+                borderRadius: '999px', padding: '5px 14px', textDecoration: 'none',
+                transition: 'background-color 0.15s',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+              Call Us
+            </a>
+            <a
+              href="sms:+13177631142"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                fontFamily: 'Poppins, system-ui, sans-serif', fontSize: '0.68rem', fontWeight: 600,
+                color: '#fff', backgroundColor: 'rgba(124,58,237,0.25)', border: '1px solid rgba(124,58,237,0.4)',
+                borderRadius: '999px', padding: '5px 14px', textDecoration: 'none',
+                transition: 'background-color 0.15s',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Text Us
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );

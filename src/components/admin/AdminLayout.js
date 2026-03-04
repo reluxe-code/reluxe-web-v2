@@ -45,6 +45,8 @@ const NAV_ITEMS = [
   {
     label: 'Content',
     children: [
+      { href: '/admin/services', label: 'Services' },
+      { href: '/admin/services/categories', label: 'Service Categories' },
       { href: '/admin/blog', label: 'Blog Posts' },
       { href: '/admin/stories', label: 'Patient Stories' },
       { href: '/admin/deals', label: 'Deals' },
@@ -72,6 +74,7 @@ const NAV_ITEMS = [
       { href: '/admin/intelligence/form-submissions', label: 'Form Submissions' },
       { href: '/admin/intelligence/actions', label: 'Actions' },
       { href: '/admin/intelligence/audit', label: 'Site Audit' },
+      { href: '/admin/settings', label: 'Settings' },
     ],
   },
 ]

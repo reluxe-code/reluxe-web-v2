@@ -24,10 +24,12 @@ const nextConfig = {
       // --- Explicit page redirects ---
       //
       { source: '/deals', destination: '/specials', permanent: true },
-      { source: '/blog-2', destination: '/blog', permanent: true },
+      { source: '/blog-2', destination: '/inspiration', permanent: true },
       { source: '/gift-cards-products-2', destination: '/shop', permanent: true },
       { source: '/online-booking', destination: '/book', permanent: true },
-      { source: '/all-posts', destination: '/blog', permanent: true },
+      { source: '/all-posts', destination: '/inspiration', permanent: true },
+      { source: '/blog', destination: '/inspiration', permanent: true },
+      { source: '/blog/:slug', destination: '/inspiration', permanent: true },
       { source: '/cart-2', destination: '/', permanent: true },
       { source: '/checkout-2', destination: '/', permanent: true },
       { source: '/my-account-2', destination: '/profile', permanent: true },
@@ -240,7 +242,7 @@ const nextConfig = {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com data:",
           "img-src 'self' data: blob: https: http:",
-          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.bird.com https://js.stripe.com https://www.google-analytics.com https://vitals.vercel-insights.com https://cdn.vercel-insights.com https://*.facebook.com https://*.boulevard.io https://*.joinboulevard.com https://*.joinblvd.com https://*.blvd.app",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.bird.com https://js.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://vitals.vercel-insights.com https://cdn.vercel-insights.com https://*.facebook.com https://*.boulevard.io https://*.joinboulevard.com https://*.joinblvd.com https://*.blvd.app",
           "frame-src 'self' https://js.stripe.com https://www.facebook.com https://reluxemedspa.com https://www.reluxemedspa.com https://www.tiktok.com https://www.instagram.com https://www.youtube.com https://*.joinboulevard.com https://*.joinblvd.com https://*.boulevard.io https://*.blvd.app",
           "object-src 'none'",
           "base-uri 'self'",

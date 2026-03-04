@@ -24,6 +24,10 @@ import { MemberProvider } from '@/context/MemberContext'
 import LocationChooserModal from '@/components/location/LocationChooserModal'
 import MemberDrawerPortal from '@/components/beta/MemberDrawerPortal'
 import { fontPairings } from '@/components/preview/tokens'
+import dynamic from 'next/dynamic'
+
+const AnnouncementModal = dynamic(() => import('@/components/promo/AnnouncementModal'), { ssr: false })
+const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false })
 
 // Guard against React DOM crash when browser extensions or mobile autofill
 // modify the DOM outside of React's control. The "removeChild" error
@@ -121,6 +125,7 @@ function MyApp({ Component, pageProps }) {
           <link rel="shortcut icon" href="/favicon.png" />
         </Head>
         {getLayout(<Component {...pageProps} />)}
+        <ChatWidget />
         <Analytics />
         <SpeedInsights />
       </>
@@ -152,8 +157,10 @@ function MyApp({ Component, pageProps }) {
             <Component {...pageProps} />
             <ScrollToTop />
             <LocationChooserModal />
+            <AnnouncementModal />
           </Layout>
           <MemberDrawerPortal fonts={fontPairings.bold} />
+          <ChatWidget />
         </MemberProvider>
       </LocationProvider>
       <Analytics />

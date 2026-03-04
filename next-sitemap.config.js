@@ -29,13 +29,15 @@ async function getDateCache() {
   if (!sb) return _dates;
 
   try {
-    const [staff, blog, inspiration, brands, products, locations] = await Promise.all([
+    const [staff, blog, inspiration, brands, products, locations, cmsServices, serviceCategories] = await Promise.all([
       sb.from('staff').select('slug, updated_at').eq('status', 'published'),
       sb.from('blog_posts').select('slug, updated_at, published_at').eq('status', 'published'),
       sb.from('inspiration_articles').select('slug, updated_at').eq('status', 'published'),
       sb.from('brands').select('slug, updated_at').eq('active', true),
       sb.from('products').select('slug, updated_at, brands!inner(slug)').eq('active', true),
       sb.from('locations').select('slug, updated_at'),
+      sb.from('cms_services').select('slug, updated_at').eq('status', 'published'),
+      sb.from('service_categories').select('slug, updated_at').eq('active', true),
     ]);
 
     for (const r of staff.data || []) _dates[`/team/${r.slug}`] = r.updated_at;
@@ -47,6 +49,8 @@ async function getDateCache() {
       if (bs) _dates[`/skincare/${bs}/${r.slug}`] = r.updated_at;
     }
     for (const r of locations.data || []) _dates[`/locations/${r.slug}`] = r.updated_at;
+    for (const r of cmsServices.data || []) _dates[`/services/${r.slug}`] = r.updated_at;
+    for (const r of serviceCategories.data || []) _dates[`/services/collections/${r.slug}`] = r.updated_at;
 
     console.log(`[next-sitemap] Loaded ${Object.keys(_dates).length} lastmod dates from Supabase`);
   } catch (err) {
@@ -138,6 +142,7 @@ module.exports = {
     }
     // ── Services ──
     else if (path === '/services') { priority = 0.95; changefreq = 'weekly'; }
+    else if (/^\/services\/collections\/[^/]+$/.test(path)) { priority = 0.88; changefreq = 'weekly'; }
     else if (/^\/services\/[^/]+$/.test(path)) { priority = 0.9; changefreq = 'weekly'; }
     else if (/^\/services\/[^/]+\/[^/]+$/.test(path)) { priority = 0.85; changefreq = 'monthly'; }
     // ── Locations ──
@@ -172,6 +177,10 @@ module.exports = {
     else if (path === '/skincare') { priority = 0.85; changefreq = 'weekly'; }
     else if (/^\/skincare\/[^/]+$/.test(path)) { priority = 0.8; changefreq = 'weekly'; }
     else if (/^\/skincare\/[^/]+\/[^/]+$/.test(path)) { priority = 0.75; changefreq = 'monthly'; }
+    // ── Learn (educational hub) ──
+    else if (path === '/learn') { priority = 0.85; changefreq = 'weekly'; }
+    // ── Best Med Spa (geo authority pages) ──
+    else if (path.startsWith('/best-med-spa/')) { priority = 0.85; changefreq = 'monthly'; }
     // ── Conditions ──
     else if (path === '/conditions') { priority = 0.85; changefreq = 'monthly'; }
     else if (path.startsWith('/conditions/')) { priority = 0.8; changefreq = 'monthly'; }

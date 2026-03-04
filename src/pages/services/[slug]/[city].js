@@ -10,6 +10,8 @@ import { getLocationContent } from '@/data/locationContent';
 import { NOT_IN_CARMEL, CARMEL_ALTERNATIVES } from '@/data/locationAvailability';
 import TestimonialWidget from '@/components/testimonials/TestimonialWidget';
 import { getTestimonialsSSR } from '@/lib/testimonials';
+import { getServiceClient } from '@/lib/supabase';
+import { transformCmsToServiceObject } from '@/lib/cmsTransform';
 
 /** small helper to add/update a single query param on a (likely relative) href */
 function addQuery(href = '/', key, val) {
@@ -20,7 +22,26 @@ function addQuery(href = '/', key, val) {
   return qs ? `${path}?${qs}` : path;
 }
 
+const USE_CMS = process.env.NEXT_PUBLIC_USE_SERVICE_CMS === 'true';
+
 export async function getStaticPaths() {
+  if (USE_CMS) {
+    try {
+      const sb = getServiceClient();
+      const { data } = await sb
+        .from('cms_services')
+        .select('slug')
+        .eq('status', 'published');
+      const paths = [];
+      for (const s of (data || [])) {
+        for (const city of LOCATION_KEYS) {
+          paths.push({ params: { slug: s.slug, city } });
+        }
+      }
+      return { paths, fallback: 'blocking' };
+    } catch {}
+  }
+
   let services = [];
   try { services = await getServicesList(); } catch { services = []; }
 
@@ -43,10 +64,60 @@ export async function getStaticProps({ params }) {
   }
 
   let service = null;
-  try {
-    const mod = await import(`@/data/services/${slug}.js`);
-    service = mod?.default || null;
-  } catch {}
+  let locationContent = null;
+  let cmsOverride = null;
+
+  if (USE_CMS) {
+    try {
+      const sb = getServiceClient();
+      const { data: svc } = await sb
+        .from('cms_services')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single();
+
+      if (svc) {
+        const { data: blocks } = await sb
+          .from('cms_service_blocks')
+          .select('*')
+          .eq('service_id', svc.id)
+          .eq('enabled', true)
+          .order('sort_order', { ascending: true });
+
+        service = transformCmsToServiceObject(svc, blocks || []);
+
+        // Fetch CMS location override
+        const { data: override } = await sb
+          .from('cms_location_overrides')
+          .select('*')
+          .eq('service_id', svc.id)
+          .eq('location_key', cityKey)
+          .maybeSingle();
+
+        if (override) {
+          cmsOverride = override;
+          locationContent = {
+            description: override.description,
+            differences: override.differences || [],
+            faqs: override.faqs || [],
+            complementary: (override.complementary || []).map(c => ({
+              href: `/services/${c.slug}`,
+              label: c.label,
+            })),
+          };
+        }
+      }
+    } catch {}
+  }
+
+  // File-based fallback
+  if (!service) {
+    try {
+      const mod = await import(`@/data/services/${slug}.js`);
+      service = mod?.default || null;
+    } catch {}
+  }
   if (!service) {
     try {
       const all = await getServicesList();
@@ -56,22 +127,34 @@ export async function getStaticProps({ params }) {
   if (!service) return { notFound: true };
 
   const loc = getLocation(cityKey);
-  const locationContent = getLocationContent({ service, cityKey });
+  if (!locationContent) {
+    locationContent = getLocationContent({ service, cityKey });
+  }
 
   const testimonials = await getTestimonialsSSR({ service: slug, location: cityKey, limit: 15 });
 
   return {
-    props: { service, cityKey, loc, locationContent, testimonials },
+    props: {
+      service,
+      cityKey,
+      loc,
+      locationContent,
+      testimonials,
+      cmsOverride: cmsOverride || null,
+    },
     revalidate: 60 * 60,
   };
 }
 
-export default function ServiceLocationPage({ service, cityKey, loc, locationContent, testimonials = [] }) {
+export default function ServiceLocationPage({ service, cityKey, loc, locationContent, testimonials = [], cmsOverride }) {
   const slugKey = String(service?.slug || '').toLowerCase();
   const isCarmel = cityKey === 'carmel';
   const isWestfield = cityKey === 'westfield';
 
-  const unavailableInCarmel = isCarmel && NOT_IN_CARMEL.has(slugKey);
+  // Use CMS override for availability if available, otherwise fall back to file-based check
+  const unavailableInCarmel = cmsOverride
+    ? (isCarmel && cmsOverride.available === false)
+    : (isCarmel && NOT_IN_CARMEL.has(slugKey));
   const isAvailableHere = isWestfield ? true : !unavailableInCarmel;
 
   // Build location-aware booking/consult URLs (override via ?loc=…)
@@ -95,9 +178,9 @@ export default function ServiceLocationPage({ service, cityKey, loc, locationCon
 
   const canonical = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://reluxemedspa.com'}/services/${service.slug}/${cityKey}`;
 
-  // Alternatives for Carmel-unavailable services
+  // Alternatives for unavailable services — use CMS override first, then fall back
   const alternatives = isCarmel && !isAvailableHere
-    ? (CARMEL_ALTERNATIVES[slugKey] || [])
+    ? (cmsOverride?.alternatives?.length ? cmsOverride.alternatives : (CARMEL_ALTERNATIVES[slugKey] || []))
     : [];
 
   // FAQ schema for location-specific FAQs

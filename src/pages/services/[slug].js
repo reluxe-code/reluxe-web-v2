@@ -9,9 +9,26 @@ import { useLocationPref } from '@/context/LocationContext';
 import { SERVICE_CONSULT_MAP } from '@/data/serviceBookingMap';
 import { getServicesList } from '@/data/servicesList';
 import { getServiceClient } from '@/lib/supabase';
+import { transformCmsToServiceObject } from '@/lib/cmsTransform';
 
 /* ─── SSG ─── */
+const USE_CMS = process.env.NEXT_PUBLIC_USE_SERVICE_CMS === 'true';
+
 export async function getStaticPaths() {
+  if (USE_CMS) {
+    // Load paths from CMS
+    try {
+      const sb = getServiceClient();
+      const { data } = await sb
+        .from('cms_services')
+        .select('slug')
+        .eq('status', 'published');
+      const paths = (data || []).map((s) => ({ params: { slug: s.slug } }));
+      return { paths, fallback: 'blocking' };
+    } catch {}
+  }
+
+  // File-based paths (original)
   let services = [];
   try { services = await getServicesList(); } catch { services = []; }
   const paths = (Array.isArray(services) ? services : [])
@@ -26,13 +43,38 @@ export async function getStaticProps({ params }) {
 
   let service = null;
 
-  // Try per-slug file first
-  try {
-    const mod = await import(`@/data/services/${slug}.js`);
-    service = mod?.default || null;
-  } catch {}
+  if (USE_CMS) {
+    // CMS data source
+    try {
+      const sb = getServiceClient();
+      const { data: svc } = await sb
+        .from('cms_services')
+        .select('*')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .single();
 
-  // Fallback to list
+      if (svc) {
+        const { data: blocks } = await sb
+          .from('cms_service_blocks')
+          .select('*')
+          .eq('service_id', svc.id)
+          .eq('enabled', true)
+          .order('sort_order', { ascending: true });
+
+        service = transformCmsToServiceObject(svc, blocks || []);
+      }
+    } catch {}
+  }
+
+  // File-based fallback (original chain)
+  if (!service) {
+    try {
+      const mod = await import(`@/data/services/${slug}.js`);
+      service = mod?.default || null;
+    } catch {}
+  }
+
   if (!service) {
     try {
       const services = await getServicesList();
@@ -40,7 +82,6 @@ export async function getStaticProps({ params }) {
     } catch {}
   }
 
-  // Fallback to defaults
   if (!service) {
     try {
       const { getDefaultService } = await import('@/data/servicesDefault');
@@ -50,7 +91,28 @@ export async function getStaticProps({ params }) {
 
   if (!service) return { notFound: true };
 
-  // Fetch testimonials from Supabase
+  // Fetch staff (all providers from staff table)
+  let staff = [];
+  try {
+    const sb = getServiceClient();
+    const { data } = await sb
+      .from('staff')
+      .select('name, title, featured_image, bio, specialties, slug')
+      .eq('status', 'published')
+      .order('sort_order', { ascending: true });
+    staff = (data || []).map((p) => ({
+      name: p.name,
+      title: p.title || '',
+      headshotUrl: p.featured_image || null,
+      bio: p.bio || '',
+      specialties: Array.isArray(p.specialties)
+        ? p.specialties.map((s) => (typeof s === 'string' ? s : s.specialty || s.name || ''))
+        : [],
+      href: `/team/${p.slug}`,
+    }));
+  } catch {}
+
+  // Fetch testimonials from Supabase (prefer service-matched)
   let testimonials = [];
   try {
     const sb = getServiceClient();
@@ -59,11 +121,23 @@ export async function getStaticProps({ params }) {
       .select('id, author_name, quote, rating, service, location, provider')
       .eq('status', 'published')
       .order('rating', { ascending: false })
-      .limit(20);
-    testimonials = data || [];
+      .limit(50);
+
+    const all = data || [];
+    const sName = (service?.name || '').toLowerCase();
+    const sSlug = slug.toLowerCase();
+
+    // Match testimonials relevant to this service
+    const matched = all.filter((t) => {
+      if (!t.service) return false;
+      const ts = t.service.toLowerCase();
+      return ts === sName || ts === sSlug || ts.includes(sSlug) || sName.includes(ts);
+    });
+
+    testimonials = matched.length >= 3 ? matched : all;
   } catch {}
 
-  return { props: { service, testimonials }, revalidate: 3600 };
+  return { props: { service, testimonials, staff }, revalidate: 3600 };
 }
 
 /* ─── helpers ─── */
@@ -71,7 +145,7 @@ const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http:
 
 /* ─── block components ─── */
 
-function HeroBlock({ s, fonts, onBook, onConsult }) {
+function HeroBlock({ s, fonts, onBook, onConsult, locationKey }) {
   return (
     <section className="relative" style={{ backgroundColor: colors.ink, paddingTop: 80, paddingBottom: 0 }}>
       <div style={{ position: 'absolute', inset: 0, backgroundImage: grain, pointerEvents: 'none' }} />
@@ -96,13 +170,18 @@ function HeroBlock({ s, fonts, onBook, onConsult }) {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2 shrink-0 pb-1">
-              <button onClick={onBook} className="rounded-full transition-shadow duration-200 hover:shadow-[0_0_24px_rgba(124,58,237,0.3)]" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
-                Book Now
-              </button>
-              <button onClick={onConsult} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', color: 'rgba(250,248,245,0.55)', background: 'transparent', border: '1.5px solid rgba(250,248,245,0.12)', cursor: 'pointer' }}>
-                Free Consult
-              </button>
+            <div className="shrink-0 pb-1">
+              <div className="flex flex-wrap gap-2">
+                <button onClick={onBook} className="rounded-full transition-shadow duration-200 hover:shadow-[0_0_24px_rgba(124,58,237,0.3)]" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', background: gradients.primary, color: '#fff', border: 'none', cursor: 'pointer' }}>
+                  Book Now
+                </button>
+                <button onClick={onConsult} className="rounded-full" style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, padding: '0.625rem 1.75rem', color: 'rgba(250,248,245,0.55)', background: 'transparent', border: '1.5px solid rgba(250,248,245,0.12)', cursor: 'pointer' }}>
+                  Free Consult
+                </button>
+              </div>
+              <div className="mt-2">
+                <ScarcityBadge locationKey={locationKey || 'westfield'} variant="inline" fonts={fonts} />
+              </div>
             </div>
           </div>
         </motion.div>
@@ -667,7 +746,7 @@ function PrepAftercareBlock({ prepAftercare, fonts }) {
 }
 
 /* ─── page ─── */
-function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
+function ServiceDetailPage({ fontKey, fonts, service, testimonials, staff }) {
   const s = service || {};
   const { openBookingModal } = useMember()
   const { locationKey: prefLoc } = useLocationPref()
@@ -677,14 +756,14 @@ function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
   const handleConsult = () => openBookingModal(loc, consultSlug)
   const results = Array.isArray(s.resultsGallery) ? s.resultsGallery : [];
   const faq = Array.isArray(s.faq) ? s.faq : [];
-  const providers = Array.isArray(s.providers) ? s.providers : [];
+  const providers = Array.isArray(staff) && staff.length > 0 ? staff : (Array.isArray(s.providers) ? s.providers : []);
 
   // Merge DB testimonials with service-level testimonials
   const allTestimonials = testimonials?.length ? testimonials : (Array.isArray(s.testimonials) ? s.testimonials : []);
 
   return (
     <>
-      <HeroBlock s={s} fonts={fonts} onBook={handleBook} onConsult={handleConsult} />
+      <HeroBlock s={s} fonts={fonts} onBook={handleBook} onConsult={handleConsult} locationKey={prefLoc || 'westfield'} />
       <QuickFactsBlock facts={s.quickFacts} fonts={fonts} />
       <OverviewBlock s={s} fonts={fonts} />
       <ResultsBlock results={results} s={s} fonts={fonts} />
@@ -734,7 +813,7 @@ function ServiceDetailPage({ fontKey, fonts, service, testimonials }) {
   );
 }
 
-export default function BetaServiceDetail({ service, testimonials }) {
+export default function BetaServiceDetail({ service, testimonials, staff }) {
   const s = service || {};
   const slug = s.slug || '';
   const serviceName = s.name || 'Service';
@@ -742,8 +821,46 @@ export default function BetaServiceDetail({ service, testimonials }) {
   const seoDesc = s.seo?.description || s.tagline || `Learn about ${serviceName} at RELUXE Med Spa in Westfield & Carmel, IN. Expert providers, transparent pricing. Book your free consultation.`;
   const canonical = `https://reluxemedspa.com/services/${slug}`;
 
-  const faqItems = Array.isArray(s.faq) ? s.faq.slice(0, 10) : [];
+  const faqItems = Array.isArray(s.faq) ? s.faq.slice(0, 12) : [];
   const singlePrice = parseFloat(String(s.pricing?.single || '').replace(/[^0-9.]/g, '')) || undefined;
+
+  // Build HowTo schema from howItWorks steps
+  const howToSteps = Array.isArray(s.howItWorks) ? s.howItWorks : [];
+  const howToSchema = howToSteps.length > 0 ? [{
+    '@type': 'HowTo',
+    name: `How ${serviceName} Works at RELUXE Med Spa`,
+    description: `Step-by-step guide to getting ${serviceName} at RELUXE Med Spa in Westfield and Carmel, Indiana.`,
+    totalTime: s.quickFacts?.find(f => f.label === 'Treatment Time')?.value ? `PT${parseInt(s.quickFacts.find(f => f.label === 'Treatment Time').value) || 30}M` : undefined,
+    step: howToSteps.map((step, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: step.title || `Step ${i + 1}`,
+      text: step.body || '',
+    })),
+  }] : [];
+
+  // Build HowTo schema from prep/aftercare instructions
+  const prep = s.prepAftercare?.prep;
+  const after = s.prepAftercare?.after;
+  const prepSchema = (prep?.points?.length || after?.points?.length) ? [{
+    '@type': 'HowTo',
+    name: `${serviceName} Prep & Aftercare Guide`,
+    description: `How to prepare for and recover from ${serviceName} at RELUXE Med Spa.`,
+    step: [
+      ...(prep?.points || []).map((pt, i) => ({
+        '@type': 'HowToStep',
+        position: i + 1,
+        name: `Prep: ${pt.split('.')[0] || pt}`,
+        text: pt,
+      })),
+      ...(after?.points || []).map((pt, i) => ({
+        '@type': 'HowToStep',
+        position: (prep?.points?.length || 0) + i + 1,
+        name: `Aftercare: ${pt.split('.')[0] || pt}`,
+        text: pt,
+      })),
+    ],
+  }] : [];
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -777,6 +894,8 @@ export default function BetaServiceDetail({ service, testimonials }) {
           acceptedAnswer: { '@type': 'Answer', text: f.a },
         })),
       }] : []),
+      ...howToSchema,
+      ...prepSchema,
     ],
   };
 
@@ -788,7 +907,7 @@ export default function BetaServiceDetail({ service, testimonials }) {
       structuredData={structuredData}
     >
       {({ fontKey, fonts }) => (
-        <ServiceDetailPage fontKey={fontKey} fonts={fonts} service={service} testimonials={testimonials} />
+        <ServiceDetailPage fontKey={fontKey} fonts={fonts} service={service} testimonials={testimonials} staff={staff} />
       )}
     </BetaLayout>
   );

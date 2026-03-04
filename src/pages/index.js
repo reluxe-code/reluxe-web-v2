@@ -7,6 +7,8 @@ import GravityBookButton from '@/components/beta/GravityBookButton';
 import ScarcityBadge from '@/components/booking/ScarcityBadge';
 import HeroIdentityCard from '@/components/beta/HeroIdentityCard';
 import { useMember } from '@/context/MemberContext';
+import GoogleReviewBadge from '@/components/GoogleReviewBadge';
+import GoogleReviewsCarousel from '@/components/GoogleReviewsCarousel';
 
 /* ─── grain texture ─── */
 const grain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`;
@@ -46,7 +48,7 @@ const locations = [
 ];
 
 const trustBadges = [
-  { icon: 'star', title: '300+ Reviews', subtitle: '5.0 Star Average' },
+  { icon: 'google', title: 'Google Reviews', subtitle: '5.0 Star Average', isReview: true },
   { icon: 'heart', title: 'Family Owned', subtitle: 'Locally Operated' },
   { icon: 'calendar', title: 'Established 2023', subtitle: 'Hamilton County\u2019s Newest' },
   { icon: 'map', title: '2 Locations', subtitle: 'Hamilton County' },
@@ -413,8 +415,9 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
                     <GravityBookButton fontKey={fontKey} size="hero" />
                     <a href="/services" className="rounded-full flex items-center gap-2" style={{ fontFamily: fonts.body, fontSize: '0.9375rem', fontWeight: 600, padding: '0.875rem 2.25rem', color: 'rgba(250,248,245,0.7)', border: '1.5px solid rgba(250,248,245,0.2)', textDecoration: 'none' }}>Explore Services</a>
                   </div>
-                  <div className="flex flex-wrap gap-6 mt-12">
-                    {['300+ 5-Star Reviews', 'Locally Owned', 'Family Owned'].map((badge) => (
+                  <div className="flex flex-wrap items-center gap-6 mt-12">
+                    <GoogleReviewBadge variant="hero" fonts={fonts} />
+                    {['Locally Owned', 'Family Owned'].map((badge) => (
                       <span key={badge} style={{ fontFamily: fonts.body, fontSize: '0.75rem', fontWeight: 500, color: 'rgba(250,248,245,0.35)', letterSpacing: '0.05em' }}>{badge}</span>
                     ))}
                   </div>
@@ -431,20 +434,28 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
           <section style={{ backgroundColor: colors.ink }}>
             <div className="max-w-6xl mx-auto px-6 py-10">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {trustBadges.map((badge, i) => (
-                  <motion.div key={badge.title} className="flex items-center gap-3 rounded-xl px-5 py-4" style={{ backgroundColor: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.06)' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
-                    <div className="flex-shrink-0 flex items-center justify-center rounded-full" style={{ width: 40, height: 40, background: 'rgba(124,58,237,0.15)' }}>
-                      {badge.icon === 'star' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>}
-                      {badge.icon === 'heart' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>}
-                      {badge.icon === 'calendar' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
-                      {badge.icon === 'map' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>}
-                    </div>
-                    <div>
-                      <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>{badge.title}</p>
-                      <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)' }}>{badge.subtitle}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                {trustBadges.map((badge, i) => {
+                  if (badge.isReview) {
+                    return (
+                      <motion.div key={badge.title} className="rounded-xl px-5 py-4" style={{ backgroundColor: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.06)' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
+                        <GoogleReviewBadge variant="hero" fonts={fonts} />
+                      </motion.div>
+                    )
+                  }
+                  return (
+                    <motion.div key={badge.title} className="flex items-center gap-3 rounded-xl px-5 py-4" style={{ backgroundColor: 'rgba(250,248,245,0.04)', border: '1px solid rgba(250,248,245,0.06)' }} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}>
+                      <div className="flex-shrink-0 flex items-center justify-center rounded-full" style={{ width: 40, height: 40, background: 'rgba(124,58,237,0.15)' }}>
+                        {badge.icon === 'heart' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>}
+                        {badge.icon === 'calendar' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+                        {badge.icon === 'map' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.violet} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>}
+                      </div>
+                      <div>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 600, color: colors.white }}>{badge.title}</p>
+                        <p style={{ fontFamily: fonts.body, fontSize: '0.6875rem', color: 'rgba(250,248,245,0.45)' }}>{badge.subtitle}</p>
+                      </div>
+                    </motion.div>
+                  )
+                })}
               </div>
             </div>
           </section>
@@ -467,6 +478,9 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
               </motion.div>
             </div>
           </section>
+
+          {/* ─── Google Reviews ─── */}
+          <GoogleReviewsCarousel fonts={fonts} />
 
           {/* ─── Pick Your Power Move ─── */}
           <section style={{ backgroundColor: '#fff' }}>
@@ -791,9 +805,9 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
             <section style={{ backgroundColor: '#fff' }}>
               <div className="max-w-7xl mx-auto px-6 py-24 lg:py-32">
                 <motion.div className="text-center mb-16" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.7 }}>
-                  <p className="mb-4" style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet }}>Don&apos;t Take Our Word for It</p>
-                  <h2 className="mb-4" style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>Our Patients Said It Best</h2>
-                  <p className="max-w-md mx-auto" style={{ fontFamily: fonts.body, fontSize: typeScale.body.size, lineHeight: typeScale.body.lineHeight, color: colors.body }}>300+ five-star reviews. Zero bought. Here&apos;s what the real ones have to say.</p>
+                  <p className="mb-4" style={{ fontFamily: fonts.body, ...typeScale.label, color: colors.violet }}>We Love Feedback</p>
+                  <h2 className="mb-4" style={{ fontFamily: fonts.display, fontSize: typeScale.sectionHeading.size, fontWeight: typeScale.sectionHeading.weight, lineHeight: typeScale.sectionHeading.lineHeight, color: colors.heading }}>See What You&apos;ll Be Saying</h2>
+                  <p className="max-w-md mx-auto" style={{ fontFamily: fonts.body, fontSize: typeScale.body.size, lineHeight: typeScale.body.lineHeight, color: colors.body }}>After your RELUXE experience, you&apos;ll want to tell everyone too.</p>
                 </motion.div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {testimonials.slice(0, 6).map((t, i) => (
@@ -803,7 +817,7 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
                           <svg key={j} width="16" height="16" viewBox="0 0 16 16" fill={colors.violet}><path d="M8 1l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 11.8 3.8 14l.8-4.7L1.2 6l4.7-.7L8 1z" /></svg>
                         ))}
                       </div>
-                      <p className="mb-6" style={{ fontFamily: fonts.body, fontSize: '1rem', color: colors.body, lineHeight: 1.625 }}>&ldquo;{t.quote.length > 220 ? t.quote.slice(0, 220) + '...' : t.quote}&rdquo;</p>
+                      <p className="mb-6" style={{ fontFamily: fonts.body, fontSize: '1rem', color: colors.body, lineHeight: 1.625 }}>&ldquo;{t.quote}&rdquo;</p>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.stone, color: colors.muted, fontFamily: fonts.body, fontSize: '0.875rem', fontWeight: 500 }}>{t.author_name?.charAt(0) || '?'}</div>
                         <div>
@@ -814,9 +828,6 @@ export default function BetaHome({ testimonials, staff, featuredStories = [] }) 
                     </motion.div>
                   ))}
                 </div>
-                <motion.div className="text-center mt-12" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }}>
-                  <p style={{ fontFamily: fonts.body, fontSize: '0.875rem', color: colors.muted }}>5.0 stars across 300+ reviews on Google</p>
-                </motion.div>
               </div>
             </section>
           )}

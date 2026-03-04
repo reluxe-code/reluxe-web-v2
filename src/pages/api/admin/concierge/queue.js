@@ -33,7 +33,7 @@ async function handler(req, res) {
     if (campaign) query = query.eq('campaign_slug', campaign)
     if (search) {
       const q = `%${search}%`
-      query = query.or(`provider_name.ilike.${q},service_name.ilike.${q}`)
+      query = query.or(`provider_name.ilike.${q},service_name.ilike.${q},sms_body.ilike.${q}`)
     }
 
     // Sort
@@ -65,9 +65,18 @@ async function handler(req, res) {
     const queue = (data || []).map((entry) => {
       const isTest = entry.priority === 0 && !entry.client_id
       const client = clientLookup[entry.client_id]
+
+      // Extract first name from sms_body as fallback (messages start with "Hi {Name}, ...")
+      let clientName = null
+      if (entry.sms_body) {
+        const m = entry.sms_body.match(/^Hi (\w+),/)
+        if (m && m[1] !== 'there') clientName = m[1]
+      }
+
       return {
         ...entry,
-        boulevard_id: client?.boulevard_id || null,
+        boulevard_id: client?.boulevard_id || entry.boulevard_id || null,
+        client_name: clientName,
         is_test: isTest,
       }
     })

@@ -51,8 +51,8 @@ s.images = {
   primaryCallout: '/images/service/tox/2.png',       // Big 50/50 split block
   secondaryCallout: '/images/service/default/3.png', // Smaller supporting visual
   testimonialBg: '/images/service/default/4.png',    // Faded background for testimonial section
-  ctaBanner: '/images/service/tox/5.png',            // Bold mid-page “Book Now” visual
-  stepByStep: '/images/service/tox/6.png',           // “What to Expect” or process section
+  ctaBanner: '/images/service/tox/5.png',            // Bold mid-page "Book Now" visual
+  stepByStep: '/images/service/tox/6.png',           // "What to Expect" or process section
   deviceShot: '/images/service/default/7.png',       // Equipment showcase (if relevant)
   techniqueShot: '/images/service/default/8.png',    // Treatment technique photo
   benefitHighlight: '/images/service/default/9.png', // Used in benefits/features grid
@@ -88,8 +88,8 @@ s.howItWorks = [
 
 // Overview: keep to 1–2 short paragraphs
 s.overview = {
-  p1: 'At RELUXE, we offer the full lineup of wrinkle relaxers—Botox®, Jeuveau®, Dysport®, and Daxxify®—because different faces (and lifestyles) benefit from different options. All four soften expression lines like frown lines, forehead lines, and crow’s feet by relaxing the tiny muscles that create creases. Treatments are quick with little to no downtime, results start to appear in a few days, and for some people Daxxify can last longer, while Dysport may kick in a touch sooner. Botox is the classic, ultra-reliable choice; Jeuveau is loved for a smooth, aesthetic finish. We truly like them all.',
-  p2: 'Your visit starts with a friendly consult where we map your expressions, discuss goals, budget, and timeline (big events, maintenance pace), and help you choose the right tox for you—sometimes even a thoughtful combo. We customize dosing for natural, balanced results (never “frozen”), keep you comfortable, and share simple aftercare. You’ll leave with a clear plan, a two-week check-in if needed, and an easy schedule for touch-ups so you stay “you, just smoother.”',
+  p1: 'At RELUXE, we offer the full lineup of wrinkle relaxers—Botox®, Jeuveau®, Dysport®, and Daxxify®—because different faces (and lifestyles) benefit from different options. All four soften expression lines like frown lines, forehead lines, and crow\'s feet by relaxing the tiny muscles that create creases. Treatments are quick with little to no downtime, results start to appear in a few days, and for some people Daxxify can last longer, while Dysport may kick in a touch sooner. Botox is the classic, ultra-reliable choice; Jeuveau is loved for a smooth, aesthetic finish. We truly like them all.',
+  p2: 'Your visit starts with a friendly consult where we map your expressions, discuss goals, budget, and timeline (big events, maintenance pace), and help you choose the right tox for you—sometimes even a thoughtful combo. We customize dosing for natural, balanced results (never "frozen"), keep you comfortable, and share simple aftercare. You\'ll leave with a clear plan, a two-week check-in if needed, and an easy schedule for touch-ups so you stay "you, just smoother."',
 };
 
 // Why RELUXE: 3–6 bullets max
@@ -101,11 +101,11 @@ s.whyReluxe = [
 ];
 
 s.candidates = {
-  good: ['Forehead lines', 'Glabellar (11s)', 'Crow’s feet', 'Bunny lines', 'Lip flip'],
+  good: ['Forehead lines', 'Glabellar (11s)', 'Crow\'s feet', 'Bunny lines', 'Lip flip'],
   notIdeal: ['Active infection at site', 'Pregnant or nursing', 'Neuromuscular disorders—consult first'],
 };
 s.appointmentSteps = [
-  'Arrive makeup-free or we’ll cleanse.',
+  'Arrive makeup-free or we\'ll cleanse.',
   'Photos for tracking.',
   'Treatment: 10–20 tiny pinches.',
   'Back to life, avoid workouts 24 hrs.',
@@ -161,11 +161,18 @@ s.comparison = {
   ],
 };
 s.faq = [
-  { q: 'Will I look frozen?', a: 'No—our approach preserves natural movement while softening lines.' },
-  { q: 'When do I see results?', a: 'Most start seeing results in 2–7 days; full effects by day 14.' },
-  { q: 'How long does it last?', a: 'Typically 3–4 months (Daxxify may last longer for some).' },
-  { q: 'Does it hurt?', a: 'Quick pinches; most rate it 2–3/10. Numbing optional.' },
-  { q: 'Can I work out?', a: 'Wait 24 hours to avoid migration.' },
+  { q: 'What is tox and how does it work?', a: 'Tox (short for neuromodulator/neurotoxin) is an FDA-approved injectable that temporarily relaxes facial muscles to smooth wrinkles and prevent new lines. At RELUXE, we carry four tox brands — Botox, Dysport, Jeuveau, and Daxxify — so we can match the best option to your goals, anatomy, and budget.' },
+  { q: 'How much does tox cost at RELUXE?', a: 'Pricing varies by brand: Botox starts at $280 for 20 units, Jeuveau at $200 for 20 units (after Evolus Rewards), Dysport at $225 for 50 units, and Daxxify at $280 for 40 units. VIP Members get the best per-unit pricing on all brands. We give you exact pricing during your consult.' },
+  { q: 'Will tox make me look frozen?', a: 'Not with our approach. We use precise, conservative dosing customized to your muscle strength and movement patterns. The result is a natural, refreshed look — softened lines without losing your expressions. We can always add more at your 2-week follow-up if needed.' },
+  { q: 'Which tox brand is best for me?', a: 'It depends on your goals. Botox is the gold standard for reliability. Dysport spreads more, making it great for large areas like foreheads. Jeuveau often kicks in fastest and is our most affordable option. Daxxify lasts 4-6+ months for patients who want fewer appointments. Your provider will recommend the best match.' },
+  { q: 'How long does tox treatment take?', a: 'The appointment takes about 30 minutes including consultation. The injections themselves are done in 10-15 minutes. There is no downtime — you can return to normal activities immediately.' },
+  { q: 'Does tox hurt?', a: 'Most patients describe it as quick pinches and rate discomfort at 2-3 out of 10. The needles are ultra-fine and injections are fast. Numbing cream is available if you want it, but most people don\'t need it.' },
+  { q: 'When will I see results from tox?', a: 'Onset varies by brand: Dysport and Jeuveau can show changes in 2-4 days, Botox in 3-5 days, and Daxxify in 2-7 days. Full results are visible by day 14 for all brands. Plan treatments 2+ weeks before events.' },
+  { q: 'How long does tox last?', a: 'Botox, Dysport, and Jeuveau typically last 3-4 months. Daxxify can last 4-6+ months for some patients. With consistent treatments, many patients find their results last longer over time as the muscles become trained.' },
+  { q: 'Is there downtime after tox?', a: 'No downtime. You can go right back to work and normal activities. The only restrictions: avoid lying flat for 4 hours, skip intense workouts for 24 hours, and don\'t rub or massage the treated areas.' },
+  { q: 'What areas can tox treat?', a: 'Common areas include forehead lines, frown lines (11s), crow\'s feet, bunny lines, lip flip, chin dimpling, jawline slimming (masseter), brow lift, and neck bands. Your provider will recommend the best combination based on your anatomy and goals.' },
+  { q: 'Can I switch between tox brands?', a: 'Yes, you can switch brands between treatments. Some patients prefer one brand for certain areas. Our providers can help you experiment to find your perfect match — there\'s no commitment to one brand.' },
+  { q: 'How do I prepare for tox and what happens after?', a: 'Avoid blood thinners, alcohol, and aspirin for 24 hours before treatment to minimize bruising. After treatment, stay upright for 4 hours, skip exercise for 24 hours, and avoid touching the area. You can wear makeup the same day.' },
 ];
 s.flexEverything = {
   intro: 'Small, precise doses customized to your muscle pattern.',
@@ -241,7 +248,7 @@ s.providers = [
     name: 'Melissa, RN',
     title: 'Nurse Injector',
     headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/09/Melissa.png',
-    bio: 'Melissa brings extensive nursing experience to her dual role as a Registered Nurse at House of Health and Injector at Reluxe Medical Spa, where she’s expanding her passion for aesthetics and functional wellness.',
+    bio: 'Melissa brings extensive nursing experience to her dual role as a Registered Nurse at House of Health and Injector at Reluxe Medical Spa, where she\'s expanding her passion for aesthetics and functional wellness.',
     href: '/book/tox',
     instagram: 'https://instagram.com/____',
     specialties: ['Tox', 'Lip Filler', 'Facial Balancing'],

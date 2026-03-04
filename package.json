@@ -17,6 +17,7 @@
     "node": ">=18 <21"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@boulevard/blvd-book-sdk": "^1.0.39",
     "@google/genai": "^1.43.0",
     "@google/generative-ai": "^0.24.1",

@@ -24,6 +24,9 @@ export async function applyAntiSpam(db, candidates, config) {
   // 3. Batch-load frequency cap data
   const capCounts = await getFrequencyCapCounts(db, phoneHashes)
 
+  // 3a. Batch-load daily cap — max 1 message per calendar day EST
+  const sentTodayHashes = await getSentTodayHashes(db, phoneHashes)
+
   // 3b. Batch-load per-campaign cooldown (same campaign within 7 days = skip)
   const campaignSlugs = [...new Set(deduped.map((c) => c.campaign_slug).filter(Boolean))]
   const campaignCooldowns = await getCampaignCooldowns(db, phoneHashes, campaignSlugs)
@@ -61,6 +64,12 @@ export async function applyAntiSpam(db, candidates, config) {
     const touchCount = capCounts[candidate.phone_hash_v1] || 0
     if (touchCount >= (config.max_touches_per_week || 2)) {
       flagged.push({ ...candidate, status: 'flagged', flag_reason: 'CAP_REACHED' })
+      continue
+    }
+
+    // Daily cap — max 1 message per calendar day (EST)
+    if (sentTodayHashes.has(candidate.phone_hash_v1)) {
+      flagged.push({ ...candidate, status: 'flagged', flag_reason: 'DAILY_CAP' })
       continue
     }
 
@@ -185,6 +194,42 @@ async function getCampaignCooldowns(db, phoneHashes, campaignSlugs) {
 }
 
 /**
+ * Get phone hashes that already received a message today (EST calendar day).
+ * Ensures max 1 concierge message per client per day.
+ */
+async function getSentTodayHashes(db, phoneHashes) {
+  if (!phoneHashes.length) return new Set()
+
+  // Compute midnight EST/EDT today as a UTC ISO string
+  const now = new Date()
+  const estDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now)
+  const utcHour = now.getUTCHours()
+  const estHour = parseInt(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }).format(now),
+    10
+  )
+  const offsetHours = ((utcHour - estHour) + 24) % 24 // 5 for EST, 4 for EDT
+  const estMidnightUTC = `${estDateStr}T${String(offsetHours).padStart(2, '0')}:00:00.000Z`
+
+  const sent = new Set()
+
+  for (let i = 0; i < phoneHashes.length; i += 100) {
+    const chunk = phoneHashes.slice(i, i + 100)
+    const { data } = await db
+      .from('marketing_touches')
+      .select('phone_hash_v1')
+      .in('phone_hash_v1', chunk)
+      .gte('sent_at', estMidnightUTC)
+
+    for (const row of data || []) {
+      sent.add(row.phone_hash_v1)
+    }
+  }
+
+  return sent
+}
+
+/**
  * Count marketing touches in the last 7 days per phone hash.
  */
 async function getFrequencyCapCounts(db, phoneHashes) {
@@ -210,19 +255,34 @@ async function getFrequencyCapCounts(db, phoneHashes) {
 }
 
 /**
- * Get set of client IDs with upcoming booked/confirmed appointments.
+ * Get set of client IDs with appointments today or later (any active/completed status).
+ * Uses start-of-today as cutoff so patients seen earlier today are also excluded.
  */
 async function getBookedClients(db, clientIds) {
   if (!clientIds.length) return new Set()
 
-  const { data } = await db
-    .from('blvd_appointments')
-    .select('client_id')
-    .in('client_id', clientIds)
-    .in('status', ['booked', 'confirmed'])
-    .gte('start_at', new Date().toISOString())
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const todayStartISO = todayStart.toISOString()
 
-  return new Set((data || []).map((r) => r.client_id))
+  const booked = new Set()
+  // Exclude only cancelled/no-show — any other status (active, booked, confirmed,
+  // arrived, started, completed, final, etc.) means the client has a real appointment.
+  for (let i = 0; i < clientIds.length; i += 100) {
+    const chunk = clientIds.slice(i, i + 100)
+    const { data } = await db
+      .from('blvd_appointments')
+      .select('client_id')
+      .in('client_id', chunk)
+      .not('status', 'in', '("cancelled","no_show")')
+      .gte('start_at', todayStartISO)
+
+    for (const row of data || []) {
+      booked.add(row.client_id)
+    }
+  }
+
+  return booked
 }
 
 /**

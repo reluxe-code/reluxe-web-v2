@@ -13,8 +13,8 @@ s.variants = {
   candidates: 'badges',
   process: 'checklist',
 
-  // ✅ Use pricingMatrix as the “clean visual pricing”
-  pricing: 'tiers', // keep, but we’ll make it minimal (or you can remove pricing entirely)
+  // ✅ Use pricingMatrix as the "clean visual pricing"
+  pricing: 'tiers', // keep, but we'll make it minimal (or you can remove pricing entirely)
   comparison: 'cards',
   video: 'split',
   faq: 'top5',
@@ -97,13 +97,13 @@ s.howItWorks = [
 ];
 
 s.candidates = {
-  good: ['Forehead lines', 'Glabellar (11s)', 'Crow’s feet', 'Bunny lines', 'Lip flip'],
+  good: ['Forehead lines', 'Glabellar (11s)', 'Crow\'s feet', 'Bunny lines', 'Lip flip'],
   notIdeal: ['Active infection at site', 'Pregnant or nursing', 'Neuromuscular disorders—consult first'],
 };
 
 s.overview = {
-  p1: 'Botox® is a quick, no-downtime treatment that softens frown lines, forehead lines, and crow’s feet so you look rested—not “frozen.” Tiny injections relax the overactive muscles that create creases, with improvements appearing in a few days and full results at about two weeks. Most people describe it as a few small pinches, and then they’re back to work, errands, or the gym.',
-  p2: 'At RELUXE, your visit starts with a friendly, honest consult. We map your unique expressions, discuss goals and budget, and create a plan that keeps your features natural and balanced. You’ll leave with simple aftercare tips and a clear timeline for follow-ups (typically every 3–4 months, depending on your muscles and metabolism).',
+  p1: 'Botox® is a quick, no-downtime treatment that softens frown lines, forehead lines, and crow\'s feet so you look rested—not "frozen." Tiny injections relax the overactive muscles that create creases, with improvements appearing in a few days and full results at about two weeks. Most people describe it as a few small pinches, and then they\'re back to work, errands, or the gym.',
+  p2: 'At RELUXE, your visit starts with a friendly, honest consult. We map your unique expressions, discuss goals and budget, and create a plan that keeps your features natural and balanced. You\'ll leave with simple aftercare tips and a clear timeline for follow-ups (typically every 3–4 months, depending on your muscles and metabolism).',
 };
 
 s.whyReluxe = [
@@ -114,7 +114,7 @@ s.whyReluxe = [
 ];
 
 s.appointmentSteps = [
-  'Arrive makeup-free or we’ll cleanse.',
+  'Arrive makeup-free or we\'ll cleanse.',
   'Photos for tracking (optional).',
   'Treatment: 10–20 tiny pinches.',
   'Back to life—avoid workouts 24 hrs.',
@@ -145,7 +145,7 @@ s.pricingMatrix = {
           label: 'Foundation Treatment',
           subLabel: '20 units',
           single: '$280',
-          singleNote: 'Great for first-time patients and “maintenance” dosing.',
+          singleNote: 'Great for first-time patients and "maintenance" dosing.',
         },
         {
           label: 'Additional Units',
@@ -155,14 +155,14 @@ s.pricingMatrix = {
           packageNote: 'Returning patient pricing applies after your initial visit.',
         },
       ],
-      promo: 'Not sure how many units you need? We’ll map your expression and recommend the right plan.',
+      promo: 'Not sure how many units you need? We\'ll map your expression and recommend the right plan.',
       ctaText: 'Book Botox',
     },
   ],
 };
 
-// Keep this minimal so the older “Pricing & Packages” section doesn’t compete.
-// (You can delete s.pricing entirely if you’d rather rely only on pricingMatrix.)
+// Keep this minimal so the older "Pricing & Packages" section doesn't compete.
+// (You can delete s.pricing entirely if you'd rather rely only on pricingMatrix.)
 s.pricing = {
   single: 'Starting at $280',
   packages: [
@@ -182,19 +182,18 @@ s.comparison = {
 };
 
 s.faq = [
-  { q: 'What is Botox?', a: 'Botox is an FDA-approved injectable that relaxes targeted muscles to smooth wrinkles and help prevent new lines from forming.' },
-  { q: 'Will I look frozen?', a: 'No—our approach preserves natural movement while softening lines.' },
-  { q: 'When do I see results?', a: 'You’ll start to notice changes in 3–5 days, with full results in about 2 weeks.' },
-  { q: 'How long does it last?', a: 'Typically 3+ months, but it varies by person and dosing.' },
-  { q: 'Does it hurt?', a: 'Quick pinches; most rate it 2–3/10.' },
-  { q: 'Is there any downtime?', a: 'No major downtime — you can return to normal activities right after, but avoid exercise for 24 hours and lying flat or rubbing the area for 4 hours.' },
-
-  // ✅ Updated pricing FAQ to match new structure
-  {
-    q: 'How much does it cost? How many units will I need?',
-    a:
-      'Botox pricing is a foundation + customization model. Your visit typically starts with a 20-unit foundation treatment ($280). If you need more, additional units are $9/unit for new patients and $10/unit for returning patients. We’ll map your facial movement and recommend a plan that looks natural and lasts.',
-  },
+  { q: 'What is Botox and how does it work?', a: 'Botox is an FDA-approved injectable made from botulinum toxin that temporarily relaxes targeted facial muscles to smooth existing wrinkles and prevent new ones. It works by blocking nerve signals to specific muscles, reducing the contractions that cause forehead lines, frown lines, and crow\'s feet. Results are natural-looking and typically last 3-4 months.' },
+  { q: 'How much does Botox cost at RELUXE Med Spa?', a: 'Botox at RELUXE starts with a 20-unit foundation treatment at $280. Additional units are $9/unit for new patients and $10/unit for returning patients. Most patients need 20-40 units depending on the areas treated. VIP Members get the best pricing. We provide exact pricing during your consult — no surprises.' },
+  { q: 'Will Botox make me look frozen or unnatural?', a: 'No. Our injectors use a "you, just refreshed" approach that preserves your natural expressions while softening lines. We customize dosing based on your unique muscle strength and movement patterns, so you still look like you — just more rested.' },
+  { q: 'How long does a Botox appointment take?', a: 'A typical Botox visit takes about 30 minutes including your consultation. The actual injections take only 10-15 minutes. Most patients come in on their lunch break and return to work right away with no visible signs of treatment.' },
+  { q: 'Does Botox hurt?', a: 'Most patients describe Botox as quick pinches and rate the discomfort at 2-3 out of 10. The needles are ultra-fine, and injections are fast. We can apply numbing cream if you\'re sensitive, though most people don\'t need it.' },
+  { q: 'When will I see Botox results?', a: 'You\'ll start noticing changes within 3-5 days, with full results visible at about 2 weeks. We recommend scheduling at least 2 weeks before any special event for optimal timing.' },
+  { q: 'How long does Botox last?', a: 'Botox typically lasts 3-4 months. With consistent treatments, many patients find results last longer over time as the muscles become trained. We recommend maintenance every 3-4 months to keep your look fresh.' },
+  { q: 'Is there downtime after Botox?', a: 'No downtime at all. You can return to work and normal activities immediately. Just avoid lying flat for 4 hours, skip intense exercise for 24 hours, and don\'t rub the treated areas. Minor redness at injection sites fades within an hour.' },
+  { q: 'What areas can Botox treat?', a: 'Botox treats forehead lines, frown lines (the "11s"), crow\'s feet, bunny lines, lip flip, chin dimpling, and jawline slimming (masseter). We also use it for brow lifts and neck bands. Your provider will recommend the best areas based on your goals.' },
+  { q: 'What is the difference between Botox, Dysport, Jeuveau, and Daxxify?', a: 'All four are FDA-approved neuromodulators that work similarly but have subtle differences. Botox is the gold standard with reliable 3-4 month results. Dysport spreads more (ideal for larger areas like foreheads). Jeuveau often kicks in fastest. Daxxify can last 4-6+ months. We carry all four at RELUXE and help you choose the best fit.' },
+  { q: 'Who is a good candidate for Botox?', a: 'Most healthy adults looking to smooth or prevent expression lines are good candidates. Botox is popular from late 20s through 60s+. You should avoid it if pregnant, nursing, or if you have a neuromuscular disorder. Book a free consult and we\'ll confirm the best plan for you.' },
+  { q: 'Can I combine Botox with other treatments?', a: 'Absolutely. Botox pairs beautifully with dermal fillers for a "liquid facelift" — tox relaxes lines while filler restores volume. Many patients also combine it with facials, chemical peels, or Morpheus8 for comprehensive rejuvenation. We\'ll design a plan that addresses all your goals.' },
 ];
 
 s.flexEverything = {
@@ -241,7 +240,7 @@ s.providers = [
     name: 'Alexis, RN',
     title: 'Nurse Injector',
     headshotUrl: 'https://wordpress-74434-5742908.cloudwaysapps.com/cms/wp-content/uploads/2025/08/alexis.png',
-    bio: 'Add Alexis’s short bio here (1–2 lines).',
+    bio: 'Add Alexis\'s short bio here (1–2 lines).',
     href: '/book/tox',
     instagram: 'https://instagram.com/____',
     specialties: ['Tox', 'Lip Filler', 'Facial Balancing'],

@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getServiceClient } from '@/lib/supabase'
 import { hashPhone, hashEmail } from '@/lib/piiHash'
 import { adminQuery } from '@/server/blvdAdmin'
+import { resolveClient } from '@/services/phiProxy'
 
 export const config = { maxDuration: 15 }
 
@@ -155,6 +156,14 @@ export default async function handler(req, res) {
       if (!allClientIds.includes(c.id)) allClientIds.push(c.id)
       if (c.boulevard_id && !allBlvdUrns.includes(c.boulevard_id)) allBlvdUrns.push(c.boulevard_id)
     }
+  }
+
+  // Resolve first name from Boulevard (dropped from DB during PII cleanup)
+  if (allBlvdUrns.length > 0) {
+    try {
+      const blvdClient = await resolveClient(allBlvdUrns[0], { masked: false })
+      if (blvdClient?.firstName) member.first_name = blvdClient.firstName
+    } catch { /* non-fatal */ }
   }
 
   // Run all queries in parallel

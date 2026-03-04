@@ -48,6 +48,7 @@ export function MemberProvider({ children }) {
         stats: data.stats,
         lastService: data.lastService,
         upcomingAppointment: data.upcomingAppointment,
+        upcomingAppointments: data.upcomingAppointments || [],
         primaryProvider: data.primaryProvider,
         visits: data.visits || [],
         toxStatus: data.toxStatus || null,
@@ -56,6 +57,9 @@ export function MemberProvider({ children }) {
         recommendations: data.recommendations || [],
         locationSplit: data.locationSplit || null,
         products: data.products || null,
+        accountCredit: data.accountCredit || null,
+        membership: data.membership || null,
+        velocity: data.velocity || null,
       })
     } catch (e) {
       console.warn('[MemberContext] profile fetch error:', e.message)

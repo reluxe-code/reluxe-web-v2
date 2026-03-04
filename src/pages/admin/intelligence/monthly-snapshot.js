@@ -35,6 +35,8 @@ function buildMonthOptions() {
 
 const MONTH_OPTIONS = buildMonthOptions()
 
+// Tox services are rolled up by brand in the API — no client-side grouping needed
+
 export default function MonthlySnapshotPage() {
   const [month, setMonth] = useState(MONTH_OPTIONS[1]?.value || MONTH_OPTIONS[0]?.value)
   const [location, setLocation] = useState('total')
@@ -142,13 +144,53 @@ export default function MonthlySnapshotPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             <StatCard label="Total Revenue" value={money(s.total_revenue)} color="emerald" />
             <StatCard label="Service Revenue" value={money(s.service_revenue)} color="blue" />
-            <StatCard label="Deferred Revenue" value={money(s.deferred_revenue)} color="violet"
-              sub={s.deferred_revenue > 0 ? `GC ${money(s.deferred_gift_cards)} / Mem ${money(s.deferred_memberships)} / Pkg ${money(s.deferred_packages)}` : undefined} />
+            <StatCard label="Deferred Revenue" value={money(s.deferred_revenue)} color="violet" />
             <StatCard label="Product Revenue" value={money(s.product_revenue)} color="amber" />
             <StatCard label="Total Appointments" value={(s.total_appointments || 0).toLocaleString()} color="neutral" />
             <StatCard label="Tox Units Used" value={(s.tox_units_total || 0).toLocaleString()} color="rose"
               sub={s.tox_cost_total > 0 ? `COGS: ${money(s.tox_cost_total)}` : undefined} />
           </div>
+
+          {/* Deferred Revenue Breakdown */}
+          {data.deferred && (
+            <div className="bg-white rounded-lg border mb-6">
+              <div className="p-4 border-b">
+                <h2 className="text-lg font-semibold">Deferred Revenue</h2>
+                <p className="text-xs text-neutral-400 mt-0.5">{monthLabel} — gift cards, memberships, and packages</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-neutral-500 border-b">
+                      <th className="px-4 py-2">Category</th>
+                      <th className="px-4 py-2 text-right">Count</th>
+                      <th className="px-4 py-2 text-right">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: 'Gift Cards', ...data.deferred.gift_cards },
+                      { label: 'Memberships', ...data.deferred.memberships },
+                      { label: 'Packages', ...data.deferred.packages },
+                    ].map((d) => (
+                      <tr key={d.label} className="border-b hover:bg-neutral-50">
+                        <td className="px-4 py-3 font-medium">{d.label}</td>
+                        <td className="px-4 py-3 text-right">{d.count}</td>
+                        <td className="px-4 py-3 text-right">{money(d.revenue)}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-neutral-50 font-medium">
+                      <td className="px-4 py-3">Total</td>
+                      <td className="px-4 py-3 text-right">
+                        {(data.deferred.gift_cards?.count || 0) + (data.deferred.memberships?.count || 0) + (data.deferred.packages?.count || 0)}
+                      </td>
+                      <td className="px-4 py-3 text-right">{money(s.deferred_revenue)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Appointments by Category */}
           <div className="bg-white rounded-lg border mb-6">
@@ -189,7 +231,7 @@ export default function MonthlySnapshotPage() {
           <div className="bg-white rounded-lg border mb-6">
             <div className="p-4 border-b">
               <h2 className="text-lg font-semibold">Appointments by Service</h2>
-              <p className="text-xs text-neutral-400 mt-0.5">{monthLabel} — top 50 services by revenue</p>
+              <p className="text-xs text-neutral-400 mt-0.5">{monthLabel} — top services by revenue, tox rolled up by brand</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -260,7 +302,7 @@ export default function MonthlySnapshotPage() {
             <button onClick={() => setCogsOpen(!cogsOpen)} className="w-full p-4 flex items-center justify-between text-left">
               <div>
                 <h2 className="text-lg font-semibold">COGS Editor</h2>
-                <p className="text-xs text-neutral-400 mt-0.5">Set cost-of-goods per service name (cents). Used for margin calculations above.</p>
+                <p className="text-xs text-neutral-400 mt-0.5">Set cost-of-goods per service ($). Tox COGS tracked via units below.</p>
               </div>
               <span className="text-neutral-400 text-sm">{cogsOpen ? 'Hide' : 'Show'}</span>
             </button>
@@ -271,19 +313,20 @@ export default function MonthlySnapshotPage() {
                     <thead>
                       <tr className="text-left text-xs text-neutral-500 border-b">
                         <th className="px-2 py-2">Service Name</th>
-                        <th className="px-2 py-2 text-right">COGS (cents)</th>
+                        <th className="px-2 py-2 text-right">COGS ($)</th>
                         <th className="px-2 py-2"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(data.by_service || []).map((svc) => {
-                        const currentCogs = cogsEdits[svc.service_name] ?? (svc.cogs > 0 ? Math.round(svc.cogs * 100) : '')
+                      {(data.by_service || []).filter((svc) => svc.slug !== 'tox').map((svc) => {
+                        const currentCogs = cogsEdits[svc.service_name] ?? (svc.cogs_per > 0 ? svc.cogs_per : '')
                         return (
                           <tr key={svc.service_name} className="border-b">
                             <td className="px-2 py-2 text-sm">{svc.service_name}</td>
                             <td className="px-2 py-2 text-right">
                               <input
                                 type="number"
+                                step="any"
                                 value={currentCogs}
                                 onChange={(e) => setCogsEdits({ ...cogsEdits, [svc.service_name]: e.target.value })}
                                 className="w-24 text-right text-sm border rounded px-2 py-1"
@@ -292,7 +335,7 @@ export default function MonthlySnapshotPage() {
                             </td>
                             <td className="px-2 py-2">
                               <button
-                                onClick={() => handleCogsSave(svc.service_name, parseInt(cogsEdits[svc.service_name]) || 0)}
+                                onClick={() => handleCogsSave(svc.service_name, parseFloat(cogsEdits[svc.service_name]) || 0)}
                                 disabled={cogsSaving}
                                 className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
                               >

@@ -950,16 +950,23 @@ async function getClientHashLookup(db, clientIds) {
 async function getUpcomingBookedClients(db, clientIds) {
   if (!clientIds.length) return new Set()
 
+  // Use start of today (midnight) so patients with appointments earlier today are also excluded
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const todayStartISO = todayStart.toISOString()
+
   const booked = new Set()
   // Query in chunks to avoid URL length limits
+  // Exclude only cancelled/no-show — any other status (active, booked, confirmed,
+  // arrived, started, completed, final, etc.) means the client has a real appointment.
   for (let i = 0; i < clientIds.length; i += 100) {
     const chunk = clientIds.slice(i, i + 100)
     const { data } = await db
       .from('blvd_appointments')
       .select('client_id')
       .in('client_id', chunk)
-      .in('status', ['booked', 'confirmed', 'arrived'])
-      .gte('start_at', new Date().toISOString())
+      .not('status', 'in', '("cancelled","no_show")')
+      .gte('start_at', todayStartISO)
 
     for (const row of data || []) {
       booked.add(row.client_id)

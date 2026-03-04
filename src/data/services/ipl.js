@@ -1,4 +1,20 @@
 // src/data/services/ipl.js
 import { getDefaultService } from '../servicesDefault';
-const svc = getDefaultService('ipl');
-export default svc;
+const s = getDefaultService('ipl');
+
+s.faq = [
+  { q: 'What is IPL and how does it work?', a: 'IPL (Intense Pulsed Light) is a non-invasive light-based treatment that targets pigment and blood vessels beneath the skin\'s surface. Broad-spectrum light pulses break down melanin in sun spots and constrict tiny blood vessels that cause redness. Your body naturally clears the treated pigment over the following 1-2 weeks, revealing clearer, more even skin.' },
+  { q: 'How much does IPL cost at RELUXE?', a: 'IPL pricing at RELUXE is per area treated. We offer 6-session packages for the best results and value since IPL works cumulatively. VIP Members get discounted pricing on every session. Your provider will give you exact pricing during your free consultation based on the areas you want to treat.' },
+  { q: 'Does IPL hurt?', a: 'Most patients describe IPL as a quick snapping sensation, like a rubber band lightly flicking the skin. It\'s very tolerable — most rate it 2-3 out of 10. We adjust the energy settings for your comfort and skin type. No numbing is needed for most patients.' },
+  { q: 'What does IPL treat?', a: 'IPL is excellent for sun damage (brown spots, age spots, freckles), redness and rosacea, broken capillaries, vascular lesions, and overall uneven skin tone. It\'s most commonly used on the face, neck, chest (decolletage), and hands — areas that get the most sun exposure over time.' },
+  { q: 'How many IPL sessions do I need?', a: 'Most patients see best results with a series of 3-6 sessions, spaced 3-4 weeks apart. You\'ll notice improvement after even one session, but cumulative treatments deliver the most dramatic clearing. Maintenance sessions every 6-12 months help keep new sun damage in check.' },
+  { q: 'What is the downtime after IPL?', a: 'IPL has minimal downtime. Treated sun spots will darken and look like coffee grounds for 5-10 days before naturally flaking off — this is completely normal and means the treatment is working. You may have mild redness for a few hours. Most patients return to normal activities immediately. Avoid direct sun and wear SPF daily.' },
+  { q: 'When will I see IPL results?', a: 'You\'ll see darkened spots within 24-48 hours (they rise to the surface), which then flake off over 7-14 days. Redness improvement is often visible within 1-2 weeks. Full results from a series are typically visible 2-4 weeks after your last session. Each treatment builds on the previous one.' },
+  { q: 'Is IPL safe for all skin tones?', a: 'IPL works best on lighter to medium skin tones (Fitzpatrick I-IV) because the light targets contrast between pigment and surrounding skin. Darker skin tones have a higher risk of hyperpigmentation with IPL. During your consult, we\'ll assess your skin type and recommend IPL or an alternative like ClearLift if better suited.' },
+  { q: 'What is the difference between IPL and laser?', a: 'IPL uses broad-spectrum light (multiple wavelengths) to treat a range of concerns simultaneously — pigment, redness, and texture. Lasers use a single, focused wavelength for more targeted treatment. IPL is ideal for overall sun damage and tone correction. We may recommend a specific laser (ClearLift, ClearSkin) for more targeted concerns.' },
+  { q: 'Can I combine IPL with other treatments?', a: 'Yes — IPL pairs well with many treatments. It\'s commonly combined with tox (Botox/Dysport) for wrinkles, microneedling for texture, and medical-grade skincare for maintenance. We typically space IPL 2 weeks from other treatments. Your provider will design a comprehensive plan during your consult.' },
+  { q: 'How do I prepare for IPL treatment?', a: 'Avoid sun exposure and self-tanner for 2-4 weeks before IPL. Discontinue retinoids 5-7 days prior. Arrive with clean skin, free of makeup and sunscreen. If you have a tan, we\'ll need to wait for it to fade before treating. Your provider will give you specific prep instructions at your consult.' },
+  { q: 'Who is a good candidate for IPL?', a: 'IPL is ideal for patients with sun damage, brown spots, redness, rosacea, or broken capillaries on fair to medium skin tones. It\'s great for the face, neck, chest, and hands. You should avoid IPL if you\'re pregnant, have active skin infections, are on photosensitizing medications, or have a recent tan.' },
+];
+
+export default s;

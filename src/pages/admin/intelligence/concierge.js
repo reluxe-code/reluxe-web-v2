@@ -58,6 +58,7 @@ function estimateSegments(text) {
 
 const TABS = [
   { id: 'queue', label: 'Queue' },
+  { id: 'insights', label: 'Insights' },
   { id: 'templates', label: 'Templates' },
   { id: 'projections', label: 'Projections' },
 ]
@@ -131,6 +132,20 @@ export default function DailyConcierge() {
   // Unavailable providers
   const [unavailableProviders, setUnavailableProviders] = useState([])
   const [staffList, setStaffList] = useState([])
+
+  // Sends drawer (RPM click-through)
+  const [sendsDrawerOpen, setSendsDrawerOpen] = useState(false)
+  const [sendsDrawerCampaign, setSendsDrawerCampaign] = useState(null)
+  const [sendsData, setSendsData] = useState(null)
+  const [sendsLoading, setSendsLoading] = useState(false)
+  const [sendsFilter, setSendsFilter] = useState('all')
+  const [sendsPage, setSendsPage] = useState(1)
+
+  // Insights tab
+  const [insightsCampaign, setInsightsCampaign] = useState('tox_journey')
+  const [insightsDays, setInsightsDays] = useState(30)
+  const [insightsData, setInsightsData] = useState(null)
+  const [insightsLoading, setInsightsLoading] = useState(false)
 
   // Projections
   const [projectionOffset, setProjectionOffset] = useState(0)
@@ -478,6 +493,66 @@ export default function DailyConcierge() {
   const projDate = new Date(Date.now() + projectionOffset * 86400000)
   const projDateLabel = projDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 
+  // ── Sends Drawer ─────────────────────────────────────────────
+
+  const openSendsDrawer = useCallback(async (campaignSlug) => {
+    setSendsDrawerCampaign(campaignSlug)
+    setSendsDrawerOpen(true)
+    setSendsFilter('all')
+    setSendsPage(1)
+    setSendsLoading(true)
+    try {
+      const res = await adminFetch(`/api/admin/concierge/sends?campaign=${campaignSlug}&days=30`)
+      if (!res.ok) throw new Error('Failed to load')
+      setSendsData(await res.json())
+    } catch (e) {
+      console.error('Sends load error:', e)
+    } finally {
+      setSendsLoading(false)
+    }
+  }, [])
+
+  const loadSendsPage = useCallback(async (pg, filter) => {
+    if (!sendsDrawerCampaign) return
+    setSendsLoading(true)
+    try {
+      const statusParam = filter || sendsFilter
+      const res = await adminFetch(`/api/admin/concierge/sends?campaign=${sendsDrawerCampaign}&days=30&status=${statusParam}&page=${pg}&limit=50`)
+      if (!res.ok) throw new Error('Failed to load')
+      const data = await res.json()
+      setSendsData(prev => prev ? { ...prev, sends: data.sends, total: data.total, page: data.page, pages: data.pages } : data)
+    } catch (e) {
+      console.error('Sends page error:', e)
+    } finally {
+      setSendsLoading(false)
+    }
+  }, [sendsDrawerCampaign, sendsFilter])
+
+  const closeSendsDrawer = () => {
+    setSendsDrawerOpen(false)
+    setSendsDrawerCampaign(null)
+    setSendsData(null)
+  }
+
+  // ── Insights Tab ────────────────────────────────────────────
+
+  const loadInsights = useCallback(async (campaign, days) => {
+    setInsightsLoading(true)
+    try {
+      const res = await adminFetch(`/api/admin/concierge/sends?campaign=${campaign}&days=${days}&limit=0`)
+      if (!res.ok) throw new Error('Failed to load')
+      setInsightsData(await res.json())
+    } catch (e) {
+      console.error('Insights load error:', e)
+    } finally {
+      setInsightsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'insights') loadInsights(insightsCampaign, insightsDays)
+  }, [activeTab, insightsCampaign, insightsDays, loadInsights])
+
   // ── Render ──────────────────────────────────────────────────
 
   const readyCount = (slug) => dashboard?.ready_counts?.[slug] || 0
@@ -546,14 +621,17 @@ export default function DailyConcierge() {
             })}
           </div>
 
-          {/* RPM for selected cohort */}
+          {/* RPM for selected cohort — clickable to open sends drawer */}
           {dashboard?.rpm?.[cohortSlug] && (
-            <div className="bg-white border rounded-lg p-4 mb-6 flex items-center gap-6">
+            <button
+              onClick={() => openSendsDrawer(cohortSlug)}
+              className="w-full bg-white border rounded-lg p-4 mb-6 flex items-center gap-6 text-left cursor-pointer hover:border-neutral-300 hover:shadow-sm transition-all"
+            >
               <div>
                 <p className="text-xs text-neutral-500">RPM (30d)</p>
                 <p className="text-xl font-bold">${dashboard.rpm[cohortSlug].rpm}</p>
               </div>
-              <div className="text-xs text-neutral-400 space-y-0.5">
+              <div className="text-xs text-neutral-400 space-y-0.5 flex-1">
                 <p>{dashboard.rpm[cohortSlug].messages_sent} sent · {dashboard.rpm[cohortSlug].conversions} booked · {dashboard.rpm[cohortSlug].conversion_rate}% CVR</p>
                 {dashboard.rpm[cohortSlug].variants && Object.keys(dashboard.rpm[cohortSlug].variants).length > 1 && (
                   <div className="flex gap-4">
@@ -563,7 +641,8 @@ export default function DailyConcierge() {
                   </div>
                 )}
               </div>
-            </div>
+              <svg className="w-4 h-4 text-neutral-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
           )}
 
           {/* Per-cohort action buttons */}
@@ -979,6 +1058,259 @@ export default function DailyConcierge() {
             </>
           )}
           {projectionLoading && <div className="text-center py-12 text-neutral-400"><p className="text-sm">Computing projection for {projDateLabel}...</p></div>}
+        </>
+      )}
+
+      {/* ════════════════ INSIGHTS TAB ════════════════ */}
+      {activeTab === 'insights' && (
+        <>
+          {/* Campaign selector */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {CAMPAIGNS.map((slug) => (
+              <button
+                key={slug}
+                onClick={() => setInsightsCampaign(slug)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                  insightsCampaign === slug
+                    ? `${CAMPAIGN_BG[slug]} ring-2 ${CAMPAIGN_RING[slug]}`
+                    : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+                }`}
+              >
+                {CAMPAIGN_LABELS[slug]}
+              </button>
+            ))}
+          </div>
+
+          {/* Date range selector */}
+          <div className="flex gap-2 mb-6">
+            {[{ label: '7d', val: 7 }, { label: '30d', val: 30 }, { label: '90d', val: 90 }, { label: 'All', val: 365 }].map(({ label, val }) => (
+              <button
+                key={val}
+                onClick={() => setInsightsDays(val)}
+                className={`px-3 py-1 rounded text-xs font-medium ${insightsDays === val ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {insightsLoading && <div className="text-center py-12 text-neutral-400"><p className="text-sm">Loading insights...</p></div>}
+
+          {insightsData && !insightsLoading && (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                {[
+                  { label: 'Sent', value: insightsData.summary.total_sent },
+                  { label: 'Click Rate', value: `${insightsData.summary.click_rate}%` },
+                  { label: 'CVR', value: `${insightsData.summary.conversion_rate}%` },
+                  { label: 'RPM', value: `$${insightsData.summary.rpm}` },
+                  { label: 'Revenue', value: `$${Math.round(insightsData.summary.revenue)}` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-white border rounded-lg p-3">
+                    <p className="text-xs text-neutral-500">{label}</p>
+                    <p className="text-lg font-bold">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* A/B Comparison */}
+              {(() => {
+                const daily = insightsData.daily || []
+                const variantStats = {}
+                for (const row of daily) {
+                  const v = row.variant || 'A'
+                  if (!variantStats[v]) variantStats[v] = { sent: 0, clicked: 0, booked: 0, failed: 0, revenue: 0 }
+                  variantStats[v].sent += row.sent
+                  variantStats[v].clicked += row.clicked
+                  variantStats[v].booked += row.booked
+                  variantStats[v].failed += row.failed
+                  variantStats[v].revenue += row.revenue
+                }
+                const variants = Object.keys(variantStats).sort()
+                if (variants.length < 2) return null
+                return (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-neutral-700 mb-3">A/B Comparison</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {variants.map((v) => {
+                        const s = variantStats[v]
+                        const clickRate = s.sent > 0 ? Math.round((s.clicked / s.sent) * 1000) / 10 : 0
+                        const cvr = s.sent > 0 ? Math.round((s.booked / s.sent) * 1000) / 10 : 0
+                        const rpm = s.sent > 0 ? Math.round((s.revenue / s.sent) * 100) / 100 : 0
+                        return (
+                          <div key={v} className="bg-white border rounded-lg p-4">
+                            <p className="text-sm font-bold mb-2">Variant {v}</p>
+                            <div className="space-y-1 text-xs text-neutral-600">
+                              <div className="flex justify-between"><span>Sent</span><span className="font-medium">{s.sent}</span></div>
+                              <div className="flex justify-between"><span>Click Rate</span><span className="font-medium">{clickRate}%</span></div>
+                              <div className="flex justify-between"><span>CVR</span><span className="font-medium text-emerald-600">{cvr}%</span></div>
+                              <div className="flex justify-between"><span>RPM</span><span className="font-medium">${rpm}</span></div>
+                              <div className="flex justify-between"><span>Revenue</span><span className="font-medium">${Math.round(s.revenue)}</span></div>
+                              <div className="flex justify-between"><span>Booked</span><span className="font-medium text-emerald-600">{s.booked}</span></div>
+                              <div className="flex justify-between"><span>Failed</span><span className="font-medium text-red-500">{s.failed}</span></div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Daily Performance table */}
+              <div className="bg-white rounded-xl border overflow-hidden">
+                <div className="px-4 py-3 bg-neutral-50 border-b">
+                  <h3 className="text-sm font-semibold">Daily Performance</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-neutral-50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Date</th>
+                        <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Var</th>
+                        <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Sent</th>
+                        <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Clicked</th>
+                        <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Booked</th>
+                        <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Failed</th>
+                        <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(insightsData.daily || []).map((row, i) => (
+                        <tr key={i} className="border-b last:border-b-0 hover:bg-neutral-50">
+                          <td className="px-4 py-2 font-medium">{new Date(row.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                          <td className="px-4 py-2"><span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${row.variant === 'B' ? 'bg-blue-50 text-blue-600' : 'bg-neutral-100 text-neutral-600'}`}>{row.variant}</span></td>
+                          <td className="px-4 py-2 text-right">{row.sent}</td>
+                          <td className="px-4 py-2 text-right text-blue-600">{row.clicked}</td>
+                          <td className="px-4 py-2 text-right text-emerald-600">{row.booked}</td>
+                          <td className="px-4 py-2 text-right text-red-500">{row.failed}</td>
+                          <td className="px-4 py-2 text-right">${Math.round(row.revenue)}</td>
+                        </tr>
+                      ))}
+                      {(!insightsData.daily || insightsData.daily.length === 0) && (
+                        <tr><td colSpan={7} className="px-4 py-8 text-center text-neutral-400 text-sm">No sends for this campaign in the selected period</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ════════════════ SENDS DRAWER ════════════════ */}
+      {sendsDrawerOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={closeSendsDrawer} />
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-white shadow-xl overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+              <h2 className="text-lg font-bold">{CAMPAIGN_LABELS[sendsDrawerCampaign]} — Send Performance</h2>
+              <button onClick={closeSendsDrawer} className="p-1 hover:bg-neutral-100 rounded-lg text-neutral-400 hover:text-neutral-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            {sendsLoading && !sendsData ? (
+              <div className="p-8 text-center text-neutral-400 text-sm">Loading...</div>
+            ) : sendsData ? (
+              <div className="p-6 space-y-6">
+                {/* Summary stats */}
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                  {[
+                    { label: 'Sent', value: sendsData.summary.total_sent, color: '' },
+                    { label: 'Delivered', value: sendsData.summary.delivered, color: '' },
+                    { label: 'Clicked', value: sendsData.summary.clicked, color: 'text-blue-600' },
+                    { label: 'Booked', value: sendsData.summary.booked, color: 'text-emerald-600' },
+                    { label: 'Failed', value: sendsData.summary.failed, color: 'text-red-500' },
+                    { label: 'Revenue', value: `$${Math.round(sendsData.summary.revenue)}`, color: '' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} className="bg-neutral-50 rounded-lg p-2.5 text-center">
+                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">{label}</p>
+                      <p className={`text-sm font-bold ${color}`}>{value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Status filter tabs */}
+                <div className="flex gap-1 border-b">
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'clicked', label: 'Clicked' },
+                    { key: 'booked', label: 'Booked' },
+                    { key: 'failed', label: 'Failed' },
+                    { key: 'sent', label: 'No Action' },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => { setSendsFilter(key); setSendsPage(1); loadSendsPage(1, key) }}
+                      className={`px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors ${
+                        sendsFilter === key
+                          ? 'border-black text-black'
+                          : 'border-transparent text-neutral-400 hover:text-neutral-600'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Send list */}
+                <div className="space-y-2">
+                  {(sendsData.sends || []).map((send) => (
+                    <div key={send.id} className="bg-white border rounded-lg p-3 hover:bg-neutral-50">
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <p className="text-sm text-neutral-800 line-clamp-2 flex-1">{send.sms_body ? send.sms_body.split('\n')[0].slice(0, 100) : 'No message body'}</p>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${send.variant === 'B' ? 'bg-blue-50 text-blue-600' : 'bg-neutral-100 text-neutral-600'}`}>{send.variant}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                            send.status === 'booked' ? 'bg-emerald-100 text-emerald-700' :
+                            send.status === 'clicked' ? 'bg-blue-100 text-blue-700' :
+                            send.status === 'failed' ? 'bg-red-100 text-red-700' :
+                            send.status === 'delivered' ? 'bg-neutral-100 text-neutral-600' :
+                            'bg-neutral-50 text-neutral-400'
+                          }`}>{send.status}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-neutral-400">
+                        <span>Sent {new Date(send.sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                        {send.clicked_at && <span className="text-blue-500">Clicked {new Date(send.clicked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                        {send.booked_at && <span className="text-emerald-600">Booked {new Date(send.booked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+                        {send.revenue > 0 && <span className="font-medium text-neutral-600">${Math.round(send.revenue)}</span>}
+                      </div>
+                    </div>
+                  ))}
+                  {sendsData.sends?.length === 0 && (
+                    <div className="text-center py-8 text-neutral-400 text-sm">No sends match this filter</div>
+                  )}
+                </div>
+
+                {/* Pagination */}
+                {sendsData.pages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-neutral-400">Page {sendsData.page} of {sendsData.pages} ({sendsData.total} total)</p>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => { const p = sendsPage - 1; setSendsPage(p); loadSendsPage(p) }}
+                        disabled={sendsPage <= 1}
+                        className="px-2 py-1 text-xs rounded border disabled:opacity-30 hover:bg-neutral-50"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        onClick={() => { const p = sendsPage + 1; setSendsPage(p); loadSendsPage(p) }}
+                        disabled={sendsPage >= sendsData.pages}
+                        className="px-2 py-1 text-xs rounded border disabled:opacity-30 hover:bg-neutral-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
         </>
       )}
 

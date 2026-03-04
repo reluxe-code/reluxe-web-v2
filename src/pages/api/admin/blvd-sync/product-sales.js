@@ -314,12 +314,13 @@ function normalizePersonKey(name) {
     .replace(/\s+/g, ' ')
 }
 
-async function resolveExportFileUrl(mode) {
-  if (!PRODUCT_REPORT_ID) {
-    throw new Error('Missing BLVD_PRODUCT_SALES_REPORT_ID env var')
+async function resolveExportFileUrl(mode, overrideReportId) {
+  const reportId = overrideReportId || PRODUCT_REPORT_ID
+  if (!reportId) {
+    throw new Error('Missing BLVD_PRODUCT_SALES_REPORT_ID env var or reportId parameter')
   }
 
-  const reportIdCandidates = buildReportIdCandidates(PRODUCT_REPORT_ID)
+  const reportIdCandidates = buildReportIdCandidates(reportId)
 
   const requestedAt = new Date()
 
@@ -729,7 +730,6 @@ async function handler(req, res) {
       unit_price: r.unit_price,
       discount_amount: r.discount_amount,
       net_sales: r.net_sales,
-      raw: r.raw,
       synced_at: new Date().toISOString(),
     }))
 

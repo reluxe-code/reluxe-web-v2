@@ -197,10 +197,25 @@ async function handler(req, res) {
       .not('boulevard_provider_id', 'is', null)
     const staffMap = new Map((staffRows || []).map((s) => [s.boulevard_provider_id, s.id]))
 
-    // Sync first 2 pages from each location (most recent appointments)
+    // Sync newest appointments from each location.
+    // Boulevard returns appointments in ascending startAt order, so we jump near
+    // the end of the list using a calculated cursor to get the most recent entries.
     for (const loc of LOCATIONS) {
-      let cursor = null
-      for (let page = 0; page < 2; page++) {
+      // Count appointments already synced for this location to estimate cursor offset
+      const { count: localCount } = await db
+        .from('blvd_appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_key', loc.key)
+
+      // Jump toward the end: offset = max(0, knownCount - PAGE_SIZE * 4)
+      // Buffer of 200 appointments covers ~1 week of bookings per location,
+      // then page forward until we run out of data.
+      const startOffset = Math.max(0, (localCount || 0) - PAGE_SIZE * 4)
+      let cursor = startOffset > 0
+        ? Buffer.from(`arrayconnection:${startOffset - 1}`).toString('base64')
+        : null
+
+      for (let page = 0; page < 20; page++) {
         const data = await adminQuery(APPOINTMENTS_QUERY, {
           locationId: loc.urn,
           first: PAGE_SIZE,
@@ -288,7 +303,7 @@ async function handler(req, res) {
           }
         }
 
-        if (!pageInfo.hasNextPage) break
+        if (!pageInfo.hasNextPage || isNearDeadline()) break
         cursor = pageInfo.endCursor
       }
       if (isNearDeadline()) break

@@ -116,18 +116,276 @@ async function handler(req, res) {
     const providerToxRows = await fetchAllRows(() =>
       db
         .from('client_tox_summary')
-        .select('last_provider_staff_id, tox_segment, tox_visits, total_tox_spend, avg_tox_interval_days')
+        .select('client_id, last_provider_staff_id, tox_segment, tox_visits, total_tox_spend, avg_tox_interval_days, last_tox_visit, first_tox_visit')
     )
 
     const providerMap = {}
     for (const row of providerToxRows || []) {
       const pid = row.last_provider_staff_id
       if (!pid) continue
-      if (!providerMap[pid]) providerMap[pid] = { staff_id: pid, patients: 0, on_schedule: 0, total_revenue: 0, intervals: [] }
+      if (!providerMap[pid]) providerMap[pid] = {
+        staff_id: pid, patients: 0, on_schedule: 0, total_revenue: 0,
+        intervals: [], activeIntervals: [],
+        due: 0, overdue: 0, probably_lost: 0, lost: 0,
+      }
       providerMap[pid].patients++
-      if (row.tox_segment === 'on_schedule') providerMap[pid].on_schedule++
+      const seg = row.tox_segment
+      if (seg === 'on_schedule') providerMap[pid].on_schedule++
+      else if (seg === 'due') providerMap[pid].due++
+      else if (seg === 'overdue') providerMap[pid].overdue++
+      else if (seg === 'probably_lost') providerMap[pid].probably_lost++
+      else if (seg === 'lost') providerMap[pid].lost++
       providerMap[pid].total_revenue += Number(row.total_tox_spend || 0)
-      if (row.avg_tox_interval_days) providerMap[pid].intervals.push(row.avg_tox_interval_days)
+      if (row.avg_tox_interval_days) {
+        providerMap[pid].intervals.push(row.avg_tox_interval_days)
+        // Active = on_schedule + due (patients still in their cycle)
+        if (seg === 'on_schedule' || seg === 'due') {
+          providerMap[pid].activeIntervals.push(row.avg_tox_interval_days)
+        }
+      }
+    }
+
+    // 3b. Rebook rate: % of completed tox visits where patient had a future appointment
+    // booked on or before the day of their visit (leading indicator of discipline)
+    const twelveMonthsAgo = new Date(Date.now() - 365 * 86400000).toISOString()
+    const now = new Date().toISOString()
+
+    const toxAppointments = await fetchAllRows(() =>
+      db
+        .from('blvd_appointment_services')
+        .select(`
+          provider_staff_id,
+          appointment_id,
+          price,
+          blvd_appointments!inner (
+            client_id,
+            start_at,
+            status
+          )
+        `)
+        .eq('service_slug', 'tox')
+        .in('blvd_appointments.status', ['completed', 'final'])
+        .gte('blvd_appointments.start_at', twelveMonthsAgo)
+        .lte('blvd_appointments.start_at', now)
+    )
+
+    // Deduplicate: each appointment = 1 treatment (multiple service lines are add-ons)
+    // Group by appointment_id, sum prices, keep one provider/client/date per appointment.
+    const toxApptMap = {}
+    for (const row of toxAppointments || []) {
+      const aid = row.appointment_id
+      if (!toxApptMap[aid]) {
+        toxApptMap[aid] = {
+          appointment_id: aid,
+          provider_staff_id: row.provider_staff_id,
+          price: 0,
+          blvd_appointments: row.blvd_appointments,
+        }
+      }
+      toxApptMap[aid].price += Number(row.price || 0)
+    }
+    const dedupedToxAppts = Object.values(toxApptMap)
+
+    // Group by provider: total completed tox treatments + treatments where client returned
+    const rebookMap = {}
+    const clientVisitDates = {}
+    for (const row of dedupedToxAppts) {
+      const pid = row.provider_staff_id
+      const appt = row.blvd_appointments
+      if (!pid || !appt?.client_id) continue
+      if (!rebookMap[pid]) rebookMap[pid] = { total: 0, rebooked: 0 }
+      rebookMap[pid].total++
+
+      // Track per-client visit dates for this provider
+      const key = `${appt.client_id}:${pid}`
+      if (!clientVisitDates[key]) clientVisitDates[key] = []
+      clientVisitDates[key].push(new Date(appt.start_at).getTime())
+    }
+
+    // A visit "rebooked" if the same client+provider has a later visit in the data
+    for (const [key, dates] of Object.entries(clientVisitDates)) {
+      const pid = key.split(':')[1]
+      dates.sort((a, b) => a - b)
+      // Every visit except the last one counts as "rebooked" (they came back)
+      if (dates.length > 1) {
+        rebookMap[pid].rebooked += dates.length - 1
+      }
+    }
+
+    // 3c. Trailing 12mo treatments per patient — count deduplicated appointments per provider
+    const visits12moMap = {}
+    const providerClientSets = {}
+    for (const row of dedupedToxAppts) {
+      const pid = row.provider_staff_id
+      const appt = row.blvd_appointments
+      if (!pid || !appt?.client_id) continue
+      if (!visits12moMap[pid]) visits12moMap[pid] = 0
+      visits12moMap[pid]++
+      if (!providerClientSets[pid]) providerClientSets[pid] = new Set()
+      providerClientSets[pid].add(appt.client_id)
+    }
+
+    // 3d. Monthly trend computation — per provider × month
+    // Build: { providerId: { 'YYYY-MM': { appts, clients, intervals[], revenue } } }
+    const monthlyData = {}
+    const monthlyClientVisits = {} // key: 'pid:clientId' → sorted visit timestamps
+
+    for (const row of dedupedToxAppts) {
+      const pid = row.provider_staff_id
+      const appt = row.blvd_appointments
+      if (!pid || !appt?.client_id || !appt.start_at) continue
+
+      const month = appt.start_at.slice(0, 7) // 'YYYY-MM'
+      const mkey = `${pid}:${month}`
+      if (!monthlyData[mkey]) monthlyData[mkey] = { pid, month, appts: 0, clients: new Set(), revenue: 0 }
+      monthlyData[mkey].appts++
+      monthlyData[mkey].clients.add(appt.client_id)
+      monthlyData[mkey].revenue += row.price
+
+      // Track all visit timestamps per client+provider for interval computation
+      const cvKey = `${pid}:${appt.client_id}`
+      if (!monthlyClientVisits[cvKey]) monthlyClientVisits[cvKey] = []
+      monthlyClientVisits[cvKey].push({ ts: new Date(appt.start_at).getTime(), month })
+    }
+
+    // Sort each client's visits and compute per-visit intervals
+    const monthlyIntervals = {} // 'pid:month' → intervals[]
+    const monthlyRebook = {} // 'pid:month' → { total, rebooked }
+
+    for (const [cvKey, visits] of Object.entries(monthlyClientVisits)) {
+      const pid = cvKey.split(':')[0]
+      visits.sort((a, b) => a.ts - b.ts)
+
+      for (let i = 0; i < visits.length; i++) {
+        const v = visits[i]
+        const mkey = `${pid}:${v.month}`
+
+        // Interval: days since previous visit for this client+provider
+        if (i > 0) {
+          const gap = Math.round((v.ts - visits[i - 1].ts) / 86400000)
+          if (gap > 0 && gap < 365) { // sanity bound
+            if (!monthlyIntervals[mkey]) monthlyIntervals[mkey] = []
+            monthlyIntervals[mkey].push(gap)
+          }
+        }
+
+        // Rebook: did this visit lead to a future visit?
+        if (!monthlyRebook[mkey]) monthlyRebook[mkey] = { total: 0, rebooked: 0 }
+        monthlyRebook[mkey].total++
+        if (i < visits.length - 1) monthlyRebook[mkey].rebooked++
+      }
+    }
+
+    // Assemble monthly trends per provider
+    const providerTrends = {} // providerId → [ { month, appts, patients, avg_interval, rebook_pct, revenue } ]
+    for (const [mkey, md] of Object.entries(monthlyData)) {
+      const { pid, month } = md
+      if (!providerTrends[pid]) providerTrends[pid] = []
+
+      const intervals = monthlyIntervals[mkey] || []
+      const avgInterval = intervals.length > 0
+        ? Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length)
+        : null
+
+      const rb = monthlyRebook[mkey]
+      const rebookPct = rb && rb.total > 0 ? Math.round((rb.rebooked / rb.total) * 100) : null
+
+      providerTrends[pid].push({
+        month,
+        appts: md.appts,
+        patients: md.clients.size,
+        avg_interval: avgInterval,
+        rebook_pct: rebookPct,
+        revenue: Math.round(md.revenue || 0),
+      })
+    }
+
+    // Sort each provider's months chronologically
+    for (const pid of Object.keys(providerTrends)) {
+      providerTrends[pid].sort((a, b) => a.month.localeCompare(b.month))
+    }
+
+    // Compute trend direction (last 3 months avg vs prior 3 months avg)
+    function computeTrend(months, field) {
+      if (months.length < 4) return null // need at least 4 months of data
+      const recent = months.slice(-3)
+      const prior = months.slice(-6, -3)
+      if (prior.length < 2) return null
+
+      const recentVals = recent.map(m => m[field]).filter(v => v != null)
+      const priorVals = prior.map(m => m[field]).filter(v => v != null)
+      if (!recentVals.length || !priorVals.length) return null
+
+      const recentAvg = recentVals.reduce((a, b) => a + b, 0) / recentVals.length
+      const priorAvg = priorVals.reduce((a, b) => a + b, 0) / priorVals.length
+      const delta = recentAvg - priorAvg
+      const pctChange = priorAvg !== 0 ? (delta / priorAvg) * 100 : 0
+
+      // Threshold: 5% change = meaningful trend
+      if (Math.abs(pctChange) < 5) return 'stable'
+      return delta > 0 ? 'up' : 'down'
+    }
+
+    // 3e. Interval drift cohort per patient: are intervals stable, expanding, or shrinking?
+    // For each patient with 3+ visits, compare the last 3 inter-visit gaps
+    const driftCohorts = {} // providerId → { stable, expanding, shrinking }
+    for (const [cvKey, visits] of Object.entries(monthlyClientVisits)) {
+      const pid = cvKey.split(':')[0]
+      if (visits.length < 3) continue // need 3+ visits to measure drift
+
+      visits.sort((a, b) => a.ts - b.ts)
+      // Compute last 3 gaps (need 4 visits for 3 gaps, or 3 visits for 2 gaps)
+      const gaps = []
+      for (let i = 1; i < visits.length; i++) {
+        gaps.push(Math.round((visits[i].ts - visits[i - 1].ts) / 86400000))
+      }
+      const recentGaps = gaps.slice(-3) // last 2-3 gaps
+      if (recentGaps.length < 2) continue
+
+      if (!driftCohorts[pid]) driftCohorts[pid] = { stable: 0, expanding: 0, shrinking: 0 }
+
+      // Compare first recent gap to last recent gap
+      const firstGap = recentGaps[0]
+      const lastGap = recentGaps[recentGaps.length - 1]
+      const drift = lastGap - firstGap
+
+      if (Math.abs(drift) <= 10) driftCohorts[pid].stable++
+      else if (drift > 10) driftCohorts[pid].expanding++ // intervals getting longer = bad
+      else driftCohorts[pid].shrinking++ // intervals getting shorter = good
+    }
+
+    // 3f. First-year retention: % of new tox patients who return
+    // "New" = first_tox_visit within relevant windows
+    const firstYearRetention = {} // providerId → { new_4mo, returned_4mo, new_12mo, returned_12mo }
+    const nowMs = Date.now()
+    for (const row of providerToxRows || []) {
+      const pid = row.last_provider_staff_id
+      if (!pid || !row.first_tox_visit) continue
+      if (!firstYearRetention[pid]) firstYearRetention[pid] = { new_4mo: 0, returned_4mo: 0, new_12mo: 0, returned_12mo: 0 }
+
+      const firstVisitMs = new Date(row.first_tox_visit).getTime()
+      const daysSinceFirst = (nowMs - firstVisitMs) / 86400000
+
+      // 4-month cohort: patients whose first visit was 120-365 days ago (enough time to return)
+      if (daysSinceFirst >= 120 && daysSinceFirst <= 365) {
+        firstYearRetention[pid].new_4mo++
+        if (row.tox_visits >= 2) firstYearRetention[pid].returned_4mo++
+      }
+
+      // 12-month cohort: patients whose first visit was 365-730 days ago
+      if (daysSinceFirst >= 365 && daysSinceFirst <= 730) {
+        firstYearRetention[pid].new_12mo++
+        if (row.tox_visits >= 2) firstYearRetention[pid].returned_12mo++
+      }
+    }
+
+    // 3g. Revenue per active tox patient (trailing 12mo)
+    const revenue12moMap = {}
+    for (const row of dedupedToxAppts) {
+      const pid = row.provider_staff_id
+      if (!pid) continue
+      if (!revenue12moMap[pid]) revenue12moMap[pid] = 0
+      revenue12moMap[pid] += row.price
     }
 
     // Fetch staff names
@@ -141,19 +399,130 @@ async function handler(req, res) {
       staffLookup = Object.fromEntries((staffRows || []).map((s) => [s.id, s]))
     }
 
+    const TARGET_INTERVAL = 95
+
     const provider_leaderboard = Object.values(providerMap)
-      .map((p) => ({
-        staff_id: p.staff_id,
-        name: staffLookup[p.staff_id]?.name || 'Unknown',
-        title: staffLookup[p.staff_id]?.title || '',
-        patients: p.patients,
-        retention_pct: p.patients > 0 ? Math.round((p.on_schedule / p.patients) * 100) : 0,
-        total_revenue: Math.round(p.total_revenue),
-        avg_interval_days: p.intervals.length > 0
+      .map((p) => {
+        const activeAvg = p.activeIntervals.length > 0
+          ? Math.round(p.activeIntervals.reduce((a, b) => a + b, 0) / p.activeIntervals.length)
+          : null
+        const allAvg = p.intervals.length > 0
           ? Math.round(p.intervals.reduce((a, b) => a + b, 0) / p.intervals.length)
-          : null,
-      }))
+          : null
+        const winback = p.overdue + p.probably_lost + p.lost
+
+        // Lost revenue from interval drift
+        const activePatients = p.on_schedule + p.due
+        const totalVisits = providerToxRows.filter(r => r.last_provider_staff_id === p.staff_id).reduce((s, r) => s + (r.tox_visits || 0), 0)
+        const avgRevenuePerVisit = totalVisits > 0 ? p.total_revenue / totalVisits : 0
+        let projectedMonthlyLift = null
+        if (activeAvg && activeAvg > TARGET_INTERVAL && activePatients > 0) {
+          const extraVisitsPerYear = (365 / TARGET_INTERVAL - 365 / activeAvg) * activePatients
+          projectedMonthlyLift = Math.round((extraVisitsPerYear / 12) * avgRevenuePerVisit)
+        }
+
+        // Rebook rate (trailing 12mo)
+        const rb = rebookMap[p.staff_id]
+        const rebookRate = rb && rb.total > 0
+          ? Math.round((rb.rebooked / rb.total) * 100)
+          : null
+
+        // Visits per patient per year (trailing 12mo)
+        const visits12mo = visits12moMap[p.staff_id] || 0
+        const clients12mo = providerClientSets[p.staff_id]?.size || 0
+        const visitsPerPatientYear = clients12mo > 0
+          ? Math.round((visits12mo / clients12mo) * 10) / 10
+          : null
+
+        // Monthly trends + direction
+        const months = providerTrends[p.staff_id] || []
+        const intervalTrend = computeTrend(months, 'avg_interval')
+        const rebookTrend = computeTrend(months, 'rebook_pct')
+        const volumeTrend = computeTrend(months, 'patients')
+
+        // Interval drift cohort: stable / expanding / shrinking
+        const dc = driftCohorts[p.staff_id] || { stable: 0, expanding: 0, shrinking: 0 }
+        const driftTotal = dc.stable + dc.expanding + dc.shrinking
+
+        // First-year retention
+        const fyr = firstYearRetention[p.staff_id] || { new_4mo: 0, returned_4mo: 0, new_12mo: 0, returned_12mo: 0 }
+        const retention4mo = fyr.new_4mo > 0 ? Math.round((fyr.returned_4mo / fyr.new_4mo) * 100) : null
+        const retention12mo = fyr.new_12mo > 0 ? Math.round((fyr.returned_12mo / fyr.new_12mo) * 100) : null
+
+        // Revenue per active tox patient (trailing 12mo)
+        const rev12mo = revenue12moMap[p.staff_id] || 0
+        const revenuePerActivePatient = activePatients > 0
+          ? Math.round(rev12mo / activePatients)
+          : null
+
+        return {
+          staff_id: p.staff_id,
+          name: staffLookup[p.staff_id]?.name || 'Unknown',
+          title: staffLookup[p.staff_id]?.title || '',
+          patients: p.patients,
+          retention_pct: p.patients > 0 ? Math.round((p.on_schedule / p.patients) * 100) : 0,
+          total_revenue: Math.round(p.total_revenue),
+          avg_interval_days: allAvg,
+          active_avg_interval: activeAvg,
+          target_interval: TARGET_INTERVAL,
+          drift: activeAvg ? activeAvg - TARGET_INTERVAL : null,
+          winback_opps: winback,
+          projected_monthly_lift: projectedMonthlyLift,
+          rebook_rate: rebookRate,
+          visits_per_patient_year: visitsPerPatientYear,
+          // Interval drift cohort (patients with 3+ visits)
+          cadence_drift: driftTotal > 0 ? {
+            stable: dc.stable,
+            expanding: dc.expanding,
+            shrinking: dc.shrinking,
+            expanding_pct: Math.round((dc.expanding / driftTotal) * 100),
+          } : null,
+          // First-year retention
+          first_year: {
+            retention_4mo: retention4mo,     // % returning within 120d
+            retention_12mo: retention12mo,   // % returning within 1yr
+            cohort_4mo: fyr.new_4mo,         // how many new patients in window
+            cohort_12mo: fyr.new_12mo,
+          },
+          // Revenue per active patient (trailing 12mo)
+          revenue_per_active: revenuePerActivePatient,
+          revenue_12mo: Math.round(rev12mo),
+          // Trend directions: 'up', 'down', 'stable', or null
+          trends: {
+            interval: intervalTrend,   // down = improving
+            rebook: rebookTrend,       // up = improving
+            volume: volumeTrend,       // up = improving
+          },
+          // Monthly detail for expandable row
+          monthly: months,
+        }
+      })
       .sort((a, b) => b.retention_pct - a.retention_pct)
+
+    // Compute provider variance summary (spread across key metrics)
+    const leaderboardForVariance = provider_leaderboard.filter(p => p.patients >= 10)
+    const providerVariance = leaderboardForVariance.length >= 2 ? {
+      rebook_range: {
+        min: Math.min(...leaderboardForVariance.map(p => p.rebook_rate).filter(v => v != null)),
+        max: Math.max(...leaderboardForVariance.map(p => p.rebook_rate).filter(v => v != null)),
+        spread: null,
+      },
+      interval_range: {
+        min: Math.min(...leaderboardForVariance.filter(p => p.active_avg_interval).map(p => p.active_avg_interval)),
+        max: Math.max(...leaderboardForVariance.filter(p => p.active_avg_interval).map(p => p.active_avg_interval)),
+        spread: null,
+      },
+      retention_range: {
+        min: Math.min(...leaderboardForVariance.map(p => p.retention_pct)),
+        max: Math.max(...leaderboardForVariance.map(p => p.retention_pct)),
+        spread: null,
+      },
+    } : null
+    if (providerVariance) {
+      providerVariance.rebook_range.spread = providerVariance.rebook_range.max - providerVariance.rebook_range.min
+      providerVariance.interval_range.spread = providerVariance.interval_range.max - providerVariance.interval_range.min
+      providerVariance.retention_range.spread = providerVariance.retention_range.max - providerVariance.retention_range.min
+    }
 
     // 4. Patient list (paginated, filterable)
     // Search: views no longer have PII columns — search blvd_clients first
@@ -268,6 +637,7 @@ async function handler(req, res) {
       summary,
       tox_types,
       provider_leaderboard,
+      provider_variance: providerVariance,
       patients: {
         data: patient_list,
         total: patientCount || 0,

@@ -87,9 +87,16 @@ async function handler(req, res) {
       })
     }
 
+    // Extract client name from sms_body as fallback
+    let clientName = null
+    if (entry.sms_body) {
+      const m = entry.sms_body.match(/^Hi (\w+),/)
+      if (m && m[1] !== 'there') clientName = m[1]
+    }
+
     return res.json({
       entry,
-      client,
+      client: client ? { ...client, name: clientName } : { name: clientName },
       touch_history: touchHistory,
       upcoming_appointments: upcomingAppointments,
     })

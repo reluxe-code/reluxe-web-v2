@@ -8,10 +8,78 @@ import { buildSmsBody, pickVariant } from '@/lib/concierge/smsBuilder'
 import { generateConciergeLink } from '@/lib/concierge/linkService'
 import { withAdminAuth } from '@/lib/adminAuth'
 import { resolveClientBatch } from '@/services/phiProxy'
+import { adminQuery } from '@/server/blvdAdmin'
+import { LOCATION_IDS } from '@/server/blvd'
 import { encryptPhone, decryptPhone } from '@/lib/piiHash'
 import { safeError } from '@/lib/logSanitizer'
 
 export const config = { maxDuration: 60 }
+
+// ── Boulevard live appointment check ──
+// Verifies candidates don't have upcoming appointments directly from Boulevard.
+// This catches appointments that haven't synced to our DB yet.
+const LOCATION_URNS = Object.entries(LOCATION_IDS).map(([key, uuid]) => ({
+  key,
+  urn: `urn:blvd:Location:${uuid}`,
+}))
+
+const CANCELLED_STATES = new Set(['CANCELLED', 'NO_SHOW'])
+
+async function filterBookedCandidates(candidates) {
+  if (!candidates.length) return candidates
+
+  // Collect unique boulevard_ids
+  const blvdIdSet = new Set()
+  for (const c of candidates) {
+    if (c.boulevard_id) blvdIdSet.add(c.boulevard_id)
+  }
+  if (!blvdIdSet.size) return candidates
+
+  const blvdIds = [...blvdIdSet]
+  const bookedBlvdIds = new Set()
+
+  // For each location, batch-check candidates' upcoming appointments
+  for (const loc of LOCATION_URNS) {
+    // Check 10 clients at a time using GraphQL aliases
+    for (let i = 0; i < blvdIds.length; i += 10) {
+      const batch = blvdIds.slice(i, i + 10)
+      const fragments = batch.map((clientId, idx) =>
+        `loc${idx}: appointments(locationId: "${loc.urn}", clientId: "${clientId}", first: 5) {
+          edges { node { id state startAt } }
+        }`
+      )
+
+      try {
+        const data = await adminQuery(`query { ${fragments.join('\n')} }`)
+        const now = new Date()
+
+        batch.forEach((clientId, idx) => {
+          const edges = data?.[`loc${idx}`]?.edges || []
+          for (const edge of edges) {
+            const appt = edge.node
+            if (!appt?.startAt) continue
+            if (CANCELLED_STATES.has(appt.state)) continue
+            if (new Date(appt.startAt) >= now) {
+              bookedBlvdIds.add(clientId)
+              break
+            }
+          }
+        })
+      } catch (err) {
+        safeError('[concierge/generate] Boulevard appointment check error:', err.message)
+      }
+    }
+  }
+
+  if (!bookedBlvdIds.size) return candidates
+
+  const filtered = candidates.filter((c) => !bookedBlvdIds.has(c.boulevard_id))
+  const removed = candidates.length - filtered.length
+  if (removed > 0) {
+    safeError(`[concierge/generate] Filtered ${removed} candidates with upcoming Boulevard appointments`)
+  }
+  return filtered
+}
 
 const COHORT_FUNCTIONS = {
   tox_journey: computeToxJourney,
@@ -91,6 +159,10 @@ async function handler(req, res) {
         cohortCounts[cohortKey] = { computed: 0, error: err.message }
       }
     }
+
+    // 5b. Live Boulevard check — filter out candidates with upcoming appointments
+    // that may not have synced to our DB yet
+    allCandidates = await filterBookedCandidates(allCandidates)
 
     // 6. Apply anti-spam shield
     const { ready, flagged } = await applyAntiSpam(db, allCandidates, engineConfig)

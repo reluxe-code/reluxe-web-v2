@@ -149,22 +149,29 @@ s.pricingMatrix = {
 };
 
 s.faq = [
-  { q: 'Will it look natural?', a: 'Yes—our goal is balance and harmony, not “done”.' },
-  { q: 'How long does swelling last?', a: 'Usually 24–72 hours; lips may swell a bit longer.' },
-  { q: 'Can it be dissolved?', a: 'Yes, HA fillers can be reversed with hyaluronidase.' },
-  { q: 'How many syringes do I need?', a: 'Depends on area and goals; we’ll design a plan together.' },
-  { q: 'When can I exercise?', a: 'Wait 24 hours to minimize swelling and bruising.' },
+  { q: 'What are dermal fillers and how do they work?', a: 'Dermal fillers are injectable gels — most made with hyaluronic acid (HA), a substance naturally found in your skin — that restore volume, smooth lines, and enhance facial contours. They work immediately to add structure and hydration to areas like lips, cheeks, jawline, and nasolabial folds. Results are visible right away and improve as swelling settles.' },
+  { q: 'How much do dermal fillers cost at RELUXE?', a: 'Filler pricing at RELUXE starts at $650 per syringe for Revanesse Versa (lips, lines) and ranges up to $800 for Juvéderm Voluma and Volux (cheeks, jawline). VIP Members save on every syringe. We also offer $100 off when you purchase 2+ syringes in the same visit. Your provider will recommend the right product and quantity during your consult.' },
+  { q: 'Will dermal fillers look natural?', a: 'Yes — our injectors prioritize balance and facial harmony, not an overfilled look. We use face-mapping techniques and take a "less is more" approach, building gradually. The goal is always "you, just refreshed." We can always add more at your follow-up if you want a bit extra.' },
+  { q: 'How long do dermal fillers last?', a: 'Duration depends on the product and area treated. Lip fillers typically last 6-12 months. Cheek and jawline fillers (like Voluma) can last 12-18 months. RHA fillers are designed to move naturally with your expressions and last 12-15 months. Your provider will explain expected longevity for your specific treatment plan.' },
+  { q: 'Does getting filler hurt?', a: 'Most fillers contain lidocaine (a numbing agent) built into the gel, so discomfort is minimal. We also apply numbing cream before treatment and use vibration devices for comfort. Most patients rate the experience at 3-4 out of 10. Lip filler is typically the most sensitive area, but it\'s still very manageable.' },
+  { q: 'What is the downtime after filler?', a: 'Expect mild swelling for 24-72 hours, with lips potentially swelling a bit longer. Bruising is possible but not guaranteed. Most patients return to work and social activities the same day. Avoid intense exercise for 24 hours, and skip alcohol the day of treatment to minimize bruising.' },
+  { q: 'How many syringes of filler will I need?', a: 'It depends on the area and your goals. Lips typically need 1 syringe, cheeks usually 1-2 per side, and a full facial balancing plan might use 3-5 syringes total. We always start conservative and build over time. Your provider will design a plan during your free consultation.' },
+  { q: 'Can dermal fillers be reversed?', a: 'Yes — hyaluronic acid fillers (which is what we primarily use) can be dissolved quickly and safely with an enzyme called hyaluronidase. This is one of the biggest advantages of HA fillers: if you\'re not happy or there\'s an issue, it\'s fully reversible.' },
+  { q: 'What is the difference between filler and Botox?', a: 'They work differently and treat different concerns. Botox relaxes muscles to smooth dynamic wrinkles (lines caused by expressions). Filler adds volume to restore structure, plump lips, or smooth static lines (visible at rest). Many patients get both — Botox for the upper face and filler for the mid/lower face — for a comprehensive refresh.' },
+  { q: 'Which filler brand is best for me?', a: 'We carry RHA (great for dynamic areas), Juvéderm (excellent structure), Restylane (versatile), and Revanesse Versa (value-focused). RHA moves naturally with your expressions. Juvéderm Voluma provides strong cheek lift. Restylane Kysse is ideal for soft, natural lips. Your provider will match the best product to each area being treated.' },
+  { q: 'Who is a good candidate for filler?', a: 'Most healthy adults looking to restore volume, enhance features, or smooth lines are good candidates. Filler is popular for lips, cheeks, jawline, nasolabial folds, under-eyes, and chin. You should avoid filler if you\'re pregnant, nursing, have an active skin infection, or have certain autoimmune conditions. A free consult will confirm the best plan.' },
+  { q: 'Can I combine filler with other treatments?', a: 'Yes — filler pairs perfectly with tox (Botox/Dysport) for a "liquid facelift" approach. Many patients also combine filler with Morpheus8 for skin tightening, or with facials for skin health. We can treat tox and filler in the same appointment for convenience.' },
 ];
 // Overview: keep to 1–2 short paragraphs
 s.overview = {
-  p1: 'Fillers are a quick, non-surgical way to smooth lines, restore volume, and enhance features like lips, cheeks, and jawline all while still looking like you. Most are made with hyaluronic acid (a substance your skin loves), results are visible right away, and there’s little to no downtime.',
-  p2: 'At your visit, we’ll chat about your goals and design a natural, balanced plan that fits your features and budget. Our nurse injectors prioritizes comfort and safety, then shares simple aftercare so your results settle beautifully over the next few days.',
+  p1: 'Fillers are a quick, non-surgical way to smooth lines, restore volume, and enhance features like lips, cheeks, and jawline all while still looking like you. Most are made with hyaluronic acid (a substance your skin loves), results are visible right away, and there\'s little to no downtime.',
+  p2: 'At your visit, we\'ll chat about your goals and design a natural, balanced plan that fits your features and budget. Our nurse injectors prioritizes comfort and safety, then shares simple aftercare so your results settle beautifully over the next few days.',
 };
 
 // Why RELUXE: 3–6 bullets max
 s.whyReluxe = [
   { title: 'Expert injectors & providers', body: 'Safety-first care from an anatomy-focused Nurse Practitioner and trained injectors, with personalized treatment plans for your features and goals.' },
-  { title: 'Natural results & education', body: 'Face-mapping consults, honest guidance on product choices and cost, and a “you, just refreshed” approach—never overfilled.' },
+  { title: 'Natural results & education', body: 'Face-mapping consults, honest guidance on product choices and cost, and a "you, just refreshed" approach—never overfilled.' },
   { title: 'The RELUXE Difference', body: 'Comfort-first experience (numbing + vibration), photo-guided plans with 2-week check-ins, clear pricing with flexible pay (Cherry), and two convenient locations.' },
 ];
 s.flexEverything = {

@@ -1,6 +1,6 @@
 // src/pages/admin/intelligence/tox.js
 // Tox Intelligence Engine — segment health, provider retention, patient list.
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { adminFetch } from '@/lib/adminFetch'
 import { useClientJit, jitDisplayName, jitContactInfo } from '@/hooks/useClientJit'
@@ -45,10 +45,21 @@ function StatCard({ label, value, sub, color }) {
   )
 }
 
+// Trend arrow: shows direction + color based on whether the direction is good or bad
+function TrendArrow({ direction, goodDirection = 'up' }) {
+  if (!direction) return null
+  if (direction === 'stable') return <span className="text-neutral-400 text-[10px] ml-1" title="Stable (last 3mo vs prior 3mo)">→</span>
+  const isGood = direction === goodDirection
+  const color = isGood ? 'text-emerald-500' : 'text-red-500'
+  const arrow = direction === 'up' ? '↑' : '↓'
+  return <span className={`${color} text-[10px] font-bold ml-1`} title={`${direction === 'up' ? 'Increasing' : 'Decreasing'} (last 3mo vs prior 3mo)`}>{arrow}</span>
+}
+
 export default function ToxEngine() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [expandedProvider, setExpandedProvider] = useState(null)
 
   // Filters
   const [location, setLocation] = useState('all')
@@ -176,7 +187,15 @@ export default function ToxEngine() {
   return (
     <AdminLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Tox Intelligence Engine</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Tox Intelligence Engine</h1>
+          <a
+            href="/admin/intelligence/tox-yearly"
+            className="text-xs text-violet-600 hover:text-violet-800 font-medium"
+          >
+            View Yearly Report &rarr;
+          </a>
+        </div>
         <p className="text-sm text-neutral-500 mt-1">
           Track tox patient health, retention, and provider performance. Segment patients by schedule status.
         </p>
@@ -372,43 +391,256 @@ export default function ToxEngine() {
           </div>
         )}
 
+        {/* Provider Variance Callout */}
+        {data?.provider_variance && (
+          <div className="bg-gradient-to-r from-red-50 to-amber-50 rounded-xl border border-red-200 p-4">
+            <p className="text-sm font-semibold text-red-800 mb-2">Provider Consistency Gap</p>
+            <div className="grid grid-cols-3 gap-4 text-xs">
+              <div>
+                <p className="text-neutral-500">Rebook Rate Spread</p>
+                <p className="text-lg font-bold text-red-700">{data.provider_variance.rebook_range.spread}pp</p>
+                <p className="text-neutral-400">{data.provider_variance.rebook_range.min}% → {data.provider_variance.rebook_range.max}%</p>
+              </div>
+              <div>
+                <p className="text-neutral-500">Interval Spread</p>
+                <p className="text-lg font-bold text-red-700">{data.provider_variance.interval_range.spread}d</p>
+                <p className="text-neutral-400">{data.provider_variance.interval_range.min}d → {data.provider_variance.interval_range.max}d</p>
+              </div>
+              <div>
+                <p className="text-neutral-500">Retention Spread</p>
+                <p className="text-lg font-bold text-red-700">{data.provider_variance.retention_range.spread}pp</p>
+                <p className="text-neutral-400">{data.provider_variance.retention_range.min}% → {data.provider_variance.retention_range.max}%</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-red-600 mt-2">This variance represents scripting inconsistency. Standardizing to best-performer levels unlocks the projected monthly lifts below.</p>
+          </div>
+        )}
+
         {/* Provider Retention Leaderboard */}
         {data?.provider_leaderboard?.length > 0 && (
-          <div className="bg-white rounded-xl border overflow-hidden">
-            <div className="px-4 py-3 bg-neutral-50 border-b rounded-t-xl">
+          <div className="bg-white rounded-xl border overflow-hidden lg:col-span-2">
+            <div className="px-4 py-3 bg-neutral-50 border-b rounded-t-xl flex items-center justify-between">
               <h2 className="text-sm font-semibold">Provider Tox Retention</h2>
+              <span className="text-[10px] text-neutral-400 font-medium">Target: {data.provider_leaderboard[0]?.target_interval || 95}d interval</span>
             </div>
-            <table className="w-full text-sm">
-              <thead className="bg-neutral-50 border-b">
-                <tr>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Provider</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Patients</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">On-Schedule %</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Avg Interval</th>
-                  <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.provider_leaderboard.map((p) => (
-                  <tr key={p.staff_id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                    <td className="px-4 py-2">
-                      <p className="font-medium">{p.name}</p>
-                      {p.title && <p className="text-xs text-neutral-400">{p.title}</p>}
-                    </td>
-                    <td className="px-4 py-2 text-right text-neutral-600">{p.patients}</td>
-                    <td className="px-4 py-2 text-right">
-                      <span className={`font-medium ${p.retention_pct >= 60 ? 'text-emerald-600' : p.retention_pct >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
-                        {p.retention_pct}%
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right text-neutral-600">
-                      {p.avg_interval_days ? `${p.avg_interval_days}d` : '—'}
-                    </td>
-                    <td className="px-4 py-2 text-right text-neutral-600">${p.total_revenue.toLocaleString()}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[900px]">
+                <thead className="bg-neutral-50 border-b">
+                  <tr>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-neutral-600">Provider</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Patients</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">On-Sched %</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Rebook %</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Active Avg</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Visits/Yr</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Winback</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Revenue</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-neutral-600">Monthly Lift</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.provider_leaderboard.map((p) => {
+                    const isExpanded = expandedProvider === p.staff_id
+                    return (
+                      <React.Fragment key={p.staff_id}>
+                        <tr
+                          className="border-b hover:bg-neutral-50 cursor-pointer"
+                          onClick={() => setExpandedProvider(isExpanded ? null : p.staff_id)}
+                        >
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-[10px] text-neutral-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>▶</span>
+                              <div>
+                                <p className="font-medium">{p.name}</p>
+                                {p.title && <p className="text-xs text-neutral-400">{p.title}</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2 text-right text-neutral-600">
+                            {p.patients}
+                            <TrendArrow direction={p.trends?.volume} goodDirection="up" />
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <span className={`font-medium ${p.retention_pct >= 60 ? 'text-emerald-600' : p.retention_pct >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                              {p.retention_pct}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {p.rebook_rate != null ? (
+                              <>
+                                <span className={`font-medium ${p.rebook_rate >= 70 ? 'text-emerald-600' : p.rebook_rate >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                  {p.rebook_rate}%
+                                </span>
+                                <TrendArrow direction={p.trends?.rebook} goodDirection="up" />
+                              </>
+                            ) : '—'}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {p.active_avg_interval != null ? (
+                              <div className="inline-flex items-center">
+                                <span className={`font-medium ${p.drift != null && p.drift > 15 ? 'text-red-600' : p.drift != null && p.drift > 5 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                  {p.active_avg_interval}d
+                                </span>
+                                {p.drift != null && p.drift > 0 && (
+                                  <span className="text-[10px] text-red-400 ml-1">+{p.drift}</span>
+                                )}
+                                <TrendArrow direction={p.trends?.interval} goodDirection="down" />
+                              </div>
+                            ) : (
+                              <span className="text-neutral-400">{p.avg_interval_days ? `${p.avg_interval_days}d` : '—'}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {p.visits_per_patient_year != null ? (
+                              <span className={`font-medium ${p.visits_per_patient_year >= 3.5 ? 'text-emerald-600' : p.visits_per_patient_year >= 2.5 ? 'text-amber-600' : 'text-red-600'}`}>
+                                {p.visits_per_patient_year}
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {p.winback_opps > 0 ? (
+                              <span className="text-red-600 font-medium">{p.winback_opps}</span>
+                            ) : (
+                              <span className="text-neutral-400">0</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-right text-neutral-600">${p.total_revenue.toLocaleString()}</td>
+                          <td className="px-4 py-2 text-right">
+                            {p.projected_monthly_lift != null && p.projected_monthly_lift > 0 ? (
+                              <span className="text-violet-600 font-medium">+${p.projected_monthly_lift.toLocaleString()}</span>
+                            ) : (
+                              <span className="text-emerald-500 text-xs">on target</span>
+                            )}
+                          </td>
+                        </tr>
+                        {/* Expandable detail panel */}
+                        {isExpanded && (
+                          <tr>
+                            <td colSpan={9} className="bg-neutral-50 px-4 py-3 border-b">
+                              {/* Insight cards row */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                                {/* Revenue per active patient */}
+                                <div className="bg-white rounded-lg border p-2.5">
+                                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Rev / Active Patient</p>
+                                  <p className={`text-lg font-bold ${p.revenue_per_active >= 1500 ? 'text-emerald-600' : p.revenue_per_active >= 1000 ? 'text-amber-600' : 'text-red-600'}`}>
+                                    {p.revenue_per_active != null ? `$${p.revenue_per_active.toLocaleString()}` : '—'}
+                                  </p>
+                                  <p className="text-[10px] text-neutral-400">Elite: $1,500–$2,000/yr</p>
+                                </div>
+                                {/* Cadence drift */}
+                                <div className="bg-white rounded-lg border p-2.5">
+                                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Cadence Drift</p>
+                                  {p.cadence_drift ? (
+                                    <>
+                                      <div className="flex items-baseline gap-2 mt-0.5">
+                                        <span className="text-red-600 font-bold text-lg">{p.cadence_drift.expanding_pct}%</span>
+                                        <span className="text-[10px] text-neutral-400">expanding</span>
+                                      </div>
+                                      <div className="flex gap-2 text-[10px] mt-1">
+                                        <span className="text-emerald-600">{p.cadence_drift.shrinking} shrinking</span>
+                                        <span className="text-neutral-400">{p.cadence_drift.stable} stable</span>
+                                        <span className="text-red-500">{p.cadence_drift.expanding} expanding</span>
+                                      </div>
+                                    </>
+                                  ) : <p className="text-neutral-300 text-sm mt-1">Not enough data</p>}
+                                </div>
+                                {/* First-year retention: 4mo */}
+                                <div className="bg-white rounded-lg border p-2.5">
+                                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">4-Month Return</p>
+                                  <p className={`text-lg font-bold ${p.first_year.retention_4mo >= 70 ? 'text-emerald-600' : p.first_year.retention_4mo >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                    {p.first_year.retention_4mo != null ? `${p.first_year.retention_4mo}%` : '—'}
+                                  </p>
+                                  <p className="text-[10px] text-neutral-400">
+                                    {p.first_year.cohort_4mo > 0 ? `${p.first_year.cohort_4mo} new patients` : 'No data'}
+                                    {' · '}Top clinics: 70%+
+                                  </p>
+                                </div>
+                                {/* First-year retention: 12mo */}
+                                <div className="bg-white rounded-lg border p-2.5">
+                                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">12-Month Retention</p>
+                                  <p className={`text-lg font-bold ${p.first_year.retention_12mo >= 55 ? 'text-emerald-600' : p.first_year.retention_12mo >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                                    {p.first_year.retention_12mo != null ? `${p.first_year.retention_12mo}%` : '—'}
+                                  </p>
+                                  <p className="text-[10px] text-neutral-400">
+                                    {p.first_year.cohort_12mo > 0 ? `${p.first_year.cohort_12mo} new patients` : 'No data'}
+                                    {' · '}Top clinics: 55–65%
+                                  </p>
+                                </div>
+                              </div>
+                              {/* Monthly table */}
+                              {p.monthly?.length > 0 && (
+                              <>
+                              <p className="text-xs font-semibold text-neutral-500 mb-2">Monthly Trend</p>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="text-neutral-400">
+                                      <th className="text-left py-1 pr-3 font-medium">Month</th>
+                                      <th className="text-right py-1 px-2 font-medium">Appts</th>
+                                      <th className="text-right py-1 px-2 font-medium">Patients</th>
+                                      <th className="text-right py-1 px-2 font-medium">Avg Interval</th>
+                                      <th className="text-right py-1 px-2 font-medium">Rebook %</th>
+                                      <th className="text-right py-1 px-2 font-medium">Revenue</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {p.monthly.map((m, i) => {
+                                      const prev = i > 0 ? p.monthly[i - 1] : null
+                                      const intervalDelta = prev?.avg_interval && m.avg_interval ? m.avg_interval - prev.avg_interval : null
+                                      const rebookDelta = prev?.rebook_pct != null && m.rebook_pct != null ? m.rebook_pct - prev.rebook_pct : null
+                                      return (
+                                        <tr key={m.month} className="border-t border-neutral-100">
+                                          <td className="py-1.5 pr-3 font-medium text-neutral-700">
+                                            {new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                          </td>
+                                          <td className="text-right py-1.5 px-2 text-neutral-600">{m.appts}</td>
+                                          <td className="text-right py-1.5 px-2 text-neutral-600">{m.patients}</td>
+                                          <td className="text-right py-1.5 px-2">
+                                            {m.avg_interval != null ? (
+                                              <>
+                                                <span className={m.avg_interval <= 95 ? 'text-emerald-600' : m.avg_interval <= 110 ? 'text-amber-600' : 'text-red-600'}>
+                                                  {m.avg_interval}d
+                                                </span>
+                                                {intervalDelta != null && intervalDelta !== 0 && (
+                                                  <span className={`ml-1 ${intervalDelta < 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                                                    {intervalDelta > 0 ? '+' : ''}{intervalDelta}
+                                                  </span>
+                                                )}
+                                              </>
+                                            ) : <span className="text-neutral-300">—</span>}
+                                          </td>
+                                          <td className="text-right py-1.5 px-2">
+                                            {m.rebook_pct != null ? (
+                                              <>
+                                                <span className={m.rebook_pct >= 70 ? 'text-emerald-600' : m.rebook_pct >= 50 ? 'text-amber-600' : 'text-red-600'}>
+                                                  {m.rebook_pct}%
+                                                </span>
+                                                {rebookDelta != null && rebookDelta !== 0 && (
+                                                  <span className={`ml-1 ${rebookDelta > 0 ? 'text-emerald-500' : 'text-red-400'}`}>
+                                                    {rebookDelta > 0 ? '+' : ''}{rebookDelta}
+                                                  </span>
+                                                )}
+                                              </>
+                                            ) : <span className="text-neutral-300">—</span>}
+                                          </td>
+                                          <td className="text-right py-1.5 px-2 text-neutral-600">${m.revenue.toLocaleString()}</td>
+                                        </tr>
+                                      )
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                              </>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
