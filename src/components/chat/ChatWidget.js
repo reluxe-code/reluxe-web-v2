@@ -35,6 +35,13 @@ export default function ChatWidget() {
       .catch(() => setEnabled(true)) // fail open
   }, [])
 
+  // Listen for toggle event from MobileStickyFooter chat button
+  useEffect(() => {
+    const handler = () => { setIsOpen(prev => !prev); checkTimeout() }
+    window.addEventListener('reluxe:toggle-chat', handler)
+    return () => window.removeEventListener('reluxe:toggle-chat', handler)
+  }, [])
+
   // Reset session after 30min inactivity
   const checkTimeout = useCallback(() => {
     if (Date.now() - lastActivityRef.current > SESSION_TIMEOUT_MS) {
@@ -169,7 +176,7 @@ export default function ChatWidget() {
         )}
       </AnimatePresence>
 
-      {/* FAB (Floating Action Button) */}
+      {/* FAB (Floating Action Button) — desktop only, mobile uses footer bar */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -181,7 +188,7 @@ export default function ChatWidget() {
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             onClick={toggleChat}
             aria-label="Open chat"
-            className="chat-fab"
+            className="chat-fab hidden lg:flex"
             style={{
               position: 'fixed',
               bottom: 24,
@@ -194,7 +201,6 @@ export default function ChatWidget() {
               background: 'linear-gradient(135deg, #7C3AED, #C026D3)',
               color: '#FAF8F5',
               cursor: 'pointer',
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: '0 4px 20px rgba(124,58,237,0.4)',

@@ -1,6 +1,7 @@
 // src/components/location/ReluxeLocationsMap.js
 import { useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import 'leaflet/dist/leaflet.css'
 
 // React-Leaflet (client only) — wrap named exports as default
 const MapContainer = dynamic(

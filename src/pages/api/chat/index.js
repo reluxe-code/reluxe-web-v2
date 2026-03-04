@@ -4,19 +4,23 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { getClientIp, applyRateLimit } from '@/lib/rateLimit'
-import { chatLimiters } from '@/lib/chat/chatRateLimit'
+import { chatLimiters, MAX_SESSION_TOKENS } from '@/lib/chat/chatRateLimit'
 import { buildSystemPrompt } from '@/lib/chat/chatSystemPrompt'
 import { TOOL_DEFINITIONS, executeTool } from '@/lib/chat/chatTools'
 import { getServiceClient } from '@/lib/supabase'
 import { safeLog, safeError } from '@/lib/logSanitizer'
 import { createHmac } from 'crypto'
 
+// Allow up to 60s for tool-heavy booking flows (requires Vercel Pro)
+export const config = { maxDuration: 60 }
+
 const CHAT_ENABLED = process.env.CHAT_ENABLED !== 'false'
 const MODEL = 'claude-haiku-4-5-20251001'
-const MAX_TOKENS = 512
+const MAX_TOKENS = 768
 const MAX_MESSAGES = 50
-const MAX_TOOL_ROUNDS = 3
+const MAX_TOOL_ROUNDS = 5
 const SLIDING_WINDOW = 20 // Send last N messages to Claude
+const MAX_MESSAGE_CHARS = 800 // Per-message content length cap
 
 let anthropic = null
 function getAnthropicClient() {
@@ -67,8 +71,9 @@ export default async function handler(req, res) {
 
   const ip = getClientIp(req)
 
-  // Rate limit: messages per minute
+  // Rate limit: messages per minute + daily cap
   if (applyRateLimit(req, res, chatLimiters.message, ip)) return
+  if (applyRateLimit(req, res, chatLimiters.daily, ip)) return
 
   const { sessionId, messages, locationKey, referrerPath } = req.body
 
@@ -82,6 +87,16 @@ export default async function handler(req, res) {
       error: 'This conversation has reached its limit. Please start a new chat.',
       maxMessages: MAX_MESSAGES,
     })
+  }
+
+  // Validate message content size — block oversized payloads before they hit Anthropic
+  for (const msg of messages) {
+    if (typeof msg.content !== 'string' || msg.content.length > MAX_MESSAGE_CHARS) {
+      return res.status(400).json({ error: 'Message too long. Please keep messages under 800 characters.' })
+    }
+    if (!['user', 'assistant'].includes(msg.role)) {
+      return res.status(400).json({ error: 'Invalid message format.' })
+    }
   }
 
   try {
@@ -121,6 +136,24 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── Per-session token budget — block runaway conversations ──
+    if (currentSessionId && !isNewSession) {
+      const { data: session } = await supabase
+        .from('chat_sessions')
+        .select('total_input_tokens, total_output_tokens')
+        .eq('session_token', currentSessionId)
+        .single()
+
+      if (session) {
+        const spent = (session.total_input_tokens || 0) + (session.total_output_tokens || 0)
+        if (spent >= MAX_SESSION_TOKENS) {
+          return res.status(429).json({
+            error: 'This conversation has used its budget. Please start a new chat or call (317) 763-1142.',
+          })
+        }
+      }
+    }
+
     // ── Build prompt + call Claude ──
     const systemPrompt = buildSystemPrompt()
 
@@ -154,31 +187,33 @@ export default async function handler(req, res) {
         break
       }
 
-      // Extract tool use blocks from the response
+      // Extract tool use blocks and execute in parallel
       const toolUseBlocks = response.content.filter(b => b.type === 'tool_use')
-      const toolResults = []
+      toolUseBlocks.forEach(t => {
+        safeLog('[chat] tool call', { tool: t.name, round: toolRound })
+        toolNames.push(t.name)
+      })
 
-      for (const toolUse of toolUseBlocks) {
-        safeLog('[chat] tool call', { tool: toolUse.name, round: toolRound })
-        toolNames.push(toolUse.name)
-
-        try {
-          const result = await executeTool(toolUse.name, toolUse.input)
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: toolUse.id,
-            content: JSON.stringify(result),
-          })
-        } catch (err) {
-          safeError('[chat] tool error', { tool: toolUse.name, error: err.message })
-          toolResults.push({
-            type: 'tool_result',
-            tool_use_id: toolUse.id,
-            content: JSON.stringify({ error: 'An error occurred. Please try again.' }),
-            is_error: true,
-          })
-        }
-      }
+      const toolResults = await Promise.all(
+        toolUseBlocks.map(async (toolUse) => {
+          try {
+            const result = await executeTool(toolUse.name, toolUse.input)
+            return {
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify(result),
+            }
+          } catch (err) {
+            safeError('[chat] tool error', { tool: toolUse.name, error: err.message })
+            return {
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({ error: 'An error occurred. Please try again.' }),
+              is_error: true,
+            }
+          }
+        })
+      )
 
       // Continue conversation with tool results
       response = await client.messages.create({

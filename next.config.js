@@ -1,12 +1,15 @@
 // next.config.js
 const path = require('path');
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   staticPageGenerationTimeout: 180, // was 60
   reactStrictMode: true,
   images: {
-    unoptimized: true, // needed for static export with next/image
+    formats: ['image/avif', 'image/webp'],
     domains: ['djmixsffpwnvgmsccrhu.supabase.co'],
     remotePatterns: [
       { protocol: 'https', hostname: 'djmixsffpwnvgmsccrhu.supabase.co', pathname: '/**' },
@@ -268,4 +271,4 @@ const nextConfig = {
   // In that case, handle redirects at your hosting layer (e.g., Vercel project redirects, Nginx/Apache).
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

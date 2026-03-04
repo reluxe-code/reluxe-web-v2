@@ -2,7 +2,7 @@
 // Tool definitions for Claude and the executor that dispatches to existing Boulevard/Bird APIs.
 
 import { createCartWithItem } from '@/server/blvd'
-import { getCached, setCache } from '@/server/cache'
+import { getServiceClient } from '@/lib/supabase'
 import { getCircuitState } from '@/server/circuitBreaker'
 import { sendSMS } from '@/lib/bird'
 import { CHAT_KNOWLEDGE } from './chatKnowledge'
@@ -23,7 +23,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'get_providers',
-    description: 'Get providers at a location who offer a specific service, including their next available date.',
+    description: 'Get providers at a location who offer a specific service. Returns provider names, titles, and IDs. Does NOT include experience level — present all providers and let the user choose.',
     input_schema: {
       type: 'object',
       properties: {
@@ -34,30 +34,17 @@ export const TOOL_DEFINITIONS = [
     },
   },
   {
-    name: 'get_available_dates',
-    description: 'Get available booking dates for a service at a location, optionally with a specific provider. Returns an array of date strings.',
+    name: 'check_availability',
+    description: 'Check available dates and time slots for a service at a location, optionally filtered by provider. Returns dates (next 14 days) and, if a date is specified, time slots for that date. Combines date and time lookup in one call.',
     input_schema: {
       type: 'object',
       properties: {
         locationKey: { type: 'string', enum: ['westfield', 'carmel'] },
-        serviceItemId: { type: 'string', description: 'Boulevard service item ID (from service booking map)' },
+        serviceItemId: { type: 'string', description: 'Boulevard service item ID (from get_providers or service booking map)' },
         staffProviderId: { type: 'string', description: 'Optional: Boulevard provider ID to filter by' },
+        date: { type: 'string', description: 'Optional: specific date (YYYY-MM-DD) to also fetch time slots for' },
       },
       required: ['locationKey', 'serviceItemId'],
-    },
-  },
-  {
-    name: 'get_available_times',
-    description: 'Get available time slots for a specific date. Returns array of { startTime } objects.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        locationKey: { type: 'string', enum: ['westfield', 'carmel'] },
-        serviceItemId: { type: 'string' },
-        date: { type: 'string', description: 'Date in YYYY-MM-DD format' },
-        staffProviderId: { type: 'string', description: 'Optional provider ID' },
-      },
-      required: ['locationKey', 'serviceItemId', 'date'],
     },
   },
   {
@@ -129,11 +116,8 @@ export async function executeTool(name, args) {
     case 'get_providers':
       return getProviders(args.locationKey, args.serviceSlug)
 
-    case 'get_available_dates':
-      return getAvailableDates(args.locationKey, args.serviceItemId, args.staffProviderId)
-
-    case 'get_available_times':
-      return getAvailableTimes(args.locationKey, args.serviceItemId, args.date, args.staffProviderId)
+    case 'check_availability':
+      return checkAvailability(args.locationKey, args.serviceItemId, args.staffProviderId, args.date)
 
     case 'create_cart':
       return createCart(args.locationKey, args.serviceItemId, args.date, args.startTime, args.staffProviderId)
@@ -178,70 +162,77 @@ function searchServices(query) {
   return { results: unique }
 }
 
+// Fast provider lookup — queries Supabase staff table directly (no Boulevard API calls)
 async function getProviders(locationKey, serviceSlug) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000'
+    const sb = getServiceClient()
+    const { data: staff, error } = await sb
+      .from('staff')
+      .select('name, title, boulevard_provider_id, boulevard_service_map, locations')
+      .eq('status', 'published')
+      .not('boulevard_provider_id', 'is', null)
 
-    const url = `${baseUrl}/api/blvd/providers/for-service?serviceSlug=${encodeURIComponent(serviceSlug)}&locationKey=${encodeURIComponent(locationKey)}`
-    const res = await fetch(url)
-    if (!res.ok) return { error: 'Could not fetch providers', degraded: true }
-
-    const data = await res.json()
-    if (data.degraded) return { error: 'Booking system temporarily unavailable', degraded: true }
-
-    return {
-      providers: (data || []).map(p => ({
-        name: p.name,
-        title: p.title,
-        boulevardProviderId: p.boulevardProviderId,
-        serviceItemId: p.serviceItemId,
-        nextAvailableDate: p.nextAvailableDate,
-      })),
+    if (error || !staff?.length) {
+      return { providers: [], message: 'No providers found. Try a different service or location.' }
     }
+
+    // Filter to providers who have this service at this location
+    const providers = staff
+      .filter(s => {
+        const map = s.boulevard_service_map || {}
+        if (!map[serviceSlug]?.[locationKey]) return false
+        const locs = Array.isArray(s.locations) ? s.locations : []
+        return locs.some(l => {
+          const locSlug = (l.slug || l.title || '').toLowerCase()
+          return locSlug.includes(locationKey)
+        })
+      })
+      .map(s => ({
+        name: s.name,
+        title: s.title,
+        boulevardProviderId: s.boulevard_provider_id,
+        serviceItemId: s.boulevard_service_map[serviceSlug][locationKey],
+      }))
+
+    if (providers.length === 0) {
+      return { providers: [], message: `No providers found for this service at ${locationKey}.` }
+    }
+
+    return { providers }
   } catch (err) {
     return { error: 'Failed to look up providers' }
   }
 }
 
-async function getAvailableDates(locationKey, serviceItemId, staffProviderId) {
+// Combined dates + times lookup — creates ONE cart, fetches dates, and optionally times
+async function checkAvailability(locationKey, serviceItemId, staffProviderId, date) {
   try {
     const circuit = getCircuitState()
-    if (circuit.state === 'OPEN') return { error: 'Booking system temporarily busy', degraded: true }
+    if (circuit.state === 'OPEN') return { error: 'Booking system temporarily busy. Please try again in a moment.', degraded: true }
 
     const result = await createCartWithItem(locationKey, serviceItemId, staffProviderId)
-    if (result.staffMismatch) return { dates: [], message: 'This provider does not offer this service at this location.' }
+    if (result.staffMismatch) return { dates: [], times: [], message: 'This provider does not offer this service at this location.' }
 
     const cart = result.cart
+
+    // Always fetch available dates
     const dates = await cart.getBookableDates({})
     const dateStrings = (dates || []).map(d => d.date).slice(0, 14)
 
-    return { dates: dateStrings }
-  } catch (err) {
-    return { error: 'Could not check availability. The booking system may be temporarily busy.' }
-  }
-}
+    const response = { dates: dateStrings }
 
-async function getAvailableTimes(locationKey, serviceItemId, date, staffProviderId) {
-  try {
-    const circuit = getCircuitState()
-    if (circuit.state === 'OPEN') return { error: 'Booking system temporarily busy', degraded: true }
-
-    const result = await createCartWithItem(locationKey, serviceItemId, staffProviderId)
-    if (result.staffMismatch) return { times: [] }
-
-    const cart = result.cart
-    const times = await cart.getBookableTimes({ date })
-
-    return {
-      times: (times || []).map(t => ({
+    // If a specific date was requested, also fetch times (saves a round-trip)
+    if (date) {
+      const times = await cart.getBookableTimes({ date })
+      response.times = (times || []).map(t => ({
         id: t.id || `${date}T${t.startTime}`,
         startTime: t.startTime,
-      })),
+      }))
     }
+
+    return response
   } catch (err) {
-    return { error: 'Could not check time slots.' }
+    return { error: 'Could not check availability. The booking system may be temporarily busy.' }
   }
 }
 

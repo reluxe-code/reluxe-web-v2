@@ -18,7 +18,9 @@ export default function ChatMessages({ messages, isLoading }) {
     <div
       style={{
         flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
+        overflowX: 'hidden',
         padding: '12px 0',
         backgroundColor: '#FFFFFF',
         WebkitOverflowScrolling: 'touch',

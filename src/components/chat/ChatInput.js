@@ -3,6 +3,8 @@
 
 import { useState, useRef } from 'react'
 
+const MAX_CHARS = 800
+
 export default function ChatInput({ onSend, disabled }) {
   const [value, setValue] = useState('')
   const inputRef = useRef(null)
@@ -41,8 +43,9 @@ export default function ChatInput({ onSend, disabled }) {
         ref={inputRef}
         type="text"
         value={value}
-        onChange={e => setValue(e.target.value)}
+        onChange={e => setValue(e.target.value.slice(0, MAX_CHARS))}
         onKeyDown={handleKeyDown}
+        maxLength={MAX_CHARS}
         placeholder={disabled ? 'Waiting for response...' : 'Type a message...'}
         disabled={disabled}
         autoComplete="off"

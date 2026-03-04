@@ -152,6 +152,93 @@ const membershipLines = [
   '',
   '- No long-term commitment, cancel anytime',
   '- Members get special tox pricing (lower per-unit rates)',
+  '',
+  '## Membership Terms',
+  '- Monthly recurring billing until canceled',
+  '- Credits are non-transferable and have no cash value',
+  '- Unused credits roll over as long as membership is active, or for 90 days after cancellation',
+  '- Cancellation requires at least one full billing cycle notice',
+  '- One pause (1-2 months) permitted per 12-month period, subject to approval',
+  '- Discounts cannot be combined unless explicitly stated',
+]
+
+// ── 8. Location-Specific Service Availability ──
+const locationAvailLines = [
+  '## Westfield-Only Services (NOT available at Carmel)',
+  '- CO2 Laser Resurfacing (co2) — Carmel alternative: Morpheus8',
+  '- HydraFacial (hydrafacial) — Carmel alternative: Glo2Facial or Signature Facials',
+  '- EvolveX Body Contouring (evolvex) — Carmel alternative: Morpheus8 Body',
+  '- VascuPen (vascupen) — Carmel alternative: IPL Photofacial',
+  '- ClearSkin (clearskin) — Carmel alternative: Facials or Chemical Peels',
+  '- Salt Sauna (salt-sauna)',
+  '- Massage (massage) — Carmel alternative: Facials',
+  '- Skin IQ (skin-iq)',
+  '',
+  '## Available at Both Locations',
+  '- Tox (Botox, Dysport, Jeuveau, Daxxify)',
+  '- Dermal Fillers (Juvederm, Restylane, Versa, RHA)',
+  '- Sculptra',
+  '- Facial Balancing Consultation',
+  '- SkinPen Microneedling',
+  '- Morpheus8',
+  '- Opus Plasma',
+  '- IPL Photofacial',
+  '- ClearLift',
+  '- Glo2Facial',
+  '- Signature Facials',
+  '- Laser Hair Removal',
+  '- Peels (BioRepeel, Micro Peel, Perfect Dermapeel)',
+  '',
+  'IMPORTANT: If a user wants a Westfield-only service at Carmel, tell them it is only at Westfield and suggest the Carmel alternative.',
+]
+
+// ── 9. Tox Comparison ──
+const toxCompareLines = [
+  '## Neuromodulator (Tox) Comparison',
+  '',
+  'Botox:',
+  '- Onset: 3-7 days | Duration: 3-4 months | Spread: Standard',
+  '- Pricing: $14/unit, $9/unit additional (new), $10/unit additional (returning), $10/unit member',
+  '- Best for: Balanced control, gold standard',
+  '',
+  'Jeuveau:',
+  '- Onset: 2-5 days | Duration: 3-4 months | Spread: Standard',
+  '- Pricing: $12/unit, $9.50/unit member, $200 for first 20 units after $40 Evolus Rewards',
+  '- Best for: Smooth aesthetic finish, great value',
+  '',
+  'Dysport:',
+  '- Onset: 2-5 days | Duration: 3-4 months | Spread: Slightly broader',
+  '- Pricing: $4.50/unit, $4.00/unit member, 50 units foundation for $225',
+  '- Best for: Larger areas (forehead), natural look',
+  '',
+  'Daxxify:',
+  '- Onset: 2-4 days | Duration: 4-6 months (varies) | Spread: Tight',
+  '- Pricing: $7/unit, $5/unit member, 40 units foundation for $280',
+  '- Best for: Longevity focus, fewer appointments per year',
+  '',
+  'NOTE: Dysport uses ~2.5x the units of Botox for the same area. Do NOT compare unit-for-unit pricing across brands. Guide users to the right brand based on their stated priorities (budget, longevity, speed of onset) but do NOT make a personalized medical recommendation.',
+]
+
+// ── 10. Financing & Gift Cards ──
+const financeLines = [
+  '## Payment Methods',
+  '- All major credit cards, Apple Pay, CareCredit',
+  '- SpaFinder gift cards accepted at both locations for any service',
+  '- RELUXE gift cards (digital and physical, never expire)',
+  '',
+  '## Cherry Financing',
+  '- Flexible monthly payment plans for treatments',
+  '- No hard credit check (will not impact credit score)',
+  '- Fast approval, even for first-time patients',
+  '- Apply at: withcherry.com/patient/apply/?partner_id=reluxemedspa',
+  '- Eligible for: Botox, fillers, facials, laser hair removal, Morpheus8, EvolveX, memberships, wedding/event prep',
+  '',
+  '## Package & Voucher Policy',
+  '- Packages valid for 24 months from purchase date',
+  '- Dollar-value gift cards valid for 5 years (federal law)',
+  '- Packages lock in services at purchase price',
+  '- Transfers require approval; some services must be used by original purchaser',
+  '- Medical holds may be considered case-by-case with documentation',
 ]
 
 // ── Assemble ──
@@ -167,6 +254,15 @@ ${membershipLines.join('\n')}
 
 === LOCATIONS ===
 ${locLines.join('\n')}
+
+=== LOCATION-SPECIFIC SERVICE AVAILABILITY ===
+${locationAvailLines.join('\n')}
+
+=== TOX BRAND COMPARISON ===
+${toxCompareLines.join('\n')}
+
+=== FINANCING & GIFT CARDS ===
+${financeLines.join('\n')}
 
 === FAQS ===
 ${faqLines.join('\n')}

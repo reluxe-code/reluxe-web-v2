@@ -2,9 +2,8 @@
 import Head from 'next/head'
 import PropTypes from 'prop-types'
 import Layout from '../components/layout/layout'
-import { ScrollToTop } from '../components/scroll'
+
 import '../styles/globals.css'
-import 'leaflet/dist/leaflet.css'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { useGAUX } from '@/hooks/useGAUX'
@@ -144,6 +143,8 @@ function MyApp({ Component, pageProps }) {
             <Head>
               <meta name="viewport" content="width=device-width, initial-scale=1" />
               <link rel="shortcut icon" href="/favicon.png" />
+              <link rel="preconnect" href="https://fonts.googleapis.com" />
+              <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
               <link rel="stylesheet" href={fontPairings.bold.googleUrl} />
               {/* Default OG image — overridden by any page that sets its own og:image */}
               <meta property="og:image" content="https://reluxemedspa.com/images/og/new-default-1200x630.png" />
@@ -155,7 +156,6 @@ function MyApp({ Component, pageProps }) {
             </Head>
 
             <Component {...pageProps} />
-            <ScrollToTop />
             <LocationChooserModal />
             <AnnouncementModal />
           </Layout>

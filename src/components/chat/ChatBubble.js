@@ -20,12 +20,15 @@ export default function ChatBubble({ role, content }) {
       <div
         style={{
           maxWidth: '85%',
+          minWidth: 0,
           padding: '10px 14px',
           borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
           fontSize: 14,
           lineHeight: 1.5,
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          overflow: 'hidden',
           ...(isUser
             ? {
                 background: 'linear-gradient(135deg, #7C3AED, #C026D3)',
