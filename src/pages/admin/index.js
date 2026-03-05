@@ -56,6 +56,8 @@ export default function AdminDashboard() {
   const [concierge, setConcierge] = useState(null)
   const [loading, setLoading] = useState(true)
   const [location, setLocation] = useState('total')
+  const [flushing, setFlushing] = useState(false)
+  const [flushResult, setFlushResult] = useState(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -107,7 +109,38 @@ export default function AdminDashboard() {
           >
             {loading ? 'Loading...' : 'Refresh'}
           </button>
+          <button
+            onClick={async () => {
+              setFlushing(true); setFlushResult(null)
+              try {
+                // Clear client-side sessionStorage cache
+                if (typeof sessionStorage !== 'undefined') {
+                  const keys = Object.keys(sessionStorage).filter(k => k.startsWith('blvd:'))
+                  keys.forEach(k => sessionStorage.removeItem(k))
+                }
+                // Clear server-side cache + revalidate key pages
+                const res = await adminFetch('/api/admin/flush-cache', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ paths: ['/', '/services', '/specials', '/team', '/pricing'] }),
+                })
+                const data = await res.json()
+                setFlushResult(`Cleared ${data.serverCacheCleared} server entries, revalidated ${data.pagesRevalidated?.length || 0} pages`)
+                setTimeout(() => setFlushResult(null), 4000)
+              } catch (e) {
+                setFlushResult('Flush failed: ' + e.message)
+                setTimeout(() => setFlushResult(null), 4000)
+              } finally { setFlushing(false) }
+            }}
+            disabled={flushing}
+            className="px-4 py-2 bg-violet-600 text-white rounded-lg text-xs font-medium hover:bg-violet-700 disabled:opacity-50"
+          >
+            {flushing ? 'Flushing...' : 'Flush Cache'}
+          </button>
         </div>
+        {flushResult && (
+          <p className="text-xs text-violet-600 mt-1 text-right">{flushResult}</p>
+        )}
       </div>
 
       {/* ── Revenue Pulse ──────────────────────────────────── */}

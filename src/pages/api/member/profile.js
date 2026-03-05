@@ -195,7 +195,7 @@ export default async function handler(req, res) {
 
     // 5. All staff (for resolving names + Boulevard booking IDs)
     db.from('staff')
-      .select('id, name, title, slug, featured_image, transparent_bg, boulevard_provider_id, boulevard_service_map')
+      .select('id, name, title, slug, featured_image, transparent_bg, boulevard_provider_id, boulevard_service_map, allow_online_booking')
       .then(r => r.data || []).catch(() => []),
 
     // 6. Product purchases
@@ -418,7 +418,7 @@ export default async function handler(req, res) {
 
   for (const [staffId, count] of providerEntries) {
     const staff = staffMap[staffId]
-    if (staff) {
+    if (staff && staff.allow_online_booking !== false) {
       result.providers.push({
         name: staff.name,
         title: staff.title,

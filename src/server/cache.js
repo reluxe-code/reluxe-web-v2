@@ -28,3 +28,20 @@ export function setCache(key, data) {
     oldest.forEach(([k]) => store.delete(k));
   }
 }
+
+/**
+ * Clear all cached entries (or entries matching an optional prefix).
+ * @returns {number} Number of entries cleared.
+ */
+export function clearCache(prefix) {
+  if (!prefix) {
+    const count = store.size;
+    store.clear();
+    return count;
+  }
+  let count = 0;
+  for (const key of store.keys()) {
+    if (key.startsWith(prefix)) { store.delete(key); count++; }
+  }
+  return count;
+}

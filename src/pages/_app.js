@@ -140,7 +140,10 @@ function MyApp({ Component, pageProps }) {
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <link rel="shortcut icon" href="/favicon.png" />
         </Head>
-        {getLayout(<Component {...pageProps} />)}
+        <SearchProvider>
+          {getLayout(<Component {...pageProps} />)}
+          <SearchOverlay />
+        </SearchProvider>
         <ChatWidget />
         <Analytics />
         <SpeedInsights />

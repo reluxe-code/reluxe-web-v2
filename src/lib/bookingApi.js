@@ -221,9 +221,31 @@ export async function fetchServiceOptions({ locationKey, serviceItemId, staffPro
  * @returns {{ data: object[] | null, degraded?: boolean }}
  */
 export async function fetchProvidersAtLocation({ locationKey }) {
-  const effectiveLocation = locationKey === 'all' ? 'westfield' : locationKey
+  if (locationKey === 'all') {
+    // Fetch both locations and merge, deduplicating by staff id
+    try {
+      const [wRes, cRes] = await Promise.all([
+        cachedFetch('/api/blvd/providers/at-location?locationKey=westfield'),
+        cachedFetch('/api/blvd/providers/at-location?locationKey=carmel'),
+      ])
+      const [wData, cData] = await Promise.all([wRes.json(), cRes.json()])
+      const wArr = Array.isArray(wData) ? wData : []
+      const cArr = Array.isArray(cData) ? cData : []
+      const seen = new Set()
+      const merged = []
+      for (const p of [...wArr, ...cArr]) {
+        const key = p.boulevardProviderId || p.id || p.name
+        if (seen.has(key)) continue
+        seen.add(key)
+        merged.push(p)
+      }
+      return { data: merged }
+    } catch {
+      return { data: [] }
+    }
+  }
   try {
-    const res = await cachedFetch(`/api/blvd/providers/at-location?locationKey=${effectiveLocation}`)
+    const res = await cachedFetch(`/api/blvd/providers/at-location?locationKey=${locationKey}`)
     const data = await res.json()
     return { data: Array.isArray(data) ? data : [] }
   } catch {

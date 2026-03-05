@@ -3,10 +3,10 @@
 // Eliminates repeat API calls within a browser session for static-ish data.
 
 const CACHE_DURATIONS = {
-  '/api/blvd/services/menu': 30 * 60 * 1000,        // 30 min
-  '/api/blvd/services/options': 30 * 60 * 1000,      // 30 min
-  '/api/blvd/bundles': 60 * 60 * 1000,               // 1 hour
-  '/api/blvd/providers/at-location': 15 * 60 * 1000,  // 15 min
+  '/api/blvd/services/menu': 15 * 60 * 1000,         // 15 min
+  '/api/blvd/services/options': 10 * 60 * 1000,      // 10 min
+  '/api/blvd/bundles': 30 * 60 * 1000,               // 30 min
+  '/api/blvd/providers/at-location': 10 * 60 * 1000,  // 10 min
 }
 
 const inflight = new Map()

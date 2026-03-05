@@ -30,9 +30,9 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = `options:${locationKey}:${serviceItemId}:${staffProviderId || 'any'}`
-  const cached = getCached(cacheKey, 3_600_000) // 1 hr — options are semi-static
+  const cached = getCached(cacheKey, 600_000) // 10 min
   if (cached && !cached.stale) {
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200')
+    res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=1200')
     return res.json(cached.data)
   }
 

@@ -464,13 +464,17 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
     refreshProfile()
   }, [refreshProfile])
 
-  // ── Rebook shortcuts (for auth users) ──
+  // ── Rebook shortcuts (for auth users) — filtered to current location ──
   const recentServices = useMemo(() => {
     if (!profile?.visits?.length) return []
     const seen = new Map()
     for (const visit of profile.visits) {
       for (const svc of visit.services || []) {
         if (!svc.slug || seen.has(svc.slug)) continue
+        // Check if this service is bookable at the current location
+        const providerMap = svc.provider?.serviceMap || profile?.providers?.find(p => p.staffId === svc.provider?.staffId)?.serviceMap || {}
+        const hasAtLocation = providerMap[svc.slug]?.[primaryLocation]
+        if (!hasAtLocation && primaryLocation !== 'all') continue
         seen.set(svc.slug, {
           slug: svc.slug,
           name: svc.name,
@@ -484,16 +488,19 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
       if (seen.size >= 5) break
     }
     return [...seen.values()]
-  }, [profile?.visits])
+  }, [profile?.visits, profile?.providers, primaryLocation])
 
   // ── Handle rebook shortcut ──
   const handleRebook = useCallback((svc) => {
     const provider = svc.provider
-    // Resolve service item ID from provider's service map
-    const serviceItemId = provider?.serviceMap?.[svc.slug]?.[primaryLocation]
-      || (profile?.providers?.find(p => p.staffId === provider?.staffId)?.serviceMap?.[svc.slug]?.[primaryLocation])
+    // Resolve service item ID — try current location, then the visit's original location
+    const providerMap = provider?.serviceMap || profile?.providers?.find(p => p.staffId === provider?.staffId)?.serviceMap || {}
+    const serviceItemId = providerMap[svc.slug]?.[primaryLocation]
+      || providerMap[svc.slug]?.[svc.location]
     if (!serviceItemId) {
-      // Fall back to categories view
+      // Clear stale state and fall back to categories view
+      dispatch({ type: 'SELECT_SERVICE', service: null })
+      dispatch({ type: 'SELECT_PROVIDER', provider: null })
       dispatch({ type: 'NAVIGATE', step: 'CATEGORIES' })
       return
     }
@@ -686,16 +693,28 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
                         ))}
                       </div>
                     ) : (
-                      <button
-                        onClick={switchLocation}
-                        style={{
-                          fontFamily: fonts?.body, fontSize: '0.6875rem', fontWeight: 600,
-                          color: '#A78BFA', background: 'none', border: 'none',
-                          cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.25rem 0',
-                        }}
-                      >
-                        Switch to {LOCATION_INFO[otherLocation]?.label || otherLocation}
-                      </button>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          onClick={() => openBookingModal('all')}
+                          style={{
+                            fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600,
+                            color: '#A78BFA', background: `${colors.violet}12`, border: `1px solid ${colors.violet}25`,
+                            borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.25rem 0.5rem',
+                          }}
+                        >
+                          All
+                        </button>
+                        <button
+                          onClick={switchLocation}
+                          style={{
+                            fontFamily: fonts?.body, fontSize: '0.625rem', fontWeight: 600,
+                            color: '#A78BFA', background: `${colors.violet}12`, border: `1px solid ${colors.violet}25`,
+                            borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.25rem 0.5rem',
+                          }}
+                        >
+                          {LOCATION_INFO[otherLocation]?.label || otherLocation}
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -705,6 +724,11 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
                 {/* Selection pills */}
                 {step !== 'HOME' && step !== 'BOOKED' && (selectedService || selectedProvider) && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                    {isAllLocations && selectedTime?.locationKey && (
+                      <span style={pillStyle(fonts)}>
+                        {LOCATION_INFO[selectedTime.locationKey]?.label || selectedTime.locationKey}
+                      </span>
+                    )}
                     {selectedProvider && (
                       <span style={pillStyle(fonts)}>
                         {selectedProvider.name}
@@ -867,6 +891,7 @@ export default function BookingFlowModal({ isOpen, onClose, locationKey, initial
                             dispatch({ type: 'NAVIGATE', step: selectedProvider ? 'DATE_TIME' : 'PROVIDER_SELECT' })
                           }}
                           fonts={fonts}
+                          serviceName={selectedService?.name || ''}
                         />
                       )}
                     </motion.div>
@@ -1496,11 +1521,26 @@ function ProviderList({ providers, fonts, onSelectProvider }) {
   )
 }
 
-function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue, onSkip, fonts }) {
+function parsePriceDelta(priceDelta) {
+  if (!priceDelta || priceDelta === '$0' || priceDelta === '$0.00') return 0
+  const raw = parseFloat(String(priceDelta).replace(/[^0-9.-]/g, ''))
+  if (isNaN(raw) || raw === 0) return 0
+  // Boulevard priceDelta is in cents (e.g. "25000" = $250.00)
+  return raw / 100
+}
+function fmtPrice(n) {
+  if (n == null || n === 0) return '$0'
+  return n % 1 === 0 ? `$${n}` : `$${n.toFixed(2)}`
+}
+
+function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue, onSkip, fonts, serviceName }) {
   if (!optionGroups?.length) return null
 
   const [openGroup, setOpenGroup] = useState(null)
   const dropdownRef = useRef(null)
+
+  // Detect laser hair removal for 50%-off-2nd-area pricing
+  const isLHR = /laser.*hair|hair.*removal/i.test(serviceName || '')
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -1537,11 +1577,11 @@ function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue
             {/* Label row */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
               <p style={{ fontFamily: fonts?.body, fontSize: '0.8125rem', fontWeight: 600, color: colors.white, margin: 0 }}>
-                {group.name}
+                {group.name}{isRequired && <span style={{ color: '#f87171', marginLeft: 2 }}>*</span>}
               </p>
               {group.maxLimit && (
                 <span style={{ fontFamily: fonts?.body, fontSize: '0.6875rem', color: isRequired ? '#A78BFA' : 'rgba(250,248,245,0.4)' }}>
-                  {isRadio ? 'choose 1' : `up to ${group.maxLimit}`}
+                  {isRadio ? (isRequired ? 'required' : 'choose 1') : `up to ${group.maxLimit}`}
                 </span>
               )}
             </div>
@@ -1584,6 +1624,17 @@ function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue
               }}>
                 {group.options.map((opt, idx) => {
                   const isSelected = selectedOptions.some(o => o.id === opt.id)
+                  const price = parsePriceDelta(opt.priceDelta)
+
+                  // For LHR multi-select groups: highest-priced area is full price, rest are 50% off
+                  const selectedInGroup = (group.options || []).filter(o => selectedOptions.some(s => s.id === o.id))
+                  const maxPrice = selectedInGroup.length > 1
+                    ? Math.max(...selectedInGroup.map(o => parsePriceDelta(o.priceDelta)))
+                    : 0
+                  const isHighest = isSelected && price === maxPrice
+                  const showHalfOff = isLHR && !isRadio && isSelected && selectedInGroup.length > 1 && !isHighest && price > 0
+                  const displayPrice = showHalfOff ? price / 2 : price
+
                   return (
                     <button
                       key={opt.id}
@@ -1615,12 +1666,34 @@ function OptionsStep({ optionGroups, selectedOptions, onToggleOption, onContinue
                       }}>
                         {isSelected && <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M10 3L4.5 8.5L2 6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                       </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontWeight: 500, color: isSelected ? colors.white : 'rgba(250,248,245,0.7)' }}>{opt.name}</span>
-                        {opt.description && (
-                          <p style={{ fontSize: '0.625rem', color: 'rgba(250,248,245,0.35)', margin: '1px 0 0', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {opt.description}
-                          </p>
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <span style={{ fontWeight: 500, color: isSelected ? colors.white : 'rgba(250,248,245,0.7)' }}>{opt.name}</span>
+                          {opt.description && (
+                            <p style={{ fontSize: '0.625rem', color: 'rgba(250,248,245,0.35)', margin: '1px 0 0', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {opt.description}
+                            </p>
+                          )}
+                        </div>
+                        {price > 0 && (
+                          <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {showHalfOff && (
+                              <span style={{ fontSize: '0.625rem', fontWeight: 600, color: '#34D399', background: 'rgba(52,211,153,0.12)', padding: '1px 5px', borderRadius: 4 }}>
+                                50% off
+                              </span>
+                            )}
+                            <span style={{
+                              fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap',
+                              color: showHalfOff ? '#34D399' : (isSelected ? '#A78BFA' : 'rgba(250,248,245,0.4)'),
+                            }}>
+                              {fmtPrice(displayPrice)}
+                            </span>
+                            {showHalfOff && (
+                              <span style={{ fontSize: '0.625rem', color: 'rgba(250,248,245,0.3)', textDecoration: 'line-through' }}>
+                                {fmtPrice(price)}
+                              </span>
+                            )}
+                          </span>
                         )}
                       </div>
                     </button>
