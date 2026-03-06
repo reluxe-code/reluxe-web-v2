@@ -99,6 +99,7 @@ const ORGANIZATION_JSONLD = {
 export default function BetaLayout({
   children, title, description, noindex = false,
   rawTitle, canonical, ogImage, ogType, structuredData,
+  minimal = false,
 }) {
   const fonts = fontPairings[FONT_KEY];
   const pageTitle = rawTitle || (title ? `${title} — ${SITE_NAME}` : SITE_NAME);
@@ -155,16 +156,16 @@ export default function BetaLayout({
       <LocationProvider>
         <MemberProvider>
           <div style={{ backgroundColor: '#fff' }}>
-            <BetaNavBar fontKey={FONT_KEY} />
+            {!minimal && <BetaNavBar fontKey={FONT_KEY} />}
             {typeof children === 'function'
               ? children({ fontKey: FONT_KEY, fonts })
               : children}
-            <OldBookingCTA fontKey={FONT_KEY} />
-            <BetaFooter fontKey={FONT_KEY} />
+            {!minimal && <OldBookingCTA fontKey={FONT_KEY} />}
+            {!minimal && <BetaFooter fontKey={FONT_KEY} />}
           </div>
           <LocationChooserModal />
           <MemberDrawerPortal fonts={fonts} />
-          <MobileStickyFooter fontKey={FONT_KEY} />
+          {!minimal && <MobileStickyFooter fontKey={FONT_KEY} />}
         </MemberProvider>
       </LocationProvider>
     </>

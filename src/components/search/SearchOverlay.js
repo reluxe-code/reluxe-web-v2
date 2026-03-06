@@ -176,7 +176,41 @@ export default function SearchOverlay() {
               maxWidth: 640,
               margin: '0 auto',
               padding: '80px 20px 32px',
+              position: 'relative',
             }}>
+              {/* Close button */}
+              <button
+                onClick={closeSearch}
+                aria-label="Close search"
+                style={{
+                  position: 'absolute',
+                  top: 32,
+                  right: 20,
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  border: '1px solid rgba(250,248,245,0.12)',
+                  background: 'rgba(250,248,245,0.06)',
+                  color: 'rgba(250,248,245,0.5)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.125rem',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(250,248,245,0.12)'
+                  e.currentTarget.style.color = 'rgba(250,248,245,0.8)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(250,248,245,0.06)'
+                  e.currentTarget.style.color = 'rgba(250,248,245,0.5)'
+                }}
+              >
+                ✕
+              </button>
+
               {/* Search input */}
               <SearchInput
                 ref={inputRef}

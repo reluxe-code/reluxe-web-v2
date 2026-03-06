@@ -2,7 +2,8 @@ import { motion } from 'framer-motion';
 import { colors, typeScale } from '@/components/preview/tokens';
 
 export function TestimonialsBlock({ testimonials, s, fonts }) {
-  if (!testimonials?.length) return null;
+  const withText = (testimonials || []).filter(t => (t.quote || t.text || '').replace(/<[^>]*>/g, '').trim().length > 0);
+  if (!withText.length) return null;
 
   return (
     <section style={{ backgroundColor: '#fff' }}>
@@ -14,7 +15,7 @@ export function TestimonialsBlock({ testimonials, s, fonts }) {
           </h2>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {testimonials.slice(0, 6).map((t, i) => {
+          {withText.slice(0, 6).map((t, i) => {
             const rawName = t.author_name || t.author || 'Patient';
             const name = rawName.includes(' ') ? rawName.split(' ')[0] + ' ' + rawName.split(' ').pop()[0] + '.' : rawName;
             const text = t.quote || t.text || '';

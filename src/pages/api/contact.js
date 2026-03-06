@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getSmtpConfig, escHtml } from '@/lib/email';
 import { fireCAPIEvent, buildUserData } from '@/lib/metaCAPI'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
+import { validateAntispam } from '@/lib/antispam'
 
 // -------- Validation (no captcha) --------
 const schema = z.object({
@@ -92,6 +93,14 @@ export default async function handler(req, res) {
 
   try {
     const json = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+
+    // Anti-spam: honeypot + timing + JS token
+    const spam = validateAntispam(json)
+    if (!spam.ok) {
+      // Return 200 to avoid revealing detection to bots
+      console.warn('[contact] spam blocked:', spam.reason, getClientIp(req))
+      return res.status(200).json({ ok: true })
+    }
 
     const parsed = schema.safeParse(json);
     if (!parsed.success) {

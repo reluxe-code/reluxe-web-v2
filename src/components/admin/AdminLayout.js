@@ -8,19 +8,25 @@ import { adminFetch } from '@/lib/adminFetch'
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard' },
   {
-    label: 'Intelligence',
+    label: 'Dashboards',
     href: '/admin/intelligence',
     children: [
       { href: '/admin/intelligence', label: 'Overview' },
       { href: '/admin/intelligence/daily-snapshot', label: 'Daily Snapshot' },
       { href: '/admin/intelligence/monthly-snapshot', label: 'Monthly Snapshot' },
+      { href: '/admin/intelligence/injector-dashboard', label: 'Injector Dashboard' },
+      { href: '/admin/intelligence/provider-scorecard', label: 'Provider Scorecard' },
+      { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    children: [
       { href: '/admin/intelligence/tox', label: 'Tox Engine' },
       { href: '/admin/intelligence/providers', label: 'Providers' },
-      { href: '/admin/intelligence/provider-scorecard', label: 'Provider Scorecard' },
       { href: '/admin/intelligence/patients', label: 'Patients' },
       { href: '/admin/intelligence/customers', label: 'Customers' },
       { href: '/admin/intelligence/bookings', label: 'Bookings' },
-      { href: '/admin/intelligence/booking-funnel', label: 'Booking Funnel' },
       { href: '/admin/intelligence/rebooking', label: 'Rebooking' },
       { href: '/admin/intelligence/products', label: 'Products' },
       { href: '/admin/intelligence/core4', label: 'Core 4 Regimen' },

@@ -31,46 +31,55 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Client info or ownership verification required' })
   }
 
-  // --- Duplicate booking check ---
+  // --- Duplicate booking check (uses blvd_appointments for real status) ---
   if (!allowDuplicate && (phone || email)) {
     try {
       const db = getServiceClient()
-      const since = new Date(Date.now() - 48 * 3600_000).toISOString()
-      let dupeQuery = db
-        .from('booking_sessions')
-        .select('session_id, service_name, provider_name, location_key, completed_at')
-        .eq('outcome', 'completed')
-        .gte('completed_at', since)
 
-      // Match by phone/email hash
-      const conditions = []
+      // Find matching client(s) by phone or email
+      const clientConditions = []
       if (phone) {
-        const phoneHash = hashPhone(phone)
-        if (phoneHash) conditions.push(`contact_phone_hash_v1.eq.${phoneHash}`)
+        const digits = phone.replace(/\D/g, '').slice(-10)
+        if (digits.length === 10) clientConditions.push(`phone.like.%${digits}`)
       }
-      if (email) {
-        const emailHash = hashEmail(email)
-        if (emailHash) conditions.push(`contact_email_hash_v1.eq.${emailHash}`)
-      }
-      if (conditions.length) dupeQuery = dupeQuery.or(conditions.join(','))
+      if (email) clientConditions.push(`email.ilike.${email.toLowerCase()}`)
 
-      // Optionally narrow to same location
-      if (locationKey) dupeQuery = dupeQuery.eq('location_key', locationKey)
+      if (clientConditions.length) {
+        const { data: clients } = await db
+          .from('blvd_clients')
+          .select('id')
+          .or(clientConditions.join(','))
+          .limit(10)
 
-      const { data: recentBookings } = await dupeQuery.order('completed_at', { ascending: false }).limit(3)
+        if (clients?.length) {
+          const clientIds = clients.map((c) => c.id)
+          let apptQuery = db
+            .from('blvd_appointments')
+            .select('boulevard_id, location_key, start_at, status, blvd_appointment_services(service_name)')
+            .in('client_id', clientIds)
+            .not('status', 'in', '(cancelled,no_show)')
+            .gte('start_at', new Date().toISOString())
+            .order('start_at', { ascending: true })
+            .limit(3)
 
-      if (recentBookings?.length) {
-        return res.status(409).json({
-          error: 'You already have a recent booking.',
-          existingBookings: recentBookings.map((b) => ({
-            service: b.service_name || 'Service',
-            provider: b.provider_name || null,
-            location: b.location_key || null,
-            completedAt: b.completed_at,
-          })),
-          message: 'It looks like you already booked recently. If this is intentional, you can confirm to proceed.',
-          allowDuplicateFlag: true,
-        })
+          if (locationKey) apptQuery = apptQuery.eq('location_key', locationKey)
+
+          const { data: upcomingAppts } = await apptQuery
+
+          if (upcomingAppts?.length) {
+            return res.status(409).json({
+              error: 'You already have an upcoming appointment.',
+              existingBookings: upcomingAppts.map((a) => ({
+                service: a.blvd_appointment_services?.[0]?.service_name || 'Service',
+                provider: null,
+                location: a.location_key || null,
+                completedAt: a.start_at,
+              })),
+              message: 'It looks like you already have an upcoming appointment. If this is a different one, you can confirm to proceed.',
+              allowDuplicateFlag: true,
+            })
+          }
+        }
       }
     } catch (dupeErr) {
       // Non-blocking: if the check fails, allow checkout to proceed

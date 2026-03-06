@@ -4,6 +4,7 @@
 import { getServiceClient } from '@/lib/supabase'
 import { createCartWithItem } from '@/server/blvd'
 import { getCached, setCache } from '@/server/cache'
+import { getCircuitState, recordSuccess, recordFailure } from '@/server/circuitBreaker'
 import { REVEAL_CATEGORIES } from '@/data/revealCategories'
 import { rateLimiters, applyRateLimit, getClientIp } from '@/lib/rateLimit'
 
@@ -144,6 +145,22 @@ function curateTiles(candidates, limit = 16) {
   return selected
 }
 
+// Tiered cache TTLs: today/tomorrow are "live" with short TTLs,
+// this week/next week use longer TTLs to reduce API load.
+const DATES_TTL_LIVE = 120_000    // 2 min — today/tomorrow dates
+const DATES_TTL_EXTENDED = 300_000 // 5 min — this week+ dates
+const TIMES_TTL_LIVE = 60_000     // 1 min — today/tomorrow times
+const TIMES_TTL_EXTENDED = 180_000 // 3 min — this week+ times
+
+function isLiveDate(dateStr) {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const tomorrow = new Date(today.getTime() + 86400000)
+  const dayAfter = new Date(today.getTime() + 2 * 86400000)
+  const fmt = (d) => d.toISOString().split('T')[0]
+  return dateStr <= fmt(dayAfter) // today or tomorrow
+}
+
 async function batchSettled(items, fn, concurrency = 6) {
   const results = []
   for (let i = 0; i < items.length; i += concurrency) {
@@ -152,6 +169,24 @@ async function batchSettled(items, fn, concurrency = 6) {
     results.push(...batchResults)
   }
   return results
+}
+
+// Last-resort fallback: scan stale cache for any tiles we can serve
+function serveStaleCacheOrEmpty(res, locationKeys, resolvedSlugs, when, timeOfDay, limit, reason) {
+  // Try to find any stale time entries in cache
+  const allCandidates = []
+  // We can't enumerate the cache Map from here, so return degraded empty
+  console.warn(`[reveal/board] Full fallback — returning degraded empty (reason: ${reason})`)
+  res.status(200).json({
+    tiles: [],
+    moreTiles: [],
+    meta: {
+      totalCandidates: 0,
+      generatedAt: new Date().toISOString(),
+      degraded: true,
+      fallbackReason: reason,
+    },
+  })
 }
 
 export default async function handler(req, res) {
@@ -170,6 +205,13 @@ export default async function handler(req, res) {
 
   // Resolve Boulevard slugs from category IDs
   const resolvedSlugs = serviceSlugs.map(s => SLUG_MAP[s] || s)
+
+  // Check circuit breaker — if OPEN, serve stale cache only
+  const circuit = getCircuitState()
+  if (circuit.state === 'OPEN') {
+    console.warn('[reveal/board] Circuit OPEN — serving stale cache only')
+    return serveStaleCacheOrEmpty(res, locationKeys, resolvedSlugs, when, timeOfDay, limit, 'circuit_open')
+  }
 
   try {
     const sb = getServiceClient()
@@ -207,6 +249,7 @@ export default async function handler(req, res) {
             providerSlug: s.slug,
             providerName: s.name,
             providerImage: s.featured_image,
+            providerTitle: s.title || '',
             boulevardProviderId: s.boulevard_provider_id,
             serviceSlug: slug,
             serviceLabel: LABEL_MAP[slug] || slug,
@@ -224,32 +267,54 @@ export default async function handler(req, res) {
     // 2. Date range from filter
     const range = getDateRange(when)
 
-    // 3. Fetch dates for each combo (batched to avoid rate limits)
+    let blvdCallsFailed = 0
+    let blvdCallsTotal = 0
+
+    // 3. Fetch dates for each combo (batched, with tiered caching)
     const dateResults = await batchSettled(
       selectedCombos, async (combo) => {
         const dateCacheKey = `reveal-dates:${combo.locationKey}:${combo.serviceItemId}:${combo.boulevardProviderId}:${range.lower}:${range.upper}`
-        const cached = getCached(dateCacheKey, 120_000)
+        // Extended dates use longer TTL
+        const ttl = isLiveDate(range.lower) ? DATES_TTL_LIVE : DATES_TTL_EXTENDED
+        const cached = getCached(dateCacheKey, ttl)
         if (cached && !cached.stale) return { combo, dates: cached.data }
 
-        const { cart, staffMismatch } = await createCartWithItem(
-          combo.locationKey, combo.serviceItemId, combo.boulevardProviderId
-        )
-        if (!cart || staffMismatch) return { combo, dates: [] }
-        const rawDates = await cart.getBookableDates({
-          searchRangeLower: range.lower,
-          searchRangeUpper: range.upper,
-        })
-        const dates = (rawDates || []).map(d => typeof d === 'string' ? d : d.date || d)
+        // Stale cache available — use it if circuit is HALF_OPEN or API fails
+        const stale = cached?.stale ? cached.data : null
 
-        // Apply weekday/weekend filter
-        const filtered = when === 'weekdays'
-          ? dates.filter(d => !isWeekend(d))
-          : when === 'weekends'
-          ? dates.filter(d => isWeekend(d))
-          : dates
+        blvdCallsTotal++
+        try {
+          const { cart, staffMismatch } = await createCartWithItem(
+            combo.locationKey, combo.serviceItemId, combo.boulevardProviderId
+          )
+          if (!cart || staffMismatch) {
+            recordSuccess() // API responded, just no match
+            return { combo, dates: stale || [] }
+          }
+          const rawDates = await cart.getBookableDates({
+            searchRangeLower: range.lower,
+            searchRangeUpper: range.upper,
+          })
+          recordSuccess()
+          const dates = (rawDates || []).map(d => typeof d === 'string' ? d : d.date || d)
 
-        setCache(dateCacheKey, filtered)
-        return { combo, dates: filtered }
+          // Apply weekday/weekend filter
+          const filtered = when === 'weekdays'
+            ? dates.filter(d => !isWeekend(d))
+            : when === 'weekends'
+            ? dates.filter(d => isWeekend(d))
+            : dates
+
+          setCache(dateCacheKey, filtered)
+          return { combo, dates: filtered }
+        } catch (apiErr) {
+          recordFailure()
+          blvdCallsFailed++
+          console.warn(`[reveal/board] dates fetch failed for ${combo.providerSlug}:`, apiErr.message)
+          // Serve stale if available
+          if (stale) return { combo, dates: stale }
+          return { combo, dates: [] }
+        }
       }, 6)
 
     // 4. For each combo with dates, fetch times for first 2 dates
@@ -266,20 +331,36 @@ export default async function handler(req, res) {
     const timeResults = await batchSettled(
       timeFetches, async ({ combo, date }) => {
         const timeCacheKey = `reveal-times:${combo.locationKey}:${combo.serviceItemId}:${combo.boulevardProviderId}:${date}`
-        const cached = getCached(timeCacheKey, 60_000)
+        const ttl = isLiveDate(date) ? TIMES_TTL_LIVE : TIMES_TTL_EXTENDED
+        const cached = getCached(timeCacheKey, ttl)
         if (cached && !cached.stale) return { combo, date, times: cached.data }
 
-        const { cart, staffMismatch } = await createCartWithItem(
-          combo.locationKey, combo.serviceItemId, combo.boulevardProviderId
-        )
-        if (!cart || staffMismatch) return { combo, date, times: [] }
-        const rawTimes = await cart.getBookableTimes({ date })
-        const times = (rawTimes || []).map(t => ({
-          startTime: t.startTime,
-        }))
+        const stale = cached?.stale ? cached.data : null
 
-        setCache(timeCacheKey, times)
-        return { combo, date, times }
+        blvdCallsTotal++
+        try {
+          const { cart, staffMismatch } = await createCartWithItem(
+            combo.locationKey, combo.serviceItemId, combo.boulevardProviderId
+          )
+          if (!cart || staffMismatch) {
+            recordSuccess()
+            return { combo, date, times: stale || [] }
+          }
+          const rawTimes = await cart.getBookableTimes({ date })
+          recordSuccess()
+          const times = (rawTimes || []).map(t => ({
+            startTime: t.startTime,
+          }))
+
+          setCache(timeCacheKey, times)
+          return { combo, date, times }
+        } catch (apiErr) {
+          recordFailure()
+          blvdCallsFailed++
+          console.warn(`[reveal/board] times fetch failed for ${combo.providerSlug}/${date}:`, apiErr.message)
+          if (stale) return { combo, date, times: stale }
+          return { combo, date, times: [] }
+        }
       }, 6)
 
     // 5. Build candidate tiles
@@ -299,6 +380,7 @@ export default async function handler(req, res) {
           providerSlug: combo.providerSlug,
           providerName: combo.providerName,
           providerImage: combo.providerImage,
+          providerTitle: combo.providerTitle,
           boulevardProviderId: combo.boulevardProviderId,
           serviceItemId: combo.serviceItemId,
           date,
@@ -317,6 +399,11 @@ export default async function handler(req, res) {
     const moreTiles = curated.slice(9)
 
     const providerSet = [...new Set(curated.map(t => t.providerName))]
+    const degraded = blvdCallsFailed > 0
+
+    if (degraded) {
+      console.warn(`[reveal/board] Degraded response: ${blvdCallsFailed}/${blvdCallsTotal} BLVD calls failed, serving with stale data`)
+    }
 
     res.json({
       tiles,
@@ -325,10 +412,12 @@ export default async function handler(req, res) {
         totalCandidates: allCandidates.length,
         providers: providerSet,
         generatedAt: new Date().toISOString(),
+        degraded,
       },
     })
   } catch (err) {
     console.error('[reveal/board]', err.message)
-    res.status(200).json({ tiles: [], moreTiles: [], meta: { totalCandidates: 0 } })
+    // Attempt to serve stale cache as last resort
+    return serveStaleCacheOrEmpty(res, locationKeys, resolvedSlugs, when, timeOfDay, limit, err.message)
   }
 }

@@ -95,6 +95,8 @@ export default function BetaReviews({ testimonials = [] }) {
 
   const filtered = useMemo(() => {
     return testimonials.filter((t) => {
+      // Always require non-empty text
+      if (!(t.quote || '').replace(/<[^>]*>/g, '').trim()) return false;
       if (filterLocation && t.location !== filterLocation) return false;
       if (filterProvider && t.provider !== filterProvider) return false;
       if (filterService && t.service !== filterService) return false;

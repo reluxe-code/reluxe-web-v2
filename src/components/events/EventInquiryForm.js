@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAntispam } from '@/lib/antispam';
 
 const EVENT_TYPES = [
   'Wedding',
@@ -22,6 +23,7 @@ export default function EventInquiryForm({ defaultEventType = '', className = ''
   const [eventType, setEventType] = useState(defaultEventType);
   const [when, setWhen] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const { getFields: getAntispam } = useAntispam();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +42,7 @@ export default function EventInquiryForm({ defaultEventType = '', className = ''
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, message, location: 'Events Page' }),
+        body: JSON.stringify({ name, email, phone, message, location: 'Events Page', ...getAntispam() }),
       });
       if (!res.ok) throw new Error('Failed');
       setStatus('success');
@@ -74,6 +76,12 @@ export default function EventInquiryForm({ defaultEventType = '', className = ''
       <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-neutral-400">
         Plan Your Event
       </p>
+
+      {/* Honeypot — invisible to humans, bots auto-fill it */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', height: 0, overflow: 'hidden' }}>
+        <label htmlFor="ei-website">Website</label>
+        <input id="ei-website" name="website" type="text" autoComplete="off" tabIndex={-1} />
+      </div>
 
       <div className="space-y-3">
         <input

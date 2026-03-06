@@ -64,17 +64,17 @@ const SUB_VERIFY = 'VERIFY';
 const SUB_CONFIRMING = 'CONFIRMING'; // auto-checkout in progress
 const SUB_DETAILS = 'DETAILS';
 
-export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSuccess, onExpired, onBack }) {
-  const [subStep, setSubStep] = useState(SUB_PHONE);
+export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSuccess, onExpired, onBack, initialPhone, initialCodeId, skipVerification }) {
+  const [subStep, setSubStep] = useState(initialCodeId ? SUB_VERIFY : skipVerification ? SUB_DETAILS : SUB_PHONE);
 
   // Phone state
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(initialPhone || '');
   const [phoneError, setPhoneError] = useState(null);
   const [sendingCode, setSendingCode] = useState(false);
   const phoneRef = useRef(null);
 
   // Verify state
-  const [codeId, setCodeId] = useState(null);
+  const [codeId, setCodeId] = useState(initialCodeId || null);
   const [code, setCode] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState(null);
@@ -196,7 +196,9 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: toE164(phone) }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { skipVerification: true }; }
 
       if (!res.ok) {
         if (data.skipVerification) { setSubStep(SUB_DETAILS); return; }
@@ -275,8 +277,13 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: toE164(phone) }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to resend');
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { skipVerification: true }; }
+      if (!res.ok) {
+        if (data.skipVerification) { setSubStep(SUB_DETAILS); return; }
+        throw new Error(data.error || 'Failed to resend');
+      }
       setCodeId(data.codeId);
       setResendCooldown(30);
     } catch (err) {
@@ -348,7 +355,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
         <CountdownTimer expiresAt={expiresAt} fonts={fonts} onExpired={onExpired} />
         <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: '#FFF7ED', border: '1px solid #FDBA74' }}>
           <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.875rem', fontWeight: 600, color: '#9A3412', marginBottom: '0.5rem' }}>
-            You already have a recent booking
+            You already have an upcoming appointment
           </p>
           {duplicateWarning.existingBookings?.map((b, i) => (
             <div key={i} className="rounded-lg p-2.5 mb-2" style={{ backgroundColor: '#fff', border: '1px solid #FED7AA' }}>
@@ -362,7 +369,7 @@ export default function ClientInfoForm({ cartId, expiresAt, summary, fonts, onSu
               )}
               {b.completedAt && (
                 <p style={{ fontFamily: fonts?.body || 'system-ui', fontSize: '0.75rem', color: colors.muted }}>
-                  Booked {new Date(b.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                  {new Date(b.completedAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                 </p>
               )}
             </div>

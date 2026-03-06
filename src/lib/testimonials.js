@@ -71,6 +71,9 @@ function sortWithRecencyBoost(testimonials) {
   const older = []
 
   for (const t of testimonials) {
+    // Skip testimonials with no meaningful text
+    const text = (t.quote || '').replace(/<[^>]*>/g, '').trim()
+    if (!text) continue
     if (t.featured) {
       featured.push(t)
     } else {

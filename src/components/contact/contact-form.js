@@ -3,6 +3,7 @@ import Link from 'next/link';
 import PropTypes from 'prop-types';
 import { AiOutlineRight } from 'react-icons/ai';
 import { useState } from 'react';
+import { useAntispam } from '@/lib/antispam';
 
 function ContactForm({ contactItems = [] }) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -10,6 +11,7 @@ function ContactForm({ contactItems = [] }) {
 
   const [status, setStatus] = useState({ state: 'idle', message: '' });
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const { getFields: getAntispam } = useAntispam();
 
   const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -38,6 +40,7 @@ function ContactForm({ contactItems = [] }) {
         ...form,
         location: active.slug || active.title || '',
         event_id: eventId,
+        ...getAntispam(),
       };
 
       // Attach Meta cookies for server-side CAPI
@@ -154,6 +157,11 @@ function ContactForm({ contactItems = [] }) {
 
             <form onSubmit={handleSubmit} noValidate>
               <input type="hidden" name="location" value={active.slug || active.title || ''} />
+              {/* Honeypot — invisible to humans, bots auto-fill it */}
+              <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', height: 0, overflow: 'hidden', tabIndex: -1 }}>
+                <label htmlFor="cf-website">Website</label>
+                <input id="cf-website" name="website" type="text" autoComplete="off" tabIndex={-1} />
+              </div>
 
               {contactItems?.length > 1 && (
                 <div className="mb-6">
