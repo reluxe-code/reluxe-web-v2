@@ -1,15 +1,112 @@
 // src/pages/api/admin/intelligence/experiments.js
 // Dashboard API for experiment analytics — aggregates sessions + events.
+// Supports any experiment_id (landing pages, quizzes, etc).
 import { getServiceClient } from '@/lib/supabase'
 import { withAdminAuth } from '@/lib/adminAuth'
 import { maskPhone, maskEmail, nameInitial } from '@/lib/piiHash'
+
+// Known funnel configs — unknown experiments get auto-built funnels from event data
+const FUNNEL_CONFIGS = {
+  thisorthat_v1: {
+    label: 'This or That',
+    steps: [
+      { key: 'experiment_view', label: 'Page View' },
+      { key: 'experiment_start', label: 'Tap Start' },
+      { key: 'experiment_swipe', label: 'Swipes (total)', isCounter: true },
+      { key: 'experiment_results_view', label: 'Results Shown' },
+      { key: 'experiment_booking_start', label: 'Book CTA Tap' },
+      { key: 'experiment_booking_complete', label: 'Booking Complete' },
+    ],
+    goals: {
+      bookings: { label: 'Bookings', target: 60 },
+      memberships: { label: 'Membership Clicks', target: 15, sessionField: 'membership_clicked' },
+      laserStarts: { label: 'Laser Hair Starts', target: 20, bookingService: 'laserhair' },
+    },
+  },
+  reveal_v1: {
+    label: 'Reveal Board',
+    steps: [
+      { key: 'reveal_page_view', label: 'Page View' },
+      { key: 'reveal_filter_submit', label: 'Filter Submit' },
+      { key: 'reveal_board_loaded', label: 'Board Loaded' },
+      { key: 'reveal_tile_tap', label: 'Tile Tap' },
+      { key: 'reveal_booking_start', label: 'Booking Start' },
+      { key: 'reveal_booking_complete', label: 'Booking Complete' },
+    ],
+    goals: {
+      bookings: { label: 'Bookings', target: 30 },
+      tileTaps: { label: 'Tile Taps', eventKey: 'reveal_tile_tap', target: 100 },
+      boardViews: { label: 'Board Views', eventKey: 'reveal_board_loaded', target: 200 },
+    },
+  },
+  tox_lp: {
+    label: 'Tox Landing Page',
+    steps: [
+      { key: 'landing_view', label: 'Page View' },
+      { key: 'section_view', label: 'Section Scroll', isCounter: true },
+      { key: 'tile_tap', label: 'Slot Tap' },
+      { key: 'booking_reserved', label: 'Slot Reserved' },
+      { key: 'booking_complete', label: 'Booking Complete' },
+    ],
+    goals: {
+      bookings: { label: 'Bookings', target: 50 },
+      tileTaps: { label: 'Slot Taps', eventKey: 'tile_tap', target: 200 },
+    },
+  },
+  lhr_lp: {
+    label: 'Laser Hair Removal',
+    steps: [
+      { key: 'experiment_view', label: 'Page View' },
+      { key: 'sms_click', label: 'SMS Click' },
+      { key: 'call_click', label: 'Call Click' },
+      { key: 'video_fullscreen_open', label: 'Video Opened' },
+      { key: 'ig_reel_click', label: 'IG Reel Click' },
+    ],
+    goals: null,
+  },
+}
 
 async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' })
 
   const db = getServiceClient()
+
+  // List mode — return all experiment IDs with counts
+  if (req.query.list === '1') {
+    try {
+      const { data: allSessions, error } = await db
+        .from('experiment_sessions')
+        .select('experiment_id, started_at')
+      if (error) throw error
+
+      const counts = {}
+      const latestAt = {}
+      ;(allSessions || []).forEach(s => {
+        counts[s.experiment_id] = (counts[s.experiment_id] || 0) + 1
+        if (!latestAt[s.experiment_id] || s.started_at > latestAt[s.experiment_id]) {
+          latestAt[s.experiment_id] = s.started_at
+        }
+      })
+
+      const experiments = Object.entries(counts)
+        .map(([id, count]) => ({
+          id,
+          label: FUNNEL_CONFIGS[id]?.label || id,
+          count,
+          lastActivity: latestAt[id],
+        }))
+        .sort((a, b) => (b.lastActivity || '').localeCompare(a.lastActivity || ''))
+
+      return res.json({ experiments })
+    } catch (err) {
+      console.error('[admin/intelligence/experiments] list', err.message)
+      return res.status(500).json({ error: err.message || 'Unknown error' })
+    }
+  }
+
   const { from, to, experiment_id } = req.query
   const expId = experiment_id || 'thisorthat_v1'
+  const funnelConfig = FUNNEL_CONFIGS[expId] || null
 
   // Date filters
   const dateFrom = from || new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)
@@ -63,13 +160,9 @@ async function handler(req, res) {
       }
     })
 
-    // 5. Membership metrics
-    const membershipShown = sessions.filter(s => s.membership_shown).length
-    const membershipClicked = sessions.filter(s => s.membership_clicked).length
-
-    // 6. Funnel — get event counts + per-session stats
+    // 5. Funnel — get event counts + per-session stats
     const sessionIds = sessions.map(s => s.session_id)
-    let eventCounts = {}
+    const eventCounts = {}
     const perSessionEvents = {} // { session_id: { count, lastEvent, lastAt } }
     // Supabase .in() has a limit, batch if needed
     for (let i = 0; i < sessionIds.length; i += 200) {
@@ -93,19 +186,57 @@ async function handler(req, res) {
       })
     }
 
-    // 7. Abandon phase breakdown
+    // 6. Abandon phase breakdown
     const abandonPhases = {}
     abandoned.forEach(s => {
       const phase = s.abandon_phase || 'unknown'
       abandonPhases[phase] = (abandonPhases[phase] || 0) + 1
     })
 
-    // 8. Average duration for completed
+    // 7. Average duration for completed
     const durations = completed.filter(s => s.duration_ms).map(s => s.duration_ms)
     const avgDuration = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0
 
-    // 9. Heavy responders
-    const heavyCount = sessions.filter(s => s.is_heavy_responder).length
+    // 8. Build funnel — known configs use defined steps, unknown auto-build from events
+    let funnel
+    if (funnelConfig) {
+      funnel = funnelConfig.steps.map(step => ({
+        key: step.key,
+        label: step.label,
+        count: eventCounts[step.key] || 0,
+        isCounter: step.isCounter || false,
+      }))
+    } else {
+      // Dynamic funnel from event data, sorted by count descending
+      funnel = Object.entries(eventCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key, count]) => ({
+          key,
+          label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          count,
+          isCounter: false,
+        }))
+    }
+
+    // 9. Goals — only for experiments with defined targets
+    let goals = null
+    if (funnelConfig?.goals) {
+      goals = {}
+      for (const [k, g] of Object.entries(funnelConfig.goals)) {
+        let current = 0
+        if (g.eventKey) {
+          current = eventCounts[g.eventKey] || 0
+        } else if (g.sessionField) {
+          current = sessions.filter(s => s[g.sessionField]).length
+        } else if (g.bookingService) {
+          current = booked.filter(s => s.booking_service === g.bookingService).length
+        } else {
+          // Default: bookings count
+          current = booked.length
+        }
+        goals[k] = { label: g.label, current, target: g.target }
+      }
+    }
 
     // 10. Recent sessions (last 50)
     const recent = sessions.slice(0, 50).map(s => {
@@ -139,50 +270,6 @@ async function handler(req, res) {
       utmSources[src] = (utmSources[src] || 0) + 1
     })
 
-    // Build funnel based on experiment type
-    const isReveal = expId === 'reveal_v1'
-    const funnel = isReveal
-      ? {
-          pageView: eventCounts.reveal_page_view || 0,
-          filterSubmit: eventCounts.reveal_filter_submit || 0,
-          boardLoaded: eventCounts.reveal_board_loaded || 0,
-          tileTap: eventCounts.reveal_tile_tap || 0,
-          bookingStart: eventCounts.reveal_booking_start || 0,
-          bookingComplete: eventCounts.reveal_booking_complete || 0,
-        }
-      : {
-          view: eventCounts.experiment_view || 0,
-          start: eventCounts.experiment_start || 0,
-          swipes: eventCounts.experiment_swipe || 0,
-          results: eventCounts.experiment_results_view || 0,
-          bookingStart: eventCounts.experiment_booking_start || 0,
-          bookingComplete: eventCounts.experiment_booking_complete || 0,
-        }
-
-    const goals = isReveal
-      ? {
-          bookings: { current: booked.length, target: 30 },
-          tileTaps: { current: eventCounts.reveal_tile_tap || 0, target: 100 },
-          boardViews: { current: eventCounts.reveal_board_loaded || 0, target: 200 },
-        }
-      : {
-          bookings: { current: booked.length, target: 60 },
-          memberships: { current: membershipClicked, target: 15 },
-          laserStarts: {
-            current: booked.filter(s => s.booking_service === 'laserhair').length,
-            target: 20,
-          },
-        }
-
-    // Reveal-specific: slots taken, alternatives shown
-    const revealExtras = isReveal
-      ? {
-          slotsTaken: eventCounts.reveal_slot_taken || 0,
-          alternativeTaps: eventCounts.reveal_alternative_tap || 0,
-          showMoreClicks: eventCounts.reveal_show_more || 0,
-        }
-      : null
-
     // 12. Booked patients (all, not limited to 50)
     const bookedPatients = booked.map(s => {
       const pse = perSessionEvents[s.session_id]
@@ -208,7 +295,7 @@ async function handler(req, res) {
       dateFrom,
       dateTo,
       experiment_id: expId,
-      isReveal,
+      experimentLabel: funnelConfig?.label || expId,
       summary: {
         total,
         completed: completed.length,
@@ -216,13 +303,11 @@ async function handler(req, res) {
         abandoned: abandoned.length,
         completionRate: total ? Math.round((completed.length / total) * 100) : 0,
         bookingRate: total ? Math.round((booked.length / total) * 100) : 0,
-        membershipShown,
-        membershipClicked,
-        heavyResponders: heavyCount,
         avgDurationMs: avgDuration,
       },
       funnel,
       goals,
+      allEventCounts: eventCounts,
       personas: personaCounts,
       services: {
         recommended: serviceRecommended,
@@ -233,7 +318,6 @@ async function handler(req, res) {
       utmSources,
       recent,
       bookedPatients,
-      revealExtras,
     })
   } catch (err) {
     console.error('[admin/intelligence/experiments]', err.message, err.stack)

@@ -1,5 +1,5 @@
 // src/pages/admin/intelligence/experiments.js
-// Real-time experiment dashboard for "This or That" campaign.
+// Experiments & Landing Pages dashboard — auto-discovers all experiments.
 import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { adminFetch } from '@/lib/adminFetch'
@@ -65,28 +65,43 @@ function FunnelRow({ label, count, total }) {
   )
 }
 
-const EXPERIMENTS = [
-  { id: 'thisorthat_v1', label: 'This or That' },
-  { id: 'reveal_v1', label: 'Reveal Board' },
-]
-
 // Human-readable event labels + icons
 const EVENT_META = {
-  reveal_page_view:       { label: 'Opened page',         icon: '👁' },
-  reveal_filter_submit:   { label: 'Submitted filters',   icon: '🔍' },
-  reveal_board_loaded:    { label: 'Board loaded',        icon: '📋' },
-  reveal_tile_tap:        { label: 'Tapped a tile',       icon: '👆' },
-  reveal_slot_taken:      { label: 'Slot already taken',  icon: '⚠️' },
-  reveal_booking_start:   { label: 'Started booking',     icon: '🛒' },
-  reveal_booking_complete:{ label: 'Completed booking',   icon: '✅' },
-  reveal_show_more:       { label: 'Tapped Show More',    icon: '➕' },
-  reveal_alternative_tap: { label: 'Tapped alternative',  icon: '🔄' },
-  experiment_view:        { label: 'Viewed page',         icon: '👁' },
-  experiment_start:       { label: 'Started quiz',        icon: '▶️' },
-  experiment_swipe:       { label: 'Swiped',              icon: '👆' },
-  experiment_results_view:{ label: 'Viewed results',      icon: '📊' },
-  experiment_booking_start:    { label: 'Started booking', icon: '🛒' },
-  experiment_booking_complete: { label: 'Completed booking', icon: '✅' },
+  // Reveal Board
+  reveal_page_view:        { label: 'Opened page',          icon: '👁' },
+  reveal_filter_submit:    { label: 'Submitted filters',    icon: '🔍' },
+  reveal_board_loaded:     { label: 'Board loaded',         icon: '📋' },
+  reveal_tile_tap:         { label: 'Tapped a tile',        icon: '👆' },
+  reveal_slot_taken:       { label: 'Slot already taken',   icon: '⚠️' },
+  reveal_booking_start:    { label: 'Started booking',      icon: '🛒' },
+  reveal_booking_complete: { label: 'Completed booking',    icon: '✅' },
+  reveal_show_more:        { label: 'Tapped Show More',     icon: '➕' },
+  reveal_alternative_tap:  { label: 'Tapped alternative',   icon: '🔄' },
+  // This or That
+  experiment_view:             { label: 'Viewed page',          icon: '👁' },
+  experiment_start:            { label: 'Started quiz',         icon: '▶️' },
+  experiment_swipe:            { label: 'Swiped',               icon: '👆' },
+  experiment_results_view:     { label: 'Viewed results',       icon: '📊' },
+  experiment_booking_start:    { label: 'Started booking',      icon: '🛒' },
+  experiment_booking_complete: { label: 'Completed booking',    icon: '✅' },
+  // Tox Landing Page
+  landing_view:        { label: 'Landed on page',       icon: '👁' },
+  section_view:        { label: 'Scrolled to section',  icon: '📜' },
+  toggle_pricing:      { label: 'Toggled pricing',      icon: '💲' },
+  tile_tap:            { label: 'Tapped a slot',        icon: '👆' },
+  booking_reserved:    { label: 'Reserved slot',        icon: '🔒' },
+  booking_complete:    { label: 'Completed booking',    icon: '✅' },
+  filter_location:     { label: 'Changed location',     icon: '📍' },
+  show_more_slots:     { label: 'Show more times',      icon: '➕' },
+  sms_click:           { label: 'SMS click',            icon: '💬' },
+  call_click:          { label: 'Phone call click',     icon: '📞' },
+  consult_click:       { label: 'Free consult click',   icon: '🗓' },
+  result_image_open:   { label: 'Opened result photo',  icon: '🖼' },
+  fallback_book_click: { label: 'Fallback book click',  icon: '🔄' },
+  // Laser Hair Removal Landing Page
+  video_fullscreen_open: { label: 'Opened video',         icon: '🎬' },
+  ig_reel_click:         { label: 'IG Reel click',        icon: '📱' },
+  instagram_click:       { label: 'Instagram click',      icon: '📱' },
 }
 
 function formatMetadata(meta) {
@@ -108,6 +123,13 @@ function formatMetadata(meta) {
   if (meta.appointmentId) parts.push(`Appt: ${meta.appointmentId}`)
   if (meta.utm_source) parts.push(`Source: ${meta.utm_source}`)
   if (meta.utm_campaign) parts.push(`Campaign: ${meta.utm_campaign}`)
+  // Tox LP metadata
+  if (meta.placement) parts.push(`Placement: ${meta.placement}`)
+  if (meta.variant) parts.push(`Variant: ${meta.variant}`)
+  if (meta.section) parts.push(`Section: ${meta.section}`)
+  if (meta.index !== undefined) parts.push(`Image #${meta.index}`)
+  if (meta.cartId) parts.push(`Cart: ${meta.cartId.slice(0, 12)}...`)
+  if (meta.type) parts.push(`Type: ${meta.type}`)
   return parts.length > 0 ? parts : null
 }
 
@@ -246,6 +268,8 @@ export default function ExperimentsDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [experiments, setExperiments] = useState([])
+  const [experimentsLoading, setExperimentsLoading] = useState(true)
   const [experimentId, setExperimentId] = useState('reveal_v1')
   const [drawerSessionId, setDrawerSessionId] = useState(null)
   const [sortKey, setSortKey] = useState('started_at')
@@ -256,6 +280,21 @@ export default function ExperimentsDashboard() {
     return d.toISOString().slice(0, 10)
   })
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10))
+
+  // Discover all experiments on mount
+  useEffect(() => {
+    adminFetch('/api/admin/intelligence/experiments?list=1')
+      .then(r => r.json())
+      .then(d => {
+        const list = d.experiments || []
+        setExperiments(list)
+        if (list.length && !list.find(e => e.id === experimentId)) {
+          setExperimentId(list[0].id)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setExperimentsLoading(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -281,8 +320,8 @@ export default function ExperimentsDashboard() {
   }, [load])
 
   const s = data?.summary || {}
-  const funnel = data?.funnel || {}
-  const funnelTotal = funnel.view || 1
+  const funnel = data?.funnel || []
+  const funnelTop = funnel[0]?.count || 1
 
   function formatDuration(ms) {
     if (!ms) return '—'
@@ -313,20 +352,29 @@ export default function ExperimentsDashboard() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold">Experiments</h1>
-            <div className="flex items-center gap-2 mt-2">
-              {EXPERIMENTS.map(exp => (
-                <button
-                  key={exp.id}
-                  onClick={() => setExperimentId(exp.id)}
-                  className={`px-3 py-1 text-sm font-medium rounded-full border transition-colors ${
-                    experimentId === exp.id
-                      ? 'bg-violet-600 text-white border-violet-600'
-                      : 'bg-white text-neutral-600 border-neutral-200 hover:border-violet-300'
-                  }`}
-                >
-                  {exp.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              {experimentsLoading ? (
+                <span className="text-sm text-neutral-400">Loading experiments...</span>
+              ) : experiments.length === 0 ? (
+                <span className="text-sm text-neutral-400">No experiments found</span>
+              ) : (
+                experiments.map(exp => (
+                  <button
+                    key={exp.id}
+                    onClick={() => setExperimentId(exp.id)}
+                    className={`px-3 py-1 text-sm font-medium rounded-full border transition-colors ${
+                      experimentId === exp.id
+                        ? 'bg-violet-600 text-white border-violet-600'
+                        : 'bg-white text-neutral-600 border-neutral-200 hover:border-violet-300'
+                    }`}
+                  >
+                    {exp.label}
+                    <span className={`ml-1.5 text-xs ${experimentId === exp.id ? 'text-violet-200' : 'text-neutral-400'}`}>
+                      {exp.count}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -336,7 +384,7 @@ export default function ExperimentsDashboard() {
               onChange={e => setDateFrom(e.target.value)}
               className="border rounded-lg px-3 py-1.5 text-sm"
             />
-            <span className="text-neutral-400">→</span>
+            <span className="text-neutral-400">&rarr;</span>
             <input
               type="date"
               value={dateTo}
@@ -367,68 +415,64 @@ export default function ExperimentsDashboard() {
       {data && (
         <>
           {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <StatCard value={s.total} label="Total Sessions" accent="violet" />
-            {data.isReveal ? (
-              <>
-                <StatCard value={`${s.booked} (${s.bookingRate}%)`} label="Bookings" accent="emerald" />
-                <StatCard value={data.funnel?.tileTap || 0} label="Tile Taps" accent="blue" />
-                <StatCard value={data.funnel?.boardLoaded || 0} label="Boards Shown" accent="amber" />
-                <StatCard value={data.revealExtras?.slotsTaken || 0} label="Slots Taken" accent="rose" />
-                <StatCard value={formatDuration(s.avgDurationMs)} label="Avg Duration" accent="violet" />
-              </>
-            ) : (
-              <>
-                <StatCard value={`${s.completed} (${s.completionRate}%)`} label="Quiz Completions" accent="blue" />
-                <StatCard value={`${s.booked} (${s.bookingRate}%)`} label="Bookings" accent="emerald" />
-                <StatCard value={s.membershipClicked} label="Membership Clicks" accent="amber" />
-                <StatCard value={s.heavyResponders} label="Heavy Responders" accent="rose" />
-                <StatCard value={formatDuration(s.avgDurationMs)} label="Avg Duration" accent="violet" />
-              </>
-            )}
+            <StatCard value={`${s.booked} (${s.bookingRate}%)`} label="Bookings" accent="emerald" />
+            <StatCard value={`${s.completed} (${s.completionRate}%)`} label="Conversions" accent="blue" />
+            <StatCard value={formatDuration(s.avgDurationMs)} label="Avg Duration" accent="amber" />
           </div>
 
-          {/* Goals */}
-          <div className="bg-white rounded-lg border p-5 mb-8">
-            <h2 className="text-sm font-semibold text-neutral-700 mb-4">Campaign Goals</h2>
-            {data.isReveal ? (
-              <>
-                <GoalBar label="Bookings" current={data.goals.bookings.current} target={data.goals.bookings.target} />
-                <GoalBar label="Tile Taps" current={data.goals.tileTaps.current} target={data.goals.tileTaps.target} />
-                <GoalBar label="Board Views" current={data.goals.boardViews.current} target={data.goals.boardViews.target} />
-              </>
-            ) : (
-              <>
-                <GoalBar label="Bookings" current={data.goals.bookings.current} target={data.goals.bookings.target} />
-                <GoalBar label="Membership Clicks" current={data.goals.memberships.current} target={data.goals.memberships.target} />
-                <GoalBar label="Laser Hair Starts" current={data.goals.laserStarts.current} target={data.goals.laserStarts.target} />
-              </>
-            )}
-          </div>
+          {/* Goals — only if experiment has defined targets */}
+          {data.goals && (
+            <div className="bg-white rounded-lg border p-5 mb-8">
+              <h2 className="text-sm font-semibold text-neutral-700 mb-4">Campaign Goals</h2>
+              {Object.entries(data.goals).map(([key, g]) => (
+                <GoalBar key={key} label={g.label} current={g.current} target={g.target} />
+              ))}
+            </div>
+          )}
 
           {/* Funnel */}
-          <div className="bg-white rounded-lg border p-5 mb-8">
-            <h2 className="text-sm font-semibold text-neutral-700 mb-4">Live Funnel</h2>
-            {data.isReveal ? (
-              <>
-                <FunnelRow label="Page View" count={funnel.pageView} total={funnel.pageView || 1} />
-                <FunnelRow label="Filter Submit" count={funnel.filterSubmit} total={funnel.pageView || 1} />
-                <FunnelRow label="Board Loaded" count={funnel.boardLoaded} total={funnel.pageView || 1} />
-                <FunnelRow label="Tile Tap" count={funnel.tileTap} total={funnel.pageView || 1} />
-                <FunnelRow label="Booking Start" count={funnel.bookingStart} total={funnel.pageView || 1} />
-                <FunnelRow label="Booking Complete" count={funnel.bookingComplete} total={funnel.pageView || 1} />
-              </>
-            ) : (
-              <>
-                <FunnelRow label="Page View" count={funnel.view} total={funnelTotal} />
-                <FunnelRow label="Tap Start" count={funnel.start} total={funnelTotal} />
-                <FunnelRow label="Swipes (total)" count={funnel.swipes} total={funnel.swipes || 1} />
-                <FunnelRow label="Results Shown" count={funnel.results} total={funnelTotal} />
-                <FunnelRow label="Book CTA Tap" count={funnel.bookingStart} total={funnelTotal} />
-                <FunnelRow label="Booking Complete" count={funnel.bookingComplete} total={funnelTotal} />
-              </>
-            )}
-          </div>
+          {funnel.length > 0 && (
+            <div className="bg-white rounded-lg border p-5 mb-8">
+              <h2 className="text-sm font-semibold text-neutral-700 mb-4">Live Funnel</h2>
+              {funnel.map(step => (
+                <FunnelRow
+                  key={step.key}
+                  label={step.label}
+                  count={step.count}
+                  total={step.isCounter ? step.count : funnelTop}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* All Events breakdown */}
+          {data.allEventCounts && Object.keys(data.allEventCounts).length > 0 && (
+            <div className="bg-white rounded-lg border p-5 mb-8">
+              <h2 className="text-sm font-semibold text-neutral-700 mb-4">All Events</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-neutral-500">
+                      <th className="text-left py-2">Event</th>
+                      <th className="text-right py-2">Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(data.allEventCounts)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([name, count]) => (
+                        <tr key={name} className="border-b border-neutral-50">
+                          <td className="py-2 font-medium">{EVENT_META[name]?.label || name.replace(/_/g, ' ')}</td>
+                          <td className="py-2 text-right tabular-nums">{count}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* Booked Patients */}
           {(data.bookedPatients || []).length > 0 && (
@@ -448,7 +492,6 @@ export default function ExperimentsDashboard() {
                       <th className="text-left py-2 pr-4">Service</th>
                       <th className="text-left py-2 pr-4">Location</th>
                       <th className="text-left py-2 pr-4">Provider</th>
-                      {!data.isReveal && <th className="text-left py-2 pr-4">Persona</th>}
                       <th className="text-left py-2 pr-4">Source</th>
                       <th className="text-right py-2">Booked At</th>
                     </tr>
@@ -471,7 +514,6 @@ export default function ExperimentsDashboard() {
                         <td className="py-2.5 pr-4 text-neutral-700 capitalize">{p.booking_service || '—'}</td>
                         <td className="py-2.5 pr-4 text-neutral-600 capitalize">{p.booking_location || '—'}</td>
                         <td className="py-2.5 pr-4 text-neutral-600">{p.booking_provider || '—'}</td>
-                        {!data.isReveal && <td className="py-2.5 pr-4 text-neutral-500">{p.persona_name || '—'}</td>}
                         <td className="py-2.5 pr-4 text-xs text-neutral-500">{p.utm_source || 'direct'}{p.utm_campaign ? ` / ${p.utm_campaign}` : ''}</td>
                         <td className="py-2.5 text-right text-xs text-neutral-500 whitespace-nowrap">
                           {new Date(p.started_at).toLocaleString('en-US', {
@@ -486,12 +528,12 @@ export default function ExperimentsDashboard() {
             </div>
           )}
 
-          <div className={`grid grid-cols-1 ${data.isReveal ? '' : 'lg:grid-cols-2'} gap-8 mb-8`}>
-            {/* Persona distribution (This or That only) */}
-            {!data.isReveal && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Persona distribution — shown when data exists */}
+            {Object.keys(data.personas || {}).length > 0 && (
               <div className="bg-white rounded-lg border p-5">
                 <h2 className="text-sm font-semibold text-neutral-700 mb-4">Persona Distribution</h2>
-                {Object.entries(data.personas || {}).sort((a, b) => b[1] - a[1]).map(([name, count]) => {
+                {Object.entries(data.personas).sort((a, b) => b[1] - a[1]).map(([name, count]) => {
                   const pct = data.summary.completed > 0 ? Math.round((count / data.summary.completed) * 100) : 0
                   return (
                     <div key={name} className="mb-3">
@@ -505,46 +547,42 @@ export default function ExperimentsDashboard() {
                     </div>
                   )
                 })}
-                {Object.keys(data.personas || {}).length === 0 && (
-                  <p className="text-sm text-neutral-400">No completions yet.</p>
-                )}
               </div>
             )}
 
             {/* Service breakdown */}
-            <div className="bg-white rounded-lg border p-5">
-              <h2 className="text-sm font-semibold text-neutral-700 mb-4">Service Breakdown</h2>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-neutral-500">
-                    <th className="text-left py-2">Service</th>
-                    <th className="text-right py-2">Recommended</th>
-                    <th className="text-right py-2">Booked</th>
-                    <th className="text-right py-2">Conv %</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.keys({ ...data.services.recommended, ...data.services.booked })
-                    .sort((a, b) => (data.services.recommended[b] || 0) - (data.services.recommended[a] || 0))
-                    .map(slug => {
-                      const rec = data.services.recommended[slug] || 0
-                      const bk = data.services.booked[slug] || 0
-                      const conv = rec > 0 ? Math.round((bk / rec) * 100) : 0
-                      return (
-                        <tr key={slug} className="border-b border-neutral-50">
-                          <td className="py-2 font-medium">{slug}</td>
-                          <td className="py-2 text-right">{rec}</td>
-                          <td className="py-2 text-right">{bk}</td>
-                          <td className="py-2 text-right">{conv}%</td>
-                        </tr>
-                      )
-                    })}
-                </tbody>
-              </table>
-              {Object.keys(data.services.recommended || {}).length === 0 && (
-                <p className="text-sm text-neutral-400 mt-2">No data yet.</p>
-              )}
-            </div>
+            {(Object.keys(data.services?.recommended || {}).length > 0 || Object.keys(data.services?.booked || {}).length > 0) && (
+              <div className="bg-white rounded-lg border p-5">
+                <h2 className="text-sm font-semibold text-neutral-700 mb-4">Service Breakdown</h2>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-xs text-neutral-500">
+                      <th className="text-left py-2">Service</th>
+                      <th className="text-right py-2">Recommended</th>
+                      <th className="text-right py-2">Booked</th>
+                      <th className="text-right py-2">Conv %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys({ ...data.services.recommended, ...data.services.booked })
+                      .sort((a, b) => (data.services.recommended[b] || 0) - (data.services.recommended[a] || 0))
+                      .map(slug => {
+                        const rec = data.services.recommended[slug] || 0
+                        const bk = data.services.booked[slug] || 0
+                        const conv = rec > 0 ? Math.round((bk / rec) * 100) : 0
+                        return (
+                          <tr key={slug} className="border-b border-neutral-50">
+                            <td className="py-2 font-medium">{slug}</td>
+                            <td className="py-2 text-right">{rec}</td>
+                            <td className="py-2 text-right">{bk}</td>
+                            <td className="py-2 text-right">{conv}%</td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -603,14 +641,13 @@ export default function ExperimentsDashboard() {
                 <thead>
                   <tr className="border-b text-xs text-neutral-500">
                     <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('started_at')}>Time{sortArrow('started_at')}</th>
-                    {!data.isReveal && <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('persona_name')}>Persona{sortArrow('persona_name')}</th>}
                     <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('client_name')}>Client{sortArrow('client_name')}</th>
                     <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('outcome')}>Outcome{sortArrow('outcome')}</th>
                     <th className="text-center py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('event_count')}>Steps{sortArrow('event_count')}</th>
                     <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('last_event')}>Last Step{sortArrow('last_event')}</th>
                     <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('booking_service')}>Service{sortArrow('booking_service')}</th>
                     <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('booking_location')}>Location{sortArrow('booking_location')}</th>
-                    {data.isReveal && <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('utm_source')}>Source{sortArrow('utm_source')}</th>}
+                    <th className="text-left py-2 pr-4 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('utm_source')}>Source{sortArrow('utm_source')}</th>
                     <th className="text-right py-2 cursor-pointer select-none hover:text-violet-600" onClick={() => toggleSort('duration_ms')}>Duration{sortArrow('duration_ms')}</th>
                   </tr>
                 </thead>
@@ -622,7 +659,6 @@ export default function ExperimentsDashboard() {
                           month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
                         })}
                       </td>
-                      {!data.isReveal && <td className="py-2 pr-4 whitespace-nowrap">{s.persona_name || '—'}</td>}
                       <td className="py-2 pr-4">
                         {s.client_name ? (
                           <div>
@@ -659,7 +695,7 @@ export default function ExperimentsDashboard() {
                       </td>
                       <td className="py-2 pr-4 text-neutral-600">{s.booking_service || '—'}</td>
                       <td className="py-2 pr-4 text-neutral-600 capitalize">{s.booking_location || '—'}</td>
-                      {data.isReveal && <td className="py-2 pr-4 text-neutral-500 text-xs">{s.utm_source || 'direct'}</td>}
+                      <td className="py-2 pr-4 text-neutral-500 text-xs">{s.utm_source || 'direct'}</td>
                       <td className="py-2 text-right text-neutral-500">{formatDuration(s.duration_ms)}</td>
                     </tr>
                   ))}

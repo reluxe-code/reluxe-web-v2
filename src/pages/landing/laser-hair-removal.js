@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import BetaLayout from '@/components/beta/BetaLayout'
 import GravityBookButton from '@/components/beta/GravityBookButton'
 import { colors, gradients, fontPairings, typeScale } from '@/components/preview/tokens'
+import useExperimentSession from '@/hooks/useExperimentSession'
+import trackExperimentEvent from '@/lib/trackExperimentEvent'
 
 const FONT_KEY = 'bold'
 const fonts = fontPairings[FONT_KEY]
@@ -103,6 +105,8 @@ const FAQS = [
 ]
 
 /** Tracking helper */
+let _getExpSessionId = null // set by component, used by module-level trackEvent
+
 function trackEvent(eventName, params = {}) {
   if (typeof window === 'undefined') return
   const payload = {
@@ -120,9 +124,14 @@ function trackEvent(eventName, params = {}) {
   if (Array.isArray(window.dataLayer)) {
     window.dataLayer.push({ event: eventName, ...payload })
   }
+  // Experiment system — store in Supabase
+  const sid = _getExpSessionId?.()
+  if (sid) trackExperimentEvent(sid, eventName, payload)
 }
 
 export default function LaserHairRemovalLanding() {
+  const { getSessionId } = useExperimentSession('lhr_lp')
+  _getExpSessionId = getSessionId
   const [videoOpen, setVideoOpen] = useState(false)
 
   useEffect(() => {
