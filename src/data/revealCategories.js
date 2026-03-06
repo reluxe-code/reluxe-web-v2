@@ -15,7 +15,7 @@ export const REVEAL_CATEGORIES = [
   { id: 'tox',         label: 'Tox',                 slug: 'tox',           icon: '\u{1F489}', priceTier: 2 },
   { id: 'massage',     label: 'Massage',             slug: 'massage',       icon: '\u{1F486}', priceTier: 1 },
   { id: 'consult',     label: 'Consult / Game Plan', slug: 'consultations', icon: '\u{1FA7A}', priceTier: 1 },
-  { id: 'laserhair',   label: 'Laser Hair Removal',  slug: 'laserhair',     icon: '\u{2728}',  priceTier: 2 },
+  { id: 'laserhair',   label: 'Laser Hair Removal',  slug: 'laser-hair-removal', icon: '\u{2728}',  priceTier: 2 },
   { id: 'evolvex',     label: 'EvolveX',             slug: 'evolvex',       icon: '\u{1F525}', priceTier: 3 },
   { id: 'hydrafacial', label: 'HydraFacial',         slug: 'hydrafacial',   icon: '\u{1F4A7}', priceTier: 2 },
   { id: 'glo2',        label: 'Glo2Facial',          slug: 'glo2facial',    icon: '\u{1F31F}', priceTier: 2 },
